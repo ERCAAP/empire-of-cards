@@ -62,6 +62,9 @@ namespace EmpireOfCards.Bootstrap
         private ScoreScreen _scoreScreen;
         private GameOverScreen _gameOverScreen;
 
+        // Card prefab template (created at runtime, inactive)
+        private GameObject _cardPrefabInstance;
+
         // TopBar sub-elements
         private TMP_Text _moneyText;
         private TMP_Text _turnText;
@@ -69,6 +72,11 @@ namespace EmpireOfCards.Bootstrap
 
         // ActionBar sub-elements
         private Image[] _actionDotImages;
+
+        // Button references captured during CreateUI
+        private Button _endTurnButton;
+        private Button _shopButton;
+        private Button _shopCloseButton;
 
         // AudioManager sources
         private AudioSource _musicSourceA;
@@ -95,8 +103,14 @@ namespace EmpireOfCards.Bootstrap
             // ====== VFX ======
             CreateVFX();
 
+            // ====== CARD PREFAB (runtime template for HandUI) ======
+            CreateCardPrefab();
+
             // ====== WIRE REFERENCES ======
             WireManagerReferences();
+
+            // ====== WIRE BUTTON CALLBACKS ======
+            WireButtonCallbacks();
 
             Debug.Log("[GameSceneBootstrap] Scene hierarchy created successfully (self-contained).");
         }
@@ -1251,7 +1265,9 @@ namespace EmpireOfCards.Bootstrap
                 float x = (i - 2f) * 2.5f;
                 bizSlot.transform.localPosition = new Vector3(x, 0, 0);
 
-                bizSlot.AddComponent<DropZone>();
+                var bizDZ = bizSlot.AddComponent<DropZone>();
+                RuntimeWiring.SetField(bizDZ, "zoneType", DropZoneType.BusinessSlot);
+                RuntimeWiring.SetField(bizDZ, "slotIndex", i);
 
                 // Employee sub-slots (max 3 per business)
                 for (int e = 0; e < 3; e++)
@@ -1260,7 +1276,9 @@ namespace EmpireOfCards.Bootstrap
                     empSlot.transform.SetParent(bizSlot.transform);
                     empSlot.transform.localPosition = new Vector3(0, -(e + 1) * 0.6f, 0);
 
-                    empSlot.AddComponent<DropZone>();
+                    var empDZ = empSlot.AddComponent<DropZone>();
+                    RuntimeWiring.SetField(empDZ, "zoneType", DropZoneType.EmployeeSlot);
+                    RuntimeWiring.SetField(empDZ, "slotIndex", i); // employee belongs to business at index i
                 }
 
                 // Hide slots 4 and 5 initially
@@ -1290,7 +1308,9 @@ namespace EmpireOfCards.Bootstrap
             var discardPile = new GameObject("DiscardPile");
             discardPile.transform.SetParent(boardRoot.transform);
             discardPile.transform.localPosition = new Vector3(5.5f, -3f, 0);
-            discardPile.AddComponent<DropZone>();
+            var discardDZ = discardPile.AddComponent<DropZone>();
+            RuntimeWiring.SetField(discardDZ, "zoneType", DropZoneType.SellZone);
+            RuntimeWiring.SetField(discardDZ, "slotIndex", 0);
         }
 
         // ================================================================
@@ -1375,12 +1395,14 @@ namespace EmpireOfCards.Bootstrap
             SetAnchors(endTurnBtn, new Vector2(1, 0), new Vector2(1, 0), new Vector2(1, 0));
             endTurnBtn.anchoredPosition = new Vector2(-100, 200);
             endTurnBtn.sizeDelta = new Vector2(160, 50);
+            _endTurnButton = endTurnBtn.GetComponent<Button>();
 
             // Shop Button
             var shopBtn = CreateButton("ShopButton", canvasGo.transform, "DUKKAN");
             SetAnchors(shopBtn, new Vector2(0, 0), new Vector2(0, 0), new Vector2(0, 0));
             shopBtn.anchoredPosition = new Vector2(100, 200);
             shopBtn.sizeDelta = new Vector2(140, 50);
+            _shopButton = shopBtn.GetComponent<Button>();
 
             // Deck Button
             var deckBtn = CreateButton("DeckButton", canvasGo.transform, "DESTE: 14");
@@ -1414,6 +1436,7 @@ namespace EmpireOfCards.Bootstrap
             var shopCloseBtn = CreateButton("CloseButton", shopPanel, "KAPAT");
             shopCloseBtn.anchoredPosition = new Vector2(0, -200);
             shopCloseBtn.sizeDelta = new Vector2(120, 40);
+            _shopCloseButton = shopCloseBtn.GetComponent<Button>();
 
             // --- Popup overlays (hidden by default) ---
             var comboPopup = CreateUIPanel("ComboPopup", canvasGo.transform);
@@ -1472,6 +1495,145 @@ namespace EmpireOfCards.Bootstrap
             var vfxRoot = new GameObject("--- VFX ---");
             var poolParent = new GameObject("VFXPool");
             poolParent.transform.SetParent(vfxRoot.transform);
+        }
+
+        // ================================================================
+        // CARD PREFAB (runtime template for HandUI instantiation)
+        // ================================================================
+
+        private void CreateCardPrefab()
+        {
+            // --- Root: CardPrefab (RectTransform 150x220 + CanvasGroup) ---
+            var root = new GameObject("CardPrefab");
+            var rootRT = root.AddComponent<RectTransform>();
+            rootRT.sizeDelta = new Vector2(150, 220);
+            var rootCG = root.AddComponent<CanvasGroup>();
+
+            // --- Background child: fills parent ---
+            var bgGo = new GameObject("Background");
+            bgGo.transform.SetParent(root.transform, false);
+            var bgRT = bgGo.AddComponent<RectTransform>();
+            bgRT.anchorMin = Vector2.zero;
+            bgRT.anchorMax = Vector2.one;
+            bgRT.sizeDelta = Vector2.zero;
+            bgRT.offsetMin = Vector2.zero;
+            bgRT.offsetMax = Vector2.zero;
+            var bgImg = bgGo.AddComponent<Image>();
+            bgImg.color = new Color(0.25f, 0.25f, 0.3f);
+
+            // --- Icon child: 80x80, centered upper ---
+            var iconGo = new GameObject("Icon");
+            iconGo.transform.SetParent(root.transform, false);
+            var iconRT = iconGo.AddComponent<RectTransform>();
+            iconRT.anchorMin = new Vector2(0.5f, 0.5f);
+            iconRT.anchorMax = new Vector2(0.5f, 0.5f);
+            iconRT.pivot = new Vector2(0.5f, 0.5f);
+            iconRT.sizeDelta = new Vector2(80, 80);
+            iconRT.anchoredPosition = new Vector2(0, 30); // upper-center
+            var iconImg = iconGo.AddComponent<Image>();
+            iconImg.color = Color.white;
+
+            // --- HighlightBorder child: fills parent, outline-style, initially transparent ---
+            var hlGo = new GameObject("HighlightBorder");
+            hlGo.transform.SetParent(root.transform, false);
+            var hlRT = hlGo.AddComponent<RectTransform>();
+            hlRT.anchorMin = Vector2.zero;
+            hlRT.anchorMax = Vector2.one;
+            hlRT.sizeDelta = Vector2.zero;
+            hlRT.offsetMin = Vector2.zero;
+            hlRT.offsetMax = Vector2.zero;
+            var hlImg = hlGo.AddComponent<Image>();
+            hlImg.color = new Color(0, 0, 0, 0); // transparent initially
+            hlImg.raycastTarget = false;
+
+            // --- NameText child: top area, 16pt ---
+            var nameGo = new GameObject("NameText");
+            nameGo.transform.SetParent(root.transform, false);
+            var nameRT = nameGo.AddComponent<RectTransform>();
+            nameRT.anchorMin = new Vector2(0, 1);
+            nameRT.anchorMax = new Vector2(0.75f, 1);
+            nameRT.pivot = new Vector2(0, 1);
+            nameRT.sizeDelta = new Vector2(0, 30);
+            nameRT.anchoredPosition = new Vector2(5, -5);
+            var nameTmp = nameGo.AddComponent<TextMeshProUGUI>();
+            nameTmp.text = "";
+            nameTmp.fontSize = 16;
+            nameTmp.alignment = TextAlignmentOptions.TopLeft;
+            nameTmp.color = Color.white;
+            nameTmp.raycastTarget = false;
+
+            // --- CostText child: top-right corner, 20pt, bold ---
+            var costGo = new GameObject("CostText");
+            costGo.transform.SetParent(root.transform, false);
+            var costRT = costGo.AddComponent<RectTransform>();
+            costRT.anchorMin = new Vector2(1, 1);
+            costRT.anchorMax = new Vector2(1, 1);
+            costRT.pivot = new Vector2(1, 1);
+            costRT.sizeDelta = new Vector2(50, 30);
+            costRT.anchoredPosition = new Vector2(-5, -5);
+            var costTmp = costGo.AddComponent<TextMeshProUGUI>();
+            costTmp.text = "";
+            costTmp.fontSize = 20;
+            costTmp.fontStyle = FontStyles.Bold;
+            costTmp.alignment = TextAlignmentOptions.TopRight;
+            costTmp.color = Color.yellow;
+            costTmp.raycastTarget = false;
+
+            // --- DescriptionText child: middle area, 12pt ---
+            var descGo = new GameObject("DescriptionText");
+            descGo.transform.SetParent(root.transform, false);
+            var descRT = descGo.AddComponent<RectTransform>();
+            descRT.anchorMin = new Vector2(0, 0.25f);
+            descRT.anchorMax = new Vector2(1, 0.55f);
+            descRT.sizeDelta = Vector2.zero;
+            descRT.offsetMin = new Vector2(8, 0);
+            descRT.offsetMax = new Vector2(-8, 0);
+            var descTmp = descGo.AddComponent<TextMeshProUGUI>();
+            descTmp.text = "";
+            descTmp.fontSize = 12;
+            descTmp.alignment = TextAlignmentOptions.TopLeft;
+            descTmp.color = Color.white;
+            descTmp.enableWordWrapping = true;
+            descTmp.raycastTarget = false;
+
+            // --- StatsText child: bottom area, 11pt ---
+            var statsGo = new GameObject("StatsText");
+            statsGo.transform.SetParent(root.transform, false);
+            var statsRT = statsGo.AddComponent<RectTransform>();
+            statsRT.anchorMin = new Vector2(0, 0);
+            statsRT.anchorMax = new Vector2(1, 0.25f);
+            statsRT.sizeDelta = Vector2.zero;
+            statsRT.offsetMin = new Vector2(8, 5);
+            statsRT.offsetMax = new Vector2(-8, 0);
+            var statsTmp = statsGo.AddComponent<TextMeshProUGUI>();
+            statsTmp.text = "";
+            statsTmp.fontSize = 11;
+            statsTmp.alignment = TextAlignmentOptions.BottomLeft;
+            statsTmp.color = new Color(0.8f, 0.8f, 0.8f);
+            statsTmp.enableWordWrapping = true;
+            statsTmp.raycastTarget = false;
+
+            // --- Add CardUI + CardDragHandler components ---
+            var cardUI = root.AddComponent<CardUI>();
+            root.AddComponent<CardDragHandler>();
+
+            // --- Wire all child references into CardUI via RuntimeWiring ---
+            RuntimeWiring.SetField(cardUI, "cardBackground", bgImg);
+            RuntimeWiring.SetField(cardUI, "cardIcon", iconImg);
+            RuntimeWiring.SetField(cardUI, "highlightBorder", hlImg);
+            RuntimeWiring.SetField(cardUI, "nameText", (TMP_Text)nameTmp);
+            RuntimeWiring.SetField(cardUI, "costText", (TMP_Text)costTmp);
+            RuntimeWiring.SetField(cardUI, "descriptionText", (TMP_Text)descTmp);
+            RuntimeWiring.SetField(cardUI, "statsText", (TMP_Text)statsTmp);
+            RuntimeWiring.SetField(cardUI, "canvasGroup", rootCG);
+            // tooltipPanel, tooltipText, synergyGlow left null initially
+
+            // --- Deactivate: this is a template/prefab ---
+            root.SetActive(false);
+
+            _cardPrefabInstance = root;
+
+            Debug.Log("[GameSceneBootstrap] Card prefab template created at runtime.");
         }
 
         // ================================================================
@@ -1544,13 +1706,53 @@ namespace EmpireOfCards.Bootstrap
             // === ActionBarUI: action dot Image[] ===
             RuntimeWiring.SetField(_actionBarUI, "actionDots", _actionDotImages);
 
-            // === HandUI: handRoot (its own transform serves as root) ===
+            // === HandUI: handRoot + cardPrefab ===
             RuntimeWiring.SetField(_handUI, "handRoot", _handUI.transform);
+            RuntimeWiring.SetField(_handUI, "cardPrefab", _cardPrefabInstance.GetComponent<CardUI>());
 
             // === ShopPanel: shopManager reference ===
             RuntimeWiring.SetField(_shopPanel, "shopManager", _shopManager);
 
+            // === DropZones: wire boardManager to all instances ===
+            var allDropZones = Object.FindObjectsByType<DropZone>(FindObjectsSortMode.None);
+            foreach (var dz in allDropZones)
+            {
+                RuntimeWiring.SetField(dz, "boardManager", _boardManager);
+            }
+
             Debug.Log("[GameSceneBootstrap] All manager and UI references wired via RuntimeWiring.");
+        }
+
+        // ================================================================
+        // BUTTON CALLBACKS (Wire onClick after managers and UI exist)
+        // ================================================================
+
+        private void WireButtonCallbacks()
+        {
+            // End Turn button -> TurnManager.EndPlayPhase()
+            if (_endTurnButton != null && _turnManager != null)
+                _endTurnButton.onClick.AddListener(() => _turnManager.EndPlayPhase());
+
+            // Shop button -> toggle shop
+            if (_shopButton != null && _uiManager != null)
+            {
+                bool shopOpen = false;
+                _shopButton.onClick.AddListener(() => {
+                    shopOpen = !shopOpen;
+                    if (shopOpen) _uiManager.ShowShop();
+                    else _uiManager.HideShop();
+                });
+            }
+
+            // Shop close -> hide shop
+            if (_shopCloseButton != null && _uiManager != null)
+                _shopCloseButton.onClick.AddListener(() => _uiManager.HideShop());
+
+            // UIManager end turn event -> TurnManager
+            if (_uiManager != null && _turnManager != null)
+                _uiManager.OnEndTurnClicked += () => _turnManager.EndPlayPhase();
+
+            Debug.Log("[GameSceneBootstrap] Button callbacks wired.");
         }
 
         // ================================================================
