@@ -38,7 +38,7 @@ namespace EmpireOfCards.Gameplay
 
         /// <summary>
         /// Assigns all dependencies without reflection.
-        /// Called by WiringService instead of RuntimeWiring.SetField().
+        /// Called by WiringService during bootstrap.
         /// </summary>
         public void Init(GameBalanceData balance, BoardManager board, ComboSystem combo)
         {
@@ -46,8 +46,17 @@ namespace EmpireOfCards.Gameplay
             this.boardManager = board;
             this.comboSystem = combo;
 
-            riskCalculator = new RiskCalculator();
-            raidExecutor = new RaidExecutor(balanceData, boardManager, riskCalculator);
+            riskCalculator = new RiskCalculator(risk =>
+            {
+                GameManager gm = GameManager.Instance;
+                if (gm != null) gm.SetFBIRisk(risk);
+            });
+            raidExecutor = new RaidExecutor(balanceData, boardManager, riskCalculator,
+                penalty =>
+                {
+                    GameManager gm = GameManager.Instance;
+                    if (gm != null) gm.SpendMoney(penalty);
+                });
         }
 
         // ----------------------------------------------------------------

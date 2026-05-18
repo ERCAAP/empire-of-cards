@@ -142,6 +142,9 @@ namespace EmpireOfCards.Bootstrap.Data
             rival.aggressiveIncomeBoost = 50;
             rival.passiveCustomerGrowth = 2;
             rival.passiveIncomeGrowth = 10;
+            rival.passiveMoneyGrowth = 50;
+            rival.eventBonusCustomers = 3;
+            rival.eventBonusIncome = 15;
 
             rival.possibleBusinessNames = new[]
             {

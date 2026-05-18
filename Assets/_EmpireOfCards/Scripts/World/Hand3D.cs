@@ -23,7 +23,7 @@ namespace EmpireOfCards.World
 
         /// <summary>
         /// Assigns all dependencies without reflection.
-        /// Called by WiringService instead of RuntimeWiring.SetField().
+        /// Called by WiringService during bootstrap.
         /// </summary>
         public void Init(CardFactory factory, DeckManager deck, Transform anchor)
         {
@@ -31,9 +31,6 @@ namespace EmpireOfCards.World
             this.deckManager = deck;
             this.handAnchor = anchor;
         }
-
-        public void SetFactory(CardFactory factory) { cardFactory = factory; }
-        public void SetAnchor(Transform anchor) { handAnchor = anchor; }
 
         private void OnEnable()
         {

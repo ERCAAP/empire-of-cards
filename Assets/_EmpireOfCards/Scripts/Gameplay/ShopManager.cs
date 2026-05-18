@@ -43,7 +43,7 @@ namespace EmpireOfCards.Gameplay
 
         /// <summary>
         /// Assigns all dependencies without reflection.
-        /// Called by WiringService instead of RuntimeWiring.SetField().
+        /// Called by WiringService during bootstrap.
         /// </summary>
         public void Init(CardData[] pool, DeckManager deck, EconomyManager econ, ComboSystem combo)
         {

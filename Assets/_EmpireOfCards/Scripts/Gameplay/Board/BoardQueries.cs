@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using EmpireOfCards.Core;
 using EmpireOfCards.Data;
+using EmpireOfCards.Gameplay;
 
 namespace EmpireOfCards.Gameplay.Board
 {

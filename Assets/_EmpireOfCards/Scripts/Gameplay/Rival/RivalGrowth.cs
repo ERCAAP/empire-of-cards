@@ -77,6 +77,8 @@ namespace EmpireOfCards.Gameplay
             EventBus.RivalActed($"Rival hired an employee for {target.name}.");
         }
 
+        private const float AGGRESSIVE_INVESTMENT_RATE = 0.3f;
+
         /// <summary>
         /// Aggressive action: invests 30% of money into the strongest business.
         /// </summary>
@@ -93,7 +95,7 @@ namespace EmpireOfCards.Gameplay
                     strongest = biz;
             }
 
-            int investmentCost = Mathf.RoundToInt(rivalMoney * 0.3f);
+            int investmentCost = Mathf.RoundToInt(rivalMoney * AGGRESSIVE_INVESTMENT_RATE);
             if (investmentCost <= 0) return;
 
             rivalMoney -= investmentCost;
@@ -104,18 +106,19 @@ namespace EmpireOfCards.Gameplay
         }
 
         /// <summary>
-        /// Normal growth: +50 money, +passiveCustomerGrowth customers per business.
+        /// Normal growth: +passiveMoneyGrowth money, +passiveCustomerGrowth customers per business.
         /// </summary>
         public void NormalGrowth(
             List<RivalBusiness> businesses,
             ref int rivalMoney)
         {
-            rivalMoney += 50;
+            int moneyGrowth = data != null ? data.passiveMoneyGrowth : 50;
+            rivalMoney += moneyGrowth;
 
-            int growth = data != null ? data.passiveCustomerGrowth : 2;
+            int customerGrowth = data != null ? data.passiveCustomerGrowth : 2;
             foreach (var biz in businesses)
             {
-                biz.customers += growth;
+                biz.customers += customerGrowth;
             }
 
             EventBus.RivalActed("Rival businesses grew steadily.");
@@ -126,10 +129,13 @@ namespace EmpireOfCards.Gameplay
         /// </summary>
         public void EventBonusAction(List<RivalBusiness> businesses)
         {
+            int custBonus = data != null ? data.eventBonusCustomers : 3;
+            int incBonus = data != null ? data.eventBonusIncome : 15;
+
             foreach (var biz in businesses)
             {
-                biz.customers += 3;
-                biz.income += 15;
+                biz.customers += custBonus;
+                biz.income += incBonus;
             }
 
             EventBus.RivalActed("Rakip event bonusunu kullandi.");

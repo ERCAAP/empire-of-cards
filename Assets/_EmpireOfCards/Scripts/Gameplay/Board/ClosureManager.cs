@@ -1,4 +1,5 @@
 using EmpireOfCards.Core;
+using EmpireOfCards.Gameplay;
 
 namespace EmpireOfCards.Gameplay.Board
 {

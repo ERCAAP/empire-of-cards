@@ -34,7 +34,7 @@ namespace EmpireOfCards.UI
 
         /// <summary>
         /// Assigns all dependencies without reflection.
-        /// Called by WiringService instead of RuntimeWiring.SetField().
+        /// Called by WiringService during bootstrap.
         /// </summary>
         public void Init(TopBarUI top, ActionBarUI action, ShopPanel shop,
             ComboPopup combo, EventPopup eventP, RivalPopup rival,
@@ -220,18 +220,8 @@ namespace EmpireOfCards.UI
         }
 
         // ------------------------------------------------------------------
-        // Pause / GameOver menu helpers
+        // GameOver menu helpers
         // ------------------------------------------------------------------
-
-        public void ShowPauseMenu()
-        {
-            // TODO: Activate pause menu panel when created
-        }
-
-        public void HidePauseMenu()
-        {
-            // TODO: Deactivate pause menu panel when created
-        }
 
         public void ShowGameOverScreen()
         {

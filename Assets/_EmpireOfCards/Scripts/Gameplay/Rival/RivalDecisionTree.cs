@@ -1,4 +1,3 @@
-using EmpireOfCards.Core;
 using EmpireOfCards.Data;
 
 namespace EmpireOfCards.Gameplay
@@ -28,6 +27,7 @@ namespace EmpireOfCards.Gameplay
         /// </summary>
         public string DecideAction(
             int playerTerritories,
+            int rivalTerritories,
             int currentTurn,
             int rivalMoney,
             int businessCount,
@@ -57,13 +57,11 @@ namespace EmpireOfCards.Gameplay
             // 4. Event benefits rival => EVENT BONUS
             if (currentTurn >= 12 && aggressionEnabled)
             {
-                int rivalTerritories = GameManager.Instance != null
-                    ? GameManager.Instance.RivalTerritories : 0;
                 if (rivalTerritories < playerTerritories)
                     return "event_bonus";
             }
 
-            // 5. Default => NORMAL GROWTH (+50 money, +2 customers)
+            // 5. Default => NORMAL GROWTH
             return "normal_growth";
         }
     }

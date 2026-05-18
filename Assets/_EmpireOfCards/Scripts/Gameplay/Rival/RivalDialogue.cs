@@ -1,4 +1,3 @@
-using EmpireOfCards.Core;
 using EmpireOfCards.Data;
 using UnityEngine;
 
@@ -23,11 +22,8 @@ namespace EmpireOfCards.Gameplay
         /// <summary>
         /// Updates rival mood based on territory comparison.
         /// </summary>
-        public void UpdateMood(int playerTerritories)
+        public void UpdateMood(int playerTerritories, int rivalTerritories)
         {
-            int rivalTerritories = GameManager.Instance != null
-                ? GameManager.Instance.RivalTerritories : 0;
-
             if (playerTerritories > 5)
                 currentMood = "aggressive";
             else if (rivalTerritories > playerTerritories + 2)
@@ -42,14 +38,9 @@ namespace EmpireOfCards.Gameplay
         /// Returns a taunt based on the current mood and game state.
         /// Categories: growing, playerGrowing, aggressive, losing, winning.
         /// </summary>
-        public string GetTaunt()
+        public string GetTaunt(int playerTerritories, int rivalTerritories)
         {
             if (data == null) return null;
-
-            int rivalTerritories = GameManager.Instance != null
-                ? GameManager.Instance.RivalTerritories : 0;
-            int playerTerritories = GameManager.Instance != null
-                ? GameManager.Instance.PlayerTerritories : 0;
 
             // Aggressive mood
             if (currentMood == "aggressive"

@@ -58,7 +58,7 @@ namespace EmpireOfCards.Gameplay
 
         /// <summary>
         /// Assigns all dependencies without reflection.
-        /// Called by WiringService instead of RuntimeWiring.SetField().
+        /// Called by WiringService during bootstrap.
         /// </summary>
         public void Init(RivalData rivalData)
         {
@@ -123,7 +123,7 @@ namespace EmpireOfCards.Gameplay
         /// <summary>
         /// Main AI turn entry point. Called during the Rival Phase.
         /// </summary>
-        public void TakeTurn(int playerTerritories, int currentTurn)
+        public void TakeTurn(int playerTerritories, int rivalTerritories, int currentTurn)
         {
             if (data == null) return;
 
@@ -135,7 +135,7 @@ namespace EmpireOfCards.Gameplay
                 aggressionEnabled = true;
 
             // Step 3: Update mood
-            dialogue.UpdateMood(playerTerritories);
+            dialogue.UpdateMood(playerTerritories, rivalTerritories);
 
             // Step 4: Execute actions
             int actions = data.actionsPerTurn;
@@ -143,6 +143,7 @@ namespace EmpireOfCards.Gameplay
             {
                 string decision = decisionTree.DecideAction(
                     playerTerritories,
+                    rivalTerritories,
                     currentTurn,
                     rivalMoney,
                     rivalBusinesses.Count,
@@ -157,7 +158,7 @@ namespace EmpireOfCards.Gameplay
             rivalIncome = economy.CalculateRivalIncome(rivalBusinesses);
 
             // Step 6: Deliver a taunt
-            string taunt = dialogue.GetTaunt();
+            string taunt = dialogue.GetTaunt(playerTerritories, rivalTerritories);
             if (!string.IsNullOrEmpty(taunt))
             {
                 EventBus.RivalTaunted(taunt);
@@ -220,9 +221,9 @@ namespace EmpireOfCards.Gameplay
             return economy.CalculateDisabledProductionLoss(rivalBusinesses);
         }
 
-        public string GetTaunt()
+        public string GetTaunt(int playerTerritories, int rivalTerritories)
         {
-            return dialogue.GetTaunt();
+            return dialogue.GetTaunt(playerTerritories, rivalTerritories);
         }
 
         /// <summary>

@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 using EmpireOfCards.Core;
 
@@ -6,6 +7,7 @@ namespace EmpireOfCards.Gameplay.FBI
     /// <summary>
     /// Pure risk calculation logic extracted from FBISystem.
     /// Handles risk addition with security/combo reductions and queries.
+    /// Notifies the owner via a callback instead of reaching into GameManager.
     /// </summary>
     public class RiskCalculator
     {
@@ -13,8 +15,18 @@ namespace EmpireOfCards.Gameplay.FBI
         private bool hasSecuritySystem;
         private bool hasGuvenliSucCombo;
 
+        /// <summary>
+        /// Fired whenever risk changes. Owner (FBISystem) syncs to GameManager.
+        /// </summary>
+        private readonly Action<float> _onRiskChanged;
+
         public float CurrentRisk => currentRisk;
         public bool HasSecuritySystem => hasSecuritySystem;
+
+        public RiskCalculator(Action<float> onRiskChanged = null)
+        {
+            _onRiskChanged = onRiskChanged;
+        }
 
         /// <summary>
         /// Adds FBI risk from an illegal source. Amount is in percentage points (e.g. 10 = +10%).
@@ -32,8 +44,7 @@ namespace EmpireOfCards.Gameplay.FBI
             float effectiveAmount = ApplySecurityReduction(amount);
             currentRisk = Mathf.Clamp(currentRisk + effectiveAmount, 0f, 100f);
 
-            SyncToGameManager();
-            EventBus.FBIRiskUpdated(currentRisk);
+            NotifyRiskChanged();
         }
 
         /// <summary>
@@ -73,8 +84,7 @@ namespace EmpireOfCards.Gameplay.FBI
         public void SetRisk(float risk)
         {
             currentRisk = Mathf.Clamp(risk, 0f, 100f);
-            SyncToGameManager();
-            EventBus.FBIRiskUpdated(currentRisk);
+            NotifyRiskChanged();
         }
 
         /// <summary>
@@ -83,8 +93,7 @@ namespace EmpireOfCards.Gameplay.FBI
         public void ResetRisk()
         {
             currentRisk = 0f;
-            SyncToGameManager();
-            EventBus.FBIRiskUpdated(0f);
+            NotifyRiskChanged();
         }
 
         public void SetSecurityActive(bool active)
@@ -113,15 +122,13 @@ namespace EmpireOfCards.Gameplay.FBI
             currentRisk = 0f;
             hasSecuritySystem = false;
             hasGuvenliSucCombo = false;
-
-            GameManager gm = GameManager.Instance;
-            if (gm != null) gm.SetFBIRisk(0f);
+            NotifyRiskChanged();
         }
 
-        private void SyncToGameManager()
+        private void NotifyRiskChanged()
         {
-            GameManager gm = GameManager.Instance;
-            if (gm != null) gm.SetFBIRisk(currentRisk / 100f); // GameManager stores 0-1
+            _onRiskChanged?.Invoke(currentRisk / 100f);
+            EventBus.FBIRiskUpdated(currentRisk);
         }
     }
 }

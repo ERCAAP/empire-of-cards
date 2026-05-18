@@ -1,6 +1,7 @@
 using UnityEngine;
 using EmpireOfCards.Core;
 using EmpireOfCards.Data;
+using EmpireOfCards.Gameplay;
 
 namespace EmpireOfCards.Gameplay.Board
 {

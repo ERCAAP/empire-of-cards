@@ -32,7 +32,7 @@ namespace EmpireOfCards.UI
 
         /// <summary>
         /// Assigns the ShopManager reference without reflection.
-        /// Called by WiringService instead of RuntimeWiring.SetField().
+        /// Called by WiringService during bootstrap.
         /// </summary>
         public void Init(ShopManager shop)
         {

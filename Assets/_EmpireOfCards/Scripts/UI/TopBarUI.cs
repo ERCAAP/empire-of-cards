@@ -35,7 +35,7 @@ namespace EmpireOfCards.UI
 
         /// <summary>
         /// Assigns all sub-element references without reflection.
-        /// Called by WiringService instead of RuntimeWiring.SetField().
+        /// Called by WiringService during bootstrap.
         /// </summary>
         public void Init(TMP_Text money, TMP_Text turn, Image fbiFill, TMP_Text fbiText)
         {

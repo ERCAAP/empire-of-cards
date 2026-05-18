@@ -1,25 +1,31 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 using EmpireOfCards.Core;
 using EmpireOfCards.Data;
+using EmpireOfCards.Gameplay;
 
 namespace EmpireOfCards.Gameplay.FBI
 {
     /// <summary>
     /// Raid consequence logic extracted from FBISystem.
     /// Handles penalty application, employee removal, and risk reset on raid.
+    /// Uses a callback to apply money penalties instead of reaching into GameManager.
     /// </summary>
     public class RaidExecutor
     {
         private readonly GameBalanceData balanceData;
         private readonly BoardManager boardManager;
         private readonly RiskCalculator riskCalculator;
+        private readonly Action<int> _applyPenalty;
 
-        public RaidExecutor(GameBalanceData balanceData, BoardManager boardManager, RiskCalculator riskCalculator)
+        public RaidExecutor(GameBalanceData balanceData, BoardManager boardManager,
+            RiskCalculator riskCalculator, Action<int> applyPenalty = null)
         {
             this.balanceData = balanceData;
             this.boardManager = boardManager;
             this.riskCalculator = riskCalculator;
+            this._applyPenalty = applyPenalty;
         }
 
         /// <summary>
@@ -32,12 +38,9 @@ namespace EmpireOfCards.Gameplay.FBI
         {
             Debug.Log("[FBISystem] FBI RAID! Applying penalties.");
 
-            GameManager gm = GameManager.Instance;
-            if (gm == null) return;
-
             // Step 1: 300 penalty (from GDD, also in balanceData)
             int penalty = balanceData != null ? balanceData.fbiRaidPenalty : Constants.FBI_RAID_PENALTY;
-            gm.SpendMoney(penalty);
+            _applyPenalty?.Invoke(penalty);
 
             EventBus.FBIRaidOccurred(penalty);
 

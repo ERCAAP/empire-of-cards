@@ -91,7 +91,7 @@ namespace EmpireOfCards.Core
 
         /// <summary>
         /// Assigns all manager dependencies without reflection.
-        /// Called by WiringService instead of RuntimeWiring.SetField().
+        /// Called by WiringService during bootstrap.
         /// </summary>
         public void Init(GameBalanceData balance, DeckPresetData deck, TurnManager tm,
             EconomyManager em, DeckManager dm, BoardManager bm, ComboSystem cs,

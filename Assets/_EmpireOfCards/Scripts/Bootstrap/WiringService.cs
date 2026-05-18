@@ -9,9 +9,7 @@ namespace EmpireOfCards.Bootstrap
     /// <summary>
     /// Wires all manager cross-references, button callbacks, and 3D interaction events.
     /// Pure static helper -- no state of its own.
-    ///
-    /// All wiring uses typed Init() methods instead of the deprecated
-    /// RuntimeWiring.SetField() reflection helper.
+    /// All wiring uses typed Init() methods.
     /// </summary>
     public static class WiringService
     {

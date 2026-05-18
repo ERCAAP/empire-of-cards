@@ -62,7 +62,7 @@ namespace EmpireOfCards.Core.TurnPhases
                 // 4a: Businesses produce products/customers
                 case ResolveStep.BusinessProduce:
                     if (gm.BoardManager != null)
-                        gm.BoardManager.TickClosedBusinesses();
+                        gm.BoardManager.TickBusinesses();
                     break;
 
                 // 4b: Calculate total customers and territory distribution
@@ -108,9 +108,10 @@ namespace EmpireOfCards.Core.TurnPhases
                 // 4e: FBI check, business closure countdown, employee leaving
                 case ResolveStep.DeteriorationCheck:
                     if (gm.FBISystem != null)
+                    {
+                        gm.FBISystem.AccumulateRiskFromBoard();
                         gm.FBISystem.CheckForRaid();
-                    if (gm.BoardManager != null)
-                        gm.BoardManager.TickClosedBusinesses();
+                    }
                     break;
             }
         }

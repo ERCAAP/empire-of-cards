@@ -38,6 +38,9 @@ namespace EmpireOfCards.Data
         public int aggressiveIncomeBoost = 50;
         public int passiveCustomerGrowth = 2;
         public int passiveIncomeGrowth = 10;
+        public int passiveMoneyGrowth = 50;         // Flat money per normal-growth action
+        public int eventBonusCustomers = 3;          // Customers per business from event bonus
+        public int eventBonusIncome = 15;            // Income per business from event bonus
         public string[] possibleBusinessNames;  // ["Tech Store", "Supermarket", ...]
 
         [Header("--- Growth Schedule (GDD Section 8.3) ---")]
