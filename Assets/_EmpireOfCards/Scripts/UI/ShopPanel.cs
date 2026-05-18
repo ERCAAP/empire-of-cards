@@ -134,7 +134,7 @@ namespace EmpireOfCards.UI
 
         private void RefreshDisplay()
         {
-            if (shopManager == null)
+            if (shopManager == null || shopCards == null || shopCards.Length == 0)
                 return;
 
             currentStock = new List<CardData>(shopManager.CurrentShopCards);
@@ -171,7 +171,7 @@ namespace EmpireOfCards.UI
 
         private void UpdateAffordability(int playerMoney)
         {
-            if (shopManager == null || currentStock == null)
+            if (shopManager == null || currentStock == null || shopCards == null)
                 return;
 
             for (int i = 0; i < shopCards.Length; i++)
