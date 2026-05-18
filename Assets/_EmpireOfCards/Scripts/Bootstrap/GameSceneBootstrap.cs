@@ -46,6 +46,30 @@ namespace EmpireOfCards.Bootstrap
         private VFXManager _vfxManager;
         private SaveManager _saveManager;
 
+        // UI sub-element references captured during CreateUI
+        private TopBarUI _topBarUI;
+        private ActionBarUI _actionBarUI;
+        private HandUI _handUI;
+        private ShopPanel _shopPanel;
+        private ComboPopup _comboPopup;
+        private EventPopup _eventPopup;
+        private RivalPopup _rivalPopup;
+        private ScoreScreen _scoreScreen;
+        private GameOverScreen _gameOverScreen;
+
+        // TopBar sub-elements
+        private TMP_Text _moneyText;
+        private TMP_Text _turnText;
+        private Image _fbiBarFillImg;
+
+        // ActionBar sub-elements
+        private Image[] _actionDotImages;
+
+        // AudioManager sources
+        private AudioSource _musicSourceA;
+        private AudioSource _musicSourceB;
+        private AudioSource _sfxSource;
+
         private void Awake()
         {
             // ====== MANAGERS ======
@@ -135,12 +159,15 @@ namespace EmpireOfCards.Bootstrap
             // --- AudioManager ---
             var audioGo = new GameObject("[AudioManager]");
             _audioManager = audioGo.AddComponent<AudioManager>();
-            // Add audio sources
-            var musicSource = audioGo.AddComponent<AudioSource>();
-            musicSource.loop = true;
-            musicSource.playOnAwake = false;
-            var sfxSource = audioGo.AddComponent<AudioSource>();
-            sfxSource.playOnAwake = false;
+            // Add audio sources (need two music sources for crossfade + one SFX)
+            _musicSourceA = audioGo.AddComponent<AudioSource>();
+            _musicSourceA.loop = true;
+            _musicSourceA.playOnAwake = false;
+            _musicSourceB = audioGo.AddComponent<AudioSource>();
+            _musicSourceB.loop = true;
+            _musicSourceB.playOnAwake = false;
+            _sfxSource = audioGo.AddComponent<AudioSource>();
+            _sfxSource.playOnAwake = false;
 
             // --- VFXManager ---
             var vfxGo = new GameObject("VFXManager");
@@ -292,15 +319,17 @@ namespace EmpireOfCards.Bootstrap
             var topBar = CreateUIPanel("TopBar", canvasGo.transform);
             SetAnchors(topBar, new Vector2(0, 1), new Vector2(1, 1), new Vector2(0.5f, 1));
             topBar.sizeDelta = new Vector2(0, 80);
-            topBar.gameObject.AddComponent<TopBarUI>();
+            _topBarUI = topBar.gameObject.AddComponent<TopBarUI>();
 
             // Money display
             var moneyObj = CreateTextElement("MoneyDisplay", topBar, "$500", 36);
             moneyObj.localPosition = new Vector3(-700, -40, 0);
+            _moneyText = moneyObj.GetComponent<TMP_Text>();
 
             // Turn counter
             var turnObj = CreateTextElement("TurnCounter", topBar, "Tur 1/20", 24);
             turnObj.localPosition = new Vector3(0, -40, 0);
+            _turnText = turnObj.GetComponent<TMP_Text>();
 
             // FBI Risk bar
             var fbiBarBg = CreateUIPanel("FBIRiskBar", topBar);
@@ -311,23 +340,25 @@ namespace EmpireOfCards.Bootstrap
 
             var fbiBarFill = CreateUIPanel("Fill", fbiBarBg);
             fbiBarFill.sizeDelta = new Vector2(200, 20);
-            var fbiBarFillImg = fbiBarFill.GetComponent<Image>();
-            fbiBarFillImg.color = Color.green;
+            _fbiBarFillImg = fbiBarFill.GetComponent<Image>();
+            _fbiBarFillImg.color = Color.green;
 
             // --- ActionBar ---
             var actionBar = CreateUIPanel("ActionBar", canvasGo.transform);
             SetAnchors(actionBar, new Vector2(0.5f, 0), new Vector2(0.5f, 0), new Vector2(0.5f, 0));
             actionBar.anchoredPosition = new Vector2(0, 200);
             actionBar.sizeDelta = new Vector2(200, 40);
-            actionBar.gameObject.AddComponent<ActionBarUI>();
+            _actionBarUI = actionBar.gameObject.AddComponent<ActionBarUI>();
 
             // Action dots (3-5)
+            _actionDotImages = new Image[5];
             for (int i = 0; i < 5; i++)
             {
                 var dot = CreateUIPanel($"ActionDot_{i + 1}", actionBar);
                 dot.sizeDelta = new Vector2(30, 30);
                 dot.localPosition = new Vector3((i - 2) * 35f, 0, 0);
-                dot.GetComponent<Image>().color = i < 3 ? Color.green : Color.gray;
+                _actionDotImages[i] = dot.GetComponent<Image>();
+                _actionDotImages[i].color = i < 3 ? Color.green : Color.gray;
                 if (i >= 3) dot.gameObject.SetActive(false); // Hidden until upgrade
             }
 
@@ -336,7 +367,7 @@ namespace EmpireOfCards.Bootstrap
             SetAnchors(handArea, new Vector2(0, 0), new Vector2(1, 0), new Vector2(0.5f, 0));
             handArea.anchoredPosition = new Vector2(0, 80);
             handArea.sizeDelta = new Vector2(0, 160);
-            handArea.gameObject.AddComponent<HandUI>();
+            _handUI = handArea.gameObject.AddComponent<HandUI>();
 
             // --- Buttons ---
             // End Turn Button
@@ -365,7 +396,7 @@ namespace EmpireOfCards.Bootstrap
             shopPanel.offsetMin = Vector2.zero;
             shopPanel.offsetMax = Vector2.zero;
             shopPanel.GetComponent<Image>().color = new Color(0.1f, 0.1f, 0.15f, 0.95f);
-            shopPanel.gameObject.AddComponent<ShopPanel>();
+            _shopPanel = shopPanel.gameObject.AddComponent<ShopPanel>();
             shopPanel.gameObject.SetActive(false);
 
             // Shop title
@@ -387,18 +418,18 @@ namespace EmpireOfCards.Bootstrap
             // --- Popup overlays (hidden by default) ---
             var comboPopup = CreateUIPanel("ComboPopup", canvasGo.transform);
             comboPopup.sizeDelta = new Vector2(600, 100);
-            comboPopup.gameObject.AddComponent<ComboPopup>();
+            _comboPopup = comboPopup.gameObject.AddComponent<ComboPopup>();
             comboPopup.gameObject.SetActive(false);
 
             var eventPopup = CreateUIPanel("EventPopup", canvasGo.transform);
             eventPopup.sizeDelta = new Vector2(400, 300);
-            eventPopup.gameObject.AddComponent<EventPopup>();
+            _eventPopup = eventPopup.gameObject.AddComponent<EventPopup>();
             eventPopup.gameObject.SetActive(false);
 
             var rivalPopup = CreateUIPanel("RivalPopup", canvasGo.transform);
             SetAnchors(rivalPopup, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f));
             rivalPopup.sizeDelta = new Vector2(500, 200);
-            rivalPopup.gameObject.AddComponent<RivalPopup>();
+            _rivalPopup = rivalPopup.gameObject.AddComponent<RivalPopup>();
             rivalPopup.gameObject.SetActive(false);
 
             // --- Score Overlay (hidden by default) ---
@@ -409,7 +440,7 @@ namespace EmpireOfCards.Bootstrap
             scoreOverlay.offsetMin = Vector2.zero;
             scoreOverlay.offsetMax = Vector2.zero;
             scoreOverlay.GetComponent<Image>().color = new Color(0, 0, 0, 0.85f);
-            scoreOverlay.gameObject.AddComponent<ScoreScreen>();
+            _scoreScreen = scoreOverlay.gameObject.AddComponent<ScoreScreen>();
             scoreOverlay.gameObject.SetActive(false);
 
             // --- GameOver Overlay (hidden by default) ---
@@ -420,7 +451,7 @@ namespace EmpireOfCards.Bootstrap
             gameOverOverlay.offsetMin = Vector2.zero;
             gameOverOverlay.offsetMax = Vector2.zero;
             gameOverOverlay.GetComponent<Image>().color = new Color(0, 0, 0, 0.85f);
-            gameOverOverlay.gameObject.AddComponent<GameOverScreen>();
+            _gameOverScreen = gameOverOverlay.gameObject.AddComponent<GameOverScreen>();
             gameOverOverlay.gameObject.SetActive(false);
 
             // --- EventSystem (required for UI interaction) ---
@@ -449,14 +480,84 @@ namespace EmpireOfCards.Bootstrap
 
         private void WireManagerReferences()
         {
-            // Since we can't set [SerializeField] at runtime, we need to use
-            // a public method or reflection. The cleanest approach is to add
-            // an Initialize method to GameManager that accepts all references.
+            // === GameManager: data + all manager references ===
+            RuntimeWiring.SetField(_gameManager, "balanceData", balanceData);
+            RuntimeWiring.SetField(_gameManager, "startingDeck", startingDeck);
+            RuntimeWiring.SetField(_gameManager, "turnManager", _turnManager);
+            RuntimeWiring.SetField(_gameManager, "economyManager", _economyManager);
+            RuntimeWiring.SetField(_gameManager, "deckManager", _deckManager);
+            RuntimeWiring.SetField(_gameManager, "boardManager", _boardManager);
+            RuntimeWiring.SetField(_gameManager, "comboSystem", _comboSystem);
+            RuntimeWiring.SetField(_gameManager, "territoryManager", _territoryManager);
+            RuntimeWiring.SetField(_gameManager, "fbiSystem", _fbiSystem);
+            RuntimeWiring.SetField(_gameManager, "rivalAI", _rivalAI);
+            RuntimeWiring.SetField(_gameManager, "shopManager", _shopManager);
+            RuntimeWiring.SetField(_gameManager, "uiManager", _uiManager);
+            RuntimeWiring.SetField(_gameManager, "audioManager", _audioManager);
+            RuntimeWiring.SetField(_gameManager, "vfxManager", _vfxManager);
+            RuntimeWiring.SetField(_gameManager, "saveManager", _saveManager);
 
-            // For now, log that wiring needs to happen via the Inspector
-            // after the first run, OR we create a dedicated wiring method.
-            Debug.Log("[GameSceneBootstrap] Manager hierarchy created. " +
-                      "Wire SerializeField references in Inspector or via GameManager.Initialize().");
+            // === EconomyManager: balanceData, boardManager, comboSystem ===
+            RuntimeWiring.SetField(_economyManager, "balanceData", balanceData);
+            RuntimeWiring.SetField(_economyManager, "boardManager", _boardManager);
+            RuntimeWiring.SetField(_economyManager, "comboSystem", _comboSystem);
+
+            // === ComboSystem: allCombos, boardManager ===
+            RuntimeWiring.SetField(_comboSystem, "allCombos", allCombos);
+            RuntimeWiring.SetField(_comboSystem, "boardManager", _boardManager);
+
+            // === FBISystem: balanceData, boardManager, comboSystem ===
+            RuntimeWiring.SetField(_fbiSystem, "balanceData", balanceData);
+            RuntimeWiring.SetField(_fbiSystem, "boardManager", _boardManager);
+            RuntimeWiring.SetField(_fbiSystem, "comboSystem", _comboSystem);
+
+            // === RivalAI: data (RivalData) ===
+            RuntimeWiring.SetField(_rivalAI, "data", megaCorpData);
+
+            // === ShopManager: shopPool, deckManager, economyManager, comboSystem ===
+            RuntimeWiring.SetField(_shopManager, "shopPool", shopPool);
+            RuntimeWiring.SetField(_shopManager, "deckManager", _deckManager);
+            RuntimeWiring.SetField(_shopManager, "economyManager", _economyManager);
+            RuntimeWiring.SetField(_shopManager, "comboSystem", _comboSystem);
+
+            // === AudioManager: musicSourceA, musicSourceB, sfxSource ===
+            RuntimeWiring.SetField(_audioManager, "musicSourceA", _musicSourceA);
+            RuntimeWiring.SetField(_audioManager, "musicSourceB", _musicSourceB);
+            RuntimeWiring.SetField(_audioManager, "sfxSource", _sfxSource);
+
+            // === UIManager: all panel references ===
+            RuntimeWiring.SetField(_uiManager, "topBar", _topBarUI);
+            RuntimeWiring.SetField(_uiManager, "actionBar", _actionBarUI);
+            RuntimeWiring.SetField(_uiManager, "shopPanel", _shopPanel);
+            RuntimeWiring.SetField(_uiManager, "handUI", _handUI);
+            RuntimeWiring.SetField(_uiManager, "comboPopup", _comboPopup);
+            RuntimeWiring.SetField(_uiManager, "eventPopup", _eventPopup);
+            RuntimeWiring.SetField(_uiManager, "rivalPopup", _rivalPopup);
+            RuntimeWiring.SetField(_uiManager, "scoreScreen", _scoreScreen);
+            RuntimeWiring.SetField(_uiManager, "gameOverScreen", _gameOverScreen);
+
+            // === TopBarUI: TMP_Text and Image sub-elements ===
+            RuntimeWiring.SetField(_topBarUI, "moneyText", _moneyText);
+            RuntimeWiring.SetField(_topBarUI, "turnText", _turnText);
+            RuntimeWiring.SetField(_topBarUI, "fbiBarFill", _fbiBarFillImg);
+
+            // === ActionBarUI: action dot Image[] ===
+            RuntimeWiring.SetField(_actionBarUI, "actionDots", _actionDotImages);
+
+            // === HandUI: handRoot (its own transform serves as root) ===
+            RuntimeWiring.SetField(_handUI, "handRoot", _handUI.transform);
+            // cardPrefab requires an actual CardUI prefab asset; wire if available
+            if (cardPrefab != null)
+            {
+                var cardUI = cardPrefab.GetComponent<CardUI>();
+                if (cardUI != null)
+                    RuntimeWiring.SetField(_handUI, "cardPrefab", cardUI);
+            }
+
+            // === ShopPanel: shopManager reference ===
+            RuntimeWiring.SetField(_shopPanel, "shopManager", _shopManager);
+
+            Debug.Log("[GameSceneBootstrap] All manager and UI references wired via RuntimeWiring.");
         }
 
         // ================================================================
