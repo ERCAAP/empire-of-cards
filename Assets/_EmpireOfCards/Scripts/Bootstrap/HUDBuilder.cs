@@ -49,7 +49,7 @@ namespace EmpireOfCards.Bootstrap
             hud.moneyText = moneyObj.GetComponent<TMP_Text>();
 
             // Turn counter
-            var turnObj = CreateTextElement("TurnCounter", topBar, "Tur 1/20", 24);
+            var turnObj = CreateTextElement("TurnCounter", topBar, "Turn 1/20", 24);
             turnObj.localPosition = new Vector3(0, -40, 0);
             hud.turnText = turnObj.GetComponent<TMP_Text>();
 
@@ -91,21 +91,21 @@ namespace EmpireOfCards.Bootstrap
             // ============================================================
 
             // End Turn Button
-            var endTurnBtn = CreateButton("EndTurnButton", canvasGo.transform, "TUR BITIR");
+            var endTurnBtn = CreateButton("EndTurnButton", canvasGo.transform, "END TURN");
             SetAnchors(endTurnBtn, new Vector2(1, 0), new Vector2(1, 0), new Vector2(1, 0));
             endTurnBtn.anchoredPosition = new Vector2(-100, 200);
             endTurnBtn.sizeDelta = new Vector2(160, 50);
             hud.endTurnButton = endTurnBtn.GetComponent<Button>();
 
             // Shop Button
-            var shopBtn = CreateButton("ShopButton", canvasGo.transform, "DUKKAN");
+            var shopBtn = CreateButton("ShopButton", canvasGo.transform, "SHOP");
             SetAnchors(shopBtn, new Vector2(0, 0), new Vector2(0, 0), new Vector2(0, 0));
             shopBtn.anchoredPosition = new Vector2(100, 200);
             shopBtn.sizeDelta = new Vector2(140, 50);
             hud.shopButton = shopBtn.GetComponent<Button>();
 
             // Deck Button
-            var deckBtn = CreateButton("DeckButton", canvasGo.transform, "DESTE: 14");
+            var deckBtn = CreateButton("DeckButton", canvasGo.transform, "DECK: 14");
             SetAnchors(deckBtn, new Vector2(0, 0), new Vector2(0, 0), new Vector2(0, 0));
             deckBtn.anchoredPosition = new Vector2(100, 140);
             deckBtn.sizeDelta = new Vector2(140, 40);
@@ -124,7 +124,7 @@ namespace EmpireOfCards.Bootstrap
             shopPanel.gameObject.SetActive(false);
 
             // Shop title
-            CreateTextElement("ShopTitle", shopPanel, "DUKKAN", 32);
+            CreateTextElement("ShopTitle", shopPanel, "SHOP", 32);
 
             // Shop card slots
             for (int i = 0; i < 3; i++)
@@ -135,7 +135,7 @@ namespace EmpireOfCards.Bootstrap
                 shopCard.GetComponent<Image>().color = new Color(0.3f, 0.3f, 0.35f);
             }
 
-            var shopCloseBtn = CreateButton("CloseButton", shopPanel, "KAPAT");
+            var shopCloseBtn = CreateButton("CloseButton", shopPanel, "CLOSE");
             shopCloseBtn.anchoredPosition = new Vector2(0, -200);
             shopCloseBtn.sizeDelta = new Vector2(120, 40);
             hud.shopCloseButton = shopCloseBtn.GetComponent<Button>();

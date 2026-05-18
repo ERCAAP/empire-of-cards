@@ -6,28 +6,28 @@ namespace EmpireOfCards.Data
     [CreateAssetMenu(fileName = "NewRival", menuName = "EmpireOfCards/Rival Data")]
     public class RivalData : ScriptableObject
     {
-        [Header("--- Kimlik ---")]
+        [Header("--- Identity ---")]
         public string rivalId;              // "RIVAL_MegaCorp"
         public string rivalName;            // "MegaCorp"
         public RivalPersonality personality;
         public Sprite portrait;
         [TextArea(1, 2)]
-        public string tagline;              // "Bu sektörde ikimize yer yok."
+        public string tagline;              // "This industry isn't big enough for both of us."
 
-        [Header("--- Başlangıç ---")]
+        [Header("--- Starting Stats ---")]
         public int startingMoney = 400;
-        public int startingIncome = 80;     // İlk işletme geliri
-        public int startingCustomers = 5;   // İlk işletme müşterisi
+        public int startingIncome = 80;     // First business income
+        public int startingCustomers = 5;   // First business customers
         public string startingBusinessName = "MegaCorp HQ";
 
-        [Header("--- Davranış ---")]
-        public int actionsPerTurn = 2;      // Normal: 2 hamle/tur
+        [Header("--- Behavior ---")]
+        public int actionsPerTurn = 2;      // Normal: 2 actions/turn
         [Range(0f, 1f)]
-        public float aggressionThreshold = 0.5f;  // Player territories > threshold → agresif
+        public float aggressionThreshold = 0.5f;  // Player territories > threshold -> aggressive
         public int maxBusinesses = 4;
         public int maxEmployeesPerBusiness = 3;
 
-        [Header("--- Büyüme Parametreleri ---")]
+        [Header("--- Growth Parameters ---")]
         public int businessCostThreshold = 200;
         public int hireCostThreshold = 80;
         public int baseBusinessIncome = 80;
@@ -38,31 +38,31 @@ namespace EmpireOfCards.Data
         public int aggressiveIncomeBoost = 50;
         public int passiveCustomerGrowth = 2;
         public int passiveIncomeGrowth = 10;
-        public string[] possibleBusinessNames;  // ["Teknoloji Mağazası", "Süpermarket", ...]
+        public string[] possibleBusinessNames;  // ["Tech Store", "Supermarket", ...]
 
-        [Header("--- Büyüme Takvimi (GDD Section 8.3) ---")]
+        [Header("--- Growth Schedule (GDD Section 8.3) ---")]
         public RivalMilestone[] growthMilestones;
 
-        [Header("--- Diyalog ---")]
+        [Header("--- Dialogue ---")]
         [TextArea(1, 2)]
-        public string[] growingTaunts;      // Rakip büyürken: "Pazar payımız artıyor."
+        public string[] growingTaunts;      // Rival growing: "Our market share is growing."
         [TextArea(1, 2)]
-        public string[] playerGrowingTaunts;// Sen büyürken: "İlginç bir hamle..."
+        public string[] playerGrowingTaunts;// Player growing: "Interesting move..."
         [TextArea(1, 2)]
-        public string[] aggressiveTaunts;   // Agresifken: "Bu sektörde ikimize yer yok."
+        public string[] aggressiveTaunts;   // Aggressive: "This industry isn't big enough for both of us."
         [TextArea(1, 2)]
-        public string[] losingTaunts;       // Kaybederken: "Bu böyle bitmez."
+        public string[] losingTaunts;       // Losing: "This isn't over."
         [TextArea(1, 2)]
-        public string[] winningTaunts;      // Kazanırken: "Kaçınılmazdı."
+        public string[] winningTaunts;      // Winning: "It was inevitable."
     }
 
     [System.Serializable]
     public class RivalMilestone
     {
-        public int turn;                    // Tur 5, 8, 12, 15 etc
-        public int targetBusinesses;        // Hedef işletme sayısı
-        public int targetEmployees;         // Hedef çalışan sayısı
-        public int targetTerritories;       // Hedef bölge sayısı
-        public bool enableAggression;       // Bu turdan sonra agresif olabilir mi
+        public int turn;                    // Turn 5, 8, 12, 15 etc
+        public int targetBusinesses;        // Target business count
+        public int targetEmployees;         // Target employee count
+        public int targetTerritories;       // Target territory count
+        public bool enableAggression;       // Can be aggressive after this turn
     }
 }

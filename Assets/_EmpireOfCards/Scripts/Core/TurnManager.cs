@@ -120,24 +120,24 @@ namespace EmpireOfCards.Core
             currentPhase = phase;
             EventBus.PhaseStarted(phase);
 
-            switch (phase)
+            IState newState = phase switch
             {
-                case TurnPhase.EventPhase:
-                    _phaseStateMachine.Initialize(new TurnPhases.EventPhase(this));
-                    break;
-                case TurnPhase.DrawPhase:
-                    _phaseStateMachine.Initialize(new TurnPhases.DrawPhase(this));
-                    break;
-                case TurnPhase.PlayPhase:
-                    _phaseStateMachine.Initialize(new TurnPhases.PlayPhase(this));
-                    break;
-                case TurnPhase.ResolvePhase:
-                    _phaseStateMachine.Initialize(new TurnPhases.ResolvePhase(this));
-                    break;
-                case TurnPhase.RivalPhase:
-                    _phaseStateMachine.Initialize(new TurnPhases.RivalPhase(this));
-                    break;
-            }
+                TurnPhase.EventPhase => new TurnPhases.EventPhase(this),
+                TurnPhase.DrawPhase => new TurnPhases.DrawPhase(this),
+                TurnPhase.PlayPhase => new TurnPhases.PlayPhase(this),
+                TurnPhase.ResolvePhase => new TurnPhases.ResolvePhase(this),
+                TurnPhase.RivalPhase => new TurnPhases.RivalPhase(this),
+                _ => null
+            };
+
+            if (newState == null) return;
+
+            // Use ChangeState for subsequent phases so Exit() is called on the previous phase.
+            // Use Initialize only for the very first phase of the turn.
+            if (_phaseStateMachine.CurrentState == null)
+                _phaseStateMachine.Initialize(newState);
+            else
+                _phaseStateMachine.ChangeState(newState);
         }
 
         /// <summary>

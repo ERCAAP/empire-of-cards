@@ -25,7 +25,7 @@ namespace EmpireOfCards.Gameplay
 
         /// <summary>
         /// Returns the effective employee slot count, considering upgrades
-        /// like Otomasyon that close slots.
+        /// like Automation that close slots.
         /// </summary>
         public int GetAvailableEmployeeSlots()
         {
@@ -111,7 +111,7 @@ namespace EmpireOfCards.Gameplay
 
         /// <summary>
         /// Assigns an employee card to a specific business. Returns true on success.
-        /// Checks employee slot limits including Otomasyon upgrade reductions.
+        /// Checks employee slot limits including Automation upgrade reductions.
         /// </summary>
         public bool PlaceEmployee(CardData card, int businessIndex)
         {
@@ -374,7 +374,7 @@ namespace EmpireOfCards.Gameplay
         /// - 15+ turns active
         /// - Business card has canEvolve = true and evolvedForm != null
         /// On evolution: replaces business card with evolved form,
-        /// new stats: Bufe(50/3) -> Restoran(80/5) -> Zincir(120/8)
+        /// new stats: Diner(50/3) -> Restaurant(80/5) -> Chain(120/8)
         /// </summary>
         private void CheckBusinessEvolution(int index, ActiveBusiness business)
         {
@@ -438,7 +438,7 @@ namespace EmpireOfCards.Gameplay
                     {
                         CardData leavingEmployee = business.employees[e];
 
-                        // Sadik Mudur prevents transfer/leaving
+                        // Loyal Manager prevents transfer/leaving
                         if (leavingEmployee != null && leavingEmployee.preventsTransfer)
                             continue;
 
@@ -601,7 +601,7 @@ namespace EmpireOfCards.Gameplay
                     bizCustomers += hasSynergy ? emp.synergyCustomerBonus : emp.customerBonus;
                 }
 
-                // Global customer bonus from Reklam Ajansı
+                // Global customer bonus from Ad Agency
                 bizCustomers += business.businessCard.globalCustomerBonus;
 
                 total += bizCustomers;

@@ -212,21 +212,21 @@ namespace EmpireOfCards.UI.Cards
             switch (card.cardType)
             {
                 case CardType.Business:
-                    return $"Gelir: {card.incomePerTurn}/tur  Musteri: {card.customersPerTurn}/tur  Slot: {card.employeeSlots}";
+                    return $"Income: {card.incomePerTurn}/turn  Customers: {card.customersPerTurn}/turn  Slots: {card.employeeSlots}";
 
                 case CardType.Employee:
-                    return $"Maas: {card.salaryPerTurn}/tur  Musteri: +{card.customerBonus}";
+                    return $"Salary: {card.salaryPerTurn}/turn  Customers: +{card.customerBonus}";
 
                 case CardType.Action:
                     return card.actionFBIRisk > 0
-                        ? $"Etki: {card.actionValue}  FBI: +%{card.actionFBIRisk}"
-                        : $"Etki: {card.actionValue}";
+                        ? $"Effect: {card.actionValue}  FBI: +{card.actionFBIRisk}%"
+                        : $"Effect: {card.actionValue}";
 
                 case CardType.Upgrade:
-                    return card.isGlobalUpgrade ? "Global Upgrade" : "Isletme Upgrade";
+                    return card.isGlobalUpgrade ? "Global Upgrade" : "Business Upgrade";
 
                 case CardType.Event:
-                    return $"Sure: {card.eventDuration} tur";
+                    return $"Duration: {card.eventDuration} turns";
 
                 default:
                     return "";

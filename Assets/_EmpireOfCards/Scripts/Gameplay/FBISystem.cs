@@ -9,11 +9,11 @@ namespace EmpireOfCards.Gameplay
     /// <summary>
     /// FBI risk and raid mechanic matching GDD Section 9.3.
     ///
-    /// - Risk accumulates from illegal cards (Hacker +10%, Dolandirici +12%, etc.)
+    /// - Risk accumulates from illegal cards (Hacker +10%, Fraudster +12%, etc.)
     /// - Each turn end: random(1-100) less than risk% => RAID!
-    /// - Raid: 300 ceza + en pahali illegal calisan kovulur + risk sifirlanir
-    /// - Guvenlik Sistemi: risk artisi %50 azalir (50% reduction on incoming risk, NOT flat -%25)
-    /// - Guvenli Suc combo: further 50% reduction stacks multiplicatively
+    /// - Raid: 300 penalty + most expensive illegal employee fired + risk reset
+    /// - Security System: incoming risk reduced by 50% (NOT flat -25%)
+    /// - Safe Crime combo: further 50% reduction stacks multiplicatively
     /// </summary>
     public class FBISystem : MonoBehaviour
     {
@@ -290,7 +290,7 @@ namespace EmpireOfCards.Gameplay
 
         /// <summary>
         /// Finds the most expensive illegal employee (by buyCost) and removes them.
-        /// GDD says: "en pahali illegal calisan kovulur" on raid.
+        /// GDD says: "most expensive illegal employee is fired" on raid.
         /// </summary>
         private void RemoveMostExpensiveIllegalEmployee()
         {

@@ -102,7 +102,7 @@ namespace EmpireOfCards.Editor
             string path = DataRoot + "/GameBalance.asset";
             var gb = CreateOrReplace<GameBalanceData>(path);
 
-            // Genel
+            // General
             gb.startingMoney          = 500;
             gb.maxTurns               = 20;
             gb.startingActions        = 3;
@@ -114,7 +114,7 @@ namespace EmpireOfCards.Editor
             gb.shopCardsPerTurn       = 3;
             gb.eventInterval          = 3;
 
-            // Ekonomi
+            // Economy
             gb.taxRate                = 0.15f;
             gb.reducedTaxRate         = 0.075f;
             gb.minTaxRate             = 0.03f;
@@ -124,19 +124,19 @@ namespace EmpireOfCards.Editor
             gb.fbiRaidPenalty         = 300;
             gb.fbiStartingRisk        = 0f;
 
-            // Bolge
+            // Territory
             gb.totalTerritories       = 10;
             gb.winTerritories         = 6;
             gb.loseTerritories        = 7;
 
-            // Market Havuzu
+            // Market Pool
             gb.baseMarketCustomers    = 60;
             gb.earlyGrowthPerTurn     = 5;
             gb.midGrowthPerTurn       = 6;
             gb.lateGrowthPerTurn      = 8;
             gb.endGrowthPerTurn       = 10;
 
-            // Skor
+            // Score
             gb.territoryScoreMultiplier   = 500;
             gb.moneyScoreMultiplier       = 1;
             gb.comboScoreMultiplier       = 200;
@@ -145,11 +145,11 @@ namespace EmpireOfCards.Editor
             gb.fbiEvasionBonus            = 50;
             gb.winBonus                   = 1000;
 
-            // Isletme Evrimi
+            // Business Evolution
             gb.evolutionCustomerThreshold = 40;
             gb.evolutionTurnRequirement   = 15;
 
-            // Calisan
+            // Employee
             gb.employeeLeaveTurnThreshold = 8;
 
             MarkDirty(gb);
@@ -195,54 +195,54 @@ namespace EmpireOfCards.Editor
         {
             CardData[] cards = new CardData[8];
 
-            // B01 - Bufe
-            cards[0] = CreateBusiness("B01_Bufe", "Bufe", Rarity.Common,
-                "Kosebasindan bir bufe. Mutevazi ama sadik.", 0, 50, 3, 1,
+            // B01 - Diner
+            cards[0] = CreateBusiness("B01_Bufe", "Diner", Rarity.Common,
+                "Humble beginnings. Everyone's first business.", 0, 50, 3, 1,
                 new[] { CardTag.Food, CardTag.Basic });
             cards[0].canEvolve = true;
 
-            // B02 - Kahveci
-            cards[1] = CreateBusiness("B02_Kahveci", "Kahveci", Rarity.Common,
-                "Trendy bir kahve dukkani. Trend aktifken cok kazandirir.", 150, 80, 5, 2,
+            // B02 - Coffee Shop
+            cards[1] = CreateBusiness("B02_Kahveci", "Coffee Shop", Rarity.Common,
+                "Trend-sensitive. Very profitable at the right time.", 150, 80, 5, 2,
                 new[] { CardTag.Food, CardTag.Coffee, CardTag.Trendy });
             cards[1].hasTrendBonus = true;
             cards[1].trendIncomeMultiplier = 1.5f;
 
-            // B03 - Burger Zinciri
-            cards[2] = CreateBusiness("B03_BurgerZinciri", "Burger Zinciri", Rarity.Uncommon,
-                "Fast-food zinciri. Guclu ve istikrarli.", 250, 100, 6, 3,
+            // B03 - Burger Chain
+            cards[2] = CreateBusiness("B03_BurgerZinciri", "Burger Chain", Rarity.Uncommon,
+                "Many employees = many synergies. But salaries add up.", 250, 100, 6, 3,
                 new[] { CardTag.Food, CardTag.Chain });
 
             // B04 - Tech Startup
             cards[3] = CreateBusiness("B04_TechStartup", "Tech Startup", Rarity.Uncommon,
-                "3 tur sonra aktif olur ama yuksek gelir.", 200, 150, 4, 2,
+                "Patience required. But when it hits, it hits big.", 200, 150, 4, 2,
                 new[] { CardTag.Tech, CardTag.Startup });
             cards[3].activationDelay = 3;
 
-            // B05 - Gece Kulubu
-            cards[4] = CreateBusiness("B05_GeceKulubu", "Gece Kulubu", Rarity.Rare,
-                "Trend aktifken muhtesem, yoksa kapali.", 350, 180, 10, 2,
+            // B05 - Nightclub
+            cards[4] = CreateBusiness("B05_GeceKulubu", "Nightclub", Rarity.Rare,
+                "High reward, high risk. Dead when trends die.", 350, 180, 10, 2,
                 new[] { CardTag.Entertainment, CardTag.Nightlife, CardTag.Trendy });
             cards[4].requiresTrendToOperate = true;
 
-            // B06 - Organik Ciftlik
-            cards[5] = CreateBusiness("B06_OrganikCiftlik", "Organik Ciftlik", Rarity.Common,
-                "Tum Food isletmelere +20 gelir verir.", 120, 40, 2, 1,
+            // B06 - Organic Farm
+            cards[5] = CreateBusiness("B06_OrganikCiftlik", "Organic Farm", Rarity.Common,
+                "Weak alone. But powers up all food businesses.", 120, 40, 2, 1,
                 new[] { CardTag.Food, CardTag.Organic, CardTag.Support });
             cards[5].foodBonusTag = "Food";
             cards[5].foodBonusAmount = 20;
 
-            // B07 - Kripto Borsasi
-            cards[6] = CreateBusiness("B07_KriptoBorsasi", "Kripto Borsasi", Rarity.Rare,
-                "Geliri rastgele: 0 ile 250 arasi. Kumar.", 300, 0, 2, 1,
+            // B07 - Crypto Exchange
+            cards[6] = CreateBusiness("B07_KriptoBorsasi", "Crypto Exchange", Rarity.Rare,
+                "Gambling. Sometimes zero, sometimes jackpot.", 300, 0, 2, 1,
                 new[] { CardTag.Tech, CardTag.Crypto, CardTag.Risky });
             cards[6].hasRandomIncome = true;
             cards[6].randomIncomeMin = 0;
             cards[6].randomIncomeMax = 250;
 
-            // B08 - Reklam Ajansi
-            cards[7] = CreateBusiness("B08_ReklamAjansi", "Reklam Ajansi", Rarity.Uncommon,
-                "Tum isletmelere +2 musteri/tur.", 200, 60, 3, 2,
+            // B08 - Ad Agency
+            cards[7] = CreateBusiness("B08_ReklamAjansi", "Ad Agency", Rarity.Uncommon,
+                "Low income but boosts all your businesses.", 200, 60, 3, 2,
                 new[] { CardTag.Marketing, CardTag.Support });
             cards[7].globalCustomerBonus = 2;
 
@@ -287,110 +287,110 @@ namespace EmpireOfCards.Editor
         {
             CardData[] cards = new CardData[10];
 
-            // C01 - Stajyer
-            cards[0] = CreateEmployee("C01_Stajyer", "Stajyer", Rarity.Common,
-                "Ucuz ve basit. +1 musteri. Aktif: +3 musteri bu tur.", 15, tags: new[] { CardTag.Basic });
+            // C01 - Intern
+            cards[0] = CreateEmployee("C01_Stajyer", "Intern", Rarity.Common,
+                "Cheap but weak. Starter card.", 15, tags: new[] { CardTag.Basic });
             cards[0].customerBonus       = 1;
             cards[0].activeAbilityType   = ActiveAbilityType.AddCustomersThisTurn;
-            cards[0].activeAbilityName   = "Ekstra Caba";
-            cards[0].activeAbilityDesc   = "Bu tur isletmeye +3 musteri ekler.";
+            cards[0].activeAbilityName   = "Hustle";
+            cards[0].activeAbilityDesc   = "Adds +3 customers to this business this turn.";
             cards[0].abilityValue2       = 3;
 
-            // C02 - Caylak Pazarlamaci
-            cards[1] = CreateEmployee("C02_CaylakPazarlamaci", "Caylak Pazarlamaci", Rarity.Common,
-                "+%10 gelir. Aktif: +5 musteri bu tur.", 20, tags: new[] { CardTag.Marketing, CardTag.Basic });
+            // C02 - Junior Marketer
+            cards[1] = CreateEmployee("C02_CaylakPazarlamaci", "Junior Marketer", Rarity.Common,
+                "Small but consistent bonus.", 20, tags: new[] { CardTag.Marketing, CardTag.Basic });
             cards[1].incomeMultiplier    = 0.10f;
             cards[1].activeAbilityType   = ActiveAbilityType.AddCustomersThisTurn;
-            cards[1].activeAbilityName   = "Brosur Dagitimi";
-            cards[1].activeAbilityDesc   = "Bu tur isletmeye +5 musteri ekler.";
+            cards[1].activeAbilityName   = "Campaign";
+            cards[1].activeAbilityDesc   = "Adds +5 customers to this business this turn.";
             cards[1].abilityValue2       = 5;
 
             // C03 - Barista
             cards[2] = CreateEmployee("C03_Barista", "Barista", Rarity.Uncommon,
-                "+3 musteri, Coffee isletmede +6. Aktif: musteri x2 bu tur.", 25,
+                "Doubles in coffee shops.", 25,
                 tags: new[] { CardTag.Food, CardTag.Coffee });
             cards[2].customerBonus         = 3;
             cards[2].synergyCustomerBonus  = 6;
             cards[2].synergyTag            = CardTag.Coffee;
             cards[2].activeAbilityType     = ActiveAbilityType.MultiplyCustomersThisTurn;
-            cards[2].activeAbilityName     = "Latte Festivali";
-            cards[2].activeAbilityDesc     = "Bu tur musteriler x2.";
+            cards[2].activeAbilityName     = "Latte Festival";
+            cards[2].activeAbilityDesc     = "Customers x2 this turn.";
             cards[2].abilityValue1         = 2f;
 
-            // C04 - Sef
-            cards[3] = CreateEmployee("C04_Sef", "Sef", Rarity.Uncommon,
-                "+3 musteri, Food isletmede +30 gelir. Aktif: gelir x1.5 bu tur.", 30,
+            // C04 - Chef
+            cards[3] = CreateEmployee("C04_Sef", "Chef", Rarity.Uncommon,
+                "Strong in food sector.", 30,
                 tags: new[] { CardTag.Food });
             cards[3].customerBonus       = 3;
             cards[3].incomeFlatBonus     = 30f;
             cards[3].incomeBonusTag      = CardTag.Food;
             cards[3].activeAbilityType   = ActiveAbilityType.MultiplyIncomeThisTurn;
-            cards[3].activeAbilityName   = "Ozel Menu";
-            cards[3].activeAbilityDesc   = "Bu tur gelir x1.5.";
+            cards[3].activeAbilityName   = "Special Menu";
+            cards[3].activeAbilityDesc   = "Income x1.5 this turn.";
             cards[3].abilityValue1       = 1.5f;
 
-            // C05 - Marketing Gurusu
-            cards[4] = CreateEmployee("C05_MarketingGurusu", "Marketing Gurusu", Rarity.Rare,
-                "+%25 gelir. Aktif: tum isletmelere +3 musteri.", 45,
+            // C05 - Marketing Guru
+            cards[4] = CreateEmployee("C05_MarketingGurusu", "Marketing Guru", Rarity.Rare,
+                "Expensive but powerful. Combo piece.", 45,
                 tags: new[] { CardTag.Marketing, CardTag.Guru });
             cards[4].incomeMultiplier    = 0.25f;
             cards[4].activeAbilityType   = ActiveAbilityType.AddCustomersToAll;
-            cards[4].activeAbilityName   = "Kampanya Patlamasi";
-            cards[4].activeAbilityDesc   = "Tum isletmelere +3 musteri.";
+            cards[4].activeAbilityName   = "Viral Campaign";
+            cards[4].activeAbilityDesc   = "+3 customers to all businesses.";
             cards[4].abilityValue2       = 3;
 
             // C06 - Influencer
             cards[5] = CreateEmployee("C06_Influencer", "Influencer", Rarity.Rare,
-                "+5 musteri, Trendy'de +12. Aktif: rakipten 5 musteri cal.", 50,
+                "Explodes during trends. Average otherwise.", 50,
                 tags: new[] { CardTag.Marketing, CardTag.Influencer, CardTag.Trendy });
             cards[5].customerBonus         = 5;
             cards[5].synergyCustomerBonus  = 12;
             cards[5].synergyTag            = CardTag.Trendy;
             cards[5].activeAbilityType     = ActiveAbilityType.StealCustomersFromRival;
-            cards[5].activeAbilityName     = "Viral Icerik";
-            cards[5].activeAbilityDesc     = "Rakipten 5 musteri cal.";
+            cards[5].activeAbilityName     = "Post Story";
+            cards[5].activeAbilityDesc     = "Steal 5 customers from rival.";
             cards[5].abilityValue2         = 5;
 
             // C07 - Hacker
             cards[6] = CreateEmployee("C07_Hacker", "Hacker", Rarity.Rare,
-                "Rakipten -4 musteri calar ama FBI riski +%10/tur.", 60,
+                "Powerful but dangerous. FBI risk every turn.", 60,
                 tags: new[] { CardTag.Tech, CardTag.Illegal });
             cards[6].customerBonus       = -4;
             cards[6].fbiRiskPerTurn      = 10;
             cards[6].activeAbilityType   = ActiveAbilityType.None;
-            cards[6].activeAbilityName   = "Pasif Sizma";
-            cards[6].activeAbilityDesc   = "Her tur rakipten 4 musteri calar (pasif).";
+            cards[6].activeAbilityName   = "Passive Infiltration";
+            cards[6].activeAbilityDesc   = "Steals 4 customers from rival each turn (passive).";
 
-            // C08 - Muhasebeci
-            cards[7] = CreateEmployee("C08_Muhasebeci", "Muhasebeci", Rarity.Uncommon,
-                "Vergiyi %50 azaltir. Aktif: bu tur vergi %0.", 30,
+            // C08 - Accountant
+            cards[7] = CreateEmployee("C08_Muhasebeci", "Accountant", Rarity.Uncommon,
+                "Boring but saves every penny.", 30,
                 tags: new[] { CardTag.Finance });
             cards[7].taxReduction        = 0.5f;
             cards[7].activeAbilityType   = ActiveAbilityType.NullifyTaxThisTurn;
-            cards[7].activeAbilityName   = "Yaratici Muhasebe";
-            cards[7].activeAbilityDesc   = "Bu tur vergi sifirlanir.";
+            cards[7].activeAbilityName   = "Tax Plan";
+            cards[7].activeAbilityDesc   = "Tax is nullified this turn.";
 
-            // C09 - Dolandirici
-            cards[8] = CreateEmployee("C09_Dolandirici", "Dolandirici", Rarity.Rare,
-                "+120 yasadisi gelir/tur. FBI +%12/tur. Aktif: +300 ama ceza.", 40,
+            // C09 - Fraudster
+            cards[8] = CreateEmployee("C09_Dolandirici", "Fraudster", Rarity.Rare,
+                "Fast money. But FBI is knocking.", 40,
                 tags: new[] { CardTag.Illegal, CardTag.Finance });
             cards[8].illegalIncomePerTurn = 120;
             cards[8].fbiRiskPerTurn       = 12;
             cards[8].activeAbilityType    = ActiveAbilityType.BonusIncomeWithPenalty;
-            cards[8].activeAbilityName    = "Buyuk Vurgun";
-            cards[8].activeAbilityDesc    = "+300 aninda ama sonraki tur -150.";
+            cards[8].activeAbilityName    = "Ponzi";
+            cards[8].activeAbilityDesc    = "+300 instant but -150 next turn.";
             cards[8].abilityValue2        = 300;
 
-            // C10 - Sadik Mudur
-            cards[9] = CreateEmployee("C10_SadikMudur", "Sadik Mudur", Rarity.Uncommon,
-                "Transfer koruması. +20 gelir. Aktif: tum calisanlar motive.", 45,
+            // C10 - Loyal Manager
+            cards[9] = CreateEmployee("C10_SadikMudur", "Loyal Manager", Rarity.Uncommon,
+                "Rival can't steal employees. Defensive.", 45,
                 tags: new[] { CardTag.Management });
             cards[9].customerBonus       = 0;
             cards[9].incomeFlatBonus     = 20f;
             cards[9].preventsTransfer    = true;
             cards[9].activeAbilityType   = ActiveAbilityType.MotivateAllEmployees;
-            cards[9].activeAbilityName   = "Motivasyon Konusmasi";
-            cards[9].activeAbilityDesc   = "Tum calisanlar bu tur +1 musteri.";
+            cards[9].activeAbilityName   = "Motivation";
+            cards[9].activeAbilityDesc   = "All employees gain +1 customer this turn.";
 
             return cards;
         }
@@ -435,66 +435,66 @@ namespace EmpireOfCards.Editor
         {
             CardData[] cards = new CardData[10];
 
-            // A01 - El Ilani
-            cards[0] = CreateAction("A01_ElIlani", "El Ilani", Rarity.Common,
-                "Rastgele isletmeye +3 musteri.", 0,
+            // A01 - Flyer
+            cards[0] = CreateAction("A01_ElIlani", "Flyer", Rarity.Common,
+                "Free but weak. Starter card.", 0,
                 ActionEffectType.AddCustomersToRandom, 3, 0f, 0,
                 new[] { CardTag.Marketing, CardTag.Basic });
 
-            // A02 - Kucuk Yatirim
-            cards[1] = CreateAction("A02_KucukYatirim", "Kucuk Yatirim", Rarity.Common,
-                "Aninda +150 para.", 0,
+            // A02 - Small Investment
+            cards[1] = CreateAction("A02_KucukYatirim", "Small Investment", Rarity.Common,
+                "Quick cash. Starter card.", 0,
                 ActionEffectType.AddMoneyInstant, 150, 0f, 0,
                 new[] { CardTag.Finance, CardTag.Basic });
 
-            // A03 - Viral Pazarlama
-            cards[2] = CreateAction("A03_ViralPazarlama", "Viral Pazarlama", Rarity.Uncommon,
-                "Tum musteriler x2 bu tur.", 150,
+            // A03 - Viral Marketing
+            cards[2] = CreateAction("A03_ViralPazarlama", "Viral Marketing", Rarity.Uncommon,
+                "Explodes when played at the right turn.", 150,
                 ActionEffectType.MultiplyAllCustomers, 0, 2f, 0,
                 new[] { CardTag.Marketing, CardTag.Viral });
 
-            // A04 - Dusmanca Devralma
-            cards[3] = CreateAction("A04_DusmancaDevralma", "Dusmanca Devralma", Rarity.Rare,
-                "Rakibin en zayif isletmesini kapat.", 400,
+            // A04 - Hostile Takeover
+            cards[3] = CreateAction("A04_DusmancaDevralma", "Hostile Takeover", Rarity.Rare,
+                "Expensive but directly weakens rival.", 400,
                 ActionEffectType.CloseRivalWeakestBusiness, 0, 0f, 0,
                 new[] { CardTag.Aggressive });
 
-            // A05 - Sahte Yorumlar
-            cards[4] = CreateAction("A05_SahteYorumlar", "Sahte Yorumlar", Rarity.Uncommon,
-                "+8 musteri ama FBI +%12.", 80,
+            // A05 - Fake Reviews
+            cards[4] = CreateAction("A05_SahteYorumlar", "Fake Reviews", Rarity.Uncommon,
+                "Cheap customers. But risky.", 80,
                 ActionEffectType.AddCustomersWithFBI, 8, 0f, 12,
                 new[] { CardTag.Marketing, CardTag.Illegal });
 
-            // A06 - Fiyat Kirma
-            cards[5] = CreateAction("A06_FiyatKirma", "Fiyat Kirma", Rarity.Uncommon,
-                "+8 musteri cal, gelir %50 feda.", 0,
+            // A06 - Price Slashing
+            cards[5] = CreateAction("A06_FiyatKirma", "Price Slashing", Rarity.Uncommon,
+                "Sacrifice income, steal customers.", 0,
                 ActionEffectType.StealCustomersHalfIncome, 8, 0f, 0,
                 new[] { CardTag.Aggressive, CardTag.Pricing });
             cards[5].actionIncomeSacrifice = 0.5f;
 
-            // A07 - Sabotaj
-            cards[6] = CreateAction("A07_Sabotaj", "Sabotaj", Rarity.Rare,
-                "Rakip 1 tur uretim yapamaz. FBI +%15.", 250,
+            // A07 - Sabotage
+            cards[6] = CreateAction("A07_Sabotaj", "Sabotage", Rarity.Rare,
+                "Powerful but very risky.", 250,
                 ActionEffectType.DisableRivalOneTurn, 0, 0f, 15,
                 new[] { CardTag.Aggressive, CardTag.Illegal });
 
-            // A08 - Yatirimci Sunumu
-            cards[7] = CreateAction("A08_YatirimciSunumu", "Yatirimci Sunumu", Rarity.Uncommon,
-                "+600 aninda, 3 tur %15 gelir yatirimciya.", 0,
+            // A08 - Investor Pitch
+            cards[7] = CreateAction("A08_YatirimciSunumu", "Investor Pitch", Rarity.Uncommon,
+                "Big money now. Pay later.", 0,
                 ActionEffectType.MoneyNowPayLater, 600, 0f, 0,
                 new[] { CardTag.Finance, CardTag.Investor });
             cards[7].actionDebtDuration = 3;
             cards[7].actionDebtPercent  = 0.15f;
 
-            // A09 - Acil Ise Alim
-            cards[8] = CreateAction("A09_AcilIseAlim", "Acil Ise Alim", Rarity.Uncommon,
-                "Rastgele calisan cek ve hemen oyna.", 100,
+            // A09 - Emergency Hire
+            cards[8] = CreateAction("A09_AcilIseAlim", "Emergency Hire", Rarity.Uncommon,
+                "Quick employee. But random.", 100,
                 ActionEffectType.DrawAndPlayEmployee, 0, 0f, 0,
                 new[] { CardTag.Hiring });
 
-            // A10 - Tasfiye Satisi
-            cards[9] = CreateAction("A10_TasfiyeSatisi", "Tasfiye Satisi", Rarity.Common,
-                "Isletmeyi sat, 2x fiyatini geri al.", 0,
+            // A10 - Liquidation Sale
+            cards[9] = CreateAction("A10_TasfiyeSatisi", "Liquidation Sale", Rarity.Common,
+                "Last resort. Or strategic move.", 0,
                 ActionEffectType.SacrificeBusiness, 0, 0f, 0,
                 new[] { CardTag.Finance, CardTag.Desperate });
 
@@ -533,39 +533,39 @@ namespace EmpireOfCards.Editor
         {
             CardData[] cards = new CardData[6];
 
-            // U01 - Ofis Malzemeleri
-            cards[0] = CreateUpgrade("U01_OfisMalzemeleri", "Ofis Malzemeleri", Rarity.Common,
-                "Bir isletmenin gelirine +%10.", 0,
+            // U01 - Office Supplies
+            cards[0] = CreateUpgrade("U01_OfisMalzemeleri", "Office Supplies", Rarity.Common,
+                "Small but free. Starter card.", 0,
                 UpgradeEffectType.IncomePercentSingle, 10f, false, 0, 0,
                 new[] { CardTag.Basic, CardTag.Office });
 
-            // U02 - Otomasyon
-            cards[1] = CreateUpgrade("U02_Otomasyon", "Otomasyon", Rarity.Uncommon,
-                "+%30 gelir ama 1 calisan slotu kapanir.", 300,
+            // U02 - Automation
+            cards[1] = CreateUpgrade("U02_Otomasyon", "Automation", Rarity.Uncommon,
+                "Strong income boost. But loses an employee slot.", 300,
                 UpgradeEffectType.IncomePercentWithSlotLoss, 30f, false, 1, 0,
                 new[] { CardTag.Tech, CardTag.Automation });
 
-            // U03 - Teslimat Agi
-            cards[2] = CreateUpgrade("U03_TeslimatAgi", "Teslimat Agi", Rarity.Uncommon,
-                "Tum isletmelere +2 musteri/tur.", 250,
+            // U03 - Delivery Network
+            cards[2] = CreateUpgrade("U03_TeslimatAgi", "Delivery Network", Rarity.Uncommon,
+                "Very valuable with multiple businesses.", 250,
                 UpgradeEffectType.GlobalCustomerPerTurn, 2f, true, 0, 0,
                 new[] { CardTag.Logistics });
 
-            // U04 - Reklam Panosu
-            cards[3] = CreateUpgrade("U04_ReklamPanosu", "Reklam Panosu", Rarity.Common,
-                "+3 musteri/tur genel.", 120,
+            // U04 - Billboard
+            cards[3] = CreateUpgrade("U04_ReklamPanosu", "Billboard", Rarity.Common,
+                "Cheap, simple, effective.", 120,
                 UpgradeEffectType.GlobalCustomerFlat, 3f, true, 0, 0,
                 new[] { CardTag.Marketing });
 
-            // U05 - Guvenlik Sistemi
-            cards[4] = CreateUpgrade("U05_GuvenlikSistemi", "Guvenlik Sistemi", Rarity.Uncommon,
-                "FBI riski -%25.", 280,
+            // U05 - Security System
+            cards[4] = CreateUpgrade("U05_GuvenlikSistemi", "Security System", Rarity.Uncommon,
+                "Essential for illegal strategies.", 280,
                 UpgradeEffectType.ReduceFBIRisk, 25f, true, 0, 0,
                 new[] { CardTag.Security });
 
-            // U06 - Yapay Zeka Asistani
-            cards[5] = CreateUpgrade("U06_YapayZekaAsistani", "Yapay Zeka Asistani", Rarity.Rare,
-                "+1 ekstra aksiyon hakki.", 400,
+            // U06 - AI Assistant
+            cards[5] = CreateUpgrade("U06_YapayZekaAsistani", "AI Assistant", Rarity.Rare,
+                "The game's strongest upgrade. Extra action per turn.", 400,
                 UpgradeEffectType.ExtraAction, 0f, true, 0, 1,
                 new[] { CardTag.Tech, CardTag.AI });
 
@@ -601,39 +601,39 @@ namespace EmpireOfCards.Editor
         {
             CardData[] cards = new CardData[6];
 
-            // E01 - Kahve Cilginligi
-            cards[0] = CreateEvent("E01_KahveCilginligi", "Kahve Cilginligi", Rarity.Common,
-                "2 tur: Food/Coffee isletmelere +%50 musteri.", 2,
+            // E01 - Coffee Craze
+            cards[0] = CreateEvent("E01_KahveCilginligi", "Coffee Craze", Rarity.Common,
+                "Food sector booming.", 2,
                 EventEffectType.TagCustomerBoost, 0.5f,
                 new[] { CardTag.Food, CardTag.Coffee }, 0, 0f);
 
-            // E02 - Ekonomik Kriz
-            cards[1] = CreateEvent("E02_EkonomikKriz", "Ekonomik Kriz", Rarity.Common,
-                "2 tur: Tum gelirler -%30.", 2,
+            // E02 - Economic Crisis
+            cards[1] = CreateEvent("E02_EkonomikKriz", "Economic Crisis", Rarity.Common,
+                "Everyone suffers. But the prepared find opportunity.", 2,
                 EventEffectType.AllIncomeReduction, -0.3f,
                 new CardTag[0], 0, 0f);
 
             // E03 - Viral Trend
             cards[2] = CreateEvent("E03_ViralTrend", "Viral Trend", Rarity.Uncommon,
-                "1 tur: Marketing kartlari 2x etki.", 1,
+                "Marketing-heavy strategy shines here.", 1,
                 EventEffectType.TagDoubleEffect, 1.0f,
                 new[] { CardTag.Marketing }, 0, 0f);
 
-            // E04 - Veri Sizintisi
-            cards[3] = CreateEvent("E04_VeriSizintisi", "Veri Sizintisi", Rarity.Uncommon,
-                "1 tur: Tech isletmeler -5 musteri.", 1,
+            // E04 - Data Breach
+            cards[3] = CreateEvent("E04_VeriSizintisi", "Data Breach", Rarity.Uncommon,
+                "Tech-focused beware. Security investment matters.", 1,
                 EventEffectType.TagCustomerPenalty, 0f,
                 new[] { CardTag.Tech }, -5, 0f);
 
-            // E05 - Yatirimci Sezonu
-            cards[4] = CreateEvent("E05_YatirimciSezonu", "Yatirimci Sezonu", Rarity.Uncommon,
-                "1 tur: Finance kartlar 2x etki.", 1,
+            // E05 - Investor Season
+            cards[4] = CreateEvent("E05_YatirimciSezonu", "Investor Season", Rarity.Uncommon,
+                "Play investment cards this turn = jackpot.", 1,
                 EventEffectType.TagDoubleEffectFinance, 1.0f,
                 new[] { CardTag.Finance }, 0, 0f);
 
-            // E06 - Iptal Kulturu
-            cards[5] = CreateEvent("E06_IptalKulturu", "Iptal Kulturu", Rarity.Rare,
-                "1 tur: FBI >%30 olan oyuncunun musterileri -%40.", 1,
+            // E06 - Cancel Culture
+            cards[5] = CreateEvent("E06_IptalKulturu", "Cancel Culture", Rarity.Rare,
+                "Disaster for dirty players. Opportunity for clean ones.", 1,
                 EventEffectType.HighFBICustomerPenalty, -0.4f,
                 new CardTag[0], 0, 0.3f);
 
@@ -668,10 +668,10 @@ namespace EmpireOfCards.Editor
         // ===================================================================
         private static void GenerateStartingDeck(CardData[] allCards)
         {
-            string path = DecksRoot + "/BaslangicDestesi.asset";
+            string path = DecksRoot + "/StarterDeck.asset";
             var deck = CreateOrReplace<DeckPresetData>(path);
 
-            deck.presetName    = "Baslangic Destesi";
+            deck.presetName    = "Starter Deck";
             deck.startingMoney = 500;
 
             // Find the cards we need by ID
@@ -694,7 +694,7 @@ namespace EmpireOfCards.Editor
             };
 
             MarkDirty(deck);
-            Debug.Log("[AssetGenerator] BaslangicDestesi.asset created (14 cards).");
+            Debug.Log("[AssetGenerator] StarterDeck.asset created (14 cards).");
         }
 
         private static CardData FindCard(CardData[] cards, string id)
@@ -718,21 +718,21 @@ namespace EmpireOfCards.Editor
             rival.rivalId                  = "RIVAL_MegaCorp";
             rival.rivalName                = "MegaCorp";
             rival.personality              = RivalPersonality.Balanced;
-            rival.tagline                  = "Bu sektorde ikimize yer yok.";
+            rival.tagline                  = "This industry isn't big enough for both of us.";
 
-            // Baslangic
+            // Starting Stats
             rival.startingMoney            = 400;
             rival.startingIncome           = 80;
             rival.startingCustomers        = 5;
             rival.startingBusinessName     = "MegaCorp HQ";
 
-            // Davranis
+            // Behavior
             rival.actionsPerTurn           = 2;
             rival.aggressionThreshold      = 0.5f;
             rival.maxBusinesses            = 4;
             rival.maxEmployeesPerBusiness  = 3;
 
-            // Buyume Parametreleri
+            // Growth Parameters
             rival.businessCostThreshold    = 200;
             rival.hireCostThreshold        = 80;
             rival.baseBusinessIncome       = 80;
@@ -746,13 +746,13 @@ namespace EmpireOfCards.Editor
 
             rival.possibleBusinessNames = new[]
             {
-                "Teknoloji Magazasi",
+                "Tech Store",
                 "Supermarket",
-                "Kafe Zinciri",
-                "Fitness Salonu"
+                "Cafe Chain",
+                "Fitness Center"
             };
 
-            // Buyume Takvimi (GDD Section 8.3)
+            // Growth Schedule (GDD Section 8.3)
             rival.growthMilestones = new RivalMilestone[]
             {
                 new RivalMilestone
@@ -789,31 +789,31 @@ namespace EmpireOfCards.Editor
                 },
             };
 
-            // Diyalog
+            // Dialogue
             rival.growingTaunts = new[]
             {
-                "Pazar payimiz artiyor.",
-                "Bu sadece baslangic."
+                "Our market share is growing.",
+                "This is just the beginning."
             };
             rival.playerGrowingTaunts = new[]
             {
-                "Ilginc bir hamle...",
-                "Bunu beklemiyordum."
+                "Interesting move...",
+                "Didn't see that coming."
             };
             rival.aggressiveTaunts = new[]
             {
-                "Bu sektorde ikimize yer yok.",
-                "Rekabet sertlesiyor."
+                "This industry isn't big enough for both of us.",
+                "Competition is heating up."
             };
             rival.losingTaunts = new[]
             {
-                "Bu boyle bitmez.",
-                "Geri donecegiz."
+                "This isn't over.",
+                "We'll be back."
             };
             rival.winningTaunts = new[]
             {
-                "Kacinilmazdi.",
-                "Piyasa bizim."
+                "It was inevitable.",
+                "The market is ours."
             };
 
             MarkDirty(rival);
@@ -825,14 +825,14 @@ namespace EmpireOfCards.Editor
         // ===================================================================
         private static void GenerateCombos(CardData[] allCards)
         {
-            // COMBO 01 - Latte Sanati (Easy)
+            // COMBO 01 - Latte Art (Easy)
             {
-                var combo = CreateOrReplace<ComboData>(CombosRoot + "/COMBO_01_LatteSanati.asset");
-                combo.comboId       = "COMBO_01_LatteSanati";
-                combo.comboName     = "Latte Sanati";
-                combo.displayText   = "LATTE SANATI!";
+                var combo = CreateOrReplace<ComboData>(CombosRoot + "/COMBO_01_LatteArt.asset");
+                combo.comboId       = "COMBO_01_LatteArt";
+                combo.comboName     = "Latte Art";
+                combo.displayText   = "LATTE ART!";
                 combo.tier          = ComboTier.Easy;
-                combo.description   = "Kahveci + Barista = musteri x2, gelir +%50.";
+                combo.description   = "Coffee Shop + Barista = customers x2, income +50%.";
                 combo.requiredCardIds = new[] { "B02_Kahveci", "C03_Barista" };
                 combo.requiredTags    = new[] { CardTag.Coffee };
                 combo.requiresSpecificPlacement = true;
@@ -840,21 +840,21 @@ namespace EmpireOfCards.Editor
                 combo.businessCardId  = "B02_Kahveci";
                 combo.customerMultiplier = 2f;
                 combo.incomeMultiplier   = 1.5f;
-                combo.glowColor          = new Color(0.6f, 0.4f, 0.2f, 1f); // kahve rengi
+                combo.glowColor          = new Color(0.6f, 0.4f, 0.2f, 1f); // coffee color
                 combo.comboSoundId       = "combo_trigger";
                 combo.screenShakeIntensity = 0.3f;
                 combo.screenShakeDuration  = 0.3f;
                 MarkDirty(combo);
             }
 
-            // COMBO 02 - Gurme Deneyimi (Easy)
+            // COMBO 02 - Organic Synergy (Easy)
             {
-                var combo = CreateOrReplace<ComboData>(CombosRoot + "/COMBO_02_GurmeDeneyimi.asset");
-                combo.comboId       = "COMBO_02_GurmeDeneyimi";
-                combo.comboName     = "Gurme Deneyimi";
-                combo.displayText   = "GURME DENEYIMI!";
+                var combo = CreateOrReplace<ComboData>(CombosRoot + "/COMBO_02_OrganicSynergy.asset");
+                combo.comboId       = "COMBO_02_OrganicSynergy";
+                combo.comboName     = "Organic Synergy";
+                combo.displayText   = "ORGANIC SYNERGY!";
                 combo.tier          = ComboTier.Easy;
-                combo.description   = "Burger Zinciri + Sef = gelir +30, musteri +%50.";
+                combo.description   = "Burger Chain + Chef = income +30, customers +50%.";
                 combo.requiredCardIds = new[] { "B03_BurgerZinciri", "C04_Sef" };
                 combo.requiredTags    = new[] { CardTag.Food };
                 combo.requiresSpecificPlacement = true;
@@ -862,42 +862,42 @@ namespace EmpireOfCards.Editor
                 combo.businessCardId  = "B03_BurgerZinciri";
                 combo.bonusIncome     = 30;
                 combo.customerMultiplier = 1.5f;
-                combo.glowColor          = new Color(1f, 0.5f, 0f, 1f); // turuncu
+                combo.glowColor          = new Color(1f, 0.5f, 0f, 1f); // orange
                 combo.comboSoundId       = "combo_trigger";
                 combo.screenShakeIntensity = 0.3f;
                 combo.screenShakeDuration  = 0.3f;
                 MarkDirty(combo);
             }
 
-            // COMBO 03 - Dijital Pazarlama (Easy)
+            // COMBO 03 - Viral Storm (Easy)
             {
-                var combo = CreateOrReplace<ComboData>(CombosRoot + "/COMBO_03_DijitalPazarlama.asset");
-                combo.comboId       = "COMBO_03_DijitalPazarlama";
-                combo.comboName     = "Dijital Pazarlama";
-                combo.displayText   = "DIJITAL PAZARLAMA!";
+                var combo = CreateOrReplace<ComboData>(CombosRoot + "/COMBO_03_ViralStorm.asset");
+                combo.comboId       = "COMBO_03_ViralStorm";
+                combo.comboName     = "Viral Storm";
+                combo.displayText   = "VIRAL STORM!";
                 combo.tier          = ComboTier.Easy;
-                combo.description   = "Tech Startup + Marketing Gurusu = gelir x2.";
+                combo.description   = "Tech Startup + Marketing Guru = income x2.";
                 combo.requiredCardIds = new[] { "B04_TechStartup", "C05_MarketingGurusu" };
                 combo.requiredTags    = new[] { CardTag.Tech, CardTag.Marketing };
                 combo.requiresSpecificPlacement = true;
                 combo.employeeCardId  = "C05_MarketingGurusu";
                 combo.businessCardId  = "B04_TechStartup";
                 combo.incomeMultiplier = 2f;
-                combo.glowColor        = new Color(0f, 0.8f, 1f, 1f); // mavi
+                combo.glowColor        = new Color(0f, 0.8f, 1f, 1f); // blue
                 combo.comboSoundId     = "combo_trigger";
                 combo.screenShakeIntensity = 0.3f;
                 combo.screenShakeDuration  = 0.3f;
                 MarkDirty(combo);
             }
 
-            // COMBO 04 - Gece Hayati Imparatoru (Medium)
+            // COMBO 04 - Fast Food Empire (Medium)
             {
-                var combo = CreateOrReplace<ComboData>(CombosRoot + "/COMBO_04_GeceHayatiImparatoru.asset");
-                combo.comboId       = "COMBO_04_GeceHayatiImparatoru";
-                combo.comboName     = "Gece Hayati Imparatoru";
-                combo.displayText   = "GECE HAYATI IMPARATORU!";
+                var combo = CreateOrReplace<ComboData>(CombosRoot + "/COMBO_04_FastFoodEmpire.asset");
+                combo.comboId       = "COMBO_04_FastFoodEmpire";
+                combo.comboName     = "Fast Food Empire";
+                combo.displayText   = "FAST FOOD EMPIRE!";
                 combo.tier          = ComboTier.Medium;
-                combo.description   = "Gece Kulubu + Influencer + Viral Trend eventi = musteri x3.";
+                combo.description   = "Nightclub + Influencer + Viral Trend event = customers x3.";
                 combo.requiredCardIds = new[] { "B05_GeceKulubu", "C06_Influencer" };
                 combo.requiredTags    = new[] { CardTag.Trendy, CardTag.Entertainment };
                 combo.requiresSpecificPlacement = true;
@@ -906,61 +906,61 @@ namespace EmpireOfCards.Editor
                 combo.requiresActiveEvent = true;
                 combo.requiredEventId     = "E03_ViralTrend";
                 combo.customerMultiplier  = 3f;
-                combo.glowColor           = new Color(0.8f, 0f, 1f, 1f); // mor
+                combo.glowColor           = new Color(0.8f, 0f, 1f, 1f); // purple
                 combo.comboSoundId        = "combo_trigger";
                 combo.screenShakeIntensity = 0.5f;
                 combo.screenShakeDuration  = 0.4f;
                 MarkDirty(combo);
             }
 
-            // COMBO 05 - Yeralti Ekonomisi (Medium)
+            // COMBO 05 - Underground Empire (Medium)
             {
-                var combo = CreateOrReplace<ComboData>(CombosRoot + "/COMBO_05_YeraltiEkonomisi.asset");
-                combo.comboId       = "COMBO_05_YeraltiEkonomisi";
-                combo.comboName     = "Yeralti Ekonomisi";
-                combo.displayText   = "YERALTI EKONOMISI!";
+                var combo = CreateOrReplace<ComboData>(CombosRoot + "/COMBO_05_UndergroundEmpire.asset");
+                combo.comboId       = "COMBO_05_UndergroundEmpire";
+                combo.comboName     = "Underground Empire";
+                combo.displayText   = "UNDERGROUND EMPIRE!";
                 combo.tier          = ComboTier.Medium;
-                combo.description   = "Hacker + Dolandirici = +200 gelir/tur ama FBI +%8 ekstra.";
+                combo.description   = "Hacker + Fraudster = +200 income/turn but FBI +8% extra.";
                 combo.requiredCardIds = new[] { "C07_Hacker", "C09_Dolandirici" };
                 combo.requiredTags    = new[] { CardTag.Illegal };
                 combo.requiresSpecificPlacement = false;
                 combo.bonusIncome     = 200;
                 combo.extraFBIRisk    = 8;
-                combo.glowColor       = new Color(0.2f, 0.2f, 0.2f, 1f); // koyu
+                combo.glowColor       = new Color(0.2f, 0.2f, 0.2f, 1f); // dark
                 combo.comboSoundId    = "combo_trigger";
                 combo.screenShakeIntensity = 0.4f;
                 combo.screenShakeDuration  = 0.3f;
                 MarkDirty(combo);
             }
 
-            // COMBO 06 - Vergi Cenneti (Medium)
+            // COMBO 06 - Safe Crime (Medium)
             {
-                var combo = CreateOrReplace<ComboData>(CombosRoot + "/COMBO_06_VergiCenneti.asset");
-                combo.comboId       = "COMBO_06_VergiCenneti";
-                combo.comboName     = "Vergi Cenneti";
-                combo.displayText   = "VERGI CENNETI!";
+                var combo = CreateOrReplace<ComboData>(CombosRoot + "/COMBO_06_SafeCrime.asset");
+                combo.comboId       = "COMBO_06_SafeCrime";
+                combo.comboName     = "Safe Crime";
+                combo.displayText   = "SAFE CRIME!";
                 combo.tier          = ComboTier.Medium;
-                combo.description   = "Muhasebeci + Dolandirici = yasadisi gelir vergisiz.";
+                combo.description   = "Accountant + Fraudster = illegal income tax-free.";
                 combo.requiredCardIds = new[] { "C08_Muhasebeci", "C09_Dolandirici" };
                 combo.requiredTags    = new[] { CardTag.Finance };
                 combo.requiresSpecificPlacement = false;
                 combo.bonusIncome       = 0;
                 combo.incomeMultiplier  = 1f;
-                combo.glowColor         = new Color(0f, 0.8f, 0f, 1f); // yesil
+                combo.glowColor         = new Color(0f, 0.8f, 0f, 1f); // green
                 combo.comboSoundId      = "combo_trigger";
                 combo.screenShakeIntensity = 0.3f;
                 combo.screenShakeDuration  = 0.3f;
                 MarkDirty(combo);
             }
 
-            // COMBO 07 - AI Devrimi (Hard)
+            // COMBO 07 - AI Revolution (Hard)
             {
-                var combo = CreateOrReplace<ComboData>(CombosRoot + "/COMBO_07_AIDevrimi.asset");
-                combo.comboId       = "COMBO_07_AIDevrimi";
-                combo.comboName     = "AI Devrimi";
-                combo.displayText   = "AI DEVRIMI!";
+                var combo = CreateOrReplace<ComboData>(CombosRoot + "/COMBO_07_AIRevolution.asset");
+                combo.comboId       = "COMBO_07_AIRevolution";
+                combo.comboName     = "AI Revolution";
+                combo.displayText   = "AI REVOLUTION!";
                 combo.tier          = ComboTier.Hard;
-                combo.description   = "Tech Startup + Otomasyon + Yapay Zeka Asistani = +1 aksiyon, gelir x2.";
+                combo.description   = "Tech Startup + Automation + AI Assistant = +1 action, income x2.";
                 combo.requiredCardIds = new[] { "B04_TechStartup", "U02_Otomasyon", "U06_YapayZekaAsistani" };
                 combo.requiredTags    = new[] { CardTag.Tech, CardTag.AI };
                 combo.requiresSpecificPlacement = false;
@@ -973,33 +973,33 @@ namespace EmpireOfCards.Editor
                 MarkDirty(combo);
             }
 
-            // COMBO 08 - Organik Zincir (Medium)
+            // COMBO 08 - Ad Blitz (Medium)
             {
-                var combo = CreateOrReplace<ComboData>(CombosRoot + "/COMBO_08_OrganikZincir.asset");
-                combo.comboId       = "COMBO_08_OrganikZincir";
-                combo.comboName     = "Organik Zincir";
-                combo.displayText   = "ORGANIK ZINCIR!";
+                var combo = CreateOrReplace<ComboData>(CombosRoot + "/COMBO_08_AdBlitz.asset");
+                combo.comboId       = "COMBO_08_AdBlitz";
+                combo.comboName     = "Ad Blitz";
+                combo.displayText   = "AD BLITZ!";
                 combo.tier          = ComboTier.Medium;
-                combo.description   = "Organik Ciftlik + Burger Zinciri + Sef = tum Food'a +50 gelir.";
+                combo.description   = "Organic Farm + Burger Chain + Chef = all Food businesses +50 income.";
                 combo.requiredCardIds = new[] { "B06_OrganikCiftlik", "B03_BurgerZinciri", "C04_Sef" };
                 combo.requiredTags    = new[] { CardTag.Food, CardTag.Organic };
                 combo.requiresSpecificPlacement = false;
                 combo.bonusIncome     = 50;
-                combo.glowColor       = new Color(0.2f, 0.8f, 0.2f, 1f); // yesil
+                combo.glowColor       = new Color(0.2f, 0.8f, 0.2f, 1f); // green
                 combo.comboSoundId    = "combo_trigger";
                 combo.screenShakeIntensity = 0.4f;
                 combo.screenShakeDuration  = 0.4f;
                 MarkDirty(combo);
             }
 
-            // COMBO 09 - Kriz Avcisi (Hard)
+            // COMBO 09 - Crisis Hunter (Hard)
             {
-                var combo = CreateOrReplace<ComboData>(CombosRoot + "/COMBO_09_KrizAvcisi.asset");
-                combo.comboId       = "COMBO_09_KrizAvcisi";
-                combo.comboName     = "Kriz Avcisi";
-                combo.displayText   = "KRIZ AVCISI!";
+                var combo = CreateOrReplace<ComboData>(CombosRoot + "/COMBO_09_CrisisHunter.asset");
+                combo.comboId       = "COMBO_09_CrisisHunter";
+                combo.comboName     = "Crisis Hunter";
+                combo.displayText   = "CRISIS HUNTER!";
                 combo.tier          = ComboTier.Hard;
-                combo.description   = "Ekonomik Kriz aktifken 1000+ paran varsa: dukkan %50, rakipten 1 calisan.";
+                combo.description   = "During Economic Crisis with 1000+ money: shop 50% off, steal 1 rival employee.";
                 combo.requiredCardIds = new string[0];
                 combo.requiredTags    = new[] { CardTag.Finance };
                 combo.requiresActiveEvent  = true;
@@ -1008,21 +1008,21 @@ namespace EmpireOfCards.Editor
                 combo.minMoneyRequired     = 1000;
                 combo.shopDiscount         = 0.5f;
                 combo.transferRivalEmployee = true;
-                combo.glowColor            = new Color(1f, 0.84f, 0f, 1f); // altin
+                combo.glowColor            = new Color(1f, 0.84f, 0f, 1f); // gold
                 combo.comboSoundId         = "combo_trigger";
                 combo.screenShakeIntensity = 0.5f;
                 combo.screenShakeDuration  = 0.4f;
                 MarkDirty(combo);
             }
 
-            // COMBO 10 - Monopol (Automatic)
+            // COMBO 10 - Monopoly (Automatic)
             {
-                var combo = CreateOrReplace<ComboData>(CombosRoot + "/COMBO_10_Monopol.asset");
-                combo.comboId       = "COMBO_10_Monopol";
-                combo.comboName     = "Monopol";
-                combo.displayText   = "MONOPOL!";
+                var combo = CreateOrReplace<ComboData>(CombosRoot + "/COMBO_10_Monopoly.asset");
+                combo.comboId       = "COMBO_10_Monopoly";
+                combo.comboName     = "Monopoly";
+                combo.displayText   = "MONOPOLY!";
                 combo.tier          = ComboTier.Automatic;
-                combo.description   = "4+ isletme, %55+ pazar payi = rakip -3 musteri/tur, gelir +%20.";
+                combo.description   = "4+ businesses, 55%+ market share = rival -3 customers/turn, income +20%.";
                 combo.requiredCardIds  = new string[0];
                 combo.requiredTags     = new CardTag[0];
                 combo.requiresSpecificPlacement = false;
@@ -1030,7 +1030,7 @@ namespace EmpireOfCards.Editor
                 combo.minMarketShare      = 0.55f;
                 combo.rivalCustomerPenalty = 3;
                 combo.incomeMultiplier     = 1.2f;
-                combo.glowColor            = new Color(1f, 0f, 0f, 1f); // kirmizi
+                combo.glowColor            = new Color(1f, 0f, 0f, 1f); // red
                 combo.comboSoundId         = "combo_trigger";
                 combo.screenShakeIntensity = 0.7f;
                 combo.screenShakeDuration  = 0.6f;
@@ -1054,42 +1054,42 @@ namespace EmpireOfCards.Editor
                 new UnlockTier
                 {
                     xpRequired = 50,
-                    unlockDescription = "Dukkan havuzu acilir. Common kartlar mevcut.",
+                    unlockDescription = "Shop pool unlocked. Common cards available.",
                     unlockedCards = new CardData[0],
                     unlockedRival = null
                 },
                 new UnlockTier
                 {
                     xpRequired = 200,
-                    unlockDescription = "Uncommon kartlar dukkan havuzuna girer.",
+                    unlockDescription = "Uncommon cards enter the shop pool.",
                     unlockedCards = new CardData[0],
                     unlockedRival = null
                 },
                 new UnlockTier
                 {
                     xpRequired = 500,
-                    unlockDescription = "Rare kartlar acilir. Shadow Inc. rakibi kullanilabilir.",
+                    unlockDescription = "Rare cards unlocked. Shadow Inc. rival available.",
                     unlockedCards = new CardData[0],
                     unlockedRival = null // Shadow Inc. post-MVP
                 },
                 new UnlockTier
                 {
                     xpRequired = 1000,
-                    unlockDescription = "Tum kartlar acilir. Ascension 1 modu aktif.",
+                    unlockDescription = "All cards unlocked. Ascension 1 mode active.",
                     unlockedCards = new CardData[0],
                     unlockedRival = null
                 },
                 new UnlockTier
                 {
                     xpRequired = 2000,
-                    unlockDescription = "The Cartel rakibi acilir. Ascension 2 modu aktif.",
+                    unlockDescription = "The Cartel rival unlocked. Ascension 2 mode active.",
                     unlockedCards = new CardData[0],
                     unlockedRival = null // The Cartel post-MVP
                 },
                 new UnlockTier
                 {
                     xpRequired = 5000,
-                    unlockDescription = "Ascension 3 modu. Tum icerik acik.",
+                    unlockDescription = "Ascension 3 mode. All content unlocked.",
                     unlockedCards = new CardData[0],
                     unlockedRival = null
                 },
@@ -1101,7 +1101,7 @@ namespace EmpireOfCards.Editor
                 new AscensionLevel
                 {
                     level = 1,
-                    description = "Rakip daha agresif, event'ler daha sik.",
+                    description = "Rival more aggressive, events more frequent.",
                     rivalAggressionMultiplier = 1.2f,
                     startingMoneyModifier = 0,
                     crisisFrequencyMultiplier = 1.2f
@@ -1109,7 +1109,7 @@ namespace EmpireOfCards.Editor
                 new AscensionLevel
                 {
                     level = 2,
-                    description = "Baslangic parasi -100, rakip cok agresif.",
+                    description = "Starting money -100, rival very aggressive.",
                     rivalAggressionMultiplier = 1.5f,
                     startingMoneyModifier = -100,
                     crisisFrequencyMultiplier = 1.3f
@@ -1117,7 +1117,7 @@ namespace EmpireOfCards.Editor
                 new AscensionLevel
                 {
                     level = 3,
-                    description = "En zor mod. Kriz sikligi x1.5, rakip acimas.",
+                    description = "Hardest mode. Crisis frequency x1.5, rival merciless.",
                     rivalAggressionMultiplier = 2.0f,
                     startingMoneyModifier = -200,
                     crisisFrequencyMultiplier = 1.5f

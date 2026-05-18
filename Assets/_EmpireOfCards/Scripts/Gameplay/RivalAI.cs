@@ -263,7 +263,7 @@ namespace EmpireOfCards.Gameplay
             };
 
             rivalBusinesses.Add(newBiz);
-            EventBus.RivalActed($"Rakip yeni isletme acti: {businessName}");
+            EventBus.RivalActed($"Rival opened a new business: {businessName}");
         }
 
         /// <summary>
@@ -298,7 +298,7 @@ namespace EmpireOfCards.Gameplay
             target.customers += data.employeeCustomerBoost;
             totalRivalEmployees++;
 
-            EventBus.RivalActed($"Rakip {target.name} icin calisan ise aldi.");
+            EventBus.RivalActed($"Rival hired an employee for {target.name}.");
         }
 
         /// <summary>
@@ -324,7 +324,7 @@ namespace EmpireOfCards.Gameplay
             strongest.customers += data.aggressiveCustomerBoost;
             strongest.income += data.aggressiveIncomeBoost;
 
-            EventBus.RivalActed($"Rakip agresif hamle yapti: {strongest.name}!");
+            EventBus.RivalActed($"Rival made an aggressive move: {strongest.name}!");
         }
 
         /// <summary>
@@ -340,7 +340,7 @@ namespace EmpireOfCards.Gameplay
                 biz.customers += data != null ? data.passiveCustomerGrowth : 2; // GDD: +2 customers
             }
 
-            EventBus.RivalActed("Rakip isletmeleri istikrarli buyudu.");
+            EventBus.RivalActed("Rival businesses grew steadily.");
         }
 
         /// <summary>
@@ -618,7 +618,7 @@ namespace EmpireOfCards.Gameplay
             totalRivalEmployees -= removed.employeeCount;
             rivalBusinesses.RemoveAt(weakestIdx);
 
-            EventBus.RivalActed($"Rakibin en zayif isletmesi kapatildi: {removed.name}");
+            EventBus.RivalActed($"Rival's weakest business was shut down: {removed.name}");
         }
 
         /// <summary>

@@ -8,7 +8,6 @@ namespace EmpireOfCards.World
 {
     public class CardFactory : MonoBehaviour
     {
-        [SerializeField] private int cardLayer = 6;
         [SerializeField] private CardData[] allCards;
 
         // Card dimensions in world units
@@ -20,7 +19,7 @@ namespace EmpireOfCards.World
         {
             // Root - UNIFORM scale (1,1,1) so children aren't distorted
             var go = new GameObject($"Card_{data.cardId}");
-            go.layer = cardLayer;
+            // Use Default layer (0) -- raycasting uses component checks, not layers
 
             // Card body as child with non-uniform scale
             var body = GameObject.CreatePrimitive(PrimitiveType.Cube);
@@ -28,7 +27,6 @@ namespace EmpireOfCards.World
             body.transform.SetParent(go.transform);
             body.transform.localPosition = Vector3.zero;
             body.transform.localScale = new Vector3(CARD_WIDTH, CARD_THICKNESS, CARD_HEIGHT);
-            body.layer = cardLayer;
 
             var meshRenderer = body.GetComponent<MeshRenderer>();
             meshRenderer.material = new Material(Shader.Find("Universal Render Pipeline/Lit"));

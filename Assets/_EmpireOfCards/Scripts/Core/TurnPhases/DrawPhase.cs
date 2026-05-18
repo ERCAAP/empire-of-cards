@@ -17,7 +17,6 @@ namespace EmpireOfCards.Core.TurnPhases
         public void Enter()
         {
             _timer = 0f;
-            _cardsDrawn = false;
 
             var dm = GameManager.Instance.DeckManager;
             if (dm != null)
@@ -25,8 +24,9 @@ namespace EmpireOfCards.Core.TurnPhases
                 dm.DiscardHand();
                 dm.ResetRedraws();
                 dm.DrawCards(Constants.HAND_SIZE);
-                _cardsDrawn = true;
             }
+            // Always mark as drawn so the phase can complete even if DeckManager is null
+            _cardsDrawn = true;
         }
 
         public void Tick()

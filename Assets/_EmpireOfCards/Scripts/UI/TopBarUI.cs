@@ -142,7 +142,7 @@ namespace EmpireOfCards.UI
         public void UpdateTurn(int current, int max)
         {
             if (turnText != null)
-                turnText.text = $"Tur {current}/{max}";
+                turnText.text = $"Turn {current}/{max}";
         }
 
         /// <summary>

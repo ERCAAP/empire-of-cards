@@ -17,29 +17,29 @@ namespace EmpireOfCards.Core
         // === Game State Machine ===
         private StateMachine.StateMachine _gameStateMachine;
 
-        [Header("=== Oyun Durumu ===")]
+        [Header("=== Game State ===")]
         [SerializeField] private GameState currentGameState = GameState.MainMenu;
         [SerializeField] private int currentTurn;
         [SerializeField] private bool gameIsRunning;
 
-        [Header("=== Oyuncu Kaynakları ===")]
+        [Header("=== Player Resources ===")]
         [SerializeField] private int playerMoney;
         [SerializeField] private int playerActions;
         [SerializeField] private int maxActions;
         [SerializeField] private int businessSlotCount;
         [SerializeField] private float fbiRisk;
 
-        [Header("=== Bölge & Müşteri ===")]
+        [Header("=== Territory & Customers ===")]
         [SerializeField] private int playerCustomers;
         [SerializeField] private int rivalCustomers;
         [SerializeField] private int playerTerritories;
         [SerializeField] private int rivalTerritories;
 
-        [Header("=== Balans Verisi ===")]
+        [Header("=== Balance Data ===")]
         [SerializeField] private GameBalanceData balanceData;
         [SerializeField] private DeckPresetData startingDeck;
 
-        [Header("=== Manager Referansları ===")]
+        [Header("=== Manager References ===")]
         [SerializeField] private TurnManager turnManager;
         [SerializeField] private EconomyManager economyManager;
         [SerializeField] private DeckManager deckManager;
@@ -254,7 +254,7 @@ namespace EmpireOfCards.Core
                 return true;
             }
 
-            // Bankruptcy (GDD: Para 0'a düşerse = IFLAS)
+            // Bankruptcy (GDD: Money drops to 0 = BANKRUPT)
             if (playerMoney <= 0)
             {
                 EndRun(false);
@@ -317,7 +317,7 @@ namespace EmpireOfCards.Core
         }
 
         /// <summary>
-        /// Adds extra action capacity (e.g. from Yapay Zeka Asistani upgrade).
+        /// Adds extra action capacity (e.g. from AI Assistant upgrade).
         /// Capped at balance max.
         /// </summary>
         public void AddExtraAction(int count = 1)

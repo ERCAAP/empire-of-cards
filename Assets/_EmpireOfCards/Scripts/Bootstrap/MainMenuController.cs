@@ -60,7 +60,7 @@ namespace EmpireOfCards.Bootstrap
             subRT.anchoredPosition = new Vector2(0, 70);
             subRT.sizeDelta = new Vector2(600, 40);
             var subText = subGo.AddComponent<TextMeshProUGUI>();
-            subText.text = "Kartlarla is kur, rakibini yen.";
+            subText.text = "Build businesses with cards, defeat your rival.";
             subText.fontSize = 24;
             subText.alignment = TextAlignmentOptions.Center;
             subText.color = new Color(0.7f, 0.7f, 0.7f);
@@ -86,7 +86,7 @@ namespace EmpireOfCards.Bootstrap
             startLabelRT.offsetMin = Vector2.zero;
             startLabelRT.offsetMax = Vector2.zero;
             var startLabel = startLabelGo.AddComponent<TextMeshProUGUI>();
-            startLabel.text = "OYUNA BASLA";
+            startLabel.text = "START GAME";
             startLabel.fontSize = 28;
             startLabel.alignment = TextAlignmentOptions.Center;
             startLabel.color = Color.white;
@@ -112,7 +112,7 @@ namespace EmpireOfCards.Bootstrap
             quitLabelRT.offsetMin = Vector2.zero;
             quitLabelRT.offsetMax = Vector2.zero;
             var quitLabel = quitLabelGo.AddComponent<TextMeshProUGUI>();
-            quitLabel.text = "CIKIS";
+            quitLabel.text = "QUIT";
             quitLabel.fontSize = 22;
             quitLabel.alignment = TextAlignmentOptions.Center;
             quitLabel.color = Color.white;

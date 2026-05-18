@@ -5,7 +5,7 @@ namespace EmpireOfCards.Data
     [CreateAssetMenu(fileName = "GameBalance", menuName = "EmpireOfCards/Game Balance")]
     public class GameBalanceData : ScriptableObject
     {
-        [Header("--- Genel ---")]
+        [Header("--- General ---")]
         public int startingMoney = 500;
         public int maxTurns = 20;
         public int startingActions = 3;
@@ -17,29 +17,29 @@ namespace EmpireOfCards.Data
         public int shopCardsPerTurn = 3;
         public int eventInterval = 3;
 
-        [Header("--- Ekonomi ---")]
+        [Header("--- Economy ---")]
         public float taxRate = 0.15f;
-        public float reducedTaxRate = 0.075f;   // 1 muhasebeci
-        public float minTaxRate = 0.03f;         // 2 muhasebeci
+        public float reducedTaxRate = 0.075f;   // 1 accountant
+        public float minTaxRate = 0.03f;         // 2 accountants
         public float sellRate = 0.4f;
 
         [Header("--- FBI ---")]
         public int fbiRaidPenalty = 300;
         public float fbiStartingRisk = 0f;
 
-        [Header("--- Bölge ---")]
+        [Header("--- Territory ---")]
         public int totalTerritories = 10;
         public int winTerritories = 6;
         public int loseTerritories = 7;
 
-        [Header("--- Market Havuzu (Balance Tablo) ---")]
+        [Header("--- Market Pool (Balance Table) ---")]
         public int baseMarketCustomers = 60;
         public int earlyGrowthPerTurn = 5;
         public int midGrowthPerTurn = 6;
         public int lateGrowthPerTurn = 8;
         public int endGrowthPerTurn = 10;
 
-        [Header("--- Skor (GDD 10.3) ---")]
+        [Header("--- Score (GDD 10.3) ---")]
         public int territoryScoreMultiplier = 500;
         public int moneyScoreMultiplier = 1;
         public int comboScoreMultiplier = 200;
@@ -48,11 +48,11 @@ namespace EmpireOfCards.Data
         public int fbiEvasionBonus = 50;
         public int winBonus = 1000;
 
-        [Header("--- İşletme Evrimi ---")]
+        [Header("--- Business Evolution ---")]
         public int evolutionCustomerThreshold = 40;
         public int evolutionTurnRequirement = 15;
 
-        [Header("--- Çalışan ---")]
+        [Header("--- Employee ---")]
         public int employeeLeaveTurnThreshold = 8;
 
         public int GetMarketPool(int currentTurn)

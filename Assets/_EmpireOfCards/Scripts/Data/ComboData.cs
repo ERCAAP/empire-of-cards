@@ -6,45 +6,45 @@ namespace EmpireOfCards.Data
     [CreateAssetMenu(fileName = "NewCombo", menuName = "EmpireOfCards/Combo Data")]
     public class ComboData : ScriptableObject
     {
-        [Header("--- Kimlik ---")]
-        public string comboId;              // "COMBO_01_LatteSanati"
-        public string comboName;            // "Latte Sanatı"
-        public string displayText;          // "LATTE SANATI!" (ekranda gösterilecek)
+        [Header("--- Identity ---")]
+        public string comboId;              // "COMBO_01_LatteArt"
+        public string comboName;            // "Latte Art"
+        public string displayText;          // "LATTE ART!" (shown on screen)
         public ComboTier tier;
         [TextArea(2, 4)]
         public string description;
 
-        [Header("--- Gereksinimler ---")]
-        public string[] requiredCardIds;    // Spesifik kart ID'leri: ["B02_Kahveci", "C03_Barista"]
-        public CardTag[] requiredTags;      // Tag gereksinimleri
-        public bool requiresSpecificPlacement;  // Barista Kahveci'de mi olmalı
-        public string employeeCardId;       // Hangi çalışan
-        public string businessCardId;       // Hangi işletmede
+        [Header("--- Requirements ---")]
+        public string[] requiredCardIds;    // Specific card IDs (internal): ["B02_Kahveci", "C03_Barista"]
+        public CardTag[] requiredTags;      // Tag requirements
+        public bool requiresSpecificPlacement;  // Must Barista be in Coffee Shop
+        public string employeeCardId;       // Which employee
+        public string businessCardId;       // Which business
 
-        [Header("--- Event Bağımlılık ---")]
+        [Header("--- Event Dependency ---")]
         public bool requiresActiveEvent;
         public string requiredEventId;      // "E03_ViralTrend"
 
-        [Header("--- Durum Gereksinimleri ---")]
+        [Header("--- State Requirements ---")]
         public bool requiresMinMoney;
-        public int minMoneyRequired;        // Kriz Avcısı: 1000
+        public int minMoneyRequired;        // Crisis Hunter: 1000
         public bool requiresMinTerritory;
-        public int minTerritoryRequired;    // Monopol: bölge >= bazı sayı
-        public int minActiveBusinesses;     // Monopol: 4 işletme
-        public float minMarketShare;        // Monopol: %55
+        public int minTerritoryRequired;    // Monopoly: territory >= some number
+        public int minActiveBusinesses;     // Monopoly: 4 businesses
+        public float minMarketShare;        // Monopoly: 55%
 
         [Header("--- Bonus ---")]
-        public int bonusIncome;             // Ek gelir/tur
-        public int bonusCustomers;          // Ek müşteri/tur
+        public int bonusIncome;             // Extra income/turn
+        public int bonusCustomers;          // Extra customers/turn
         public float incomeMultiplier;      // 1.0 = normal, 2.0 = x2
-        public float customerMultiplier;    // Müşteri çarpanı
-        public int extraActions;            // AI Devrimi: +1
-        public int rivalCustomerPenalty;    // Monopol: rakip -3/tur
-        public float shopDiscount;          // Kriz Avcısı: 0.5 (%50)
-        public bool transferRivalEmployee;  // Kriz Avcısı: 1 çalışan transfer
-        public int extraFBIRisk;            // Yeraltı: +8
+        public float customerMultiplier;    // Customer multiplier
+        public int extraActions;            // AI Revolution: +1
+        public int rivalCustomerPenalty;    // Monopoly: rival -3/turn
+        public float shopDiscount;          // Crisis Hunter: 0.5 (50%)
+        public bool transferRivalEmployee;  // Crisis Hunter: 1 employee transfer
+        public int extraFBIRisk;            // Underground: +8
 
-        [Header("--- Görsel Feedback ---")]
+        [Header("--- Visual Feedback ---")]
         public Color glowColor = Color.yellow;
         public string comboSoundId;         // "combo_trigger" audio reference
         [Range(0f, 1f)]

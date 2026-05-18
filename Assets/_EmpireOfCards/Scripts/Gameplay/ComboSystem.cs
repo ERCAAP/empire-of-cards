@@ -188,7 +188,7 @@ namespace EmpireOfCards.Gameplay
 
         /// <summary>
         /// Checks if a specific employee is placed in a specific business.
-        /// Used for combos like "Latte Sanati" (Barista in Kahveci).
+        /// Used for combos like "Latte Art" (Barista in Coffee Shop).
         /// </summary>
         private bool CheckSpecificPlacement(string employeeCardId, string businessCardId)
         {

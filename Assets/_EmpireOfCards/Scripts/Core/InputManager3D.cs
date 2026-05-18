@@ -10,9 +10,6 @@ namespace EmpireOfCards.Core
     {
         [Header("Raycast Settings")]
         [SerializeField] private Camera mainCamera;
-        [SerializeField] private LayerMask cardLayer;
-        [SerializeField] private LayerMask slotLayer;
-        [SerializeField] private LayerMask boardLayer;
         [SerializeField] private float dragHeight = 1.5f;
         [SerializeField] private float hoverHeight = 0.3f;
 
@@ -67,9 +64,13 @@ namespace EmpireOfCards.Core
         {
             Ray ray = mainCamera.ScreenPointToRay(Mouse.current.position.ReadValue());
 
-            if (Physics.Raycast(ray, out RaycastHit hit, 100f, cardLayer))
+            // Raycast against ALL layers then check for Card3D component
+            // (LayerMask fields default to 0/Nothing when AddComponent'd at runtime)
+            if (Physics.Raycast(ray, out RaycastHit hit, 100f))
             {
                 var card = hit.collider.GetComponent<Card3D>();
+                if (card == null) card = hit.collider.GetComponentInParent<Card3D>();
+
                 if (card != null && card != _hoveredCard)
                 {
                     if (_hoveredCard != null)
@@ -80,6 +81,12 @@ namespace EmpireOfCards.Core
                     _hoveredCard = card;
                     _hoveredCard.SetHovered(true);
                     OnCardHoverEnter?.Invoke(_hoveredCard);
+                }
+                else if (card == null && _hoveredCard != null)
+                {
+                    _hoveredCard.SetHovered(false);
+                    OnCardHoverExit?.Invoke(_hoveredCard);
+                    _hoveredCard = null;
                 }
             }
             else if (_hoveredCard != null)
@@ -104,16 +111,26 @@ namespace EmpireOfCards.Core
                     _draggedCard.transform.position, worldPos, Time.deltaTime * 20f);
             }
 
-            // Check slot hover
-            if (Physics.Raycast(ray, out RaycastHit hit, 100f, slotLayer))
+            // Check slot hover - raycast all layers, check for SlotZone3D component
+            if (Physics.Raycast(ray, out RaycastHit hit, 100f))
             {
                 var slot = hit.collider.GetComponent<SlotZone3D>();
-                if (slot != _hoveredSlot)
+                if (slot == null) slot = hit.collider.GetComponentInParent<SlotZone3D>();
+
+                if (slot != null)
                 {
-                    _hoveredSlot?.SetHighlight(false);
-                    _hoveredSlot = slot;
-                    bool valid = _hoveredSlot.CanAccept(_draggedCard.CardData);
-                    _hoveredSlot.SetHighlight(true, valid);
+                    if (slot != _hoveredSlot)
+                    {
+                        _hoveredSlot?.SetHighlight(false);
+                        _hoveredSlot = slot;
+                        bool valid = _hoveredSlot.CanAccept(_draggedCard.CardData);
+                        _hoveredSlot.SetHighlight(true, valid);
+                    }
+                }
+                else if (_hoveredSlot != null)
+                {
+                    _hoveredSlot.SetHighlight(false);
+                    _hoveredSlot = null;
                 }
             }
             else if (_hoveredSlot != null)

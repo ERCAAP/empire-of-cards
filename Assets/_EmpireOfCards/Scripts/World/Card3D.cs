@@ -92,11 +92,11 @@ namespace EmpireOfCards.World
             {
                 _statsText.text = _cardData.cardType switch
                 {
-                    CardType.Business => $"${_cardData.incomePerTurn}/tur  {_cardData.customersPerTurn} musteri",
-                    CardType.Employee => $"Maas: ${_cardData.salaryPerTurn}/tur",
+                    CardType.Business => $"${_cardData.incomePerTurn}/turn  {_cardData.customersPerTurn} customers",
+                    CardType.Employee => $"Salary: ${_cardData.salaryPerTurn}/turn",
                     CardType.Action => _cardData.actionEffectType.ToString(),
                     CardType.Upgrade => _cardData.upgradeEffectType.ToString(),
-                    CardType.Event => $"{_cardData.eventDuration} tur",
+                    CardType.Event => $"{_cardData.eventDuration} turns",
                     _ => ""
                 };
             }

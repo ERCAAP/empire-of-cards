@@ -17,14 +17,14 @@ namespace EmpireOfCards.Core.TurnPhases
         public void Enter()
         {
             _timer = 0f;
-            _rivalActed = false;
 
             var rival = GameManager.Instance.RivalAI;
             if (rival != null)
             {
                 rival.TakeTurn(GameManager.Instance.PlayerTerritories, _turnManager.CurrentTurnNumber);
-                _rivalActed = true;
             }
+            // Always mark as acted so the phase can complete even if RivalAI is null
+            _rivalActed = true;
         }
 
         public void Tick()

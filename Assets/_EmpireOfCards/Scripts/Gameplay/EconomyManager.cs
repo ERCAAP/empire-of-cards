@@ -63,10 +63,10 @@ namespace EmpireOfCards.Gameplay
         /// Calculates the total income from all businesses this turn.
         /// Handles special business mechanics:
         /// - Tech Startup: activationDelay (3 turns of 0 income)
-        /// - Gece Kulubu: requiresTrendToOperate (0 income if no trend event)
-        /// - Kripto Borsasi: hasRandomIncome (random from threshold table)
-        /// - Organik Ciftlik: foodBonusTag (+20 per food business)
-        /// - Reklam Ajansi: globalCustomerBonus (+2 customers to all businesses)
+        /// - Nightclub: requiresTrendToOperate (0 income if no trend event)
+        /// - Crypto Exchange: hasRandomIncome (random from threshold table)
+        /// - Organic Farm: foodBonusTag (+20 per food business)
+        /// - Ad Agency: globalCustomerBonus (+2 customers to all businesses)
         /// </summary>
         public int CalculateTurnIncome(IReadOnlyList<ActiveBusiness> businesses, CardData activeEvent)
         {
@@ -86,7 +86,7 @@ namespace EmpireOfCards.Gameplay
                 if (card.activationDelay > 0 && business.turnsActive < card.activationDelay)
                     continue;
 
-                // --- Gece Kulubu: needs trend event to operate ---
+                // --- Nightclub: needs trend event to operate ---
                 if (card.requiresTrendToOperate)
                 {
                     bool trendActive = activeEvent != null && HasTag(activeEvent, CardTag.Trendy);
@@ -96,7 +96,7 @@ namespace EmpireOfCards.Gameplay
 
                 int businessIncome;
 
-                // --- Kripto Borsasi: random income ---
+                // --- Crypto Exchange: random income ---
                 if (card.hasRandomIncome)
                 {
                     businessIncome = CalculateRandomIncome(card);
@@ -106,7 +106,7 @@ namespace EmpireOfCards.Gameplay
                     businessIncome = card.incomePerTurn;
                 }
 
-                // --- Trend bonus (Kahveci: hasTrendBonus + trendIncomeMultiplier) ---
+                // --- Trend bonus (Coffee Shop: hasTrendBonus + trendIncomeMultiplier) ---
                 if (card.hasTrendBonus && activeEvent != null)
                 {
                     bool trendEventActive = HasTag(activeEvent, CardTag.Trendy) ||

@@ -2,11 +2,11 @@ namespace EmpireOfCards.Core
 {
     public enum CardType
     {
-        Business,   // Mavi - slota konur, kalıcı, gelir üretir
-        Employee,   // Yeşil - işletmeye konur, passif + aktif yetenek
-        Action,     // Kırmızı - tek kullanım, güçlü etki
-        Upgrade,    // Mor - kalıcı iyileştirme
-        Event       // Sarı - otomatik, dünyayı değiştirir
+        Business,   // Blue - placed in slots, permanent, generates income
+        Employee,   // Green - placed in businesses, passive + active ability
+        Action,     // Red - single use, powerful effect
+        Upgrade,    // Purple - permanent improvement
+        Event       // Yellow - automatic, changes the world
     }
 
     public enum Rarity
@@ -32,11 +32,11 @@ namespace EmpireOfCards.Core
     // 5-phase turn system from GDD Section 4
     public enum TurnPhase
     {
-        EventPhase,     // Adım 1: Event gelir (her 3 turda 1)
-        DrawPhase,      // Adım 2: 5 kart çek, 1 redraw
-        PlayPhase,      // Adım 3: 3 aksiyon - kart koy veya yetenek kullan
-        ResolvePhase,   // Adım 4: Masa çalışır - gelir, müşteri, combo, FBI
-        RivalPhase      // Adım 5: Rakip AI oynar
+        EventPhase,     // Step 1: Event triggers (1 every 3 turns)
+        DrawPhase,      // Step 2: Draw 5 cards, 1 redraw
+        PlayPhase,      // Step 3: 3 actions - play card or use ability
+        ResolvePhase,   // Step 4: Board resolves - income, customers, combo, FBI
+        RivalPhase      // Step 5: Rival AI plays
     }
 
     public enum GameState
@@ -50,91 +50,91 @@ namespace EmpireOfCards.Core
         ScoreScreen
     }
 
-    // GDD Section 8: Rakip kişilikleri
+    // GDD Section 8: Rival personalities
     public enum RivalPersonality
     {
-        Balanced,       // MegaCorp - Normal zorluk
+        Balanced,       // MegaCorp - Normal difficulty
         Aggressive,     // Shadow Inc. (post-MVP)
         Economic        // The Cartel (post-MVP)
     }
 
     public enum ComboTier
     {
-        Easy,       // 2 kart, erken keşfedilir
-        Medium,     // 2-3 kart veya event bağımlı
-        Hard,       // 3+ kart
-        Automatic   // Koşul sağlanınca otomatik (Monopol)
+        Easy,       // 2 cards, discovered early
+        Medium,     // 2-3 cards or event-dependent
+        Hard,       // 3+ cards
+        Automatic   // Triggers automatically when conditions met (Monopoly)
     }
 
-    // Resolve phase sub-steps from GDD Section 4.2 Adım 4
+    // Resolve phase sub-steps from GDD Section 4.2 Step 4
     public enum ResolveStep
     {
-        BusinessProduce,    // 4a: İşletmeler üretir
-        CustomerFlow,       // 4b: Müşteriler kayar
-        ComboCheck,         // 4c: Combo kontrolü
-        IncomeCalculation,  // 4d: Gelir hesaplanır
-        DeteriorationCheck  // 4e: Bozulma kontrolü (FBI, kapanma, ayrılma)
+        BusinessProduce,    // 4a: Businesses produce
+        CustomerFlow,       // 4b: Customers flow
+        ComboCheck,         // 4c: Combo check
+        IncomeCalculation,  // 4d: Income calculated
+        DeteriorationCheck  // 4e: Deterioration check (FBI, closure, leaving)
     }
 
     // Employee active ability types from GDD Section 3.2
     public enum ActiveAbilityType
     {
         None,
-        MultiplyCustomersThisTurn,  // Barista: müşteri x2 bu tur
-        AddCustomersThisTurn,       // Stajyer: +3 müşteri bu tur
-        MultiplyIncomeThisTurn,     // Şef: 1 tur gelir x1.5
-        StealCustomersFromRival,    // Influencer: rakipten 5 müşteri çal
-        AddCustomersToAll,          // Marketing Guru: tüm işletmelere +3
-        NullifyTaxThisTurn,         // Muhasebeci: bu tur vergi %0
-        BonusIncomeWithPenalty,     // Dolandırıcı: +300 ama sonraki tur -150
-        MotivateAllEmployees        // Sadık Müdür: tüm çalışanlar +1 müşteri
+        MultiplyCustomersThisTurn,  // Barista: customers x2 this turn
+        AddCustomersThisTurn,       // Intern: +3 customers this turn
+        MultiplyIncomeThisTurn,     // Chef: income x1.5 this turn
+        StealCustomersFromRival,    // Influencer: steal 5 customers from rival
+        AddCustomersToAll,          // Marketing Guru: +3 to all businesses
+        NullifyTaxThisTurn,         // Accountant: 0% tax this turn
+        BonusIncomeWithPenalty,     // Fraudster: +300 but -150 next turn
+        MotivateAllEmployees        // Loyal Manager: all employees +1 customer
     }
 
     // Action card effect types from GDD Section 3.3
     public enum ActionEffectType
     {
         None,
-        AddCustomersToRandom,       // El İlanı: +3 müşteri rastgele işletmeye
-        AddMoneyInstant,            // Küçük Yatırım: +150 anında
-        MultiplyAllCustomers,       // Viral Pazarlama: tüm müşteri x2
-        CloseRivalWeakestBusiness,  // Düşmanca Devralma: rakibin en zayıfını kapat
-        AddCustomersWithFBI,        // Sahte Yorumlar: +8 müşteri, FBI +%12
-        StealCustomersHalfIncome,   // Fiyat Kırma: gelir %50 karşılığı 8 müşteri çal
-        DisableRivalOneTurn,        // Sabotaj: rakip 1 tur üretim yapamaz, FBI +%15
-        MoneyNowPayLater,           // Yatırımcı Sunumu: +600 anında, 3 tur %15
-        DrawAndPlayEmployee,        // Acil İşe Alım: rastgele çalışan çek ve oyna
-        SacrificeBusiness           // Tasfiye: işletmeyi sat, 2x fiyat al
+        AddCustomersToRandom,       // Flyer: +3 customers to random business
+        AddMoneyInstant,            // Small Investment: +150 instant
+        MultiplyAllCustomers,       // Viral Marketing: all customers x2
+        CloseRivalWeakestBusiness,  // Hostile Takeover: close rival's weakest
+        AddCustomersWithFBI,        // Fake Reviews: +8 customers, FBI +12%
+        StealCustomersHalfIncome,   // Price Slashing: sacrifice 50% income, steal 8 customers
+        DisableRivalOneTurn,        // Sabotage: rival can't produce for 1 turn, FBI +15%
+        MoneyNowPayLater,           // Investor Pitch: +600 instant, 3 turns 15%
+        DrawAndPlayEmployee,        // Emergency Hire: draw random employee and play
+        SacrificeBusiness           // Liquidation: sell business, get 2x price
     }
 
     // Upgrade effect types from GDD Section 3.4
     public enum UpgradeEffectType
     {
         None,
-        IncomePercentSingle,        // Ofis Malzemeleri: 1 işletme +%10
-        IncomePercentWithSlotLoss,  // Otomasyon: +%30 ama 1 çalışan slotu kapanır
-        GlobalCustomerPerTurn,      // Teslimat Ağı: tüm işletmelere +2 müşteri/tur
-        GlobalCustomerFlat,         // Reklam Panosu: +3 müşteri/tur genel
-        ReduceFBIRisk,              // Güvenlik Sistemi: FBI riski -%25
-        ExtraAction                 // Yapay Zeka Asistanı: +1 aksiyon hakkı
+        IncomePercentSingle,        // Office Supplies: 1 business +10%
+        IncomePercentWithSlotLoss,  // Automation: +30% but 1 employee slot closed
+        GlobalCustomerPerTurn,      // Delivery Network: +2 customers/turn to all businesses
+        GlobalCustomerFlat,         // Billboard: +3 customers/turn global
+        ReduceFBIRisk,              // Security System: FBI risk -25%
+        ExtraAction                 // AI Assistant: +1 action
     }
 
     // Event effect types from GDD Section 3.5
     public enum EventEffectType
     {
         None,
-        TagCustomerBoost,           // Kahve Çılgınlığı: food/coffee +%50 müşteri
-        AllIncomeReduction,         // Ekonomik Kriz: tüm gelirler -%30
-        TagDoubleEffect,            // Viral Trend: marketing kartları 2x
-        TagCustomerPenalty,         // Veri Sızıntısı: tech -5 müşteri
-        TagDoubleEffectFinance,     // Yatırımcı Sezonu: finance kartlar 2x
-        HighFBICustomerPenalty      // İptal Kültürü: FBI>%30 → müşteri -%40
+        TagCustomerBoost,           // Coffee Craze: food/coffee +50% customers
+        AllIncomeReduction,         // Economic Crisis: all income -30%
+        TagDoubleEffect,            // Viral Trend: marketing cards 2x
+        TagCustomerPenalty,         // Data Breach: tech -5 customers
+        TagDoubleEffectFinance,     // Investor Season: finance cards 2x
+        HighFBICustomerPenalty      // Cancel Culture: FBI>30% -> customers -40%
     }
 
     // Business evolution levels from GDD Section 3.1
     public enum BusinessLevel
     {
-        Level1, // Büfe
-        Level2, // Dükkan
-        Level3  // Mağaza/Zincir
+        Level1, // Diner
+        Level2, // Shop
+        Level3  // Store/Chain
     }
 }
