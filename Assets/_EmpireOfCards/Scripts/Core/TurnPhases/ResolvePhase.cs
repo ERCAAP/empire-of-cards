@@ -67,6 +67,14 @@ namespace EmpireOfCards.Core.TurnPhases
 
                 // 4b: Calculate total customers and territory distribution
                 case ResolveStep.CustomerFlow:
+                    // Update player customer count from board state
+                    if (gm.BoardManager != null)
+                        gm.SetPlayerCustomers(gm.BoardManager.CalculatePlayerCustomers());
+
+                    // Update rival customer count
+                    if (gm.RivalAI != null)
+                        gm.SetRivalCustomers(gm.RivalAI.RivalCustomers);
+
                     if (gm.TerritoryManager != null)
                     {
                         int marketPool = gm.BalanceData != null
