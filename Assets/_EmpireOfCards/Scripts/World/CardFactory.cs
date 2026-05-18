@@ -10,6 +10,9 @@ namespace EmpireOfCards.World
     {
         [SerializeField] private int cardLayer = 6; // "Card" layer index
 
+        // Wired by RuntimeWiring from bootstrap; all card definitions for lookup
+        [SerializeField] private CardData[] allCards;
+
         public Card3D CreateCard(CardData data)
         {
             // Root

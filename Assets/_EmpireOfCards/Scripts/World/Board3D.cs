@@ -1,12 +1,16 @@
 using System.Collections.Generic;
 using UnityEngine;
 using EmpireOfCards.Core;
+using EmpireOfCards.Gameplay;
 using EmpireOfCards.UI.Cards;
 
 namespace EmpireOfCards.World
 {
     public class Board3D : MonoBehaviour
     {
+        // Wired by RuntimeWiring from bootstrap
+        [SerializeField] private BoardManager boardManager;
+
         // Created at runtime
         private readonly List<SlotZone3D> _businessSlots = new List<SlotZone3D>();
         private readonly List<SlotZone3D> _employeeSlots = new List<SlotZone3D>();

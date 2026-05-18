@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Empire of Cards | Build a business empire with cards</title>
+    <meta
+      name="description"
+      content="Build a business empire with cards. Place businesses, chain combos, and fight a rival for market share in Empire of Cards."
+    />
+    <meta
+      property="og:title"
+      content="Empire of Cards | Build a business empire with cards"
+    />
+    <meta
+      property="og:description"
+      content="A tabletop-flavored strategy game where you build businesses, trigger juicy combos, and fight for market share."
+    />
+    <meta property="og:type" content="website" />
+    <meta name="theme-color" content="#140c0a" />
+    <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Manrope:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="page-shell">
+      <div class="setup-banner" data-setup-banner hidden>
+        Preview mode is active. Add your Steam URL and Mailchimp values in
+        <code>landing-page/config.js</code> before publishing.
+      </div>
+
+      <header class="site-header">
+        <a class="brand" href="#top" aria-label="Empire of Cards home">
+          <span class="brand-mark">E</span>
+          <span class="brand-copy">
+            <strong>Empire of Cards</strong>
+            <span>PC / Steam first</span>
+          </span>
+        </a>
+
+        <nav class="site-nav" aria-label="Primary">
+          <a href="#about">About</a>
+          <a href="#gameplay">Gameplay</a>
+          <a href="#updates">Updates</a>
+          <a href="#faq">FAQ</a>
+        </nav>
+
+        <a
+          class="button button-ghost button-small"
+          href="#updates"
+          data-track="header_updates"
+        >
+          Get dev updates
+        </a>
+      </header>
+
+      <main id="top">
+        <section class="hero section">
+          <div class="hero-copy reveal">
+            <div class="eyebrow-group">
+              <span class="eyebrow">Tabletop strategy</span>
+              <span class="eyebrow eyebrow-warm">Solo dev project</span>
+            </div>
+
+            <h1>Build a business empire with cards.</h1>
+            <p class="hero-lead">
+              Place businesses, hire wildly useful talent, trigger absurdly
+              satisfying combos, and wrestle market share away from a rival on a
+              tabletop battlefield.
+            </p>
+
+            <div class="hero-actions">
+              <a
+                class="button button-primary"
+                href="#"
+                data-steam-link
+                data-track="hero_wishlist"
+              >
+                Wishlist on Steam
+              </a>
+              <a
+                class="button button-secondary"
+                href="#updates"
+                data-track="hero_updates"
+              >
+                Get dev updates
+              </a>
+            </div>
+
+            <div class="hero-notes">
+              <p>
+                Empire of Cards is being built for <strong>PC via Steam</strong>
+                first. Mobile and web may come later, but this first push is
+                focused on a sharp desktop strategy experience.
+              </p>
+            </div>
+
+            <ul class="hero-points" aria-label="Key fantasy">
+              <li>
+                <strong>Build businesses</strong>
+                <span>Cards become stores, staff, upgrades, and momentum.</span>
+              </li>
+              <li>
+                <strong>Chain juicy combos</strong>
+                <span>Every smart setup turns into cash, customers, and chaos.</span>
+              </li>
+              <li>
+                <strong>Fight for market share</strong>
+                <span>Take the board before your rival takes the city.</span>
+              </li>
+            </ul>
+          </div>
+
+          <div class="hero-visual reveal reveal-delay">
+            <div class="tabletop-frame">
+              <div class="tabletop-header">
+                <span class="state-pill state-pill-danger">Rival pressure</span>
+                <span class="state-pill">Turn 08 / 15</span>
+              </div>
+
+              <div class="board-grid">
+                <div class="lane lane-rival">
+                  <div class="lane-label">Rival board</div>
+                  <div class="card-row">
+                    <article class="mini-card rival-card tilt-left">
+                      <span class="card-type">Business</span>
+                      <h3>Night Club</h3>
+                      <p>High income while the trend is hot.</p>
+                      <span class="stat-row-inline">+10 crowd</span>
+                    </article>
+                    <article class="mini-card rival-card">
+                      <span class="card-type">Staff</span>
+                      <h3>Influencer</h3>
+                      <p>Steals customers when the spotlight moves.</p>
+                      <span class="stat-row-inline">Steal 5</span>
+                    </article>
+                  </div>
+                </div>
+
+                <div class="center-strip">
+                  <div class="event-chip">
+                    <span class="event-label">Active event</span>
+                    <strong>Coffee craze</strong>
+                  </div>
+
+                  <div class="market-share-panel" aria-label="Market share board">
+                    <div class="market-labels">
+                      <span>You</span>
+                      <span>Market share</span>
+                      <span>Rival</span>
+                    </div>
+                    <div class="share-track">
+                      <span class="share-node share-node-player"></span>
+                      <span class="share-node share-node-player"></span>
+                      <span class="share-node share-node-player"></span>
+                      <span class="share-node share-node-player"></span>
+                      <span class="share-node share-node-neutral"></span>
+                      <span class="share-node share-node-neutral"></span>
+                      <span class="share-node share-node-rival"></span>
+                      <span class="share-node share-node-rival"></span>
+                      <span class="share-node share-node-rival"></span>
+                      <span class="share-node share-node-neutral pulse-node"></span>
+                    </div>
+                    <div class="market-copy">
+                      One more district swings the run.
+                    </div>
+                  </div>
+                </div>
+
+                <div class="lane lane-player">
+                  <div class="lane-label">Your board</div>
+                  <div class="card-row">
+                    <article class="mini-card player-card tilt-right">
+                      <span class="card-type">Business</span>
+                      <h3>Coffee Shop</h3>
+                      <p>Feeds the board with customers every turn.</p>
+                      <span class="stat-row-inline">+5 crowd</span>
+                    </article>
+                    <article class="mini-card support-card">
+                      <span class="card-type">Staff</span>
+                      <h3>Barista</h3>
+                      <p>Doubles up when coffee starts rolling.</p>
+                      <span class="stat-row-inline">Combo live</span>
+                    </article>
+                    <article class="mini-card economy-card">
+                      <span class="card-type">Upgrade</span>
+                      <h3>Ad Agency</h3>
+                      <p>Turns every lane into a louder machine.</p>
+                      <span class="stat-row-inline">+2 all</span>
+                    </article>
+                  </div>
+                </div>
+
+                <div class="hud-panel">
+                  <div class="hud-stat">
+                    <span>Cash</span>
+                    <strong>$620</strong>
+                  </div>
+                  <div class="hud-stat">
+                    <span>Actions</span>
+                    <strong>3 left</strong>
+                  </div>
+                  <div class="hud-stat">
+                    <span>Risk</span>
+                    <strong>FBI 12%</strong>
+                  </div>
+                </div>
+
+                <div class="hand-strip">
+                  <span class="hand-label">Hand</span>
+                  <div class="hand-cards">
+                    <span class="hand-card hand-card-business"></span>
+                    <span class="hand-card hand-card-staff"></span>
+                    <span class="hand-card hand-card-action"></span>
+                    <span class="hand-card hand-card-upgrade"></span>
+                    <span class="hand-card hand-card-event"></span>
+                  </div>
+                </div>
+
+                <div class="combo-burst" aria-hidden="true">
+                  <strong>Combo!</strong>
+                  <span>Latte Festival x Market Buzz</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="section section-grid" id="about">
+          <div class="section-heading reveal">
+            <span class="eyebrow">What is this game?</span>
+            <h2>Strategy with readable stakes and a tabletop pulse.</h2>
+          </div>
+
+          <div class="two-column">
+            <div class="copy-panel reveal">
+              <p>
+                Empire of Cards is a strategy game where cards are your
+                businesses, employees, upgrades, and one-turn power plays. You
+                are not crawling a dungeon. You are building a weird little
+                empire and trying to outgrow a rival before they lock up the
+                board.
+              </p>
+              <p>
+                The fantasy is simple: make strong placements, trigger sharper
+                synergies, survive the events, and claim the market one district
+                at a time.
+              </p>
+            </div>
+
+            <aside class="note-panel reveal reveal-delay">
+              <h3>The fast pitch</h3>
+              <p>
+                A card-driven business strategy game where you chain combos and
+                fight for market share on a living tabletop board.
+              </p>
+            </aside>
+          </div>
+        </section>
+
+        <section class="section" aria-labelledby="pillars-title">
+          <div class="section-heading reveal">
+            <span class="eyebrow">Core pillars</span>
+            <h2 id="pillars-title">Three things the page needs to sell fast.</h2>
+          </div>
+
+          <div class="pillar-grid">
+            <article class="pillar-card reveal">
+              <span class="pillar-index">01</span>
+              <h3>Build strange businesses</h3>
+              <p>
+                Businesses occupy the board, staff reshape their output, and
+                upgrades bend the whole run toward a bigger engine.
+              </p>
+            </article>
+
+            <article class="pillar-card reveal reveal-delay">
+              <span class="pillar-index">02</span>
+              <h3>Trigger combo chains</h3>
+              <p>
+                The best turns are explosive. Layer the right cards and the
+                table should feel like it just cashed out in your favor.
+              </p>
+            </article>
+
+            <article class="pillar-card reveal reveal-delay-2">
+              <span class="pillar-index">03</span>
+              <h3>Win the market share war</h3>
+              <p>
+                This is not abstract score chasing. Every district on the board
+                swings tension toward you or your rival, and that shift should
+                always feel visible.
+              </p>
+            </article>
+          </div>
+        </section>
+
+        <section class="section" id="gameplay">
+          <div class="section-heading reveal">
+            <span class="eyebrow">Gameplay rhythm</span>
+            <h2>From placement to payoff in a few readable beats.</h2>
+          </div>
+
+          <div class="strip-grid">
+            <article class="strip-card reveal">
+              <div class="strip-stage">
+                <span class="stage-number">1</span>
+                <strong>Place</strong>
+              </div>
+              <div class="micro-board micro-board-place">
+                <span class="micro-slot active"></span>
+                <span class="micro-slot"></span>
+                <span class="micro-slot"></span>
+                <span class="micro-card micro-card-business"></span>
+              </div>
+              <p>
+                Start the turn by dropping a business or enabling a setup piece
+                that changes the whole table.
+              </p>
+            </article>
+
+            <article class="strip-card reveal reveal-delay">
+              <div class="strip-stage">
+                <span class="stage-number">2</span>
+                <strong>Pop</strong>
+              </div>
+              <div class="micro-board micro-board-pop">
+                <span class="micro-card micro-card-business"></span>
+                <span class="micro-card micro-card-staff"></span>
+                <span class="micro-card micro-card-upgrade"></span>
+                <span class="combo-chip">+12 customers</span>
+              </div>
+              <p>
+                Pair staff, trends, and upgrades to create turns that feel
+                louder than simple stat bumps.
+              </p>
+            </article>
+
+            <article class="strip-card reveal reveal-delay-2">
+              <div class="strip-stage">
+                <span class="stage-number">3</span>
+                <strong>Take</strong>
+              </div>
+              <div class="micro-board micro-board-take">
+                <span class="share-slab blue"></span>
+                <span class="share-slab blue"></span>
+                <span class="share-slab blue"></span>
+                <span class="share-slab gold"></span>
+                <span class="share-slab red"></span>
+                <span class="share-slab red"></span>
+              </div>
+              <p>
+                Your customers shift the board. One last district can end the
+                run before the rival claws it back.
+              </p>
+            </article>
+          </div>
+        </section>
+
+        <section class="section signup-section" id="updates">
+          <div class="section-heading reveal">
+            <span class="eyebrow">Owned audience</span>
+            <h2>Get the first playable updates.</h2>
+            <p>
+              Join for gameplay progress, Steam page news, playtest pings, and
+              launch updates. No inbox spam, no broad studio newsletter.
+            </p>
+          </div>
+
+          <div class="signup-shell reveal reveal-delay">
+            <div class="signup-copy">
+              <h3>Be early when the board opens.</h3>
+              <p>
+                The first emails will cover progress clips, coming soon page
+                status, and when wishlist and playtest doors go live.
+              </p>
+              <ul class="signup-list">
+                <li>Gameplay progress and build updates</li>
+                <li>Steam page and wishlist announcement</li>
+                <li>Future playtest and demo news</li>
+              </ul>
+            </div>
+
+            <div class="signup-form-panel">
+              <form class="signup-form" data-mailchimp-form novalidate>
+                <label class="field-label" for="email">Email</label>
+                <input
+                  id="email"
+                  name="email"
+                  type="email"
+                  inputmode="email"
+                  autocomplete="email"
+                  placeholder="you@example.com"
+                  required
+                />
+
+                <label class="consent-row">
+                  <input
+                    id="consent"
+                    name="consent"
+                    type="checkbox"
+                    required
+                  />
+                  <span>
+                    I want development updates and launch news by email.
+                  </span>
+                </label>
+
+                <button class="button button-primary button-wide" type="submit">
+                  Join the list
+                </button>
+
+                <p class="form-meta">
+                  Double opt-in and GDPR-friendly consent are supported through
+                  Mailchimp configuration.
+                </p>
+                <p class="form-message" data-form-message aria-live="polite"></p>
+                <input data-honeypot type="text" tabindex="-1" autocomplete="off" />
+              </form>
+            </div>
+          </div>
+        </section>
+
+        <section class="section founder-section">
+          <div class="founder-card reveal">
+            <span class="eyebrow">Founder note</span>
+            <h2>Built as a clean restart.</h2>
+            <p>
+              Empire of Cards is being built by a solo developer who spent years
+              shipping and optimizing games played by millions, then went back
+              to first principles to make a sharper, stranger strategy game of
+              his own.
+            </p>
+            <p>
+              The goal is not to make a spreadsheet with cards. It is to make a
+              readable, juicy, competitive board where every smart setup feels
+              like a takeover.
+            </p>
+          </div>
+        </section>
+
+        <section class="section faq-section" id="faq">
+          <div class="section-heading reveal">
+            <span class="eyebrow">FAQ</span>
+            <h2>Questions players will ask first.</h2>
+          </div>
+
+          <div class="faq-list">
+            <details class="faq-item reveal">
+              <summary>What kind of game is Empire of Cards?</summary>
+              <p>
+                It is a strategy game where cards become businesses, employees,
+                upgrades, and one-turn plays. Your objective is to outbuild a
+                rival and control the board’s market share before they do.
+              </p>
+            </details>
+
+            <details class="faq-item reveal reveal-delay">
+              <summary>Is this launching on mobile and web too?</summary>
+              <p>
+                The current focus is PC via Steam. If the game lands well, other
+                platforms can be explored later, but they are not the first
+                promise.
+              </p>
+            </details>
+
+            <details class="faq-item reveal reveal-delay-2">
+              <summary>How can I support the project right now?</summary>
+              <p>
+                Join the mailing list, wishlist the game on Steam when the page
+                goes live, and share the page with people who enjoy strategy,
+                management, and card-driven systems.
+              </p>
+            </details>
+
+            <details class="faq-item reveal reveal-delay-3">
+              <summary>What kind of emails will I get?</summary>
+              <p>
+                Only development updates that matter: gameplay clips, Steam page
+                news, playtest calls, and launch updates. No general-purpose
+                marketing blast.
+              </p>
+            </details>
+          </div>
+        </section>
+      </main>
+
+      <footer class="site-footer section">
+        <div class="footer-card reveal">
+          <div>
+            <span class="eyebrow">Ready to back the board?</span>
+            <h2>Follow the build, then hit wishlist when Steam is live.</h2>
+          </div>
+
+          <div class="footer-actions">
+            <a
+              class="button button-primary"
+              href="#"
+              data-steam-link
+              data-track="footer_wishlist"
+            >
+              Wishlist on Steam
+            </a>
+            <a
+              class="button button-secondary"
+              href="#updates"
+              data-track="footer_updates"
+            >
+              Get dev updates
+            </a>
+          </div>
+        </div>
+      </footer>
+    </div>
+
+    <script src="./config.js"></script>
+    <script src="./script.js"></script>
+  </body>
+</html>

@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using EmpireOfCards.Core;
 using EmpireOfCards.Data;
+using EmpireOfCards.Gameplay;
 
 namespace EmpireOfCards.World
 {
@@ -14,11 +15,14 @@ namespace EmpireOfCards.World
         [SerializeField] private float verticalArc = 0.15f;
 
         private readonly List<Card3D> _cards = new List<Card3D>();
-        private CardFactory _factory;
+
+        // Wired by RuntimeWiring from bootstrap (field names must match SetField calls)
+        [SerializeField] private CardFactory cardFactory;
+        [SerializeField] private DeckManager deckManager; // reserved for future use
 
         public IReadOnlyList<Card3D> Cards => _cards;
 
-        public void SetFactory(CardFactory factory) { _factory = factory; }
+        public void SetFactory(CardFactory factory) { cardFactory = factory; }
         public void SetAnchor(Transform anchor) { handAnchor = anchor; }
 
         private void OnEnable()
@@ -39,9 +43,9 @@ namespace EmpireOfCards.World
 
         private void OnCardDrawn(CardData card)
         {
-            if (_factory == null) return;
+            if (cardFactory == null) return;
 
-            Card3D card3D = _factory.CreateCard(card);
+            Card3D card3D = cardFactory.CreateCard(card);
             card3D.IsInHand = true;
             _cards.Add(card3D);
             LayoutHand();
@@ -62,6 +66,40 @@ namespace EmpireOfCards.World
                     break;
                 }
             }
+            LayoutHand();
+        }
+
+        /// <summary>
+        /// Public entry point called by bootstrap's Wire3DInteraction.
+        /// Spawns a 3D card from CardData and adds it to the hand.
+        /// NOTE: Hand3D also subscribes to EventBus.OnCardDrawn internally,
+        /// so callers should avoid double-calling.
+        /// </summary>
+        public void AddCard(CardData card)
+        {
+            if (cardFactory == null) return;
+
+            Card3D card3D = cardFactory.CreateCard(card);
+            card3D.IsInHand = true;
+            _cards.Add(card3D);
+            LayoutHand();
+        }
+
+        /// <summary>
+        /// Public entry point to remove a card by its CardData.
+        /// Called by bootstrap's Wire3DInteraction.
+        /// </summary>
+        public void RemoveCard(CardData card)
+        {
+            RemoveCardFromHand(card);
+        }
+
+        /// <summary>
+        /// Public entry point to re-layout the hand fan.
+        /// Called by bootstrap on turn start.
+        /// </summary>
+        public void RefreshLayout()
+        {
             LayoutHand();
         }
 

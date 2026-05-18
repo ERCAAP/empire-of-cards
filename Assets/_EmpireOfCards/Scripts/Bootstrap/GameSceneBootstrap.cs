@@ -1297,8 +1297,9 @@ namespace EmpireOfCards.Bootstrap
             handGo.transform.localRotation = Quaternion.identity;
             _hand3D = handGo.AddComponent<Hand3D>();
 
-            // Wire the card factory so Hand3D can spawn cards
+            // Wire the card factory and hand anchor so Hand3D can spawn and layout cards
             RuntimeWiring.SetField(_hand3D, "cardFactory", _cardFactory);
+            RuntimeWiring.SetField(_hand3D, "handAnchor", handAnchor.transform);
 
             Debug.Log("[GameSceneBootstrap] Hand3D created, anchored to camera at local(0, -2, 4).");
         }
@@ -1683,19 +1684,9 @@ namespace EmpireOfCards.Bootstrap
                 _inputManager3D.InputEnabled = (phase == TurnPhase.PlayPhase);
             };
 
-            // --- Hand3D listens to draw events to spawn 3D cards ---
-            EventBus.OnCardDrawn += cardData =>
-            {
-                if (_hand3D != null)
-                    _hand3D.AddCard(cardData);
-            };
-
-            // --- Hand3D removes played cards ---
-            EventBus.OnCardPlayed += cardData =>
-            {
-                if (_hand3D != null)
-                    _hand3D.RemoveCard(cardData);
-            };
+            // NOTE: Hand3D already subscribes to EventBus.OnCardDrawn, OnCardPlayed,
+            // OnCardDiscarded, and OnCardBurned in its own OnEnable(). No need to
+            // wire those externally here -- doing so would cause double handling.
 
             // --- Turn start: refresh hand layout ---
             EventBus.OnTurnStarted += turn =>

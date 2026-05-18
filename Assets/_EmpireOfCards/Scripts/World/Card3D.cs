@@ -137,5 +137,16 @@ namespace EmpireOfCards.World
             _targetRot = rot;
             _isInHand = true;
         }
+
+        /// <summary>
+        /// Called when a card drop fails and the card needs to animate back
+        /// to its previous hand position. Uses the last target set by SetHandPosition.
+        /// </summary>
+        public void ReturnToHand()
+        {
+            _isDragging = false;
+            _isInHand = true;
+            // Card will lerp back to _targetPos/_targetRot (its last hand slot)
+        }
     }
 }
