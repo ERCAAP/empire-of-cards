@@ -8,6 +8,8 @@ namespace EmpireOfCards.Gameplay
 {
     /// <summary>
     /// Manages the player's deck, hand, draw pile, and discard pile.
+    /// Initializes from DeckPresetData (expanding DeckEntry counts into individual cards).
+    /// Supports draw, discard, redraw (1/turn), burn, and deck recycling.
     /// </summary>
     public class DeckManager : MonoBehaviour
     {
@@ -17,21 +19,29 @@ namespace EmpireOfCards.Gameplay
         [SerializeField] private List<CardData> hand = new List<CardData>();
         [SerializeField] private List<CardData> discardPile = new List<CardData>();
 
-        [Header("Redraw")]
-        [SerializeField] private int redrawsRemaining;
+        [Header("Settings")]
+        [SerializeField] private int handSize = 5;
         [SerializeField] private int redrawsPerTurn = 1;
 
-        // --- Events ---
-        public event Action<CardData> OnCardDrawn;
-        public event Action<CardData> OnCardDiscarded;
-        public event Action OnDeckShuffled;
+        // --- Redraw tracking ---
+        [Header("Redraw State (Read Only)")]
+        [SerializeField] private int redrawsRemaining;
 
         // --- Properties ---
+        public IReadOnlyList<CardData> DrawPile => drawPile;
         public IReadOnlyList<CardData> Hand => hand;
+        public IReadOnlyList<CardData> DiscardPile => discardPile;
         public int RedrawsRemaining => redrawsRemaining;
+        public int HandSize => handSize;
+
+        // ----------------------------------------------------------------
+        // Initialization
+        // ----------------------------------------------------------------
 
         /// <summary>
-        /// Creates the starting deck from a preset. Call once at the start of a run.
+        /// Creates the starting deck from a preset. Expands DeckEntry counts
+        /// into individual CardData instances. Call once at the start of a run.
+        /// DeckPresetData has DeckEntry[] cards, each with a card + count.
         /// </summary>
         public void InitializeDeck(DeckPresetData preset)
         {
@@ -45,14 +55,26 @@ namespace EmpireOfCards.Gameplay
                 return;
             }
 
-            foreach (var card in preset.startingCards)
+            // Expand DeckEntry counts into individual cards
+            foreach (DeckEntry entry in preset.cards)
             {
-                drawPile.Add(card);
+                if (entry.card == null) continue;
+
+                for (int i = 0; i < entry.count; i++)
+                {
+                    drawPile.Add(entry.card);
+                }
             }
+
+            Debug.Log($"[DeckManager] Deck initialized with {drawPile.Count} cards from preset '{preset.presetName}'.");
 
             ShuffleDeck();
             redrawsRemaining = redrawsPerTurn;
         }
+
+        // ----------------------------------------------------------------
+        // Shuffle
+        // ----------------------------------------------------------------
 
         /// <summary>
         /// Fisher-Yates shuffle of the draw pile.
@@ -62,56 +84,95 @@ namespace EmpireOfCards.Gameplay
             for (int i = drawPile.Count - 1; i > 0; i--)
             {
                 int j = UnityEngine.Random.Range(0, i + 1);
-                (drawPile[i], drawPile[j]) = (drawPile[j], drawPile[i]);
+                CardData temp = drawPile[i];
+                drawPile[i] = drawPile[j];
+                drawPile[j] = temp;
             }
-
-            OnDeckShuffled?.Invoke();
         }
+
+        // ----------------------------------------------------------------
+        // Draw
+        // ----------------------------------------------------------------
 
         /// <summary>
         /// Draws the specified number of cards from the draw pile into the hand.
-        /// If the draw pile is empty, shuffles the discard pile back in first.
+        /// If the draw pile is empty, recycled the discard pile back in (shuffled).
         /// </summary>
-        public void DrawCards(int count)
+        public List<CardData> DrawCards(int count)
         {
+            List<CardData> drawnCards = new List<CardData>();
+
             for (int i = 0; i < count; i++)
             {
                 if (drawPile.Count == 0)
                 {
-                    if (discardPile.Count == 0)
+                    RecycleDiscardPile();
+
+                    if (drawPile.Count == 0)
                     {
                         Debug.Log("[DeckManager] No cards left to draw.");
-                        return;
+                        break;
                     }
-
-                    // Recycle discard pile into draw pile
-                    drawPile.AddRange(discardPile);
-                    discardPile.Clear();
-                    ShuffleDeck();
                 }
 
                 CardData drawn = drawPile[0];
                 drawPile.RemoveAt(0);
                 hand.Add(drawn);
-                OnCardDrawn?.Invoke(drawn);
+                drawnCards.Add(drawn);
+                EventBus.CardDrawn(drawn);
             }
+
+            return drawnCards;
         }
+
+        /// <summary>
+        /// Draws cards up to handSize. Used at the start of draw phase.
+        /// </summary>
+        public List<CardData> DrawToHandSize()
+        {
+            int cardsToDraw = Mathf.Max(0, handSize - hand.Count);
+            return DrawCards(cardsToDraw);
+        }
+
+        // ----------------------------------------------------------------
+        // Discard
+        // ----------------------------------------------------------------
 
         /// <summary>
         /// Moves a card from the hand to the discard pile.
         /// </summary>
-        public void DiscardCard(CardData card)
+        public bool DiscardCard(CardData card)
         {
             if (card == null || !hand.Contains(card))
-                return;
+                return false;
 
             hand.Remove(card);
             discardPile.Add(card);
-            OnCardDiscarded?.Invoke(card);
+            EventBus.CardDiscarded(card);
+            return true;
         }
 
         /// <summary>
-        /// Discards a card from hand and draws a replacement. Limited to redrawsPerTurn per turn.
+        /// Discards the entire hand at end of turn.
+        /// </summary>
+        public void DiscardHand()
+        {
+            while (hand.Count > 0)
+            {
+                CardData card = hand[0];
+                hand.RemoveAt(0);
+                discardPile.Add(card);
+                EventBus.CardDiscarded(card);
+            }
+        }
+
+        // ----------------------------------------------------------------
+        // Redraw (GDD: 1/turn limit)
+        // ----------------------------------------------------------------
+
+        /// <summary>
+        /// Discards a card from hand and draws a replacement.
+        /// Limited to redrawsPerTurn per turn (default 1).
         /// Returns true if the redraw succeeded.
         /// </summary>
         public bool RedrawCard(CardData card)
@@ -132,60 +193,6 @@ namespace EmpireOfCards.Gameplay
         }
 
         /// <summary>
-        /// Adds a new card to the deck (goes to the discard pile so it is available next shuffle).
-        /// Used when purchasing from the shop.
-        /// </summary>
-        public void AddCardToDeck(CardData card)
-        {
-            if (card == null)
-                return;
-
-            discardPile.Add(card);
-        }
-
-        /// <summary>
-        /// Permanently removes a card from the game. Checks hand, draw pile, and discard pile.
-        /// </summary>
-        public void BurnCard(CardData card)
-        {
-            if (card == null)
-                return;
-
-            if (hand.Contains(card))
-            {
-                hand.Remove(card);
-                return;
-            }
-
-            if (drawPile.Contains(card))
-            {
-                drawPile.Remove(card);
-                return;
-            }
-
-            if (discardPile.Contains(card))
-            {
-                discardPile.Remove(card);
-            }
-        }
-
-        /// <summary>
-        /// Returns the number of cards remaining in the draw pile.
-        /// </summary>
-        public int GetDeckCount()
-        {
-            return drawPile.Count;
-        }
-
-        /// <summary>
-        /// Returns the number of cards in the discard pile.
-        /// </summary>
-        public int GetDiscardCount()
-        {
-            return discardPile.Count;
-        }
-
-        /// <summary>
         /// Resets the redraw counter. Call at the start of each turn.
         /// </summary>
         public void ResetRedraws()
@@ -193,15 +200,148 @@ namespace EmpireOfCards.Gameplay
             redrawsRemaining = redrawsPerTurn;
         }
 
+        // ----------------------------------------------------------------
+        // Add / Remove Cards
+        // ----------------------------------------------------------------
+
         /// <summary>
-        /// Discards the entire hand at end of turn.
+        /// Adds a new card to the deck (goes to the discard pile so it is
+        /// available next shuffle). Used when purchasing from the shop.
         /// </summary>
-        public void DiscardHand()
+        public void AddCardToDeck(CardData card)
         {
-            while (hand.Count > 0)
+            if (card == null) return;
+            discardPile.Add(card);
+        }
+
+        /// <summary>
+        /// Permanently removes a card from the game.
+        /// Searches hand, draw pile, and discard pile.
+        /// </summary>
+        public void BurnCard(CardData card)
+        {
+            if (card == null) return;
+
+            // Search hand first
+            if (hand.Remove(card))
             {
-                DiscardCard(hand[0]);
+                EventBus.CardBurned(card);
+                return;
             }
+
+            // Then draw pile
+            if (drawPile.Remove(card))
+            {
+                EventBus.CardBurned(card);
+                return;
+            }
+
+            // Then discard pile
+            if (discardPile.Remove(card))
+            {
+                EventBus.CardBurned(card);
+            }
+        }
+
+        // ----------------------------------------------------------------
+        // Special: Draw Random Employee (Acil Ise Alim action card)
+        // ----------------------------------------------------------------
+
+        /// <summary>
+        /// Searches draw pile and discard pile for a random Employee card,
+        /// removes it from its pile, and returns it.
+        /// Used by the "Acil Ise Alim" action card.
+        /// </summary>
+        public CardData DrawRandomEmployee()
+        {
+            // Collect all employee cards from draw and discard piles
+            List<(CardData card, bool inDrawPile, int index)> candidates = new List<(CardData, bool, int)>();
+
+            for (int i = 0; i < drawPile.Count; i++)
+            {
+                if (drawPile[i] != null && drawPile[i].cardType == CardType.Employee)
+                    candidates.Add((drawPile[i], true, i));
+            }
+
+            for (int i = 0; i < discardPile.Count; i++)
+            {
+                if (discardPile[i] != null && discardPile[i].cardType == CardType.Employee)
+                    candidates.Add((discardPile[i], false, i));
+            }
+
+            if (candidates.Count == 0)
+            {
+                Debug.Log("[DeckManager] No employee cards available to draw.");
+                return null;
+            }
+
+            // Pick random
+            int pick = UnityEngine.Random.Range(0, candidates.Count);
+            var chosen = candidates[pick];
+
+            // Remove from its pile
+            if (chosen.inDrawPile)
+                drawPile.RemoveAt(chosen.index);
+            else
+                discardPile.RemoveAt(chosen.index);
+
+            return chosen.card;
+        }
+
+        // ----------------------------------------------------------------
+        // Queries
+        // ----------------------------------------------------------------
+
+        /// <summary>
+        /// Returns the number of cards remaining in the draw pile.
+        /// </summary>
+        public int GetDrawPileCount()
+        {
+            return drawPile.Count;
+        }
+
+        /// <summary>
+        /// Returns the number of cards in the discard pile.
+        /// </summary>
+        public int GetDiscardPileCount()
+        {
+            return discardPile.Count;
+        }
+
+        /// <summary>
+        /// Returns the total number of cards across all piles (draw + hand + discard).
+        /// </summary>
+        public int GetTotalCardCount()
+        {
+            return drawPile.Count + hand.Count + discardPile.Count;
+        }
+
+        // ----------------------------------------------------------------
+        // Recycle
+        // ----------------------------------------------------------------
+
+        /// <summary>
+        /// Moves all discard pile cards into the draw pile and shuffles.
+        /// </summary>
+        private void RecycleDiscardPile()
+        {
+            if (discardPile.Count == 0) return;
+
+            drawPile.AddRange(discardPile);
+            discardPile.Clear();
+            ShuffleDeck();
+            Debug.Log("[DeckManager] Discard pile recycled into draw pile and shuffled.");
+        }
+
+        /// <summary>
+        /// Resets the deck manager for a new run.
+        /// </summary>
+        public void Reset()
+        {
+            drawPile.Clear();
+            hand.Clear();
+            discardPile.Clear();
+            redrawsRemaining = 0;
         }
     }
 }

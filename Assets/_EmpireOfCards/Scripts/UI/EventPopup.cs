@@ -1,4 +1,3 @@
-using System.Collections;
 using UnityEngine;
 using EmpireOfCards.Data;
 using EmpireOfCards.UI.Cards;
@@ -6,129 +5,173 @@ using EmpireOfCards.UI.Cards;
 namespace EmpireOfCards.UI
 {
     /// <summary>
-    /// Displays an event card with a flip-and-glow animation.
+    /// Event card reveal popup. Card flip animation, glow, hold, then fade.
+    /// All animation driven by Update() polling -- no coroutines.
     /// </summary>
     public class EventPopup : MonoBehaviour
     {
         [Header("References")]
         [SerializeField] private CardUI eventCardUI;
         [SerializeField] private CanvasGroup canvasGroup;
-
-        [Header("Timing")]
-        [SerializeField] private float displayDuration = 3f;
-        [SerializeField] private float flipDuration = 0.4f;
-        [SerializeField] private float glowPulseDuration = 0.6f;
-        [SerializeField] private float fadeOutDuration = 0.5f;
-
-        [Header("Glow")]
         [SerializeField] private GameObject glowEffect;
 
-        private Coroutine activeCoroutine;
+        [Header("Timing")]
+        [SerializeField] private float flipDuration = 0.4f;
+        [SerializeField] private float glowPulseDuration = 0.6f;
+        [SerializeField] private float holdDuration = 3f;
+        [SerializeField] private float fadeOutDuration = 0.5f;
+
+        // State machine
+        private enum State { Idle, FlipClose, FlipOpen, GlowPulse, Hold, FadeOut }
+
+        private State state = State.Idle;
+        private float stateTimer;
         private RectTransform cardRect;
+        private Vector3 cardOriginalScale;
+
+        // ------------------------------------------------------------------
+        // Lifecycle
+        // ------------------------------------------------------------------
 
         private void Awake()
         {
             if (eventCardUI != null)
-            {
                 cardRect = eventCardUI.GetComponent<RectTransform>();
-            }
 
             if (canvasGroup != null)
-            {
                 canvasGroup.alpha = 0f;
-            }
 
             if (glowEffect != null)
-            {
                 glowEffect.SetActive(false);
+        }
+
+        private void Update()
+        {
+            if (state == State.Idle)
+                return;
+
+            stateTimer += Time.deltaTime;
+
+            switch (state)
+            {
+                case State.FlipClose: UpdateFlipClose(); break;
+                case State.FlipOpen:  UpdateFlipOpen();  break;
+                case State.GlowPulse: UpdateGlowPulse(); break;
+                case State.Hold:      UpdateHold();      break;
+                case State.FadeOut:   UpdateFadeOut();   break;
             }
         }
+
+        // ------------------------------------------------------------------
+        // Public
+        // ------------------------------------------------------------------
 
         /// <summary>
         /// Shows the event card with a flip animation followed by a glow pulse.
         /// </summary>
         public void Show(CardData eventCard)
         {
-            if (activeCoroutine != null)
-            {
-                StopCoroutine(activeCoroutine);
-            }
-
             if (eventCardUI != null)
-            {
                 eventCardUI.SetupCard(eventCard);
-            }
 
-            activeCoroutine = StartCoroutine(AnimateEventCoroutine());
-        }
-
-        private IEnumerator AnimateEventCoroutine()
-        {
-            // Fade in
             if (canvasGroup != null)
                 canvasGroup.alpha = 1f;
 
-            // Card flip animation (scale X from 0 to 1)
+            if (cardRect != null)
+                cardOriginalScale = cardRect.localScale;
+
+            if (glowEffect != null)
+                glowEffect.SetActive(false);
+
+            state = State.FlipClose;
+            stateTimer = 0f;
+        }
+
+        // ------------------------------------------------------------------
+        // State updates
+        // ------------------------------------------------------------------
+
+        private void UpdateFlipClose()
+        {
+            float halfFlip = flipDuration * 0.5f;
+            float t = Mathf.Clamp01(stateTimer / halfFlip);
+
             if (cardRect != null)
             {
-                float elapsed = 0f;
-                Vector3 scale = cardRect.localScale;
-
-                // First half: scale X to 0 (card back)
-                while (elapsed < flipDuration * 0.5f)
-                {
-                    elapsed += Time.deltaTime;
-                    float t = elapsed / (flipDuration * 0.5f);
-                    cardRect.localScale = new Vector3(Mathf.Lerp(1f, 0f, t), scale.y, scale.z);
-                    yield return null;
-                }
-
-                // Second half: scale X from 0 to 1 (card front revealed)
-                elapsed = 0f;
-                while (elapsed < flipDuration * 0.5f)
-                {
-                    elapsed += Time.deltaTime;
-                    float t = elapsed / (flipDuration * 0.5f);
-                    cardRect.localScale = new Vector3(Mathf.Lerp(0f, 1f, t), scale.y, scale.z);
-                    yield return null;
-                }
-
-                cardRect.localScale = scale;
+                cardRect.localScale = new Vector3(
+                    Mathf.Lerp(cardOriginalScale.x, 0f, t),
+                    cardOriginalScale.y,
+                    cardOriginalScale.z);
             }
 
-            // Glow pulse
-            if (glowEffect != null)
+            if (t >= 1f)
             {
-                glowEffect.SetActive(true);
-
-                float elapsed = 0f;
-                while (elapsed < glowPulseDuration)
-                {
-                    elapsed += Time.deltaTime;
-                    yield return null;
-                }
-
-                glowEffect.SetActive(false);
+                state = State.FlipOpen;
+                stateTimer = 0f;
             }
+        }
 
-            // Hold on screen
-            yield return new WaitForSeconds(displayDuration);
+        private void UpdateFlipOpen()
+        {
+            float halfFlip = flipDuration * 0.5f;
+            float t = Mathf.Clamp01(stateTimer / halfFlip);
 
-            // Fade out
-            float fadeElapsed = 0f;
-            while (fadeElapsed < fadeOutDuration)
+            if (cardRect != null)
             {
-                fadeElapsed += Time.deltaTime;
-                float t = Mathf.Clamp01(fadeElapsed / fadeOutDuration);
-                if (canvasGroup != null)
-                    canvasGroup.alpha = 1f - t;
-                yield return null;
+                cardRect.localScale = new Vector3(
+                    Mathf.Lerp(0f, cardOriginalScale.x, t),
+                    cardOriginalScale.y,
+                    cardOriginalScale.z);
             }
+
+            if (t >= 1f)
+            {
+                if (cardRect != null)
+                    cardRect.localScale = cardOriginalScale;
+
+                if (glowEffect != null)
+                    glowEffect.SetActive(true);
+
+                state = State.GlowPulse;
+                stateTimer = 0f;
+            }
+        }
+
+        private void UpdateGlowPulse()
+        {
+            if (stateTimer >= glowPulseDuration)
+            {
+                if (glowEffect != null)
+                    glowEffect.SetActive(false);
+
+                state = State.Hold;
+                stateTimer = 0f;
+            }
+        }
+
+        private void UpdateHold()
+        {
+            if (stateTimer >= holdDuration)
+            {
+                state = State.FadeOut;
+                stateTimer = 0f;
+            }
+        }
+
+        private void UpdateFadeOut()
+        {
+            float t = Mathf.Clamp01(stateTimer / fadeOutDuration);
 
             if (canvasGroup != null)
-                canvasGroup.alpha = 0f;
+                canvasGroup.alpha = 1f - t;
 
-            activeCoroutine = null;
+            if (t >= 1f)
+            {
+                if (canvasGroup != null)
+                    canvasGroup.alpha = 0f;
+
+                state = State.Idle;
+            }
         }
     }
 }

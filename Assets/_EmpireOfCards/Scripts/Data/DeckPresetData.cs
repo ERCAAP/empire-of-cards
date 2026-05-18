@@ -1,4 +1,3 @@
-using System;
 using UnityEngine;
 
 namespace EmpireOfCards.Data
@@ -6,21 +5,15 @@ namespace EmpireOfCards.Data
     [CreateAssetMenu(fileName = "NewDeckPreset", menuName = "EmpireOfCards/Deck Preset")]
     public class DeckPresetData : ScriptableObject
     {
-        [Tooltip("Display name for this deck preset")]
-        public string presetName;
-
-        public DeckEntry[] cards;
-
-        [Tooltip("Starting money when using this deck")]
-        public int startingMoney;
+        public string presetName;           // "Başlangıç Destesi"
+        public int startingMoney = 500;
+        public DeckEntry[] cards;           // 14 cards: 2xBüfe, 3xStajyer, 2xÇaylak, 3xElİlanı, 2xKüçükYatırım, 2xOfisMalzemeleri
     }
 
-    [Serializable]
+    [System.Serializable]
     public class DeckEntry
     {
         public CardData card;
-
-        [Tooltip("Number of copies of this card in the deck")]
         public int count;
     }
 }

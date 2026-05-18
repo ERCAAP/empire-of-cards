@@ -1,12 +1,14 @@
 using System;
 using UnityEngine;
+using EmpireOfCards.Core;
 using EmpireOfCards.Data;
 
 namespace EmpireOfCards.UI
 {
     /// <summary>
-    /// Central UI controller. Holds references to all UI panels and orchestrates
-    /// transitions between them.
+    /// Central UI controller. Subscribes to EventBus events and routes
+    /// updates to the appropriate panel components. No panel calls manager
+    /// methods for data -- everything flows through events.
     /// </summary>
     public class UIManager : MonoBehaviour
     {
@@ -21,7 +23,7 @@ namespace EmpireOfCards.UI
         [SerializeField] private ScoreScreen scoreScreen;
         [SerializeField] private GameOverScreen gameOverScreen;
 
-        // --- Events ---
+        // --- Events for external listeners (e.g. TurnManager) ---
         public event Action OnEndTurnClicked;
         public event Action<bool> OnShopToggled;
 
@@ -31,15 +33,132 @@ namespace EmpireOfCards.UI
         public ShopPanel Shop => shopPanel;
         public HandUI Hand => handUI;
 
+        // ------------------------------------------------------------------
+        // Lifecycle
+        // ------------------------------------------------------------------
+
+        private void OnEnable()
+        {
+            EventBus.OnPhaseStarted += HandlePhaseStarted;
+            EventBus.OnComboTriggered += HandleComboTriggered;
+            EventBus.OnEventActivated += HandleEventActivated;
+            EventBus.OnRivalAction += HandleRivalAction;
+            EventBus.OnRivalTaunt += HandleRivalTaunt;
+            EventBus.OnGameOver += HandleGameOver;
+            EventBus.OnMoneyChanged += HandleMoneyChanged;
+            EventBus.OnTerritoryChanged += HandleTerritoryChanged;
+            EventBus.OnFBIRiskChanged += HandleFBIRiskChanged;
+            EventBus.OnTurnStarted += HandleTurnStarted;
+        }
+
+        private void OnDisable()
+        {
+            EventBus.OnPhaseStarted -= HandlePhaseStarted;
+            EventBus.OnComboTriggered -= HandleComboTriggered;
+            EventBus.OnEventActivated -= HandleEventActivated;
+            EventBus.OnRivalAction -= HandleRivalAction;
+            EventBus.OnRivalTaunt -= HandleRivalTaunt;
+            EventBus.OnGameOver -= HandleGameOver;
+            EventBus.OnMoneyChanged -= HandleMoneyChanged;
+            EventBus.OnTerritoryChanged -= HandleTerritoryChanged;
+            EventBus.OnFBIRiskChanged -= HandleFBIRiskChanged;
+            EventBus.OnTurnStarted -= HandleTurnStarted;
+        }
+
+        // ------------------------------------------------------------------
+        // EventBus handlers
+        // ------------------------------------------------------------------
+
+        private void HandlePhaseStarted(TurnPhase phase)
+        {
+            // During PlayPhase the player can interact; hide/show as needed
+            bool isPlayPhase = phase == TurnPhase.PlayPhase;
+
+            if (handUI != null)
+                handUI.SetInteractable(isPlayPhase);
+
+            if (actionBar != null)
+                actionBar.SetVisible(isPlayPhase);
+        }
+
+        private void HandleComboTriggered(ComboData combo)
+        {
+            if (comboPopup != null)
+                comboPopup.Show(combo.displayText, combo.glowColor);
+        }
+
+        private void HandleEventActivated(CardData eventCard)
+        {
+            if (eventPopup != null)
+                eventPopup.Show(eventCard);
+        }
+
+        private void HandleRivalAction(string action)
+        {
+            if (rivalPopup != null)
+                rivalPopup.Show(action, string.Empty);
+        }
+
+        private void HandleRivalTaunt(string taunt)
+        {
+            if (rivalPopup != null)
+                rivalPopup.Show(string.Empty, taunt);
+        }
+
+        private void HandleGameOver(bool won)
+        {
+            if (won)
+            {
+                if (scoreScreen != null)
+                {
+                    scoreScreen.gameObject.SetActive(true);
+                }
+            }
+            else
+            {
+                if (gameOverScreen != null)
+                {
+                    gameOverScreen.gameObject.SetActive(true);
+                    gameOverScreen.Show(false);
+                }
+            }
+        }
+
+        private void HandleMoneyChanged(int newAmount)
+        {
+            if (topBar != null)
+                topBar.SetTargetMoney(newAmount);
+        }
+
+        private void HandleTerritoryChanged(int player, int rival)
+        {
+            // TopBar or a dedicated territory widget can reflect this.
+            // Kept intentionally thin -- panels subscribe themselves.
+        }
+
+        private void HandleFBIRiskChanged(float risk)
+        {
+            if (topBar != null)
+                topBar.UpdateFBIRisk(risk);
+        }
+
+        private void HandleTurnStarted(int turnNumber)
+        {
+            if (topBar != null)
+                topBar.UpdateTurn(turnNumber, Constants.MAX_TURNS);
+        }
+
+        // ------------------------------------------------------------------
+        // Public helpers (called by buttons in the scene)
+        // ------------------------------------------------------------------
+
         /// <summary>
         /// Opens the shop panel and fires the toggle event.
         /// </summary>
         public void ShowShop()
         {
             if (shopPanel != null)
-            {
                 shopPanel.gameObject.SetActive(true);
-            }
 
             OnShopToggled?.Invoke(true);
         }
@@ -50,90 +169,30 @@ namespace EmpireOfCards.UI
         public void HideShop()
         {
             if (shopPanel != null)
-            {
                 shopPanel.Close();
-            }
 
             OnShopToggled?.Invoke(false);
         }
 
         /// <summary>
-        /// Displays a combo popup with the given text and color.
-        /// </summary>
-        public void ShowComboPopup(string text, Color color)
-        {
-            if (comboPopup != null)
-            {
-                comboPopup.Show(text, color);
-            }
-        }
-
-        /// <summary>
-        /// Displays the event popup with the given event card.
-        /// </summary>
-        public void ShowEventPopup(CardData eventCard)
-        {
-            if (eventPopup != null)
-            {
-                eventPopup.Show(eventCard);
-            }
-        }
-
-        /// <summary>
-        /// Shows a rival action popup.
-        /// </summary>
-        public void ShowRivalAction(string action)
-        {
-            if (rivalPopup != null)
-            {
-                rivalPopup.Show(action, string.Empty, null);
-            }
-        }
-
-        /// <summary>
-        /// Opens the score screen with the final run data.
-        /// </summary>
-        public void ShowScoreScreen(ScoreData data)
-        {
-            if (scoreScreen != null)
-            {
-                scoreScreen.gameObject.SetActive(true);
-                scoreScreen.Show(data);
-            }
-        }
-
-        /// <summary>
-        /// Shows the game over screen.
-        /// </summary>
-        public void ShowGameOver(bool won)
-        {
-            if (gameOverScreen != null)
-            {
-                gameOverScreen.gameObject.SetActive(true);
-                gameOverScreen.Show(won);
-            }
-        }
-
-        /// <summary>
-        /// Refreshes every visible UI element to reflect current game state.
+        /// Refreshes every visible UI element by pulling current GameManager state.
+        /// Called once on game start or when re-entering the playing state.
         /// </summary>
         public void UpdateAllUI()
         {
-            var gm = Core.GameManager.Instance;
+            var gm = GameManager.Instance;
             if (gm == null)
                 return;
 
             if (topBar != null)
             {
-                topBar.UpdateMoney(gm.PlayerMoney);
+                topBar.SetTargetMoney(gm.PlayerMoney);
                 topBar.UpdateTurn(gm.CurrentTurn, gm.MaxTurns);
                 topBar.UpdateFBIRisk(gm.FBIRisk);
             }
 
             if (actionBar != null)
-            {
                 actionBar.UpdateActions(gm.PlayerActions, gm.MaxActions);
-            }
         }
 
         /// <summary>

@@ -1,4 +1,3 @@
-using System.Collections;
 using UnityEngine;
 using TMPro;
 
@@ -7,6 +6,7 @@ namespace EmpireOfCards.UI
     /// <summary>
     /// Animated popup that appears when a combo is triggered.
     /// Text flies upward with a scale punch, then fades out.
+    /// All animation driven by Update() polling -- no coroutines.
     /// </summary>
     public class ComboPopup : MonoBehaviour
     {
@@ -15,94 +15,125 @@ namespace EmpireOfCards.UI
         [SerializeField] private CanvasGroup canvasGroup;
 
         [Header("Timing")]
+        [SerializeField] private float punchDuration = 0.2f;
         [SerializeField] private float displayDuration = 2f;
         [SerializeField] private float fadeOutDuration = 0.5f;
 
         [Header("Animation")]
         [SerializeField] private float riseDistance = 80f;
         [SerializeField] private float punchScale = 1.4f;
-        [SerializeField] private float punchDuration = 0.2f;
 
-        private Coroutine activeCoroutine;
+        // Animation state machine
+        private enum State { Idle, Punch, Rise, FadeOut }
+
+        private State state = State.Idle;
+        private float stateTimer;
         private RectTransform rectTransform;
+        private Vector3 startPosition;
+
+        // ------------------------------------------------------------------
+        // Lifecycle
+        // ------------------------------------------------------------------
 
         private void Awake()
         {
             rectTransform = GetComponent<RectTransform>();
 
             if (canvasGroup != null)
-            {
                 canvasGroup.alpha = 0f;
+        }
+
+        private void Update()
+        {
+            if (state == State.Idle)
+                return;
+
+            stateTimer += Time.deltaTime;
+
+            switch (state)
+            {
+                case State.Punch:
+                    UpdatePunch();
+                    break;
+                case State.Rise:
+                    UpdateRise();
+                    break;
+                case State.FadeOut:
+                    UpdateFadeOut();
+                    break;
             }
         }
 
+        // ------------------------------------------------------------------
+        // Public
+        // ------------------------------------------------------------------
+
         /// <summary>
-        /// Displays the combo text with a fly-up and scale animation, then fades out.
+        /// Displays the combo text with fly-up, scale punch, and fade.
         /// </summary>
         public void Show(string text, Color color)
         {
-            if (activeCoroutine != null)
-            {
-                StopCoroutine(activeCoroutine);
-            }
-
             if (comboText != null)
             {
                 comboText.text = text;
                 comboText.color = color;
             }
 
-            activeCoroutine = StartCoroutine(AnimateComboCoroutine());
-        }
-
-        private IEnumerator AnimateComboCoroutine()
-        {
             if (canvasGroup != null)
                 canvasGroup.alpha = 1f;
 
-            Vector3 startPos = rectTransform.localPosition;
-            Vector3 originalScale = Vector3.one;
-            float elapsed;
+            startPosition = rectTransform.localPosition;
+            rectTransform.localScale = Vector3.one * punchScale;
 
-            // Punch scale in
-            elapsed = 0f;
-            while (elapsed < punchDuration)
-            {
-                elapsed += Time.deltaTime;
-                float t = elapsed / punchDuration;
-                float scale = Mathf.Lerp(punchScale, 1f, t * t);
-                rectTransform.localScale = originalScale * scale;
-                yield return null;
-            }
-            rectTransform.localScale = originalScale;
+            state = State.Punch;
+            stateTimer = 0f;
+        }
 
-            // Hold and rise
-            elapsed = 0f;
-            while (elapsed < displayDuration)
-            {
-                elapsed += Time.deltaTime;
-                float t = elapsed / displayDuration;
-                rectTransform.localPosition = startPos + Vector3.up * (riseDistance * t);
-                yield return null;
-            }
+        // ------------------------------------------------------------------
+        // State updates
+        // ------------------------------------------------------------------
 
-            // Fade out
-            elapsed = 0f;
-            while (elapsed < fadeOutDuration)
+        private void UpdatePunch()
+        {
+            float t = Mathf.Clamp01(stateTimer / punchDuration);
+            float scale = Mathf.Lerp(punchScale, 1f, t * t); // ease-in
+            rectTransform.localScale = Vector3.one * scale;
+
+            if (t >= 1f)
             {
-                elapsed += Time.deltaTime;
-                float t = Mathf.Clamp01(elapsed / fadeOutDuration);
-                if (canvasGroup != null)
-                    canvasGroup.alpha = 1f - t;
-                yield return null;
+                rectTransform.localScale = Vector3.one;
+                state = State.Rise;
+                stateTimer = 0f;
             }
+        }
+
+        private void UpdateRise()
+        {
+            float t = Mathf.Clamp01(stateTimer / displayDuration);
+            rectTransform.localPosition = startPosition + Vector3.up * (riseDistance * t);
+
+            if (t >= 1f)
+            {
+                state = State.FadeOut;
+                stateTimer = 0f;
+            }
+        }
+
+        private void UpdateFadeOut()
+        {
+            float t = Mathf.Clamp01(stateTimer / fadeOutDuration);
 
             if (canvasGroup != null)
-                canvasGroup.alpha = 0f;
+                canvasGroup.alpha = 1f - t;
 
-            // Reset position
-            rectTransform.localPosition = startPos;
-            activeCoroutine = null;
+            if (t >= 1f)
+            {
+                if (canvasGroup != null)
+                    canvasGroup.alpha = 0f;
+
+                rectTransform.localPosition = startPosition;
+                state = State.Idle;
+            }
         }
     }
 }

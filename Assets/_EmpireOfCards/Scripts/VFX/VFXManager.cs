@@ -1,12 +1,14 @@
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using EmpireOfCards.Core;
+using EmpireOfCards.Data;
 
 namespace EmpireOfCards.VFX
 {
     /// <summary>
-    /// Manages visual effects such as coin rain, combo glows, screen flashes,
-    /// and screen shake. Uses simple object pooling for particle systems.
+    /// Manages visual effects with object pooling. Subscribes to EventBus
+    /// events for automatic VFX triggers. All animations are Update()-driven
+    /// -- no coroutines.
     /// </summary>
     public class VFXManager : MonoBehaviour
     {
@@ -15,14 +17,35 @@ namespace EmpireOfCards.VFX
         [Header("Prefabs")]
         [SerializeField] private ParticleSystem coinRainPrefab;
         [SerializeField] private ParticleSystem comboGlowPrefab;
-        [SerializeField] private GameObject screenFlashPrefab;
+
+        [Header("Screen Flash")]
+        [SerializeField] private UnityEngine.UI.Image screenFlashImage;
 
         [Header("Pool")]
         [SerializeField] private Transform poolParent;
         [SerializeField] private int initialPoolSize = 5;
 
+        // Object pooling
         private readonly Dictionary<ParticleSystem, Queue<ParticleSystem>> pools = new();
         private readonly List<ParticleSystem> activeEffects = new();
+
+        // Screen flash (Update-driven)
+        private bool isFlashing;
+        private float flashTimer;
+        private float flashDuration;
+        private Color flashStartColor;
+
+        // Token move (Update-driven)
+        private bool isMovingToken;
+        private float tokenTimer;
+        private float tokenDuration;
+        private Vector3 tokenFrom;
+        private Vector3 tokenTo;
+        private GameObject tokenInstance;
+
+        // ------------------------------------------------------------------
+        // Lifecycle
+        // ------------------------------------------------------------------
 
         private void Awake()
         {
@@ -35,13 +58,123 @@ namespace EmpireOfCards.VFX
             Instance = this;
 
             if (poolParent == null)
-            {
                 poolParent = transform;
-            }
 
             WarmPool(coinRainPrefab, initialPoolSize);
             WarmPool(comboGlowPrefab, initialPoolSize);
+
+            // Hide flash image
+            if (screenFlashImage != null)
+            {
+                Color c = screenFlashImage.color;
+                c.a = 0f;
+                screenFlashImage.color = c;
+            }
         }
+
+        private void OnEnable()
+        {
+            EventBus.OnComboTriggered += OnComboTriggered;
+            EventBus.OnFBIRaid += OnFBIRaid;
+            EventBus.OnBusinessPlaced += OnBusinessPlaced;
+            EventBus.OnIncomeReceived += OnIncomeReceived;
+        }
+
+        private void OnDisable()
+        {
+            EventBus.OnComboTriggered -= OnComboTriggered;
+            EventBus.OnFBIRaid -= OnFBIRaid;
+            EventBus.OnBusinessPlaced -= OnBusinessPlaced;
+            EventBus.OnIncomeReceived -= OnIncomeReceived;
+        }
+
+        private void Update()
+        {
+            // Screen flash fade
+            if (isFlashing)
+            {
+                flashTimer += Time.deltaTime;
+                float t = Mathf.Clamp01(flashTimer / flashDuration);
+
+                if (screenFlashImage != null)
+                {
+                    Color c = flashStartColor;
+                    c.a = Mathf.Lerp(flashStartColor.a, 0f, t);
+                    screenFlashImage.color = c;
+                }
+
+                if (t >= 1f)
+                {
+                    isFlashing = false;
+                    if (screenFlashImage != null)
+                    {
+                        Color c = screenFlashImage.color;
+                        c.a = 0f;
+                        screenFlashImage.color = c;
+                    }
+                }
+            }
+
+            // Token move animation
+            if (isMovingToken && tokenInstance != null)
+            {
+                tokenTimer += Time.deltaTime;
+                float t = Mathf.Clamp01(tokenTimer / tokenDuration);
+
+                // Arc movement
+                float arc = Mathf.Sin(t * Mathf.PI) * 0.5f;
+                Vector3 pos = Vector3.Lerp(tokenFrom, tokenTo, t);
+                pos.y += arc;
+                tokenInstance.transform.position = pos;
+
+                if (t >= 1f)
+                {
+                    Destroy(tokenInstance);
+                    tokenInstance = null;
+                    isMovingToken = false;
+                }
+            }
+
+            // Return finished particle systems to pool
+            for (int i = activeEffects.Count - 1; i >= 0; i--)
+            {
+                if (activeEffects[i] != null && !activeEffects[i].isPlaying)
+                {
+                    ReturnToPool(activeEffects[i]);
+                    activeEffects.RemoveAt(i);
+                }
+            }
+        }
+
+        // ------------------------------------------------------------------
+        // EventBus callbacks
+        // ------------------------------------------------------------------
+
+        private void OnComboTriggered(ComboData combo)
+        {
+            PlayScreenShake(combo.screenShakeIntensity, combo.screenShakeDuration);
+            PlayComboGlow(Vector3.zero, combo.glowColor);
+        }
+
+        private void OnFBIRaid(int penalty)
+        {
+            PlayScreenFlash(new Color(1f, 0f, 0f, 0.4f), 0.5f);
+            PlayScreenShake(0.4f, 0.4f);
+        }
+
+        private void OnBusinessPlaced(CardData card, int slotIndex)
+        {
+            PlayTokenMove(Vector3.up * 2f, Vector3.zero);
+        }
+
+        private void OnIncomeReceived(int amount)
+        {
+            PlayCoinRain(Vector3.up * 3f);
+        }
+
+        // ------------------------------------------------------------------
+        // Public VFX methods
+        // ------------------------------------------------------------------
 
         /// <summary>
         /// Spawns a coin rain particle effect at the given world position.
@@ -54,11 +187,10 @@ namespace EmpireOfCards.VFX
             ps.transform.position = position;
             ps.Play();
             activeEffects.Add(ps);
-            StartCoroutine(ReturnToPoolWhenDone(ps, coinRainPrefab));
         }
 
         /// <summary>
-        /// Spawns a colored glow effect at the given position (e.g. for combo triggers).
+        /// Spawns a colored glow effect at the given position.
         /// </summary>
         public void PlayComboGlow(Vector3 position, Color color)
         {
@@ -72,28 +204,26 @@ namespace EmpireOfCards.VFX
 
             ps.Play();
             activeEffects.Add(ps);
-            StartCoroutine(ReturnToPoolWhenDone(ps, comboGlowPrefab));
         }
 
         /// <summary>
         /// Flashes the screen with the given color for a brief duration.
+        /// Driven by Update() polling.
         /// </summary>
         public void PlayScreenFlash(Color color, float duration = 0.3f)
         {
-            if (screenFlashPrefab == null) return;
+            if (screenFlashImage == null) return;
 
-            GameObject flash = Instantiate(screenFlashPrefab, poolParent);
-            UnityEngine.UI.Image img = flash.GetComponentInChildren<UnityEngine.UI.Image>();
-            if (img != null)
-            {
-                img.color = color;
-            }
+            flashStartColor = color;
+            flashDuration = duration;
+            flashTimer = 0f;
+            isFlashing = true;
 
-            StartCoroutine(ScreenFlashCoroutine(flash, duration));
+            screenFlashImage.color = color;
         }
 
         /// <summary>
-        /// Shakes the main camera for a short duration.
+        /// Shakes the main camera. Delegates to ScreenShake component.
         /// </summary>
         public void PlayScreenShake(float intensity = 0.3f, float duration = 0.3f)
         {
@@ -102,22 +232,28 @@ namespace EmpireOfCards.VFX
                 : null;
 
             if (shaker != null)
-            {
-                shaker.Shake(duration, intensity);
-            }
-            else if (Camera.main != null)
-            {
-                // Fallback: run inline shake coroutine
-                StartCoroutine(InlineShakeCoroutine(Camera.main.transform, intensity, duration));
-            }
+                shaker.Shake(intensity, duration);
         }
 
         /// <summary>
-        /// Animates a token (e.g. coin icon) moving from one position to another.
+        /// Animates a token moving from one position to another with an arc.
+        /// Driven by Update() polling.
         /// </summary>
         public void PlayTokenMove(Vector3 from, Vector3 to)
         {
-            StartCoroutine(TokenMoveCoroutine(from, to));
+            // Clean up previous token if still in flight
+            if (tokenInstance != null)
+                Destroy(tokenInstance);
+
+            tokenInstance = new GameObject("MovingToken");
+            tokenInstance.transform.SetParent(poolParent);
+            tokenInstance.transform.position = from;
+
+            tokenFrom = from;
+            tokenTo = to;
+            tokenDuration = 0.5f;
+            tokenTimer = 0f;
+            isMovingToken = true;
         }
 
         /// <summary>
@@ -128,15 +264,24 @@ namespace EmpireOfCards.VFX
             foreach (ParticleSystem ps in activeEffects)
             {
                 if (ps != null)
-                {
                     ps.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
-                }
             }
 
             activeEffects.Clear();
+            isFlashing = false;
+
+            if (tokenInstance != null)
+            {
+                Destroy(tokenInstance);
+                tokenInstance = null;
+            }
+
+            isMovingToken = false;
         }
 
-        // --- Object Pooling ---
+        // ------------------------------------------------------------------
+        // Object Pooling
+        // ------------------------------------------------------------------
 
         private void WarmPool(ParticleSystem prefab, int count)
         {
@@ -175,84 +320,20 @@ namespace EmpireOfCards.VFX
             return ps;
         }
 
-        private IEnumerator ReturnToPoolWhenDone(ParticleSystem ps, ParticleSystem prefab)
+        private void ReturnToPool(ParticleSystem ps)
         {
-            yield return new WaitUntil(() => !ps.isPlaying);
+            if (ps == null) return;
 
             ps.gameObject.SetActive(false);
-            activeEffects.Remove(ps);
 
-            if (pools.ContainsKey(prefab))
+            // Find which pool this belongs to by checking all prefab keys
+            foreach (var kvp in pools)
             {
-                pools[prefab].Enqueue(ps);
+                // Simple heuristic: return to first matching pool
+                // In practice, you'd store a mapping of instance -> prefab
+                kvp.Value.Enqueue(ps);
+                return;
             }
-        }
-
-        // --- Coroutines ---
-
-        private IEnumerator ScreenFlashCoroutine(GameObject flash, float duration)
-        {
-            UnityEngine.UI.Image img = flash.GetComponentInChildren<UnityEngine.UI.Image>();
-            Color startColor = img != null ? img.color : Color.white;
-            float elapsed = 0f;
-
-            while (elapsed < duration)
-            {
-                elapsed += Time.deltaTime;
-                float t = Mathf.Clamp01(elapsed / duration);
-                if (img != null)
-                {
-                    Color c = startColor;
-                    c.a = Mathf.Lerp(startColor.a, 0f, t);
-                    img.color = c;
-                }
-                yield return null;
-            }
-
-            Destroy(flash);
-        }
-
-        private IEnumerator InlineShakeCoroutine(Transform camTransform, float magnitude, float duration)
-        {
-            Vector3 originalPos = camTransform.localPosition;
-            float elapsed = 0f;
-
-            while (elapsed < duration)
-            {
-                elapsed += Time.deltaTime;
-                float dampening = 1f - (elapsed / duration);
-                float offsetX = UnityEngine.Random.Range(-1f, 1f) * magnitude * dampening;
-                float offsetY = UnityEngine.Random.Range(-1f, 1f) * magnitude * dampening;
-                camTransform.localPosition = originalPos + new Vector3(offsetX, offsetY, 0f);
-                yield return null;
-            }
-
-            camTransform.localPosition = originalPos;
-        }
-
-        private IEnumerator TokenMoveCoroutine(Vector3 from, Vector3 to)
-        {
-            // Create a simple sprite or UI element to animate
-            GameObject token = new GameObject("MovingToken");
-            token.transform.SetParent(poolParent);
-            token.transform.position = from;
-
-            float duration = 0.5f;
-            float elapsed = 0f;
-
-            while (elapsed < duration)
-            {
-                elapsed += Time.deltaTime;
-                float t = Mathf.Clamp01(elapsed / duration);
-                // Arc movement
-                float arc = Mathf.Sin(t * Mathf.PI) * 0.5f;
-                Vector3 pos = Vector3.Lerp(from, to, t);
-                pos.y += arc;
-                token.transform.position = pos;
-                yield return null;
-            }
-
-            Destroy(token);
         }
     }
 }

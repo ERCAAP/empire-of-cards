@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
+using EmpireOfCards.Core;
 
 namespace EmpireOfCards.Save
 {
@@ -16,11 +17,12 @@ namespace EmpireOfCards.Save
         public int runsPlayed;
         public int runsWon;
         public List<string> unlockedCardIds = new List<string>();
-        public float bestScore;
+        public int bestScore;
     }
 
     /// <summary>
-    /// Handles JSON-based save/load for meta-progression data.
+    /// JSON save/load for meta progression. Subscribes to EventBus.OnGameOver
+    /// to automatically persist progress at the end of a run.
     /// Uses Application.persistentDataPath for cross-platform compatibility.
     /// </summary>
     public class SaveManager : MonoBehaviour
@@ -28,6 +30,13 @@ namespace EmpireOfCards.Save
         public static SaveManager Instance { get; private set; }
 
         [SerializeField] private string saveFileName = "empire_save.json";
+
+        // Cached data loaded on Awake
+        private SaveData cachedData;
+
+        // ------------------------------------------------------------------
+        // Lifecycle
+        // ------------------------------------------------------------------
 
         private void Awake()
         {
@@ -39,7 +48,54 @@ namespace EmpireOfCards.Save
 
             Instance = this;
             DontDestroyOnLoad(gameObject);
+
+            // Load existing save or create fresh
+            cachedData = LoadFromDisk();
         }
+
+        private void OnEnable()
+        {
+            EventBus.OnGameOver += OnGameOver;
+        }
+
+        private void OnDisable()
+        {
+            EventBus.OnGameOver -= OnGameOver;
+        }
+
+        // ------------------------------------------------------------------
+        // EventBus callback
+        // ------------------------------------------------------------------
+
+        private void OnGameOver(bool won)
+        {
+            if (cachedData == null)
+                cachedData = new SaveData();
+
+            cachedData.runsPlayed++;
+
+            if (won)
+                cachedData.runsWon++;
+
+            // Calculate score from GameManager
+            var gm = GameManager.Instance;
+            if (gm != null)
+            {
+                int score = CalculateRunScore(gm, won);
+                if (score > cachedData.bestScore)
+                    cachedData.bestScore = score;
+
+                // XP earned from the run (simplified: score / 10)
+                int xpEarned = Mathf.Max(score / 10, 10);
+                cachedData.totalXP += xpEarned;
+            }
+
+            Save(cachedData);
+        }
+
+        // ------------------------------------------------------------------
+        // Public API
+        // ------------------------------------------------------------------
 
         /// <summary>
         /// Serializes the save data to JSON and writes it to disk.
@@ -51,6 +107,8 @@ namespace EmpireOfCards.Save
                 Debug.LogWarning("[SaveManager] Attempted to save null data.");
                 return;
             }
+
+            cachedData = data;
 
             try
             {
@@ -66,9 +124,86 @@ namespace EmpireOfCards.Save
         }
 
         /// <summary>
-        /// Loads save data from disk. Returns a new SaveData if no file exists.
+        /// Returns the cached save data (loaded on Awake).
         /// </summary>
         public SaveData Load()
+        {
+            if (cachedData == null)
+                cachedData = LoadFromDisk();
+
+            return cachedData;
+        }
+
+        /// <summary>
+        /// Deletes the save file from disk and resets cached data.
+        /// </summary>
+        public void DeleteSave()
+        {
+            string path = GetSavePath();
+
+            if (File.Exists(path))
+            {
+                try
+                {
+                    File.Delete(path);
+                    Debug.Log("[SaveManager] Save file deleted.");
+                }
+                catch (Exception e)
+                {
+                    Debug.LogError($"[SaveManager] Delete failed: {e.Message}");
+                }
+            }
+
+            cachedData = new SaveData();
+        }
+
+        /// <summary>
+        /// Returns the full path to the save file.
+        /// </summary>
+        public string GetSavePath()
+        {
+            return Path.Combine(Application.persistentDataPath, saveFileName);
+        }
+
+        /// <summary>
+        /// Returns true if a save file exists on disk.
+        /// </summary>
+        public bool HasSave()
+        {
+            return File.Exists(GetSavePath());
+        }
+
+        /// <summary>
+        /// Unlocks a card by ID if not already unlocked.
+        /// </summary>
+        public void UnlockCard(string cardId)
+        {
+            if (cachedData == null)
+                cachedData = new SaveData();
+
+            if (!cachedData.unlockedCardIds.Contains(cardId))
+            {
+                cachedData.unlockedCardIds.Add(cardId);
+                Save(cachedData);
+            }
+        }
+
+        /// <summary>
+        /// Returns true if the card with the given ID has been unlocked.
+        /// </summary>
+        public bool IsCardUnlocked(string cardId)
+        {
+            if (cachedData == null)
+                return false;
+
+            return cachedData.unlockedCardIds.Contains(cardId);
+        }
+
+        // ------------------------------------------------------------------
+        // Internal
+        // ------------------------------------------------------------------
+
+        private SaveData LoadFromDisk()
         {
             string path = GetSavePath();
 
@@ -93,40 +228,33 @@ namespace EmpireOfCards.Save
         }
 
         /// <summary>
-        /// Deletes the save file from disk.
+        /// Calculates the total score for the run based on GDD scoring rules.
         /// </summary>
-        public void DeleteSave()
+        private int CalculateRunScore(GameManager gm, bool won)
         {
-            string path = GetSavePath();
+            int score = 0;
 
-            if (File.Exists(path))
-            {
-                try
-                {
-                    File.Delete(path);
-                    Debug.Log("[SaveManager] Save file deleted.");
-                }
-                catch (Exception e)
-                {
-                    Debug.LogError($"[SaveManager] Delete failed: {e.Message}");
-                }
-            }
-        }
+            score += gm.PlayerTerritories * Constants.SCORE_TERRITORY;
+            score += gm.PlayerMoney * Constants.SCORE_MONEY;
+            // Combo and business scores would be provided by ComboSystem / BoardManager
+            // For now, territory and money are the primary automatic inputs
 
-        /// <summary>
-        /// Returns the full path to the save file.
-        /// </summary>
-        public string GetSavePath()
-        {
-            return Path.Combine(Application.persistentDataPath, saveFileName);
-        }
+            // Early finish bonus
+            int turnsRemaining = Constants.MAX_TURNS - gm.CurrentTurn;
+            if (turnsRemaining > 0 && won)
+                score += turnsRemaining * Constants.SCORE_EARLY_FINISH;
 
-        /// <summary>
-        /// Returns true if a save file exists on disk.
-        /// </summary>
-        public bool HasSave()
-        {
-            return File.Exists(GetSavePath());
+            // FBI evasion bonus (low risk = higher bonus)
+            if (gm.FBIRisk < 0.1f)
+                score += Constants.SCORE_FBI_EVASION * 3;
+            else if (gm.FBIRisk < 0.3f)
+                score += Constants.SCORE_FBI_EVASION;
+
+            // Win bonus
+            if (won)
+                score += Constants.SCORE_WIN_BONUS;
+
+            return score;
         }
     }
 }

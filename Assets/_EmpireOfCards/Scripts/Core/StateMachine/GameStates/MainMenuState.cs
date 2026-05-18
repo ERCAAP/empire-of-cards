@@ -1,36 +1,33 @@
-using UnityEngine;
+using EmpireOfCards.Core.StateMachine;
 
-namespace EmpireOfCards.Core.StateMachine.GameStates
+namespace EmpireOfCards.Core.GameStates
 {
     /// <summary>
     /// State active while the player is on the main menu screen.
     /// Shows main menu UI and plays calm background music.
+    /// Tick polls for nothing — UI buttons drive transitions via GameManager.
     /// </summary>
     public class MainMenuState : IState
     {
         public void Enter()
         {
-            Debug.Log("[MainMenuState] Enter - Showing main menu UI");
+            var gm = GameManager.Instance;
+            gm.SetGameState(GameState.MainMenu);
 
-            // Show the main menu canvas
-            // TODO: UIManager.Instance.ShowMainMenu();
-
-            // Play calm main menu music
-            // TODO: AudioManager.Instance.PlayMusic("MainMenuTheme");
+            // Show main menu UI, play calm music
+            if (gm.AudioManager != null)
+                gm.AudioManager.PlayMusic(false); // calm
         }
 
-        public void Execute()
+        public void Tick()
         {
-            // Wait for player input - UI buttons handle transitions
-            // e.g. "New Game" button calls GameManager to change to GameSetupState
+            // Polling: waiting for UI button press to start game.
+            // UIManager handles button clicks and calls GameManager.StartNewRun().
         }
 
         public void Exit()
         {
-            Debug.Log("[MainMenuState] Exit - Hiding main menu");
-
-            // Hide the main menu canvas
-            // TODO: UIManager.Instance.HideMainMenu();
+            // Hide main menu — UIManager handles canvas toggling
         }
     }
 }

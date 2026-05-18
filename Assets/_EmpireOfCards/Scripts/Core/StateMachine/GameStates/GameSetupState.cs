@@ -1,61 +1,39 @@
-using UnityEngine;
+using EmpireOfCards.Core.StateMachine;
 
-namespace EmpireOfCards.Core.StateMachine.GameStates
+namespace EmpireOfCards.Core.GameStates
 {
     /// <summary>
     /// State responsible for setting up a new game run.
-    /// Initializes the deck, starting money, board, and rival before transitioning to InGameState.
+    /// Enter initializes all systems via GameManager.StartNewRun().
+    /// Tick polls _setupComplete and transitions to InGameState.
     /// </summary>
     public class GameSetupState : IState
     {
-        private readonly StateMachine stateMachine;
-        private readonly InGameState inGameState;
-        private bool setupComplete;
+        private StateMachine.StateMachine _stateMachine;
+        private IState _nextState;
+        private bool _setupComplete;
 
-        public GameSetupState(StateMachine stateMachine, InGameState inGameState)
+        public GameSetupState(StateMachine.StateMachine sm, IState next)
         {
-            this.stateMachine = stateMachine;
-            this.inGameState = inGameState;
+            _stateMachine = sm;
+            _nextState = next;
         }
 
         public void Enter()
         {
-            Debug.Log("[GameSetupState] Enter - Initializing new game");
-            setupComplete = false;
-
-            // Initialize player deck
-            // TODO: DeckManager.Instance.InitializeDeck();
-
-            // Set starting money via GameManager
-            GameManager gm = GameManager.Instance;
-            if (gm != null)
-            {
-                gm.StartNewRun();
-            }
-
-            // Create the game board
-            // TODO: BoardManager.Instance.CreateBoard();
-
-            // Set up the rival
-            // TODO: RivalAI.Instance.Initialize();
-
-            setupComplete = true;
-
-            Debug.Log("[GameSetupState] Setup complete");
+            _setupComplete = false;
+            var gm = GameManager.Instance;
+            gm.SetGameState(GameState.GameSetup);
+            gm.StartNewRun();
+            _setupComplete = true;
         }
 
-        public void Execute()
+        public void Tick()
         {
-            // Transition to InGameState once setup is finished
-            if (setupComplete)
-            {
-                stateMachine.ChangeState(inGameState);
-            }
+            if (_setupComplete)
+                _stateMachine.ChangeState(_nextState);
         }
 
-        public void Exit()
-        {
-            // Nothing to clean up
-        }
+        public void Exit() { }
     }
 }

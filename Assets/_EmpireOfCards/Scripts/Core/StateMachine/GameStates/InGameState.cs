@@ -1,44 +1,40 @@
-using UnityEngine;
+using EmpireOfCards.Core.StateMachine;
 
-namespace EmpireOfCards.Core.StateMachine.GameStates
+namespace EmpireOfCards.Core.GameStates
 {
     /// <summary>
-    /// State active during the main gameplay loop.
-    /// Delegates turn flow to the TurnManager.
+    /// The main gameplay state. TurnManager handles turn/phase flow internally.
+    /// Tick polls win/lose conditions every frame so the game can end
+    /// the moment a threshold is crossed — no event subscription needed.
     /// </summary>
     public class InGameState : IState
     {
         public void Enter()
         {
-            Debug.Log("[InGameState] Enter - Starting gameplay");
+            var gm = GameManager.Instance;
+            gm.SetGameState(GameState.Playing);
 
-            // Start the first turn via TurnManager
-            GameManager gm = GameManager.Instance;
-            if (gm != null && gm.TurnManager != null)
-            {
-                gm.TurnManager.StartTurn();
-            }
+            // TurnManager is already running; ensure game flag is on
+            if (!gm.GameIsRunning)
+                return;
         }
 
-        public void Execute()
+        public void Tick()
         {
-            // Main game loop - the TurnManager drives the turn/phase sequence
-            // via its own coroutine. We delegate to it here.
-
-            GameManager gm = GameManager.Instance;
-            if (gm == null)
+            var gm = GameManager.Instance;
+            if (gm == null || !gm.GameIsRunning)
                 return;
 
-            // Check for win/lose conditions each frame
-            if (gm.CheckWinCondition() || gm.CheckLoseCondition())
-            {
+            // Poll win/lose every frame
+            if (gm.CheckWinCondition())
                 return;
-            }
+            if (gm.CheckLoseCondition())
+                return;
         }
 
         public void Exit()
         {
-            // Nothing to clean up; GameOverState or PausedState handles next steps
+            // TurnManager stops itself when GameManager.EndRun() is called
         }
     }
 }

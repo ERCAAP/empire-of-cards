@@ -1,126 +1,97 @@
 using UnityEngine;
+using EmpireOfCards.Core;
 
 namespace EmpireOfCards.Data
 {
-    using EmpireOfCards.Core;
-
     [CreateAssetMenu(fileName = "NewCard", menuName = "EmpireOfCards/Card Data")]
     public class CardData : ScriptableObject
     {
-        [Header("Base Info")]
-        [Tooltip("Unique identifier, e.g. B02_Kahveci")]
-        public string cardId;
-
-        [Tooltip("Display name, e.g. Kahveci")]
-        public string cardName;
-
+        [Header("--- Kimlik ---")]
+        public string cardId;               // "B02_Kahveci", "C03_Barista" etc
+        public string cardName;             // Display name: "Kahveci"
         public CardType cardType;
         public Rarity rarity;
-        public int buyCost;
-
         [TextArea(2, 4)]
-        [Tooltip("Turkish flavor text")]
-        public string description;
-
+        public string description;          // Turkish flavor text
         public Sprite icon;
         public Sprite cardFrame;
-        public CardTag[] tags;
+        public CardTag[] tags;              // food, coffee, trendy etc.
 
-        [Header("Business Stats")]
-        [Tooltip("Base income generated each turn")]
-        public int incomePerTurn;
+        [Header("--- Maliyet ---")]
+        public int buyCost;                 // Dükkan/oynama maliyeti
 
-        [Tooltip("Base customers attracted each turn")]
-        public int customersPerTurn;
+        // ====== BUSINESS (Mavi) ======
+        [Header("--- İşletme Özellikleri ---")]
+        public int incomePerTurn;           // Base gelir/tur
+        public int customersPerTurn;        // Base müşteri/tur
+        public int employeeSlots;           // Çalışan yuvası sayısı (1-3)
+        public bool hasTrendBonus;          // Kahveci: trend aktifken bonus
+        [Range(1f, 3f)]
+        public float trendIncomeMultiplier = 1f;  // Kahveci: 1.5
+        public int activationDelay;         // Tech Startup: 3 tur delay
+        public bool requiresTrendToOperate; // Gece Kulübü: trend yoksa 0 gelir
+        public bool hasRandomIncome;        // Kripto Borsası
+        public int randomIncomeMin;         // 0
+        public int randomIncomeMax;         // 250
+        public int[] randomIncomeThresholds;// [0, 0, 100, 100, 250, 250] (zar 1-6)
+        public string foodBonusTag;         // Organik Çiftlik: "food" tag'li herkese bonus
+        public int foodBonusAmount;         // +20 per food business
+        public int globalCustomerBonus;     // Reklam Ajansı: tüm işletmelere +2
 
-        [Tooltip("How many employee slots this business provides")]
-        public int employeeSlots;
+        // İşletme Evrimi (GDD Bölüm 3.1)
+        public bool canEvolve;
+        public CardData evolvedForm;        // Büfe → Restoran → Zincir
+        public int evolutionCustomerReq;    // 40 toplam müşteri
+        public int evolutionTurnReq;        // 15 tur
 
-        [Tooltip("Whether this card benefits from trend mechanics")]
-        public bool hasTrendBonus;
+        // ====== EMPLOYEE (Yeşil) ======
+        [Header("--- Çalışan Özellikleri ---")]
+        public int salaryPerTurn;           // Maaş/tur
+        public int customerBonus;           // Base müşteri katkısı
+        public int synergyCustomerBonus;    // Doğru işletmede ekstra bonus (Barista coffee: +6 vs +3)
+        public CardTag synergyTag;          // Hangi tag ile sinerji (Coffee for Barista)
+        public float incomeMultiplier;      // Marketing Guru: 0.25 (+%25)
+        public float incomeFlatBonus;       // Şef food'da: +30
+        public CardTag incomeBonusTag;      // Hangi tag'de flat bonus aktif
+        public int fbiRiskPerTurn;          // Hacker: 10, Dolandırıcı: 12
+        public int illegalIncomePerTurn;    // Dolandırıcı: 120
+        public bool preventsTransfer;       // Sadık Müdür: transfer koruması
+        public float taxReduction;          // Muhasebeci: 0.5 (%50 azaltma)
 
-        [Tooltip("Trend multiplier (e.g. 1.5 for Kahveci)")]
-        public float trendMultiplier;
-
-        [Tooltip("Turns before this card activates (e.g. Tech Startup: 3)")]
-        public int activationDelay;
-
-        [Header("Employee Stats")]
-        public int salaryPerTurn;
-
-        [Tooltip("Base customer bonus when assigned to any business")]
-        public int customerBonus;
-
-        [Tooltip("Bonus when assigned to a matching business (e.g. Barista in coffee = +6 vs +3)")]
-        public int synergyCustomerBonus;
-
-        [Tooltip("Which business tag triggers the synergy bonus")]
-        public string synergyTag;
-
-        [Tooltip("Income multiplier (e.g. Marketing Guru: 1.25)")]
-        public float incomeMultiplier;
-
-        [Tooltip("FBI risk added per turn (e.g. Hacker: 10, Dolandirici: 12)")]
-        public int fbiRiskPerTurn;
-
-        [Tooltip("Illegal income per turn (e.g. Dolandirici: 120)")]
-        public int illegalIncomePerTurn;
-
-        [Tooltip("Prevents employee transfers (Sadik Mudur)")]
-        public bool preventsTransfer;
-
-        [Tooltip("Tax reduction factor (e.g. Muhasebeci: 0.5)")]
-        public float taxReduction;
-
-        [Header("Active Ability")]
-        [Tooltip("Ability display name, e.g. Latte Festivali")]
-        public string activeAbilityName;
-
-        [TextArea(2, 3)]
-        public string activeAbilityDesc;
-
+        // Aktif Yetenek (GDD Bölüm 3.2)
         public ActiveAbilityType activeAbilityType;
+        public string activeAbilityName;    // "Latte Festivali"
+        [TextArea(1, 3)]
+        public string activeAbilityDesc;    // Tooltip açıklaması
+        public float abilityValue1;         // Primary param (multiplier or flat)
+        public int abilityValue2;           // Secondary param (customers, money etc)
 
-        [Tooltip("Primary ability parameter (multiplier or flat bonus)")]
-        public float abilityParam1;
-
-        [Tooltip("Secondary ability parameter")]
-        public int abilityParam2;
-
-        [Header("Action Card")]
+        // ====== ACTION (Kırmızı) ======
+        [Header("--- Aksiyon Özellikleri ---")]
         public ActionEffectType actionEffectType;
+        public int actionValue;             // Flat value (+150 money, +3 customers)
+        public float actionMultiplier;      // Viral Pazarlama: 2.0 (x2)
+        public int actionFBIRisk;           // Sahte Yorumlar: 12, Sabotaj: 15
+        public int actionDebtDuration;      // Yatırımcı Sunumu: 3 tur
+        public float actionDebtPercent;     // 0.15 (%15 gelir yatırımcıya)
+        public float actionIncomeSacrifice; // Fiyat Kırma: 0.5 (%50 gelir feda)
 
-        [Tooltip("Flat value (+150 money, +3 customers, etc.)")]
-        public int actionValue;
-
-        [Tooltip("Multiplier (e.g. Viral Pazarlama: x2)")]
-        public float actionMultiplier;
-
-        [Tooltip("FBI risk from this action (e.g. Sahte Yorumlar: 12)")]
-        public int actionFBIRisk;
-
-        [Tooltip("Duration in turns (e.g. Yatirimci Sunumu: 3)")]
-        public int actionDuration;
-
-        [Header("Upgrade")]
+        // ====== UPGRADE (Mor) ======
+        [Header("--- Upgrade Özellikleri ---")]
         public UpgradeEffectType upgradeEffectType;
-        public float upgradeValue;
+        public float upgradeValue;          // +%10, +%30, +2 müşteri etc
+        public bool isGlobalUpgrade;        // Tüm masayı etkiler mi
+        public int closedEmployeeSlots;     // Otomasyon: 1 slot kapanır
+        public int extraActions;            // Yapay Zeka Asistanı: +1
 
-        [Tooltip("Whether this upgrade affects all businesses")]
-        public bool isGlobalUpgrade;
-
-        [Tooltip("Employee slots closed by this upgrade (e.g. Otomasyon: 1)")]
-        public int closedEmployeeSlots;
-
-        [Header("Event")]
-        [Tooltip("Duration in turns (1-2)")]
-        public int eventDuration;
-
+        // ====== EVENT (Sarı) ======
+        [Header("--- Event Özellikleri ---")]
         public EventEffectType eventEffectType;
-        public float eventMultiplier;
-
-        [Tooltip("Which card tags are affected by this event")]
-        public string[] affectedTags;
+        public int eventDuration;           // 1-2 tur
+        public float eventMultiplier;       // +%50 = 0.5, -%30 = -0.3
+        public CardTag[] affectedTags;      // Hangi tag'ler etkilenir
+        public int eventCustomerPenalty;    // Veri Sızıntısı: -5
+        public float eventFBIThreshold;     // İptal Kültürü: 0.30 (%30)
     }
 
     public enum ActiveAbilityType

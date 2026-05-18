@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
@@ -5,21 +6,43 @@ using TMPro;
 namespace EmpireOfCards.UI
 {
     /// <summary>
-    /// Simple game-over overlay. Shows win or loss state.
+    /// Simple game over overlay. Shows win or loss title and message.
+    /// Play Again and Menu buttons.
     /// </summary>
     public class GameOverScreen : MonoBehaviour
     {
         [Header("References")]
         [SerializeField] private TMP_Text titleText;
         [SerializeField] private TMP_Text messageText;
-        [SerializeField] private Button retryButton;
-        [SerializeField] private Button mainMenuButton;
+        [SerializeField] private Button playAgainButton;
+        [SerializeField] private Button menuButton;
 
         [Header("Text Presets")]
-        [SerializeField] private string winTitle = "Victory!";
-        [SerializeField] private string winMessage = "You built an empire that dominates the market!";
-        [SerializeField] private string loseTitle = "Game Over";
-        [SerializeField] private string loseMessage = "Your business empire has crumbled...";
+        [SerializeField] private string winTitle = "Zafer!";
+        [SerializeField] private string winMessage = "Pazara hakim bir imparatorluk kurdun!";
+        [SerializeField] private string loseTitle = "Oyun Bitti";
+        [SerializeField] private string loseMessage = "Is imparatorlugun coktu...";
+
+        // Events
+        public event Action OnPlayAgainClicked;
+        public event Action OnMenuClicked;
+
+        // ------------------------------------------------------------------
+        // Lifecycle
+        // ------------------------------------------------------------------
+
+        private void Awake()
+        {
+            if (playAgainButton != null)
+                playAgainButton.onClick.AddListener(() => OnPlayAgainClicked?.Invoke());
+
+            if (menuButton != null)
+                menuButton.onClick.AddListener(() => OnMenuClicked?.Invoke());
+        }
+
+        // ------------------------------------------------------------------
+        // Public
+        // ------------------------------------------------------------------
 
         /// <summary>
         /// Displays the game over screen with win or loss text.
@@ -31,6 +54,19 @@ namespace EmpireOfCards.UI
 
             if (messageText != null)
                 messageText.text = won ? winMessage : loseMessage;
+        }
+
+        // ------------------------------------------------------------------
+        // Cleanup
+        // ------------------------------------------------------------------
+
+        private void OnDestroy()
+        {
+            if (playAgainButton != null)
+                playAgainButton.onClick.RemoveAllListeners();
+
+            if (menuButton != null)
+                menuButton.onClick.RemoveAllListeners();
         }
     }
 }

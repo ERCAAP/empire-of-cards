@@ -1,91 +1,129 @@
 using System;
+using EmpireOfCards.Data;
 
 namespace EmpireOfCards.Core
 {
-    /// <summary>
-    /// Static event bus for decoupled cross-system communication.
-    /// Subscribe in OnEnable, unsubscribe in OnDisable to avoid leaks.
-    /// </summary>
     public static class EventBus
     {
-        // --- Card Events ---
+        // Card lifecycle
+        public static event Action<CardData> OnCardPlayed;
+        public static event Action<CardData> OnCardDrawn;
+        public static event Action<CardData> OnCardDiscarded;
+        public static event Action<CardData> OnCardBurned;
 
-        /// <summary>Fired when any card is played from hand. Parameter: card instance id.</summary>
-        public static event Action<int> OnCardPlayed;
+        // Board placement
+        public static event Action<CardData, int> OnBusinessPlaced;        // card, slotIndex
+        public static event Action<CardData, int> OnEmployeePlaced;        // card, businessIndex
+        public static event Action<CardData, int> OnUpgradePlaced;         // card, businessIndex (-1=global)
+        public static event Action<CardData> OnActionExecuted;
 
-        /// <summary>Fired when a card is drawn into the hand. Parameter: card instance id.</summary>
-        public static event Action<int> OnCardDrawn;
+        // Combo system
+        public static event Action<ComboData> OnComboTriggered;
+        public static event Action<ComboData> OnComboDeactivated;
 
-        // --- Combo Events ---
+        // World events
+        public static event Action<CardData> OnEventActivated;             // event card
+        public static event Action<CardData> OnEventExpired;
 
-        /// <summary>Fired when a combo is triggered. Parameter: combo name.</summary>
-        public static event Action<string> OnComboTriggered;
+        // FBI
+        public static event Action<int> OnFBIRaid;                         // penalty amount
+        public static event Action OnFBIRaidAvoided;
+        public static event Action<float> OnFBIRiskChanged;                // new risk value
 
-        // --- Placement Events ---
+        // Business lifecycle
+        public static event Action<int> OnBusinessClosed;                   // businessIndex
+        public static event Action<int> OnBusinessReopened;
+        public static event Action<CardData, int> OnEmployeeLeft;          // employee, businessIndex
+        public static event Action<int, BusinessLevel> OnBusinessEvolved;   // businessIndex, newLevel
 
-        /// <summary>Fired when a business card is placed on the board. Parameter: card instance id.</summary>
-        public static event Action<int> OnBusinessPlaced;
+        // Territory
+        public static event Action<int, int> OnTerritoryChanged;           // playerCount, rivalCount
 
-        /// <summary>Fired when an employee card is assigned. Parameter: card instance id.</summary>
-        public static event Action<int> OnEmployeePlaced;
+        // Economy
+        public static event Action<int> OnMoneyChanged;                    // newAmount
+        public static event Action<int> OnIncomeReceived;                  // amount
+        public static event Action<int> OnMoneySpent;                      // amount
 
-        /// <summary>Fired when an upgrade is applied to a business. Parameters: upgrade id, target business id.</summary>
-        public static event Action<int, int> OnUpgradeApplied;
+        // Turn flow
+        public static event Action<int> OnTurnStarted;                     // turnNumber
+        public static event Action<int> OnTurnEnded;                       // turnNumber
+        public static event Action<TurnPhase> OnPhaseStarted;
+        public static event Action<TurnPhase> OnPhaseEnded;
 
-        /// <summary>Fired when an action card is played. Parameter: card instance id.</summary>
-        public static event Action<int> OnActionPlayed;
+        // Game state
+        public static event Action<GameState> OnGameStateChanged;
+        public static event Action<bool> OnGameOver;                       // won
 
-        // --- World Events ---
+        // Rival
+        public static event Action<string> OnRivalAction;                  // description
+        public static event Action<string> OnRivalTaunt;                   // taunt text
 
-        /// <summary>Fired when a random event is triggered. Parameter: event name.</summary>
-        public static event Action<string> OnEventTriggered;
+        // Invoke helpers
+        public static void CardPlayed(CardData card) => OnCardPlayed?.Invoke(card);
+        public static void CardDrawn(CardData card) => OnCardDrawn?.Invoke(card);
+        public static void CardDiscarded(CardData card) => OnCardDiscarded?.Invoke(card);
+        public static void CardBurned(CardData card) => OnCardBurned?.Invoke(card);
+        public static void BusinessPlaced(CardData card, int slot) => OnBusinessPlaced?.Invoke(card, slot);
+        public static void EmployeePlaced(CardData card, int bizIdx) => OnEmployeePlaced?.Invoke(card, bizIdx);
+        public static void UpgradePlaced(CardData card, int bizIdx) => OnUpgradePlaced?.Invoke(card, bizIdx);
+        public static void ActionExecuted(CardData card) => OnActionExecuted?.Invoke(card);
+        public static void ComboTriggered(ComboData combo) => OnComboTriggered?.Invoke(combo);
+        public static void ComboDeactivated(ComboData combo) => OnComboDeactivated?.Invoke(combo);
+        public static void EventActivated(CardData card) => OnEventActivated?.Invoke(card);
+        public static void EventExpired(CardData card) => OnEventExpired?.Invoke(card);
+        public static void FBIRaidOccurred(int penalty) => OnFBIRaid?.Invoke(penalty);
+        public static void FBIRaidWasAvoided() => OnFBIRaidAvoided?.Invoke();
+        public static void FBIRiskUpdated(float risk) => OnFBIRiskChanged?.Invoke(risk);
+        public static void BusinessClosed(int idx) => OnBusinessClosed?.Invoke(idx);
+        public static void BusinessReopened(int idx) => OnBusinessReopened?.Invoke(idx);
+        public static void EmployeeLeft(CardData emp, int bizIdx) => OnEmployeeLeft?.Invoke(emp, bizIdx);
+        public static void BusinessEvolved(int idx, BusinessLevel lvl) => OnBusinessEvolved?.Invoke(idx, lvl);
+        public static void TerritoryUpdated(int p, int r) => OnTerritoryChanged?.Invoke(p, r);
+        public static void MoneyUpdated(int amount) => OnMoneyChanged?.Invoke(amount);
+        public static void IncomeReceived(int amount) => OnIncomeReceived?.Invoke(amount);
+        public static void MoneySpent(int amount) => OnMoneySpent?.Invoke(amount);
+        public static void TurnStarted(int turn) => OnTurnStarted?.Invoke(turn);
+        public static void TurnEnded(int turn) => OnTurnEnded?.Invoke(turn);
+        public static void PhaseStarted(TurnPhase phase) => OnPhaseStarted?.Invoke(phase);
+        public static void PhaseEnded(TurnPhase phase) => OnPhaseEnded?.Invoke(phase);
+        public static void GameStateChanged(GameState state) => OnGameStateChanged?.Invoke(state);
+        public static void GameEnded(bool won) => OnGameOver?.Invoke(won);
+        public static void RivalActed(string desc) => OnRivalAction?.Invoke(desc);
+        public static void RivalTaunted(string taunt) => OnRivalTaunt?.Invoke(taunt);
 
-        /// <summary>Fired when an FBI raid occurs. Parameter: penalty amount.</summary>
-        public static event Action<int> OnFBIRaid;
-
-        /// <summary>Fired when a business is shut down. Parameter: card instance id.</summary>
-        public static event Action<int> OnBusinessClosed;
-
-        /// <summary>Fired when an employee leaves. Parameter: card instance id.</summary>
-        public static event Action<int> OnEmployeeLeft;
-
-        // --- Territory Events ---
-
-        /// <summary>Fired when territory ownership changes. Parameters: player territories, rival territories.</summary>
-        public static event Action<int, int> OnTerritoryChanged;
-
-        // --- Invoke Helpers ---
-
-        public static void CardPlayed(int cardId) => OnCardPlayed?.Invoke(cardId);
-        public static void CardDrawn(int cardId) => OnCardDrawn?.Invoke(cardId);
-        public static void ComboTriggered(string comboName) => OnComboTriggered?.Invoke(comboName);
-        public static void BusinessPlaced(int cardId) => OnBusinessPlaced?.Invoke(cardId);
-        public static void EmployeePlaced(int cardId) => OnEmployeePlaced?.Invoke(cardId);
-        public static void UpgradeApplied(int upgradeId, int businessId) => OnUpgradeApplied?.Invoke(upgradeId, businessId);
-        public static void ActionPlayed(int cardId) => OnActionPlayed?.Invoke(cardId);
-        public static void EventTriggered(string eventName) => OnEventTriggered?.Invoke(eventName);
-        public static void FBIRaid(int penalty) => OnFBIRaid?.Invoke(penalty);
-        public static void BusinessClosed(int cardId) => OnBusinessClosed?.Invoke(cardId);
-        public static void EmployeeLeft(int cardId) => OnEmployeeLeft?.Invoke(cardId);
-        public static void TerritoryChanged(int playerTerritories, int rivalTerritories) => OnTerritoryChanged?.Invoke(playerTerritories, rivalTerritories);
-
-        /// <summary>
-        /// Clears all subscribers. Call when returning to the main menu or ending a run.
-        /// </summary>
         public static void ClearAll()
         {
             OnCardPlayed = null;
             OnCardDrawn = null;
-            OnComboTriggered = null;
+            OnCardDiscarded = null;
+            OnCardBurned = null;
             OnBusinessPlaced = null;
             OnEmployeePlaced = null;
-            OnUpgradeApplied = null;
-            OnActionPlayed = null;
-            OnEventTriggered = null;
+            OnUpgradePlaced = null;
+            OnActionExecuted = null;
+            OnComboTriggered = null;
+            OnComboDeactivated = null;
+            OnEventActivated = null;
+            OnEventExpired = null;
             OnFBIRaid = null;
+            OnFBIRaidAvoided = null;
+            OnFBIRiskChanged = null;
             OnBusinessClosed = null;
+            OnBusinessReopened = null;
             OnEmployeeLeft = null;
+            OnBusinessEvolved = null;
             OnTerritoryChanged = null;
+            OnMoneyChanged = null;
+            OnIncomeReceived = null;
+            OnMoneySpent = null;
+            OnTurnStarted = null;
+            OnTurnEnded = null;
+            OnPhaseStarted = null;
+            OnPhaseEnded = null;
+            OnGameStateChanged = null;
+            OnGameOver = null;
+            OnRivalAction = null;
+            OnRivalTaunt = null;
         }
     }
 }

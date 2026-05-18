@@ -1,150 +1,209 @@
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using EmpireOfCards.Core;
 using EmpireOfCards.Data;
 using EmpireOfCards.UI.Cards;
 
 namespace EmpireOfCards.UI
 {
     /// <summary>
-    /// Manages the visual representation of the player's hand.
+    /// Displays the player's hand of cards in a fan layout.
+    /// Subscribes to EventBus card events -- never reads DeckManager directly.
+    /// Creates / destroys CardUI instances from a prefab.
     /// </summary>
     public class HandUI : MonoBehaviour
     {
-        [Header("Layout")]
-        [SerializeField] private Transform[] cardSlots;
+        [Header("Prefab")]
         [SerializeField] private CardUI cardPrefab;
 
-        [Header("Animation")]
-        [SerializeField] private float drawAnimDuration = 0.3f;
-        [SerializeField] private float drawStagger = 0.1f;
+        [Header("Fan Layout")]
+        [SerializeField] private Transform handRoot;
+        [SerializeField] private float cardSpacing = 160f;
+        [SerializeField] private float fanAngle = 5f;       // degrees per card offset from center
+        [SerializeField] private float verticalArc = 20f;   // parabolic lift at center
 
-        private readonly List<CardUI> currentCards = new List<CardUI>();
+        // Runtime
+        private readonly List<CardUI> cardInstances = new List<CardUI>();
+        private bool interactable;
 
         /// <summary>
-        /// Current cards displayed in hand.
+        /// Current card visuals in hand.
         /// </summary>
-        public List<CardUI> CurrentCards => currentCards;
+        public IReadOnlyList<CardUI> CurrentCards => cardInstances;
 
-        /// <summary>
-        /// Clears the hand and displays new cards.
-        /// </summary>
-        public void DisplayHand(List<CardData> cards)
+        // ------------------------------------------------------------------
+        // Lifecycle
+        // ------------------------------------------------------------------
+
+        private void OnEnable()
         {
-            ClearHand();
+            EventBus.OnCardDrawn += OnCardDrawn;
+            EventBus.OnCardDiscarded += OnCardDiscarded;
+            EventBus.OnCardBurned += OnCardBurned;
+            EventBus.OnCardPlayed += OnCardPlayed;
+            EventBus.OnPhaseStarted += OnPhaseStarted;
+        }
 
-            for (int i = 0; i < cards.Count && i < cardSlots.Length; i++)
+        private void OnDisable()
+        {
+            EventBus.OnCardDrawn -= OnCardDrawn;
+            EventBus.OnCardDiscarded -= OnCardDiscarded;
+            EventBus.OnCardBurned -= OnCardBurned;
+            EventBus.OnCardPlayed -= OnCardPlayed;
+            EventBus.OnPhaseStarted -= OnPhaseStarted;
+        }
+
+        // ------------------------------------------------------------------
+        // EventBus handlers
+        // ------------------------------------------------------------------
+
+        private void OnCardDrawn(CardData card)
+        {
+            AddCard(card);
+        }
+
+        private void OnCardDiscarded(CardData card)
+        {
+            RemoveCard(card);
+        }
+
+        private void OnCardBurned(CardData card)
+        {
+            RemoveCard(card);
+        }
+
+        private void OnCardPlayed(CardData card)
+        {
+            RemoveCard(card);
+        }
+
+        private void OnPhaseStarted(TurnPhase phase)
+        {
+            // Cards are interactable only during the PlayPhase
+            SetInteractable(phase == TurnPhase.PlayPhase);
+
+            // At the start of the EventPhase (new turn) clear visuals;
+            // the DrawPhase will repopulate via OnCardDrawn events.
+            if (phase == TurnPhase.EventPhase)
             {
-                CardUI card = Instantiate(cardPrefab, cardSlots[i]);
-                card.SetupCard(cards[i]);
-                currentCards.Add(card);
+                ClearHand();
+            }
+        }
+
+        // ------------------------------------------------------------------
+        // Public
+        // ------------------------------------------------------------------
+
+        /// <summary>
+        /// Enable or disable card interaction (dragging, hover).
+        /// </summary>
+        public void SetInteractable(bool value)
+        {
+            interactable = value;
+
+            foreach (var card in cardInstances)
+            {
+                if (card != null)
+                    card.SetInteractable(value);
             }
         }
 
         /// <summary>
-        /// Removes all card visuals from hand slots.
+        /// Removes a specific CardUI that has been played / discarded.
+        /// Called by CardDragHandler after a successful drop.
         /// </summary>
-        public void ClearHand()
+        public void RemoveCardUI(CardUI cardUI)
         {
-            foreach (CardUI card in currentCards)
+            if (cardUI == null)
+                return;
+
+            cardInstances.Remove(cardUI);
+            Destroy(cardUI.gameObject);
+            LayoutHand();
+        }
+
+        // ------------------------------------------------------------------
+        // Internal
+        // ------------------------------------------------------------------
+
+        private void AddCard(CardData card)
+        {
+            if (cardPrefab == null || handRoot == null)
+                return;
+
+            CardUI instance = Instantiate(cardPrefab, handRoot);
+            instance.SetupCard(card);
+            instance.SetInteractable(interactable);
+
+            cardInstances.Add(instance);
+            LayoutHand();
+        }
+
+        private void RemoveCard(CardData card)
+        {
+            for (int i = cardInstances.Count - 1; i >= 0; i--)
             {
-                if (card != null)
+                if (cardInstances[i] != null && cardInstances[i].Data == card)
                 {
-                    Destroy(card.gameObject);
+                    Destroy(cardInstances[i].gameObject);
+                    cardInstances.RemoveAt(i);
+                    break;
                 }
             }
 
-            currentCards.Clear();
+            LayoutHand();
         }
 
-        /// <summary>
-        /// Adds a single card to the next available hand slot.
-        /// </summary>
-        public void AddCard(CardData card)
+        private void ClearHand()
         {
-            if (currentCards.Count >= cardSlots.Length)
-                return;
-
-            int slotIndex = currentCards.Count;
-            CardUI cardUI = Instantiate(cardPrefab, cardSlots[slotIndex]);
-            cardUI.SetupCard(card);
-            currentCards.Add(cardUI);
-        }
-
-        /// <summary>
-        /// Removes the card at the given index from the hand.
-        /// </summary>
-        public void RemoveCard(int index)
-        {
-            if (index < 0 || index >= currentCards.Count)
-                return;
-
-            CardUI card = currentCards[index];
-            currentCards.RemoveAt(index);
-
-            if (card != null)
+            foreach (var card in cardInstances)
             {
-                Destroy(card.gameObject);
+                if (card != null)
+                    Destroy(card.gameObject);
             }
 
-            // Re-parent remaining cards to fill the gap
-            for (int i = 0; i < currentCards.Count && i < cardSlots.Length; i++)
-            {
-                currentCards[i].transform.SetParent(cardSlots[i], false);
-            }
+            cardInstances.Clear();
         }
 
         /// <summary>
-        /// Plays a staggered draw animation for all cards currently in hand.
+        /// Positions cards in a fan arc centered on handRoot.
         /// </summary>
-        public void AnimateDrawCards()
+        private void LayoutHand()
         {
-            StartCoroutine(DrawCardsCoroutine());
-        }
+            int count = cardInstances.Count;
+            if (count == 0)
+                return;
 
-        private IEnumerator DrawCardsCoroutine()
-        {
-            foreach (CardUI card in currentCards)
+            float totalWidth = (count - 1) * cardSpacing;
+            float startX = -totalWidth * 0.5f;
+
+            for (int i = 0; i < count; i++)
             {
-                if (card == null)
+                if (cardInstances[i] == null)
                     continue;
 
-                CanvasGroup cg = card.GetComponent<CanvasGroup>();
-                RectTransform rt = card.GetComponent<RectTransform>();
+                RectTransform rt = cardInstances[i].GetComponent<RectTransform>();
+                if (rt == null)
+                    continue;
 
-                if (cg != null)
-                    cg.alpha = 0f;
+                float t = count > 1 ? (float)i / (count - 1) : 0.5f;
 
-                Vector3 targetPos = rt.localPosition;
-                rt.localPosition = targetPos + Vector3.down * 200f;
+                // Horizontal position
+                float x = startX + i * cardSpacing;
 
-                StartCoroutine(AnimateSingleDraw(rt, cg, targetPos));
-                yield return new WaitForSeconds(drawStagger);
+                // Parabolic vertical arc (higher at center)
+                float normalizedOffset = (t - 0.5f) * 2f; // -1..1
+                float y = verticalArc * (1f - normalizedOffset * normalizedOffset);
+
+                // Fan rotation
+                float angle = Mathf.Lerp(
+                    fanAngle * (count - 1) * 0.5f,
+                    -fanAngle * (count - 1) * 0.5f,
+                    t);
+
+                rt.anchoredPosition = new Vector2(x, y);
+                rt.localRotation = Quaternion.Euler(0f, 0f, angle);
             }
-        }
-
-        private IEnumerator AnimateSingleDraw(RectTransform rt, CanvasGroup cg, Vector3 targetPos)
-        {
-            float elapsed = 0f;
-            Vector3 startPos = rt.localPosition;
-
-            while (elapsed < drawAnimDuration)
-            {
-                elapsed += Time.deltaTime;
-                float t = Mathf.Clamp01(elapsed / drawAnimDuration);
-                // Ease-out
-                float eased = 1f - Mathf.Pow(1f - t, 3f);
-
-                rt.localPosition = Vector3.Lerp(startPos, targetPos, eased);
-                if (cg != null)
-                    cg.alpha = eased;
-
-                yield return null;
-            }
-
-            rt.localPosition = targetPos;
-            if (cg != null)
-                cg.alpha = 1f;
         }
     }
 }

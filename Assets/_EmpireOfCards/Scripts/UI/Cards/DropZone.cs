@@ -1,83 +1,115 @@
-using System;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using EmpireOfCards.Core;
 using EmpireOfCards.Data;
+using EmpireOfCards.Gameplay;
 
 namespace EmpireOfCards.UI.Cards
 {
     /// <summary>
-    /// Defines a region where cards can be dropped. Each zone has a type
-    /// that determines which cards are valid.
+    /// Type of drop zone on the board.
+    /// </summary>
+    public enum DropZoneType
+    {
+        BusinessSlot,
+        EmployeeSlot,
+        UpgradeSlot,
+        ActionZone,
+        SellZone,
+        BurnZone
+    }
+
+    /// <summary>
+    /// Drop target for card placement. Validates card type vs zone type
+    /// and calls the appropriate BoardManager method on successful drop.
+    /// Shows green highlight for valid drops, red for invalid while dragging.
     /// </summary>
     public class DropZone : MonoBehaviour
     {
-        public enum DropZoneType
-        {
-            BusinessSlot,
-            EmployeeSlot,
-            UpgradeSlot,
-            ActionZone,
-            SellZone,
-            BurnZone
-        }
-
         [Header("Zone Config")]
         [SerializeField] private DropZoneType zoneType;
-        [SerializeField] private int slotIndex;
-        [SerializeField] private int parentBusinessIndex;
+        [SerializeField] private int slotIndex;                  // business slot or employee business index
 
-        [Header("Visuals")]
-        [SerializeField] private Image highlight;
+        [Header("Highlight")]
+        [SerializeField] private Image highlightImage;
+        [SerializeField] private Color validColor = new Color(0f, 1f, 0.3f, 0.35f);
+        [SerializeField] private Color invalidColor = new Color(1f, 0f, 0f, 0.25f);
 
-        // --- Events ---
-        public event Action<CardData, DropZoneType, int> OnCardReceived;
+        [Header("Manager Reference")]
+        [SerializeField] private BoardManager boardManager;
 
-        /// <summary>
-        /// The type of this drop zone.
-        /// </summary>
+        // --- Static registry for broadcast ---
+        private static readonly List<DropZone> allZones = new List<DropZone>();
+
+        // --- Properties ---
         public DropZoneType ZoneType => zoneType;
-
-        /// <summary>
-        /// The slot index within its parent (e.g. employee slot 0, 1, 2).
-        /// </summary>
         public int SlotIndex => slotIndex;
 
-        /// <summary>
-        /// The index of the parent business this slot belongs to (-1 for global zones).
-        /// </summary>
-        public int ParentBusinessIndex => parentBusinessIndex;
+        // ------------------------------------------------------------------
+        // Lifecycle
+        // ------------------------------------------------------------------
 
-        /// <summary>
-        /// Shows or hides the highlight overlay on this zone.
-        /// </summary>
-        public void ShowHighlight(bool show, Color color)
+        private void OnEnable()
         {
-            if (highlight == null)
-                return;
+            allZones.Add(this);
+            SetHighlight(false, false);
+        }
 
-            highlight.enabled = show;
-            if (show)
+        private void OnDisable()
+        {
+            allZones.Remove(this);
+        }
+
+        // ------------------------------------------------------------------
+        // Static broadcast helpers (called by CardDragHandler)
+        // ------------------------------------------------------------------
+
+        /// <summary>
+        /// Tells every active DropZone to show valid/invalid highlight for the
+        /// card currently being dragged.
+        /// </summary>
+        public static void BroadcastDragStarted(CardUI card)
+        {
+            foreach (var zone in allZones)
             {
-                highlight.color = new Color(color.r, color.g, color.b, 0.35f);
+                bool valid = zone.CanAccept(card);
+                zone.SetHighlight(true, valid);
             }
         }
 
         /// <summary>
-        /// Returns true if the given card can legally be dropped on this zone.
+        /// Hides all highlights when dragging ends.
         /// </summary>
-        public bool IsValidDrop(CardData card)
+        public static void BroadcastDragEnded()
         {
-            if (card == null)
+            foreach (var zone in allZones)
+            {
+                zone.SetHighlight(false, false);
+            }
+        }
+
+        // ------------------------------------------------------------------
+        // Validation
+        // ------------------------------------------------------------------
+
+        /// <summary>
+        /// Returns true if this zone can accept the given card.
+        /// </summary>
+        public bool CanAccept(CardUI cardUI)
+        {
+            if (cardUI == null || cardUI.Data == null)
                 return false;
+
+            CardData card = cardUI.Data;
 
             switch (zoneType)
             {
                 case DropZoneType.BusinessSlot:
-                    return card.cardType == CardType.Business;
+                    return card.cardType == CardType.Business && IsSlotEmpty();
 
                 case DropZoneType.EmployeeSlot:
-                    return card.cardType == CardType.Employee;
+                    return card.cardType == CardType.Employee && HasRoomForEmployee();
 
                 case DropZoneType.UpgradeSlot:
                     return card.cardType == CardType.Upgrade;
@@ -86,12 +118,10 @@ namespace EmpireOfCards.UI.Cards
                     return card.cardType == CardType.Action;
 
                 case DropZoneType.SellZone:
-                    // Any card can be sold
-                    return true;
+                    return true; // any card can be sold
 
                 case DropZoneType.BurnZone:
-                    // Any card can be burned/discarded
-                    return true;
+                    return true; // any card can be burned
 
                 default:
                     return false;
@@ -99,15 +129,114 @@ namespace EmpireOfCards.UI.Cards
         }
 
         /// <summary>
-        /// Called when a valid card is dropped on this zone.
+        /// Processes the dropped card. Calls the appropriate BoardManager method
+        /// and fires EventBus events.
         /// </summary>
-        public void OnCardDropped(CardData card)
+        public void AcceptCard(CardUI cardUI)
         {
-            if (!IsValidDrop(card))
+            if (cardUI == null || cardUI.Data == null)
                 return;
 
-            ShowHighlight(false, Color.clear);
-            OnCardReceived?.Invoke(card, zoneType, slotIndex);
+            CardData card = cardUI.Data;
+            bool success = false;
+
+            switch (zoneType)
+            {
+                case DropZoneType.BusinessSlot:
+                    if (boardManager != null)
+                        success = boardManager.PlaceBusiness(card, slotIndex);
+                    if (success)
+                        EventBus.BusinessPlaced(card, slotIndex);
+                    break;
+
+                case DropZoneType.EmployeeSlot:
+                    if (boardManager != null)
+                        success = boardManager.PlaceEmployee(card, slotIndex);
+                    if (success)
+                        EventBus.EmployeePlaced(card, slotIndex);
+                    break;
+
+                case DropZoneType.UpgradeSlot:
+                    if (boardManager != null)
+                        success = boardManager.PlaceUpgrade(card, slotIndex);
+                    if (success)
+                        EventBus.UpgradePlaced(card, slotIndex);
+                    break;
+
+                case DropZoneType.ActionZone:
+                    success = true;
+                    EventBus.ActionExecuted(card);
+                    break;
+
+                case DropZoneType.SellZone:
+                {
+                    int sellPrice = Mathf.RoundToInt(card.buyCost * Constants.SELL_RATE);
+                    GameManager.Instance?.GainMoney(sellPrice);
+                    success = true;
+                    EventBus.CardDiscarded(card);
+                    break;
+                }
+
+                case DropZoneType.BurnZone:
+                    success = true;
+                    EventBus.CardBurned(card);
+                    break;
+            }
+
+            if (success)
+            {
+                // Use an action for placing / using cards (sell and burn are free)
+                if (zoneType != DropZoneType.SellZone && zoneType != DropZoneType.BurnZone)
+                    GameManager.Instance?.UseAction();
+
+                EventBus.CardPlayed(card);
+
+                // Destroy the card visual -- HandUI also gets notified via OnCardPlayed
+                Destroy(cardUI.gameObject);
+            }
+        }
+
+        // ------------------------------------------------------------------
+        // Internal
+        // ------------------------------------------------------------------
+
+        private bool IsSlotEmpty()
+        {
+            if (boardManager == null)
+                return true;
+
+            return slotIndex >= boardManager.PlayerBusinesses.Count
+                || boardManager.PlayerBusinesses[slotIndex] == null;
+        }
+
+        private bool HasRoomForEmployee()
+        {
+            if (boardManager == null)
+                return false;
+
+            if (slotIndex < 0 || slotIndex >= boardManager.PlayerBusinesses.Count)
+                return false;
+
+            var business = boardManager.PlayerBusinesses[slotIndex];
+            if (business == null || business.isClosed)
+                return false;
+
+            return business.employees.Count < business.businessCard.employeeSlots;
+        }
+
+        private void SetHighlight(bool visible, bool valid)
+        {
+            if (highlightImage == null)
+                return;
+
+            if (!visible)
+            {
+                highlightImage.enabled = false;
+                return;
+            }
+
+            highlightImage.enabled = true;
+            highlightImage.color = valid ? validColor : invalidColor;
         }
     }
 }

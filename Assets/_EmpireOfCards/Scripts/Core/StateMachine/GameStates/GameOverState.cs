@@ -1,47 +1,57 @@
 using UnityEngine;
+using EmpireOfCards.Core.StateMachine;
 
-namespace EmpireOfCards.Core.StateMachine.GameStates
+namespace EmpireOfCards.Core.GameStates
 {
     /// <summary>
     /// State active when the game ends (win or lose).
-    /// Displays the score screen and waits for the player to choose next action.
+    /// Enter shows the score / game-over screen and calculates the final score.
+    /// Tick waits for Play Again or Main Menu button press.
+    /// Exit clears EventBus and performs cleanup.
     /// </summary>
     public class GameOverState : IState
     {
         public void Enter()
         {
-            Debug.Log("[GameOverState] Enter - Showing game over screen");
+            var gm = GameManager.Instance;
+            gm.SetGameState(GameState.GameOver);
+
+            // Calculate and log final score
+            int finalMoney = gm.PlayerMoney;
+            int playerTerr = gm.PlayerTerritories;
+            int rivalTerr = gm.RivalTerritories;
+            int turn = gm.CurrentTurn;
+            int maxTurn = gm.MaxTurns;
+
+            Debug.Log($"[GameOverState] Final — Money: {finalMoney}, " +
+                      $"Territories: {playerTerr}/{rivalTerr}, " +
+                      $"Turn: {turn}/{maxTurn}");
 
             // Show game over / score screen UI
-            // TODO: UIManager.Instance.ShowGameOverScreen();
+            if (gm.UIManager != null)
+                gm.UIManager.ShowGameOverScreen();
 
-            // Display final stats: money, territories, turns survived, combos triggered
-            GameManager gm = GameManager.Instance;
-            if (gm != null)
-            {
-                Debug.Log($"[GameOverState] Final Score - Money: {gm.PlayerMoney}, " +
-                          $"Territories: {gm.PlayerTerritories}/{gm.RivalTerritories}, " +
-                          $"Turn: {gm.CurrentTurn}/{gm.MaxTurns}");
-            }
+            // Play game-over music
+            if (gm.AudioManager != null)
+                gm.AudioManager.PlayMusic(false); // calm / melancholic
         }
 
-        public void Execute()
+        public void Tick()
         {
-            // Wait for player to choose:
-            // - Play Again -> transition to GameSetupState
-            // - Main Menu  -> transition to MainMenuState
-            // UI buttons handle the transitions
+            // Polling: waiting for Play Again or Main Menu button.
+            // UIManager handles button clicks and calls
+            // GameManager.GetGameStateMachine().ChangeState(...) accordingly.
         }
 
         public void Exit()
         {
-            Debug.Log("[GameOverState] Exit - Cleaning up");
-
-            // Clear event bus subscriptions to prevent stale references
+            // Clear EventBus subscriptions to prevent stale references
             EventBus.ClearAll();
 
             // Hide game over UI
-            // TODO: UIManager.Instance.HideGameOverScreen();
+            var gm = GameManager.Instance;
+            if (gm != null && gm.UIManager != null)
+                gm.UIManager.HideGameOverScreen();
         }
     }
 }

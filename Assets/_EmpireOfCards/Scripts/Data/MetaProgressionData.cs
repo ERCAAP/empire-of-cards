@@ -1,4 +1,3 @@
-using System;
 using UnityEngine;
 
 namespace EmpireOfCards.Data
@@ -10,37 +9,22 @@ namespace EmpireOfCards.Data
         public AscensionLevel[] ascensionLevels;
     }
 
-    [Serializable]
+    [System.Serializable]
     public class UnlockTier
     {
-        [Tooltip("XP needed to reach this unlock tier")]
-        public int xpRequired;
-
-        [TextArea(1, 3)]
-        public string unlockDescription;
-
-        [Tooltip("Cards unlocked at this tier")]
+        public int xpRequired;          // 50, 200, 500, 1000, 2000, 5000
+        public string unlockDescription;// "Uncommon kartlar dükkan havuzuna girer"
         public CardData[] unlockedCards;
-
-        [Tooltip("Rival unlocked at this tier (optional)")]
-        public RivalData unlockedRival;
+        public RivalData unlockedRival; // 500 XP → Shadow Inc., 2000 XP → The Cartel
     }
 
-    [Serializable]
+    [System.Serializable]
     public class AscensionLevel
     {
-        public int level;
-
-        [TextArea(1, 3)]
-        public string description;
-
-        [Tooltip("Multiplier applied to rival aggression at this ascension level")]
-        public float rivalAggressionMultiplier;
-
-        [Tooltip("Modifier to starting money (can be negative)")]
-        public int startingMoneyModifier;
-
-        [Tooltip("Multiplier applied to crisis event frequency")]
-        public float crisisFrequencyMultiplier;
+        public int level;               // 1, 2, 3
+        public string description;      // "Rakip daha agresif"
+        public float rivalAggressionMultiplier = 1f;  // 1.2, 1.5 etc
+        public int startingMoneyModifier;             // -100 at Ascension 2
+        public float crisisFrequencyMultiplier = 1f;  // Ascension 3: 1.5
     }
 }

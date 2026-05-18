@@ -5,7 +5,7 @@ namespace EmpireOfCards.Data
     [CreateAssetMenu(fileName = "GameBalance", menuName = "EmpireOfCards/Game Balance")]
     public class GameBalanceData : ScriptableObject
     {
-        [Header("General")]
+        [Header("--- Genel ---")]
         public int startingMoney = 500;
         public int maxTurns = 20;
         public int startingActions = 3;
@@ -15,53 +15,31 @@ namespace EmpireOfCards.Data
         public int handSize = 5;
         public int redrawsPerTurn = 1;
         public int shopCardsPerTurn = 3;
+        public int eventInterval = 3;
 
-        [Header("Economy")]
-        [Tooltip("Standard tax rate applied to income")]
+        [Header("--- Ekonomi ---")]
         public float taxRate = 0.15f;
-
-        [Tooltip("Reduced tax rate (e.g. with Muhasebeci)")]
-        public float reducedTaxRate = 0.075f;
-
-        [Tooltip("Minimum possible tax rate")]
-        public float minTaxRate = 0.03f;
-
-        [Tooltip("Fraction of buy cost returned when selling a card")]
+        public float reducedTaxRate = 0.075f;   // 1 muhasebeci
+        public float minTaxRate = 0.03f;         // 2 muhasebeci
         public float sellRate = 0.4f;
 
-        [Header("FBI")]
-        [Tooltip("Money penalty when an FBI raid occurs")]
+        [Header("--- FBI ---")]
         public int fbiRaidPenalty = 300;
-
-        [Tooltip("FBI risk percentage at the start of the game")]
         public float fbiStartingRisk = 0f;
 
-        [Header("Territory")]
+        [Header("--- Bölge ---")]
         public int totalTerritories = 10;
-
-        [Tooltip("Territories needed for player to win")]
         public int winTerritories = 6;
-
-        [Tooltip("Territories the rival needs for the player to lose")]
         public int loseTerritories = 7;
 
-        [Header("Market Pool")]
-        [Tooltip("Starting customer pool available in the market")]
+        [Header("--- Market Havuzu (Balance Tablo) ---")]
         public int baseMarketCustomers = 60;
-
-        [Tooltip("Customer growth per turn during turns 1-5")]
         public int earlyGrowthPerTurn = 5;
-
-        [Tooltip("Customer growth per turn during turns 6-10")]
         public int midGrowthPerTurn = 6;
-
-        [Tooltip("Customer growth per turn during turns 11-15")]
         public int lateGrowthPerTurn = 8;
-
-        [Tooltip("Customer growth per turn during turns 16-20")]
         public int endGrowthPerTurn = 10;
 
-        [Header("Scoring")]
+        [Header("--- Skor (GDD 10.3) ---")]
         public int territoryScoreMultiplier = 500;
         public int moneyScoreMultiplier = 1;
         public int comboScoreMultiplier = 200;
@@ -70,8 +48,24 @@ namespace EmpireOfCards.Data
         public int fbiEvasionBonus = 50;
         public int winBonus = 1000;
 
-        [Header("Events")]
-        [Tooltip("An event occurs every N turns")]
-        public int eventInterval = 3;
+        [Header("--- İşletme Evrimi ---")]
+        public int evolutionCustomerThreshold = 40;
+        public int evolutionTurnRequirement = 15;
+
+        [Header("--- Çalışan ---")]
+        public int employeeLeaveTurnThreshold = 8;
+
+        public int GetMarketPool(int currentTurn)
+        {
+            int pool = baseMarketCustomers;
+            for (int t = 1; t < currentTurn; t++)
+            {
+                if (t <= 5) pool += earlyGrowthPerTurn;
+                else if (t <= 10) pool += midGrowthPerTurn;
+                else if (t <= 15) pool += lateGrowthPerTurn;
+                else pool += endGrowthPerTurn;
+            }
+            return pool;
+        }
     }
 }

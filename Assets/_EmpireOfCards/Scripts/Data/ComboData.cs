@@ -1,78 +1,54 @@
 using UnityEngine;
+using EmpireOfCards.Core;
 
 namespace EmpireOfCards.Data
 {
-    using EmpireOfCards.Core;
-
     [CreateAssetMenu(fileName = "NewCombo", menuName = "EmpireOfCards/Combo Data")]
     public class ComboData : ScriptableObject
     {
-        [Header("Combo Info")]
-        [Tooltip("Unique combo identifier, e.g. COMBO_01")]
-        public string comboId;
-
-        [Tooltip("Display name, e.g. Latte Sanati")]
-        public string comboName;
-
-        [Tooltip("In-game display text, e.g. LATTE SANATI!")]
-        public string displayText;
-
+        [Header("--- Kimlik ---")]
+        public string comboId;              // "COMBO_01_LatteSanati"
+        public string comboName;            // "Latte Sanatı"
+        public string displayText;          // "LATTE SANATI!" (ekranda gösterilecek)
         public ComboTier tier;
-
         [TextArea(2, 4)]
         public string description;
 
-        [Header("Requirements")]
-        [Tooltip("Specific card IDs needed to trigger this combo")]
-        public string[] requiredCardIds;
+        [Header("--- Gereksinimler ---")]
+        public string[] requiredCardIds;    // Spesifik kart ID'leri: ["B02_Kahveci", "C03_Barista"]
+        public CardTag[] requiredTags;      // Tag gereksinimleri
+        public bool requiresSpecificPlacement;  // Barista Kahveci'de mi olmalı
+        public string employeeCardId;       // Hangi çalışan
+        public string businessCardId;       // Hangi işletmede
 
-        [Tooltip("Tag requirements for combo activation")]
-        public CardTag[] requiredTags;
-
+        [Header("--- Event Bağımlılık ---")]
         public bool requiresActiveEvent;
+        public string requiredEventId;      // "E03_ViralTrend"
 
-        [Tooltip("Specific event ID that must be active")]
-        public string requiredEventId;
-
+        [Header("--- Durum Gereksinimleri ---")]
         public bool requiresMinMoney;
-        public int minMoneyRequired;
-
+        public int minMoneyRequired;        // Kriz Avcısı: 1000
         public bool requiresMinTerritory;
-        public int minTerritoryRequired;
+        public int minTerritoryRequired;    // Monopol: bölge >= bazı sayı
+        public int minActiveBusinesses;     // Monopol: 4 işletme
+        public float minMarketShare;        // Monopol: %55
 
-        [Tooltip("Minimum number of active businesses required")]
-        public int minActiveBusinesses;
+        [Header("--- Bonus ---")]
+        public int bonusIncome;             // Ek gelir/tur
+        public int bonusCustomers;          // Ek müşteri/tur
+        public float incomeMultiplier;      // 1.0 = normal, 2.0 = x2
+        public float customerMultiplier;    // Müşteri çarpanı
+        public int extraActions;            // AI Devrimi: +1
+        public int rivalCustomerPenalty;    // Monopol: rakip -3/tur
+        public float shopDiscount;          // Kriz Avcısı: 0.5 (%50)
+        public bool transferRivalEmployee;  // Kriz Avcısı: 1 çalışan transfer
+        public int extraFBIRisk;            // Yeraltı: +8
 
-        [Header("Bonus")]
-        public int bonusIncome;
-        public int bonusCustomers;
-
-        [Tooltip("Income multiplier (1.0 = no change)")]
-        public float incomeMultiplier = 1.0f;
-
-        [Tooltip("Customer multiplier (1.0 = no change)")]
-        public float customerMultiplier = 1.0f;
-
-        public int extraActions;
-
-        [Tooltip("Rival customer penalty (e.g. Monopol: -3)")]
-        public int rivalCustomerPenalty;
-
-        [Tooltip("Shop discount (e.g. Kriz Avcisi: 0.5)")]
-        public float shopDiscount;
-
-        [Tooltip("Whether this combo transfers a rival employee")]
-        public bool transferRivalEmployee;
-
-        [Tooltip("Extra FBI risk from this combo")]
-        public int fbiRiskBonus;
-
-        [Header("Visual Feedback")]
-        public Color glowColor = Color.white;
-
-        [Tooltip("Audio clip reference ID")]
-        public string comboSoundId;
-
-        public float screenShakeIntensity;
+        [Header("--- Görsel Feedback ---")]
+        public Color glowColor = Color.yellow;
+        public string comboSoundId;         // "combo_trigger" audio reference
+        [Range(0f, 1f)]
+        public float screenShakeIntensity = 0.3f;
+        public float screenShakeDuration = 0.3f;
     }
 }

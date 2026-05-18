@@ -1,99 +1,157 @@
-using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
+using EmpireOfCards.Core;
 
 namespace EmpireOfCards.UI
 {
     /// <summary>
-    /// Displays the player's money, turn counter, and FBI risk meter in the top bar.
+    /// Displays money (animated counter), turn indicator, and FBI risk bar.
+    /// Subscribes to EventBus events -- never calls manager methods for data.
+    /// All animations use Update() polling, no coroutines.
     /// </summary>
     public class TopBarUI : MonoBehaviour
     {
-        [Header("Text Fields")]
+        [Header("Money")]
         [SerializeField] private TMP_Text moneyText;
+        [SerializeField] private float moneyLerpSpeed = 8f;
+
+        [Header("Turn")]
         [SerializeField] private TMP_Text turnText;
+
+        [Header("FBI Risk")]
+        [SerializeField] private Image fbiBarFill;
         [SerializeField] private TMP_Text fbiRiskText;
+        [SerializeField] private Color fbiColorLow = Color.green;
+        [SerializeField] private Color fbiColorMid = Color.yellow;
+        [SerializeField] private Color fbiColorHigh = Color.red;
+        [SerializeField] private float fbiLerpSpeed = 5f;
 
-        [Header("Risk Bar")]
-        [SerializeField] private Image fbiRiskBar;
+        // Runtime
+        private float displayedMoney;
+        private float targetMoney;
+        private float displayedFBI;
+        private float targetFBI;
 
-        [Header("Animation")]
-        [SerializeField] private float moneyAnimDuration = 0.5f;
+        // ------------------------------------------------------------------
+        // Lifecycle
+        // ------------------------------------------------------------------
 
-        private Coroutine moneyAnimCoroutine;
-
-        /// <summary>
-        /// Sets the money display to the given amount immediately.
-        /// </summary>
-        public void UpdateMoney(int amount)
+        private void OnEnable()
         {
-            if (moneyText != null)
+            EventBus.OnMoneyChanged += OnMoneyChanged;
+            EventBus.OnTurnStarted += OnTurnStarted;
+            EventBus.OnFBIRiskChanged += OnFBIRiskChanged;
+        }
+
+        private void OnDisable()
+        {
+            EventBus.OnMoneyChanged -= OnMoneyChanged;
+            EventBus.OnTurnStarted -= OnTurnStarted;
+            EventBus.OnFBIRiskChanged -= OnFBIRiskChanged;
+        }
+
+        private void Update()
+        {
+            // Lerp money counter toward target
+            if (!Mathf.Approximately(displayedMoney, targetMoney))
             {
-                moneyText.text = $"${amount:N0}";
+                displayedMoney = Mathf.MoveTowards(
+                    displayedMoney,
+                    targetMoney,
+                    moneyLerpSpeed * Mathf.Max(1f, Mathf.Abs(targetMoney - displayedMoney)) * Time.deltaTime);
+
+                if (moneyText != null)
+                    moneyText.text = $"${Mathf.RoundToInt(displayedMoney):N0}";
+            }
+
+            // Lerp FBI bar fill and color
+            if (!Mathf.Approximately(displayedFBI, targetFBI))
+            {
+                displayedFBI = Mathf.MoveTowards(displayedFBI, targetFBI, fbiLerpSpeed * Time.deltaTime);
+
+                if (fbiBarFill != null)
+                {
+                    fbiBarFill.fillAmount = displayedFBI;
+                    fbiBarFill.color = GetFBIColor(displayedFBI);
+                }
+
+                if (fbiRiskText != null)
+                    fbiRiskText.text = $"FBI Risk: {Mathf.RoundToInt(displayedFBI * 100f)}%";
             }
         }
 
+        // ------------------------------------------------------------------
+        // EventBus callbacks
+        // ------------------------------------------------------------------
+
+        private void OnMoneyChanged(int newAmount)
+        {
+            SetTargetMoney(newAmount);
+        }
+
+        private void OnTurnStarted(int turnNumber)
+        {
+            UpdateTurn(turnNumber, Constants.MAX_TURNS);
+        }
+
+        private void OnFBIRiskChanged(float risk)
+        {
+            UpdateFBIRisk(risk);
+        }
+
+        // ------------------------------------------------------------------
+        // Public setters (also called by UIManager.UpdateAllUI)
+        // ------------------------------------------------------------------
+
         /// <summary>
-        /// Updates the turn counter display.
+        /// Sets the target money value. The counter lerps toward it in Update().
+        /// </summary>
+        public void SetTargetMoney(int amount)
+        {
+            targetMoney = amount;
+        }
+
+        /// <summary>
+        /// Immediately sets the money display without animation.
+        /// </summary>
+        public void UpdateMoney(int amount)
+        {
+            targetMoney = amount;
+            displayedMoney = amount;
+
+            if (moneyText != null)
+                moneyText.text = $"${amount:N0}";
+        }
+
+        /// <summary>
+        /// Updates the turn counter text.
         /// </summary>
         public void UpdateTurn(int current, int max)
         {
             if (turnText != null)
-            {
-                turnText.text = $"Turn {current}/{max}";
-            }
+                turnText.text = $"Tur {current}/{max}";
         }
 
         /// <summary>
-        /// Updates the FBI risk bar and text. Percent should be 0-1.
+        /// Sets the target FBI risk. The bar lerps toward it in Update().
         /// </summary>
-        public void UpdateFBIRisk(float percent)
+        public void UpdateFBIRisk(float risk)
         {
-            percent = Mathf.Clamp01(percent);
-
-            if (fbiRiskBar != null)
-            {
-                fbiRiskBar.fillAmount = percent;
-                fbiRiskBar.color = Color.Lerp(Color.yellow, Color.red, percent);
-            }
-
-            if (fbiRiskText != null)
-            {
-                fbiRiskText.text = $"FBI Risk: {Mathf.RoundToInt(percent * 100)}%";
-            }
+            targetFBI = Mathf.Clamp01(risk);
         }
 
-        /// <summary>
-        /// Smoothly animates the money display from one value to another.
-        /// </summary>
-        public void AnimateMoneyChange(int from, int to)
+        // ------------------------------------------------------------------
+        // Helpers
+        // ------------------------------------------------------------------
+
+        private Color GetFBIColor(float t)
         {
-            if (moneyAnimCoroutine != null)
-            {
-                StopCoroutine(moneyAnimCoroutine);
-            }
-
-            moneyAnimCoroutine = StartCoroutine(AnimateMoneyCoroutine(from, to));
-        }
-
-        private IEnumerator AnimateMoneyCoroutine(int from, int to)
-        {
-            float elapsed = 0f;
-
-            while (elapsed < moneyAnimDuration)
-            {
-                elapsed += Time.deltaTime;
-                float t = Mathf.Clamp01(elapsed / moneyAnimDuration);
-                // Ease-out curve for satisfying deceleration
-                t = 1f - Mathf.Pow(1f - t, 3f);
-                int current = Mathf.RoundToInt(Mathf.Lerp(from, to, t));
-                UpdateMoney(current);
-                yield return null;
-            }
-
-            UpdateMoney(to);
-            moneyAnimCoroutine = null;
+            // 0..0.5 -> green..yellow, 0.5..1 -> yellow..red
+            if (t < 0.5f)
+                return Color.Lerp(fbiColorLow, fbiColorMid, t * 2f);
+            else
+                return Color.Lerp(fbiColorMid, fbiColorHigh, (t - 0.5f) * 2f);
         }
     }
 }

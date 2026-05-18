@@ -1,127 +1,185 @@
 using UnityEngine;
 using UnityEngine.EventSystems;
-using EmpireOfCards.Data;
+using EmpireOfCards.Core;
 
 namespace EmpireOfCards.UI.Cards
 {
     /// <summary>
-    /// Handles drag-and-drop behaviour for a card. Attach alongside CardUI.
-    /// Implements pointer enter/exit for hover feedback.
+    /// Drag-and-drop handler for playing cards from the hand.
+    /// Implements pointer and drag interfaces. All visual tweens
+    /// are driven by Update() polling -- no coroutines.
     /// </summary>
     [RequireComponent(typeof(CardUI))]
     public class CardDragHandler : MonoBehaviour,
         IBeginDragHandler, IDragHandler, IEndDragHandler,
         IPointerEnterHandler, IPointerExitHandler
     {
-        [Header("References")]
-        [SerializeField] private Canvas canvas;
-        [SerializeField] private RectTransform rectTransform;
-        [SerializeField] private CanvasGroup canvasGroup;
+        [Header("Drag Settings")]
+        [SerializeField] private float dragScale = 1.15f;
+        [SerializeField] private float hoverScale = 1.08f;
+        [SerializeField] private float scaleSpeed = 10f;
 
-        [Header("Settings")]
-        [SerializeField] private float dragScale = 1.1f;
-        [SerializeField] private float hoverScale = 1.05f;
-        [SerializeField] private float snapBackSpeed = 15f;
+        // Runtime
+        private CardUI cardUI;
+        private RectTransform rectTransform;
+        private Canvas parentCanvas;
+        private CanvasGroup canvasGroup;
 
         private Vector2 originalPosition;
-        private Vector3 originalScale;
+        private Quaternion originalRotation;
+        private int originalSiblingIndex;
         private Transform originalParent;
+
+        private float targetScale = 1f;
         private bool isDragging;
-        private CardUI cardUI;
+
+        // ------------------------------------------------------------------
+        // Lifecycle
+        // ------------------------------------------------------------------
 
         private void Awake()
         {
-            if (rectTransform == null)
-                rectTransform = GetComponent<RectTransform>();
+            cardUI = GetComponent<CardUI>();
+            rectTransform = GetComponent<RectTransform>();
+            canvasGroup = GetComponent<CanvasGroup>();
 
             if (canvasGroup == null)
-                canvasGroup = GetComponent<CanvasGroup>();
-
-            cardUI = GetComponent<CardUI>();
+                canvasGroup = gameObject.AddComponent<CanvasGroup>();
         }
 
-        // --- Drag Handlers ---
+        private void Start()
+        {
+            parentCanvas = GetComponentInParent<Canvas>();
+        }
+
+        private void Update()
+        {
+            // Smooth scale transition (Update polling, no coroutine)
+            float currentScale = transform.localScale.x;
+            if (!Mathf.Approximately(currentScale, targetScale))
+            {
+                float newScale = Mathf.MoveTowards(currentScale, targetScale, scaleSpeed * Time.deltaTime);
+                transform.localScale = Vector3.one * newScale;
+            }
+        }
+
+        // ------------------------------------------------------------------
+        // Drag
+        // ------------------------------------------------------------------
 
         public void OnBeginDrag(PointerEventData eventData)
         {
-            isDragging = true;
-            originalPosition = rectTransform.anchoredPosition;
-            originalScale = rectTransform.localScale;
-            originalParent = transform.parent;
-
-            // Scale up while dragging
-            rectTransform.localScale = originalScale * dragScale;
-
-            // Allow raycasts to pass through so drop zones can detect
-            if (canvasGroup != null)
+            if (cardUI == null || !cardUI.IsInteractable)
             {
-                canvasGroup.blocksRaycasts = false;
-                canvasGroup.alpha = 0.85f;
+                eventData.pointerDrag = null;
+                return;
             }
 
-            // Move to top of sibling order so card renders above others
+            // Check PlayPhase and available actions
+            var gm = GameManager.Instance;
+            if (gm == null || gm.PlayerActions <= 0)
+            {
+                eventData.pointerDrag = null;
+                return;
+            }
+
+            isDragging = true;
+
+            // Store original transform state for snap-back
+            originalPosition = rectTransform.anchoredPosition;
+            originalRotation = rectTransform.localRotation;
+            originalSiblingIndex = transform.GetSiblingIndex();
+            originalParent = transform.parent;
+
+            // Move to top of hierarchy so the card renders above everything
+            transform.SetParent(parentCanvas != null ? parentCanvas.transform : transform.parent);
             transform.SetAsLastSibling();
 
-            ShowValidDropZones(true);
+            // Scale up
+            targetScale = dragScale;
+
+            // Remove rotation so the card is upright while dragging
+            rectTransform.localRotation = Quaternion.identity;
+
+            // Let raycasts pass through the dragged card to hit drop zones
+            canvasGroup.blocksRaycasts = false;
+            canvasGroup.alpha = 0.85f;
+
+            // Notify drop zones to show valid highlights
+            DropZone.BroadcastDragStarted(cardUI);
         }
 
         public void OnDrag(PointerEventData eventData)
         {
-            if (!isDragging || canvas == null)
+            if (!isDragging)
                 return;
 
-            // Follow the mouse, accounting for canvas scale
-            rectTransform.anchoredPosition += eventData.delta / canvas.scaleFactor;
+            // Follow the pointer
+            if (parentCanvas != null)
+            {
+                RectTransformUtility.ScreenPointToLocalPointInRectangle(
+                    parentCanvas.transform as RectTransform,
+                    eventData.position,
+                    parentCanvas.worldCamera,
+                    out Vector2 localPoint);
+
+                rectTransform.anchoredPosition = localPoint;
+            }
+            else
+            {
+                rectTransform.position += (Vector3)eventData.delta;
+            }
         }
 
         public void OnEndDrag(PointerEventData eventData)
         {
+            if (!isDragging)
+                return;
+
             isDragging = false;
+            canvasGroup.blocksRaycasts = true;
+            canvasGroup.alpha = 1f;
+            targetScale = 1f;
 
-            if (canvasGroup != null)
-            {
-                canvasGroup.blocksRaycasts = true;
-                canvasGroup.alpha = 1f;
-            }
-
-            ShowValidDropZones(false);
-
-            // Check if we dropped on a valid drop zone
-            bool droppedOnZone = false;
+            // Check whether we landed on a valid drop zone
+            bool accepted = false;
 
             if (eventData.pointerCurrentRaycast.gameObject != null)
             {
                 DropZone dropZone = eventData.pointerCurrentRaycast.gameObject
                     .GetComponentInParent<DropZone>();
 
-                if (dropZone != null && cardUI != null)
+                if (dropZone != null && dropZone.CanAccept(cardUI))
                 {
-                    CardData data = cardUI.GetCardData();
-                    if (data != null && dropZone.IsValidDrop(data))
-                    {
-                        dropZone.OnCardDropped(data);
-                        droppedOnZone = true;
-                    }
+                    dropZone.AcceptCard(cardUI);
+                    accepted = true;
                 }
             }
 
-            if (!droppedOnZone)
+            if (!accepted)
             {
-                // Snap back to original position
+                // Return card to hand
+                transform.SetParent(originalParent);
+                transform.SetSiblingIndex(originalSiblingIndex);
                 rectTransform.anchoredPosition = originalPosition;
+                rectTransform.localRotation = originalRotation;
             }
 
-            rectTransform.localScale = originalScale;
+            // Notify drop zones to hide highlights
+            DropZone.BroadcastDragEnded();
         }
 
-        // --- Hover Handlers ---
+        // ------------------------------------------------------------------
+        // Hover
+        // ------------------------------------------------------------------
 
         public void OnPointerEnter(PointerEventData eventData)
         {
-            if (isDragging)
+            if (isDragging || cardUI == null || !cardUI.IsInteractable)
                 return;
 
-            rectTransform.localScale = Vector3.one * hoverScale;
+            targetScale = hoverScale;
+            cardUI.ShowTooltip();
         }
 
         public void OnPointerExit(PointerEventData eventData)
@@ -129,30 +187,10 @@ namespace EmpireOfCards.UI.Cards
             if (isDragging)
                 return;
 
-            rectTransform.localScale = Vector3.one;
-        }
+            targetScale = 1f;
 
-        // --- Helpers ---
-
-        /// <summary>
-        /// Highlights or un-highlights all valid drop zones in the scene for this card.
-        /// </summary>
-        private void ShowValidDropZones(bool show)
-        {
-            DropZone[] zones = FindObjectsByType<DropZone>(FindObjectsSortMode.None);
-            CardData data = cardUI != null ? cardUI.GetCardData() : null;
-
-            foreach (DropZone zone in zones)
-            {
-                if (show && data != null && zone.IsValidDrop(data))
-                {
-                    zone.ShowHighlight(true, Color.green);
-                }
-                else
-                {
-                    zone.ShowHighlight(false, Color.clear);
-                }
-            }
+            if (cardUI != null)
+                cardUI.HideTooltip();
         }
     }
 }

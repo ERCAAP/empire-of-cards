@@ -1,6 +1,7 @@
 using System;
-using System.Collections;
 using UnityEngine;
+using EmpireOfCards.Core;
+using EmpireOfCards.Data;
 
 namespace EmpireOfCards.Audio
 {
@@ -16,7 +17,9 @@ namespace EmpireOfCards.Audio
     }
 
     /// <summary>
-    /// Singleton audio manager. Handles music crossfading and one-shot SFX playback.
+    /// Singleton audio manager. Subscribes to EventBus events to play
+    /// sounds automatically. Music crossfades between calm (early game)
+    /// and intense (turn 10+) using Update() polling -- no coroutines.
     ///
     /// Expected Sound IDs:
     ///   card_place, card_draw, coin_ching, coin_cascade,
@@ -28,7 +31,8 @@ namespace EmpireOfCards.Audio
         public static AudioManager Instance { get; private set; }
 
         [Header("Audio Sources")]
-        [SerializeField] private AudioSource musicSource;
+        [SerializeField] private AudioSource musicSourceA;
+        [SerializeField] private AudioSource musicSourceB;
         [SerializeField] private AudioSource sfxSource;
 
         [Header("Music Clips")]
@@ -43,7 +47,24 @@ namespace EmpireOfCards.Audio
         [Range(0f, 1f)][SerializeField] private float musicVolume = 0.7f;
         [Range(0f, 1f)][SerializeField] private float sfxVolume = 1f;
 
-        private Coroutine crossfadeCoroutine;
+        [Header("Crossfade")]
+        [SerializeField] private float crossfadeDuration = 1.5f;
+        [SerializeField] private int intenseMusicTurnThreshold = 10;
+
+        // Crossfade state (Update-driven, no coroutine)
+        private bool isCrossfading;
+        private float crossfadeTimer;
+        private AudioSource fadeOutSource;
+        private AudioSource fadeInSource;
+        private float fadeOutStartVolume;
+        private float fadeInTargetVolume;
+
+        // Track which source is currently active
+        private AudioSource activeSource;
+
+        // ------------------------------------------------------------------
+        // Lifecycle
+        // ------------------------------------------------------------------
 
         private void Awake()
         {
@@ -55,8 +76,112 @@ namespace EmpireOfCards.Audio
 
             Instance = this;
             DontDestroyOnLoad(gameObject);
+
+            activeSource = musicSourceA;
             ApplyVolumes();
         }
+
+        private void OnEnable()
+        {
+            EventBus.OnCardPlayed += OnCardPlayed;
+            EventBus.OnCardDrawn += OnCardDrawn;
+            EventBus.OnIncomeReceived += OnIncomeReceived;
+            EventBus.OnComboTriggered += OnComboTriggered;
+            EventBus.OnFBIRaid += OnFBIRaid;
+            EventBus.OnTurnStarted += OnTurnStarted;
+            EventBus.OnBusinessClosed += OnBusinessClosed;
+        }
+
+        private void OnDisable()
+        {
+            EventBus.OnCardPlayed -= OnCardPlayed;
+            EventBus.OnCardDrawn -= OnCardDrawn;
+            EventBus.OnIncomeReceived -= OnIncomeReceived;
+            EventBus.OnComboTriggered -= OnComboTriggered;
+            EventBus.OnFBIRaid -= OnFBIRaid;
+            EventBus.OnTurnStarted -= OnTurnStarted;
+            EventBus.OnBusinessClosed -= OnBusinessClosed;
+        }
+
+        private void Update()
+        {
+            if (!isCrossfading)
+                return;
+
+            crossfadeTimer += Time.deltaTime;
+            float t = Mathf.Clamp01(crossfadeTimer / crossfadeDuration);
+
+            // Fade out old source
+            if (fadeOutSource != null)
+                fadeOutSource.volume = Mathf.Lerp(fadeOutStartVolume, 0f, t);
+
+            // Fade in new source
+            if (fadeInSource != null)
+                fadeInSource.volume = Mathf.Lerp(0f, fadeInTargetVolume, t);
+
+            if (t >= 1f)
+            {
+                // Crossfade complete
+                if (fadeOutSource != null)
+                {
+                    fadeOutSource.Stop();
+                    fadeOutSource.volume = 0f;
+                }
+
+                if (fadeInSource != null)
+                    fadeInSource.volume = fadeInTargetVolume;
+
+                activeSource = fadeInSource;
+                isCrossfading = false;
+            }
+        }
+
+        // ------------------------------------------------------------------
+        // EventBus callbacks
+        // ------------------------------------------------------------------
+
+        private void OnCardPlayed(CardData card)
+        {
+            PlaySFX("card_place");
+        }
+
+        private void OnCardDrawn(CardData card)
+        {
+            PlaySFX("card_draw");
+        }
+
+        private void OnIncomeReceived(int amount)
+        {
+            PlaySFX("coin_ching");
+        }
+
+        private void OnComboTriggered(ComboData combo)
+        {
+            PlaySFX("combo_trigger");
+        }
+
+        private void OnFBIRaid(int penalty)
+        {
+            PlaySFX("fbi_siren");
+        }
+
+        private void OnTurnStarted(int turnNumber)
+        {
+            PlaySFX("turn_bell");
+
+            // Switch to intense music at threshold
+            if (turnNumber == intenseMusicTurnThreshold)
+                CrossfadeMusic(true);
+        }
+
+        private void OnBusinessClosed(int businessIndex)
+        {
+            PlaySFX("negative_buzz");
+        }
+
+        // ------------------------------------------------------------------
+        // Public API
+        // ------------------------------------------------------------------
 
         /// <summary>
         /// Plays a one-shot sound effect by its string ID.
@@ -79,45 +204,59 @@ namespace EmpireOfCards.Audio
         }
 
         /// <summary>
-        /// Starts playing music. If intense is true, plays the intense track; otherwise calm.
+        /// Starts playing music. If intense is true, plays the intense track.
         /// </summary>
         public void PlayMusic(bool intense)
         {
-            if (musicSource == null)
+            if (activeSource == null)
                 return;
 
             AudioClip target = intense ? intenseMusic : calmMusic;
             if (target == null)
                 return;
 
-            musicSource.clip = target;
-            musicSource.volume = musicVolume * masterVolume;
-            musicSource.loop = true;
-            musicSource.Play();
+            activeSource.clip = target;
+            activeSource.volume = musicVolume * masterVolume;
+            activeSource.loop = true;
+            activeSource.Play();
         }
 
         /// <summary>
-        /// Smoothly crossfades between calm and intense music tracks.
+        /// Smoothly crossfades between calm and intense music using Update() polling.
         /// </summary>
-        public void CrossfadeMusic(bool toIntense, float duration = 1f)
+        public void CrossfadeMusic(bool toIntense)
         {
-            if (crossfadeCoroutine != null)
-            {
-                StopCoroutine(crossfadeCoroutine);
-            }
+            AudioClip targetClip = toIntense ? intenseMusic : calmMusic;
+            if (targetClip == null)
+                return;
 
-            crossfadeCoroutine = StartCoroutine(CrossfadeMusicCoroutine(toIntense, duration));
+            // Determine which source pair to use
+            fadeOutSource = activeSource;
+            fadeInSource = (activeSource == musicSourceA) ? musicSourceB : musicSourceA;
+
+            if (fadeInSource == null || fadeOutSource == null)
+                return;
+
+            fadeOutStartVolume = fadeOutSource.volume;
+            fadeInTargetVolume = musicVolume * masterVolume;
+
+            fadeInSource.clip = targetClip;
+            fadeInSource.volume = 0f;
+            fadeInSource.loop = true;
+            fadeInSource.Play();
+
+            crossfadeTimer = 0f;
+            isCrossfading = true;
         }
 
         /// <summary>
-        /// Stops music playback.
+        /// Stops music playback on both sources.
         /// </summary>
         public void StopMusic()
         {
-            if (musicSource != null)
-            {
-                musicSource.Stop();
-            }
+            if (musicSourceA != null) musicSourceA.Stop();
+            if (musicSourceB != null) musicSourceB.Stop();
+            isCrossfading = false;
         }
 
         /// <summary>
@@ -147,55 +286,22 @@ namespace EmpireOfCards.Audio
             ApplyVolumes();
         }
 
+        // ------------------------------------------------------------------
+        // Internal
+        // ------------------------------------------------------------------
+
         private void ApplyVolumes()
         {
-            if (musicSource != null)
-            {
-                musicSource.volume = musicVolume * masterVolume;
-            }
+            float effectiveMusicVol = musicVolume * masterVolume;
+
+            if (musicSourceA != null && activeSource == musicSourceA)
+                musicSourceA.volume = effectiveMusicVol;
+
+            if (musicSourceB != null && activeSource == musicSourceB)
+                musicSourceB.volume = effectiveMusicVol;
 
             if (sfxSource != null)
-            {
                 sfxSource.volume = sfxVolume * masterVolume;
-            }
-        }
-
-        private IEnumerator CrossfadeMusicCoroutine(bool toIntense, float duration)
-        {
-            AudioClip target = toIntense ? intenseMusic : calmMusic;
-            if (target == null || musicSource == null)
-                yield break;
-
-            float startVolume = musicSource.volume;
-            float elapsed = 0f;
-
-            // Fade out current track
-            while (elapsed < duration * 0.5f)
-            {
-                elapsed += Time.deltaTime;
-                float t = elapsed / (duration * 0.5f);
-                musicSource.volume = Mathf.Lerp(startVolume, 0f, t);
-                yield return null;
-            }
-
-            // Switch track
-            musicSource.clip = target;
-            musicSource.Play();
-
-            // Fade in new track
-            elapsed = 0f;
-            float targetVolume = musicVolume * masterVolume;
-
-            while (elapsed < duration * 0.5f)
-            {
-                elapsed += Time.deltaTime;
-                float t = elapsed / (duration * 0.5f);
-                musicSource.volume = Mathf.Lerp(0f, targetVolume, t);
-                yield return null;
-            }
-
-            musicSource.volume = targetVolume;
-            crossfadeCoroutine = null;
         }
     }
 }

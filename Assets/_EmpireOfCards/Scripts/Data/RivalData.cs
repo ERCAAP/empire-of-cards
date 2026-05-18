@@ -1,56 +1,68 @@
 using UnityEngine;
+using EmpireOfCards.Core;
 
 namespace EmpireOfCards.Data
 {
-    using EmpireOfCards.Core;
-
     [CreateAssetMenu(fileName = "NewRival", menuName = "EmpireOfCards/Rival Data")]
     public class RivalData : ScriptableObject
     {
-        [Tooltip("Unique rival identifier")]
-        public string rivalId;
-
-        [Tooltip("Display name, e.g. MegaCorp")]
-        public string rivalName;
-
+        [Header("--- Kimlik ---")]
+        public string rivalId;              // "RIVAL_MegaCorp"
+        public string rivalName;            // "MegaCorp"
         public RivalPersonality personality;
         public Sprite portrait;
+        [TextArea(1, 2)]
+        public string tagline;              // "Bu sektörde ikimize yer yok."
 
-        [Header("Economy")]
-        public int startingMoney;
-        public int incomeGrowthPerTurn;
-        public int startingCustomers;
+        [Header("--- Başlangıç ---")]
+        public int startingMoney = 400;
+        public int startingIncome = 80;     // İlk işletme geliri
+        public int startingCustomers = 5;   // İlk işletme müşterisi
+        public string startingBusinessName = "MegaCorp HQ";
 
-        [Header("Behavior")]
-        [Tooltip("Actions the rival takes per turn (2 for Normal)")]
-        public int actionsPerTurn;
-
-        [Tooltip("Player territory count above which the rival becomes aggressive")]
-        public float aggressionThreshold;
-
+        [Header("--- Davranış ---")]
+        public int actionsPerTurn = 2;      // Normal: 2 hamle/tur
         [Range(0f, 1f)]
-        [Tooltip("Chance to expand each turn")]
-        public float expansionChance;
+        public float aggressionThreshold = 0.5f;  // Player territories > threshold → agresif
+        public int maxBusinesses = 4;
+        public int maxEmployeesPerBusiness = 3;
 
-        [Range(0f, 1f)]
-        [Tooltip("Chance to sabotage the player each turn")]
-        public float sabotageChance;
+        [Header("--- Büyüme Parametreleri ---")]
+        public int businessCostThreshold = 200;
+        public int hireCostThreshold = 80;
+        public int baseBusinessIncome = 80;
+        public int baseBusinessCustomers = 5;
+        public int employeeIncomeBoost = 30;
+        public int employeeCustomerBoost = 3;
+        public int aggressiveCustomerBoost = 8;
+        public int aggressiveIncomeBoost = 50;
+        public int passiveCustomerGrowth = 2;
+        public int passiveIncomeGrowth = 10;
+        public string[] possibleBusinessNames;  // ["Teknoloji Mağazası", "Süpermarket", ...]
 
-        [Header("Dialogue")]
+        [Header("--- Büyüme Takvimi (GDD Section 8.3) ---")]
+        public RivalMilestone[] growthMilestones;
+
+        [Header("--- Diyalog ---")]
         [TextArea(1, 2)]
-        [Tooltip("Taunts when the rival is growing")]
-        public string[] growingTaunts;
-
+        public string[] growingTaunts;      // Rakip büyürken: "Pazar payımız artıyor."
         [TextArea(1, 2)]
-        [Tooltip("Taunts when the player is growing")]
-        public string[] playerGrowingTaunts;
-
+        public string[] playerGrowingTaunts;// Sen büyürken: "İlginç bir hamle..."
         [TextArea(1, 2)]
-        [Tooltip("Taunts when the rival is in aggressive mode")]
-        public string[] aggressiveTaunts;
-
+        public string[] aggressiveTaunts;   // Agresifken: "Bu sektörde ikimize yer yok."
         [TextArea(1, 2)]
-        [Tooltip("Taunts when the rival is losing")]
-        public string[] losingTaunts;
+        public string[] losingTaunts;       // Kaybederken: "Bu böyle bitmez."
+        [TextArea(1, 2)]
+        public string[] winningTaunts;      // Kazanırken: "Kaçınılmazdı."
+    }
+
+    [System.Serializable]
+    public class RivalMilestone
+    {
+        public int turn;                    // Tur 5, 8, 12, 15 etc
+        public int targetBusinesses;        // Hedef işletme sayısı
+        public int targetEmployees;         // Hedef çalışan sayısı
+        public int targetTerritories;       // Hedef bölge sayısı
+        public bool enableAggression;       // Bu turdan sonra agresif olabilir mi
     }
 }

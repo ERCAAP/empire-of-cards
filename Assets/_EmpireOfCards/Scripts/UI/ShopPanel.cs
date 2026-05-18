@@ -3,151 +3,191 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
+using EmpireOfCards.Core;
 using EmpireOfCards.Data;
+using EmpireOfCards.Gameplay;
 using EmpireOfCards.UI.Cards;
 
 namespace EmpireOfCards.UI
 {
     /// <summary>
-    /// Displays available cards for purchase each turn.
+    /// Shop overlay panel. Shows 3 cards with buy buttons and prices.
+    /// Subscribes to ShopManager events and EventBus.OnMoneyChanged.
+    /// Grays out cards the player cannot afford.
     /// </summary>
     public class ShopPanel : MonoBehaviour
     {
-        [Header("Panel")]
-        [SerializeField] private GameObject panel;
-
         [Header("Card Slots")]
         [SerializeField] private CardUI[] shopCards;
         [SerializeField] private TMP_Text[] priceTexts;
         [SerializeField] private Button[] buyButtons;
+
+        [Header("References")]
+        [SerializeField] private ShopManager shopManager;
         [SerializeField] private Button closeButton;
 
-        // --- Events ---
-        public event Action<int> OnBuyRequested;
+        [Header("Styling")]
+        [SerializeField] private Color affordableColor = Color.white;
+        [SerializeField] private Color unaffordableColor = new Color(0.5f, 0.5f, 0.5f, 0.7f);
 
+        // Cached stock for affordability re-checks
         private List<CardData> currentStock;
 
-        private void Awake()
+        // ------------------------------------------------------------------
+        // Lifecycle
+        // ------------------------------------------------------------------
+
+        private void OnEnable()
         {
-            if (closeButton != null)
+            if (shopManager != null)
             {
-                closeButton.onClick.AddListener(Close);
+                shopManager.OnShopRefreshed += HandleShopRefreshed;
+                shopManager.OnCardPurchased += HandleCardPurchased;
             }
 
-            // Wire up buy buttons
+            // Money changes affect affordability
+            EventBus.OnMoneyChanged += HandleMoneyChanged;
+
+            if (closeButton != null)
+                closeButton.onClick.AddListener(Close);
+
+            // Wire up buy buttons once
             for (int i = 0; i < buyButtons.Length; i++)
             {
                 int index = i; // capture for closure
                 if (buyButtons[i] != null)
-                {
-                    buyButtons[i].onClick.AddListener(() => OnBuyCard(index));
-                }
+                    buyButtons[i].onClick.AddListener(() => OnBuyClicked(index));
             }
+
+            RefreshDisplay();
         }
 
-        /// <summary>
-        /// Populates the shop with the given cards and shows the panel.
-        /// </summary>
-        public void Open(List<CardData> cards)
+        private void OnDisable()
         {
-            currentStock = cards;
-
-            for (int i = 0; i < shopCards.Length; i++)
+            if (shopManager != null)
             {
-                if (i < cards.Count && cards[i] != null)
-                {
-                    shopCards[i].gameObject.SetActive(true);
-                    shopCards[i].SetupCard(cards[i]);
-
-                    if (i < priceTexts.Length && priceTexts[i] != null)
-                    {
-                        priceTexts[i].text = $"${cards[i].buyCost}";
-                    }
-
-                    if (i < buyButtons.Length && buyButtons[i] != null)
-                    {
-                        buyButtons[i].interactable = true;
-                    }
-                }
-                else
-                {
-                    shopCards[i].gameObject.SetActive(false);
-
-                    if (i < buyButtons.Length && buyButtons[i] != null)
-                    {
-                        buyButtons[i].interactable = false;
-                    }
-                }
+                shopManager.OnShopRefreshed -= HandleShopRefreshed;
+                shopManager.OnCardPurchased -= HandleCardPurchased;
             }
 
-            if (panel != null)
+            EventBus.OnMoneyChanged -= HandleMoneyChanged;
+
+            if (closeButton != null)
+                closeButton.onClick.RemoveListener(Close);
+
+            for (int i = 0; i < buyButtons.Length; i++)
             {
-                panel.SetActive(true);
+                if (buyButtons[i] != null)
+                    buyButtons[i].onClick.RemoveAllListeners();
             }
         }
+
+        // ------------------------------------------------------------------
+        // Event handlers
+        // ------------------------------------------------------------------
+
+        private void HandleShopRefreshed(List<CardData> cards)
+        {
+            RefreshDisplay();
+        }
+
+        private void HandleCardPurchased(CardData card)
+        {
+            RefreshDisplay();
+        }
+
+        private void HandleMoneyChanged(int newAmount)
+        {
+            UpdateAffordability(newAmount);
+        }
+
+        // ------------------------------------------------------------------
+        // Public
+        // ------------------------------------------------------------------
 
         /// <summary>
         /// Closes the shop panel.
         /// </summary>
         public void Close()
         {
-            if (panel != null)
-            {
-                panel.SetActive(false);
-            }
+            gameObject.SetActive(false);
         }
 
-        /// <summary>
-        /// Called when a buy button is clicked.
-        /// </summary>
-        public void OnBuyCard(int index)
+        // ------------------------------------------------------------------
+        // Internal
+        // ------------------------------------------------------------------
+
+        private void RefreshDisplay()
         {
-            if (currentStock == null || index < 0 || index >= currentStock.Count)
+            if (shopManager == null)
                 return;
 
-            OnBuyRequested?.Invoke(index);
+            currentStock = new List<CardData>(shopManager.CurrentShopCards);
 
-            // Disable the buy button after purchase
-            if (index < buyButtons.Length && buyButtons[index] != null)
+            for (int i = 0; i < shopCards.Length; i++)
             {
-                buyButtons[index].interactable = false;
-            }
-        }
-
-        /// <summary>
-        /// Applies a discount to all displayed prices.
-        /// </summary>
-        public void UpdatePrices(float discount)
-        {
-            if (currentStock == null)
-                return;
-
-            float multiplier = Mathf.Clamp01(1f - discount);
-
-            for (int i = 0; i < currentStock.Count && i < priceTexts.Length; i++)
-            {
-                if (priceTexts[i] != null && currentStock[i] != null)
+                if (i < currentStock.Count && currentStock[i] != null)
                 {
-                    int discountedPrice = Mathf.RoundToInt(currentStock[i].buyCost * multiplier);
-                    priceTexts[i].text = $"${discountedPrice}";
+                    if (shopCards[i] != null)
+                    {
+                        shopCards[i].gameObject.SetActive(true);
+                        shopCards[i].SetupCard(currentStock[i]);
+                    }
+
+                    if (i < priceTexts.Length && priceTexts[i] != null)
+                        priceTexts[i].text = $"${shopManager.GetDiscountedPrice(currentStock[i])}";
+
+                    if (i < buyButtons.Length && buyButtons[i] != null)
+                        buyButtons[i].interactable = true;
+                }
+                else
+                {
+                    if (i < shopCards.Length && shopCards[i] != null)
+                        shopCards[i].gameObject.SetActive(false);
+
+                    if (i < buyButtons.Length && buyButtons[i] != null)
+                        buyButtons[i].interactable = false;
+                }
+            }
+
+            int playerMoney = GameManager.Instance != null ? GameManager.Instance.PlayerMoney : 0;
+            UpdateAffordability(playerMoney);
+        }
+
+        private void UpdateAffordability(int playerMoney)
+        {
+            if (shopManager == null || currentStock == null)
+                return;
+
+            for (int i = 0; i < shopCards.Length; i++)
+            {
+                if (i >= currentStock.Count || currentStock[i] == null)
+                    continue;
+
+                int price = shopManager.GetDiscountedPrice(currentStock[i]);
+                bool canAfford = playerMoney >= price;
+
+                if (i < buyButtons.Length && buyButtons[i] != null)
+                    buyButtons[i].interactable = canAfford;
+
+                if (i < priceTexts.Length && priceTexts[i] != null)
+                    priceTexts[i].color = canAfford ? affordableColor : unaffordableColor;
+
+                if (shopCards[i] != null)
+                {
+                    CanvasGroup cg = shopCards[i].GetComponent<CanvasGroup>();
+                    if (cg != null)
+                        cg.alpha = canAfford ? 1f : 0.5f;
                 }
             }
         }
 
-        private void OnDestroy()
+        private void OnBuyClicked(int shopIndex)
         {
-            if (closeButton != null)
-            {
-                closeButton.onClick.RemoveAllListeners();
-            }
+            if (shopManager == null)
+                return;
 
-            foreach (Button btn in buyButtons)
-            {
-                if (btn != null)
-                {
-                    btn.onClick.RemoveAllListeners();
-                }
-            }
+            shopManager.BuyCard(shopIndex);
         }
     }
 }

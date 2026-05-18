@@ -3,7 +3,7 @@ namespace EmpireOfCards.Core.StateMachine
     public interface IState
     {
         void Enter();
-        void Execute();
+        void Tick();    // Called every frame (polling)
         void Exit();
     }
 }

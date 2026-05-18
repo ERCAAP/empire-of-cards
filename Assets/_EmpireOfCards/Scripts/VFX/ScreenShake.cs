@@ -1,64 +1,99 @@
-using System.Collections;
 using UnityEngine;
 
 namespace EmpireOfCards.VFX
 {
     /// <summary>
-    /// Attach to the main camera to enable screen shake via coroutine.
+    /// Camera shake component. Uses Update() polling (NOT coroutine).
+    /// Dampening over time. Additive -- multiple shakes can overlap
+    /// by re-invoking Shake() which increases remaining timer and intensity.
     /// </summary>
     public class ScreenShake : MonoBehaviour
     {
-        [SerializeField] private float shakeDuration;
-        [SerializeField] private float shakeMagnitude;
+        [Header("Defaults")]
+        [SerializeField] private float defaultIntensity = 0.3f;
+        [SerializeField] private float defaultDuration = 0.3f;
 
-        private Transform cameraTransform;
+        // Runtime
         private Vector3 originalPosition;
-        private Coroutine shakeCoroutine;
+        private float shakeTimer;
+        private float shakeDuration;
+        private float shakeIntensity;
+        private bool isShaking;
+
+        // ------------------------------------------------------------------
+        // Lifecycle
+        // ------------------------------------------------------------------
 
         private void Awake()
         {
-            cameraTransform = transform;
+            originalPosition = transform.localPosition;
+        }
+
+        private void Update()
+        {
+            if (!isShaking)
+                return;
+
+            shakeTimer += Time.deltaTime;
+
+            if (shakeTimer >= shakeDuration)
+            {
+                // Shake finished -- snap back
+                transform.localPosition = originalPosition;
+                isShaking = false;
+                return;
+            }
+
+            // Dampening: intensity tapers linearly toward zero
+            float remaining = 1f - (shakeTimer / shakeDuration);
+            float currentIntensity = shakeIntensity * remaining;
+
+            float offsetX = Random.Range(-currentIntensity, currentIntensity);
+            float offsetY = Random.Range(-currentIntensity, currentIntensity);
+
+            transform.localPosition = originalPosition + new Vector3(offsetX, offsetY, 0f);
+        }
+
+        // ------------------------------------------------------------------
+        // Public
+        // ------------------------------------------------------------------
+
+        /// <summary>
+        /// Triggers a screen shake. Additive -- calling Shake() while
+        /// already shaking extends the timer and takes the higher intensity.
+        /// </summary>
+        public void Shake(float intensity, float duration)
+        {
+            if (!isShaking)
+            {
+                // Fresh shake -- record the camera's rest position
+                originalPosition = transform.localPosition;
+            }
+
+            // Additive: extend remaining time, use higher intensity
+            float remainingTime = isShaking ? Mathf.Max(0f, shakeDuration - shakeTimer) : 0f;
+            shakeDuration = remainingTime + duration;
+            shakeIntensity = Mathf.Max(shakeIntensity, intensity);
+            shakeTimer = 0f;
+            isShaking = true;
         }
 
         /// <summary>
-        /// Shakes the camera for the given duration and magnitude.
-        /// If a shake is already in progress it is replaced.
+        /// Convenience overload using inspector defaults.
         /// </summary>
-        public void Shake(float duration, float magnitude)
+        public void Shake()
         {
-            shakeDuration = duration;
-            shakeMagnitude = magnitude;
-
-            if (shakeCoroutine != null)
-            {
-                StopCoroutine(shakeCoroutine);
-                cameraTransform.localPosition = originalPosition;
-            }
-
-            shakeCoroutine = StartCoroutine(ShakeCoroutine());
+            Shake(defaultIntensity, defaultDuration);
         }
 
-        private IEnumerator ShakeCoroutine()
+        /// <summary>
+        /// Immediately stops any active shake and snaps back.
+        /// </summary>
+        public void ResetPosition()
         {
-            originalPosition = cameraTransform.localPosition;
-            float elapsed = 0f;
-
-            while (elapsed < shakeDuration)
-            {
-                elapsed += Time.deltaTime;
-
-                // Dampen intensity over time so shake tapers off naturally
-                float dampening = 1f - (elapsed / shakeDuration);
-                float offsetX = Random.Range(-1f, 1f) * shakeMagnitude * dampening;
-                float offsetY = Random.Range(-1f, 1f) * shakeMagnitude * dampening;
-
-                cameraTransform.localPosition = originalPosition + new Vector3(offsetX, offsetY, 0f);
-
-                yield return null;
-            }
-
-            cameraTransform.localPosition = originalPosition;
-            shakeCoroutine = null;
+            isShaking = false;
+            shakeTimer = 0f;
+            transform.localPosition = originalPosition;
         }
     }
 }

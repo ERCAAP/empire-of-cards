@@ -1,4 +1,3 @@
-using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
@@ -6,7 +5,8 @@ using TMPro;
 namespace EmpireOfCards.UI
 {
     /// <summary>
-    /// Shows what the rival AI just did, with an optional taunt line.
+    /// Rival action summary popup. Fade in, display action and taunt, fade out.
+    /// All animation driven by Update() polling -- no coroutines.
     /// </summary>
     public class RivalPopup : MonoBehaviour
     {
@@ -17,30 +17,50 @@ namespace EmpireOfCards.UI
         [SerializeField] private CanvasGroup canvasGroup;
 
         [Header("Timing")]
-        [SerializeField] private float displayDuration = 2.5f;
         [SerializeField] private float fadeInDuration = 0.3f;
+        [SerializeField] private float displayDuration = 2.5f;
         [SerializeField] private float fadeOutDuration = 0.4f;
 
-        private Coroutine activeCoroutine;
+        // State machine
+        private enum State { Idle, FadeIn, Hold, FadeOut }
+
+        private State state = State.Idle;
+        private float stateTimer;
+
+        // ------------------------------------------------------------------
+        // Lifecycle
+        // ------------------------------------------------------------------
 
         private void Awake()
         {
             if (canvasGroup != null)
-            {
                 canvasGroup.alpha = 0f;
+        }
+
+        private void Update()
+        {
+            if (state == State.Idle)
+                return;
+
+            stateTimer += Time.deltaTime;
+
+            switch (state)
+            {
+                case State.FadeIn:  UpdateFadeIn();  break;
+                case State.Hold:    UpdateHold();    break;
+                case State.FadeOut: UpdateFadeOut(); break;
             }
         }
 
-        /// <summary>
-        /// Displays the rival popup with an action description, optional taunt, and portrait.
-        /// </summary>
-        public void Show(string action, string taunt, Sprite portrait)
-        {
-            if (activeCoroutine != null)
-            {
-                StopCoroutine(activeCoroutine);
-            }
+        // ------------------------------------------------------------------
+        // Public
+        // ------------------------------------------------------------------
 
+        /// <summary>
+        /// Displays the rival popup with an action description and optional taunt.
+        /// </summary>
+        public void Show(string action, string taunt)
+        {
             if (actionText != null)
                 actionText.text = action;
 
@@ -50,53 +70,54 @@ namespace EmpireOfCards.UI
                 tauntText.gameObject.SetActive(!string.IsNullOrEmpty(taunt));
             }
 
-            if (rivalPortrait != null && portrait != null)
-            {
-                rivalPortrait.sprite = portrait;
-                rivalPortrait.enabled = true;
-            }
-            else if (rivalPortrait != null)
-            {
-                rivalPortrait.enabled = false;
-            }
-
-            activeCoroutine = StartCoroutine(AnimatePopupCoroutine());
+            state = State.FadeIn;
+            stateTimer = 0f;
         }
 
-        private IEnumerator AnimatePopupCoroutine()
+        // ------------------------------------------------------------------
+        // State updates
+        // ------------------------------------------------------------------
+
+        private void UpdateFadeIn()
         {
-            // Fade in
-            float elapsed = 0f;
-            while (elapsed < fadeInDuration)
-            {
-                elapsed += Time.deltaTime;
-                float t = Mathf.Clamp01(elapsed / fadeInDuration);
-                if (canvasGroup != null)
-                    canvasGroup.alpha = t;
-                yield return null;
-            }
+            float t = Mathf.Clamp01(stateTimer / fadeInDuration);
 
             if (canvasGroup != null)
-                canvasGroup.alpha = 1f;
+                canvasGroup.alpha = t;
 
-            // Hold
-            yield return new WaitForSeconds(displayDuration);
-
-            // Fade out
-            elapsed = 0f;
-            while (elapsed < fadeOutDuration)
+            if (t >= 1f)
             {
-                elapsed += Time.deltaTime;
-                float t = Mathf.Clamp01(elapsed / fadeOutDuration);
                 if (canvasGroup != null)
-                    canvasGroup.alpha = 1f - t;
-                yield return null;
+                    canvasGroup.alpha = 1f;
+
+                state = State.Hold;
+                stateTimer = 0f;
             }
+        }
+
+        private void UpdateHold()
+        {
+            if (stateTimer >= displayDuration)
+            {
+                state = State.FadeOut;
+                stateTimer = 0f;
+            }
+        }
+
+        private void UpdateFadeOut()
+        {
+            float t = Mathf.Clamp01(stateTimer / fadeOutDuration);
 
             if (canvasGroup != null)
-                canvasGroup.alpha = 0f;
+                canvasGroup.alpha = 1f - t;
 
-            activeCoroutine = null;
+            if (t >= 1f)
+            {
+                if (canvasGroup != null)
+                    canvasGroup.alpha = 0f;
+
+                state = State.Idle;
+            }
         }
     }
 }

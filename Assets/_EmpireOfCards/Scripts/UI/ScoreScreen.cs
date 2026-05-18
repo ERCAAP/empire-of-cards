@@ -1,5 +1,4 @@
 using System;
-using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
@@ -24,161 +23,205 @@ namespace EmpireOfCards.UI
     }
 
     /// <summary>
-    /// End-of-run score screen that tallies up the player's performance
-    /// with an animated counter.
+    /// End-of-run score screen. Animated count-up for each score line,
+    /// grade reveal at the end. All animation via Update() polling.
+    /// Grade: S (5000+), A (3000+), B (2000+), C (1000+), D (500+), F (<500).
     /// </summary>
     public class ScoreScreen : MonoBehaviour
     {
         [Header("Score Texts")]
-        [SerializeField] private TMP_Text totalScoreText;
         [SerializeField] private TMP_Text territoryScoreText;
         [SerializeField] private TMP_Text moneyScoreText;
         [SerializeField] private TMP_Text comboScoreText;
         [SerializeField] private TMP_Text businessScoreText;
         [SerializeField] private TMP_Text earlyFinishText;
+        [SerializeField] private TMP_Text fbiEvasionText;
+        [SerializeField] private TMP_Text winBonusText;
+        [SerializeField] private TMP_Text totalScoreText;
         [SerializeField] private TMP_Text gradeText;
 
         [Header("Buttons")]
         [SerializeField] private Button playAgainButton;
+        [SerializeField] private Button menuButton;
 
         [Header("Animation")]
-        [SerializeField] private float countDuration = 1.5f;
-        [SerializeField] private float lineDelay = 0.3f;
+        [SerializeField] private float countDuration = 1.0f;
+        [SerializeField] private float lineDelay = 0.25f;
+        [SerializeField] private float gradePunchScale = 1.5f;
+        [SerializeField] private float gradePunchDuration = 0.3f;
 
-        /// <summary>
-        /// Called by the Play Again button in the scene.
-        /// </summary>
+        // Events
         public event Action OnPlayAgainClicked;
+        public event Action OnMenuClicked;
+
+        // Animation state
+        private ScoreData scoreData;
+        private ScoreLine[] lines;
+        private int currentLineIndex;
+        private float lineTimer;
+        private float delayTimer;
+        private bool isAnimating;
+
+        // Grade punch
+        private bool gradeRevealed;
+        private float gradeTimer;
+
+        // ------------------------------------------------------------------
+        // Lifecycle
+        // ------------------------------------------------------------------
 
         private void Awake()
         {
             if (playAgainButton != null)
-            {
                 playAgainButton.onClick.AddListener(() => OnPlayAgainClicked?.Invoke());
+
+            if (menuButton != null)
+                menuButton.onClick.AddListener(() => OnMenuClicked?.Invoke());
+        }
+
+        private void Update()
+        {
+            if (!isAnimating)
+            {
+                // Grade punch scale animation after all lines are done
+                if (gradeRevealed && gradeText != null)
+                {
+                    gradeTimer += Time.deltaTime;
+                    float t = Mathf.Clamp01(gradeTimer / gradePunchDuration);
+                    float scale = Mathf.Lerp(gradePunchScale, 1f, t);
+                    gradeText.transform.localScale = Vector3.one * scale;
+
+                    if (t >= 1f)
+                    {
+                        gradeText.transform.localScale = Vector3.one;
+                        gradeRevealed = false; // done animating
+                    }
+                }
+                return;
+            }
+
+            if (lines == null || currentLineIndex >= lines.Length)
+            {
+                // All lines counted -- reveal grade
+                isAnimating = false;
+                RevealGrade();
+                return;
+            }
+
+            // Inter-line delay
+            if (delayTimer > 0f)
+            {
+                delayTimer -= Time.deltaTime;
+                return;
+            }
+
+            // Count-up current line
+            lineTimer += Time.deltaTime;
+            float lineT = Mathf.Clamp01(lineTimer / countDuration);
+            int displayValue = Mathf.RoundToInt(Mathf.Lerp(0f, lines[currentLineIndex].targetValue, lineT));
+
+            if (lines[currentLineIndex].textField != null)
+                lines[currentLineIndex].textField.text = displayValue.ToString("N0");
+
+            if (lineT >= 1f)
+            {
+                // Finalize this line
+                if (lines[currentLineIndex].textField != null)
+                    lines[currentLineIndex].textField.text = lines[currentLineIndex].targetValue.ToString("N0");
+
+                currentLineIndex++;
+                lineTimer = 0f;
+                delayTimer = lineDelay;
             }
         }
 
+        // ------------------------------------------------------------------
+        // Public
+        // ------------------------------------------------------------------
+
         /// <summary>
-        /// Populates and animates the score screen with the given data.
+        /// Populates and starts the animated score count-up.
         /// </summary>
         public void Show(ScoreData data)
         {
             if (data == null)
                 return;
 
-            data.grade = CalculateGrade(data.totalScore);
+            scoreData = data;
+            scoreData.grade = CalculateGrade(scoreData.totalScore);
 
-            // Set final values immediately as fallback
-            SetScoreTexts(data);
+            // Build the ordered line array
+            lines = new ScoreLine[]
+            {
+                new ScoreLine { textField = territoryScoreText, targetValue = data.territoryScore },
+                new ScoreLine { textField = moneyScoreText,     targetValue = data.moneyScore },
+                new ScoreLine { textField = comboScoreText,     targetValue = data.comboScore },
+                new ScoreLine { textField = businessScoreText,  targetValue = data.businessScore },
+                new ScoreLine { textField = earlyFinishText,    targetValue = data.earlyFinishBonus },
+                new ScoreLine { textField = fbiEvasionText,     targetValue = data.fbiEvasionBonus },
+                new ScoreLine { textField = winBonusText,       targetValue = data.winBonus },
+                new ScoreLine { textField = totalScoreText,     targetValue = data.totalScore },
+            };
 
-            // Start animated count-up
-            StartCoroutine(AnimateScoreCount(data));
+            // Zero out all fields
+            foreach (var line in lines)
+            {
+                if (line.textField != null)
+                    line.textField.text = "0";
+            }
+
+            if (gradeText != null)
+                gradeText.text = "?";
+
+            currentLineIndex = 0;
+            lineTimer = 0f;
+            delayTimer = 0f;
+            isAnimating = true;
+            gradeRevealed = false;
         }
+
+        // ------------------------------------------------------------------
+        // Internal
+        // ------------------------------------------------------------------
 
         /// <summary>
         /// Determines the letter grade based on total score.
         /// </summary>
-        public string CalculateGrade(int score)
+        public static string CalculateGrade(int score)
         {
             if (score >= 5000) return "S";
-            if (score >= 4000) return "A";
-            if (score >= 3000) return "B";
-            if (score >= 2000) return "C";
-            if (score >= 1000) return "D";
+            if (score >= 3000) return "A";
+            if (score >= 2000) return "B";
+            if (score >= 1000) return "C";
+            if (score >= 500)  return "D";
             return "F";
         }
 
-        /// <summary>
-        /// Animates each score line counting up from zero one by one.
-        /// </summary>
-        private IEnumerator AnimateScoreCount(ScoreData data)
+        private void RevealGrade()
         {
-            // Reset all to zero
-            SetText(territoryScoreText, 0);
-            SetText(moneyScoreText, 0);
-            SetText(comboScoreText, 0);
-            SetText(businessScoreText, 0);
-            SetText(earlyFinishText, 0);
-            SetText(totalScoreText, 0);
-            if (gradeText != null) gradeText.text = "?";
+            if (gradeText == null || scoreData == null)
+                return;
 
-            yield return StartCoroutine(CountUpLine(territoryScoreText, data.territoryScore));
-            yield return new WaitForSeconds(lineDelay);
-
-            yield return StartCoroutine(CountUpLine(moneyScoreText, data.moneyScore));
-            yield return new WaitForSeconds(lineDelay);
-
-            yield return StartCoroutine(CountUpLine(comboScoreText, data.comboScore));
-            yield return new WaitForSeconds(lineDelay);
-
-            yield return StartCoroutine(CountUpLine(businessScoreText, data.businessScore));
-            yield return new WaitForSeconds(lineDelay);
-
-            yield return StartCoroutine(CountUpLine(earlyFinishText, data.earlyFinishBonus));
-            yield return new WaitForSeconds(lineDelay);
-
-            yield return StartCoroutine(CountUpLine(totalScoreText, data.totalScore));
-            yield return new WaitForSeconds(lineDelay);
-
-            // Reveal grade
-            if (gradeText != null)
-            {
-                gradeText.text = data.grade;
-                gradeText.transform.localScale = Vector3.one * 1.5f;
-                // Quick punch scale
-                float elapsed = 0f;
-                while (elapsed < 0.3f)
-                {
-                    elapsed += Time.deltaTime;
-                    float t = elapsed / 0.3f;
-                    gradeText.transform.localScale = Vector3.Lerp(Vector3.one * 1.5f, Vector3.one, t);
-                    yield return null;
-                }
-                gradeText.transform.localScale = Vector3.one;
-            }
-        }
-
-        private IEnumerator CountUpLine(TMP_Text textField, int targetValue)
-        {
-            if (textField == null)
-                yield break;
-
-            float elapsed = 0f;
-            while (elapsed < countDuration)
-            {
-                elapsed += Time.deltaTime;
-                float t = Mathf.Clamp01(elapsed / countDuration);
-                int current = Mathf.RoundToInt(Mathf.Lerp(0, targetValue, t));
-                textField.text = current.ToString("N0");
-                yield return null;
-            }
-
-            textField.text = targetValue.ToString("N0");
-        }
-
-        private void SetScoreTexts(ScoreData data)
-        {
-            SetText(territoryScoreText, data.territoryScore);
-            SetText(moneyScoreText, data.moneyScore);
-            SetText(comboScoreText, data.comboScore);
-            SetText(businessScoreText, data.businessScore);
-            SetText(earlyFinishText, data.earlyFinishBonus);
-            SetText(totalScoreText, data.totalScore);
-            if (gradeText != null) gradeText.text = data.grade;
-        }
-
-        private void SetText(TMP_Text field, int value)
-        {
-            if (field != null)
-                field.text = value.ToString("N0");
+            gradeText.text = scoreData.grade;
+            gradeText.transform.localScale = Vector3.one * gradePunchScale;
+            gradeRevealed = true;
+            gradeTimer = 0f;
         }
 
         private void OnDestroy()
         {
             if (playAgainButton != null)
-            {
                 playAgainButton.onClick.RemoveAllListeners();
-            }
+
+            if (menuButton != null)
+                menuButton.onClick.RemoveAllListeners();
+        }
+
+        // Helper struct
+        private struct ScoreLine
+        {
+            public TMP_Text textField;
+            public int targetValue;
         }
     }
 }
