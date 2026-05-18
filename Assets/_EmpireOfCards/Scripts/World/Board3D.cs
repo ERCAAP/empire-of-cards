@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
+using TMPro;
 using EmpireOfCards.Core;
 using EmpireOfCards.Gameplay;
 using EmpireOfCards.UI.Cards;
@@ -147,6 +148,9 @@ namespace EmpireOfCards.World
             eventArea.transform.localScale = new Vector3(1.2f, 0.02f, 1.7f);
             eventArea.GetComponent<MeshRenderer>().material.color = new Color(0.9f, 0.8f, 0.15f, 0.3f);
             Destroy(eventArea.GetComponent<Collider>());
+
+            // === FLOATING BOARD LABELS ===
+            CreateBoardLabels();
         }
 
         // Called by TerritoryManager to update visuals
@@ -161,6 +165,67 @@ namespace EmpireOfCards.World
                 else
                     _territoryRenderers[i].material.color = Color.gray; // Empty
             }
+        }
+
+        // ================================================================
+        //  Board Labels -- floating 3D TextMeshPro above each area
+        // ================================================================
+
+        /// <summary>
+        /// Creates floating world-space text labels above the key board zones
+        /// so first-time players can identify what each area is.
+        /// </summary>
+        private void CreateBoardLabels()
+        {
+            // Label positions are relative to the board root.
+            // Y is raised above the board surface; text faces the camera (flat on XZ, rotated to face -Z).
+            float labelY = 0.6f;
+            float fontSize = 4f;
+            Quaternion labelRot = Quaternion.Euler(55f, 0f, 0f); // Match camera angle
+
+            // YOUR BUSINESSES -- above player business slots (center-bottom)
+            CreateLabel("YOUR BUSINESSES", new Vector3(0f, labelY, -0.5f), labelRot, fontSize,
+                        new Color(0.5f, 0.7f, 1f));
+
+            // RIVAL -- above rival area (center-top)
+            CreateLabel("RIVAL", new Vector3(0f, labelY, 2.5f), labelRot, fontSize,
+                        new Color(1f, 0.4f, 0.4f));
+
+            // TERRITORIES -- above territory bar (very top)
+            CreateLabel("TERRITORIES", new Vector3(0f, labelY, 4.2f), labelRot, fontSize,
+                        new Color(0.9f, 0.9f, 0.9f));
+
+            // UPGRADES -- above upgrade area (left side)
+            CreateLabel("UPGRADES", new Vector3(-5.5f, labelY, 1.5f), labelRot, fontSize * 0.85f,
+                        new Color(0.7f, 0.45f, 0.9f));
+
+            // SELL -- above sell zone (right side)
+            CreateLabel("SELL", new Vector3(5.5f, labelY, -0.5f), labelRot, fontSize * 0.85f,
+                        new Color(0.9f, 0.7f, 0.2f));
+        }
+
+        /// <summary>
+        /// Creates a single floating 3D TextMeshPro label as a child of the board.
+        /// </summary>
+        private void CreateLabel(string text, Vector3 localPos, Quaternion localRot, float fontSize, Color color)
+        {
+            var go = new GameObject($"Label_{text.Replace(" ", "")}");
+            go.transform.SetParent(transform);
+            go.transform.localPosition = localPos;
+            go.transform.localRotation = localRot;
+            go.transform.localScale = Vector3.one;
+
+            var tmp = go.AddComponent<TextMeshPro>();
+            tmp.text = text;
+            tmp.fontSize = fontSize;
+            tmp.alignment = TextAlignmentOptions.Center;
+            tmp.color = color;
+            tmp.enableWordWrapping = false;
+
+            // Make sure the label is visible but doesn't interfere with raycasts
+            var rt = go.GetComponent<RectTransform>();
+            if (rt != null)
+                rt.sizeDelta = new Vector2(6f, 1.5f);
         }
     }
 }

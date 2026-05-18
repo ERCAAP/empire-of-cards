@@ -18,6 +18,7 @@ namespace EmpireOfCards.Save
         public int runsWon;
         public List<string> unlockedCardIds = new List<string>();
         public int bestScore;
+        public bool tutorialCompleted;
     }
 
     /// <summary>

@@ -1,6 +1,7 @@
 using UnityEngine;
 using EmpireOfCards.Core;
 using EmpireOfCards.World;
+using EmpireOfCards.UI;
 using EmpireOfCards.UI.Cards;
 using EmpireOfCards.VFX;
 using EmpireOfCards.Helpers;
@@ -47,12 +48,22 @@ namespace EmpireOfCards.Bootstrap
             // 9. Wire everything together
             WiringService.WireAll(data, managers, board3D, cardFactory, hand3D, hud, mainCamera);
 
+            // 10. Create Tutorial system (after all wiring is complete)
+            _tutorialManager = CreateTutorial(hud);
+
             Debug.Log("[GameSceneBootstrap] 3D scene created successfully.");
         }
+
+        // Tutorial reference kept for Start()
+        private TutorialManager _tutorialManager;
 
         private void Start()
         {
             GameManager.Instance?.StartNewRun();
+
+            // Start tutorial after the first turn begins so the player can see the board
+            if (_tutorialManager != null)
+                _tutorialManager.TryStartTutorial();
         }
 
         // ================================================================
@@ -125,6 +136,34 @@ namespace EmpireOfCards.Bootstrap
             var vfxRoot = new GameObject("--- VFX ---");
             var poolParent = new GameObject("VFXPool");
             poolParent.transform.SetParent(vfxRoot.transform);
+        }
+
+        /// <summary>
+        /// Creates the TutorialUI overlay on the HUD canvas and wires
+        /// it to a new TutorialManager MonoBehaviour.
+        /// </summary>
+        private TutorialManager CreateTutorial(HUDBundle hud)
+        {
+            // Find the HUD canvas (parent of any HUD element)
+            Transform canvasParent = hud.uiManager != null
+                ? hud.uiManager.transform
+                : null;
+
+            if (canvasParent == null)
+            {
+                Debug.LogWarning("[GameSceneBootstrap] No canvas found for TutorialUI.");
+                return null;
+            }
+
+            // Build the overlay UI
+            var tutorialUI = TutorialUI.Create(canvasParent);
+
+            // Create the manager
+            var tutGo = new GameObject("TutorialManager");
+            var tutorialManager = tutGo.AddComponent<TutorialManager>();
+            tutorialManager.Init(tutorialUI);
+
+            return tutorialManager;
         }
     }
 }
