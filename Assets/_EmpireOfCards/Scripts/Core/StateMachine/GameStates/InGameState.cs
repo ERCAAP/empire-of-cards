@@ -26,10 +26,19 @@ namespace EmpireOfCards.Core.GameStates
                 return;
 
             // Poll win/lose every frame
-            if (gm.CheckWinCondition())
+            int winReq = gm.BalanceData != null ? gm.BalanceData.winTerritories : Constants.WIN_TERRITORIES;
+            int loseReq = gm.BalanceData != null ? gm.BalanceData.loseTerritories : Constants.LOSE_TERRITORIES;
+
+            if (WinLoseChecker.CheckWin(gm.PlayerTerritories, winReq))
+            {
+                gm.EndRun(true);
                 return;
-            if (gm.CheckLoseCondition())
+            }
+            if (WinLoseChecker.CheckLose(gm.RivalTerritories, loseReq, gm.PlayerMoney))
+            {
+                gm.EndRun(false);
                 return;
+            }
         }
 
         public void Exit()

@@ -18,9 +18,7 @@ namespace EmpireOfCards.Core.GameStates
             var gm = GameManager.Instance;
             gm.SetGameState(GameState.Paused);
 
-            // Show pause menu overlay
-            if (gm.UIManager != null)
-                gm.UIManager.ShowPauseMenu();
+            // Pause UI will be handled when pause menu panel is implemented
         }
 
         public void Tick()
@@ -34,10 +32,7 @@ namespace EmpireOfCards.Core.GameStates
         {
             Time.timeScale = 1f;
 
-            // Hide pause menu overlay
-            var gm = GameManager.Instance;
-            if (gm.UIManager != null)
-                gm.UIManager.HidePauseMenu();
+            // Pause UI will be handled when pause menu panel is implemented
         }
     }
 }
