@@ -27,6 +27,7 @@ namespace EmpireOfCards.VFX
 
         // Object pooling
         private readonly Dictionary<ParticleSystem, Queue<ParticleSystem>> pools = new();
+        private readonly Dictionary<ParticleSystem, ParticleSystem> instanceToPrefab = new();
         private readonly List<ParticleSystem> activeEffects = new();
 
         // Screen flash (Update-driven)
@@ -294,6 +295,7 @@ namespace EmpireOfCards.VFX
             {
                 ParticleSystem ps = Instantiate(prefab, poolParent);
                 ps.gameObject.SetActive(false);
+                instanceToPrefab[ps] = prefab;
                 pools[prefab].Enqueue(ps);
             }
         }
@@ -314,6 +316,7 @@ namespace EmpireOfCards.VFX
             else
             {
                 ps = Instantiate(prefab, poolParent);
+                instanceToPrefab[ps] = prefab;
             }
 
             ps.gameObject.SetActive(true);
@@ -326,13 +329,9 @@ namespace EmpireOfCards.VFX
 
             ps.gameObject.SetActive(false);
 
-            // Find which pool this belongs to by checking all prefab keys
-            foreach (var kvp in pools)
+            if (instanceToPrefab.TryGetValue(ps, out ParticleSystem prefab) && pools.ContainsKey(prefab))
             {
-                // Simple heuristic: return to first matching pool
-                // In practice, you'd store a mapping of instance -> prefab
-                kvp.Value.Enqueue(ps);
-                return;
+                pools[prefab].Enqueue(ps);
             }
         }
     }

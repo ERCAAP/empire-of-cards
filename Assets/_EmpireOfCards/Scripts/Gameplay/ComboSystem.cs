@@ -3,14 +3,14 @@ using System.Collections.Generic;
 using UnityEngine;
 using EmpireOfCards.Core;
 using EmpireOfCards.Data;
+using EmpireOfCards.Gameplay.Combo;
 
 namespace EmpireOfCards.Gameplay
 {
     /// <summary>
     /// Checks all 10 combos from the GDD Combo Matrix each turn.
-    /// Collects all active card IDs and tags from the board, then matches against
-    /// ComboData requirements. Tracks newly triggered vs already active combos
-    /// and fires events for UI popups.
+    /// Coordinator that delegates evaluation to ComboEvaluator
+    /// and bonus queries to ComboBonusProvider.
     /// </summary>
     public class ComboSystem : MonoBehaviour
     {
@@ -26,6 +26,10 @@ namespace EmpireOfCards.Gameplay
         [Header("Active Combos (Read Only)")]
         [SerializeField] private List<ComboData> activeCombos = new List<ComboData>();
 
+        // --- Extracted Helpers ---
+        private ComboEvaluator evaluator;
+        private ComboBonusProvider bonusProvider;
+
         // --- Properties ---
         public IReadOnlyList<ComboData> ActiveCombos => activeCombos;
 
@@ -37,6 +41,9 @@ namespace EmpireOfCards.Gameplay
         {
             this.allCombos = combos;
             this.boardManager = board;
+
+            evaluator = new ComboEvaluator(boardManager);
+            bonusProvider = new ComboBonusProvider(activeCombos);
         }
 
         // ----------------------------------------------------------------
@@ -46,12 +53,6 @@ namespace EmpireOfCards.Gameplay
         /// <summary>
         /// Evaluates every combo in the database against the current board state.
         /// Call this once each turn during the Resolve phase.
-        ///
-        /// Collects:
-        /// - All active card IDs from board (businesses + employees + upgrades + active event)
-        /// - All active tags
-        /// - Specific placement info (employee X in business Y)
-        /// Then matches each combo's requirements.
         /// </summary>
         public void CheckCombos(int playerMoney, int playerTerritories, int activeBusinessCount, float marketShare)
         {
@@ -66,9 +67,9 @@ namespace EmpireOfCards.Gameplay
             List<ComboData> previouslyActive = new List<ComboData>(activeCombos);
             activeCombos.Clear();
 
-            // Gather board state
-            HashSet<string> activeCardIds = new HashSet<string>(boardManager.GetAllActiveCardIds());
-            HashSet<CardTag> activeTags = boardManager.GetAllActiveTags();
+            // Gather board state via evaluator
+            HashSet<string> activeCardIds = evaluator.CollectActiveCardIds();
+            HashSet<CardTag> activeTags = evaluator.CollectActiveTags();
             string activeEventId = boardManager.ActiveEvent != null ? boardManager.ActiveEvent.cardId : null;
 
             // Evaluate each combo
@@ -76,7 +77,7 @@ namespace EmpireOfCards.Gameplay
             {
                 if (combo == null) continue;
 
-                bool met = EvaluateCombo(
+                bool met = evaluator.EvaluateCombo(
                     combo, activeCardIds, activeTags, activeEventId,
                     playerMoney, playerTerritories, activeBusinessCount, marketShare
                 );
@@ -106,250 +107,25 @@ namespace EmpireOfCards.Gameplay
         }
 
         // ----------------------------------------------------------------
-        // Combo Evaluation
+        // Bonus Queries (delegated to ComboBonusProvider)
         // ----------------------------------------------------------------
 
-        /// <summary>
-        /// Checks whether all requirements for a specific combo are met.
-        /// Requirements can include:
-        /// - Required card IDs (all must be on board)
-        /// - Required tags (all must be present)
-        /// - Specific placement (employee X in business Y)
-        /// - Active event requirement
-        /// - Minimum money (Kriz Avcisi: 1000)
-        /// - Minimum territories / businesses / market share (Monopol)
-        /// </summary>
-        private bool EvaluateCombo(
-            ComboData combo,
-            HashSet<string> activeCardIds,
-            HashSet<CardTag> activeTags,
-            string activeEventId,
-            int playerMoney,
-            int playerTerritories,
-            int activeBusinessCount,
-            float marketShare)
-        {
-            // --- Required card IDs ---
-            if (combo.requiredCardIds != null && combo.requiredCardIds.Length > 0)
-            {
-                foreach (string reqId in combo.requiredCardIds)
-                {
-                    if (string.IsNullOrEmpty(reqId)) continue;
-                    if (!activeCardIds.Contains(reqId))
-                        return false;
-                }
-            }
-
-            // --- Required tags ---
-            if (combo.requiredTags != null && combo.requiredTags.Length > 0)
-            {
-                foreach (CardTag reqTag in combo.requiredTags)
-                {
-                    if (!activeTags.Contains(reqTag))
-                        return false;
-                }
-            }
-
-            // --- Specific placement: employee must be in specific business ---
-            if (combo.requiresSpecificPlacement)
-            {
-                if (!CheckSpecificPlacement(combo.employeeCardId, combo.businessCardId))
-                    return false;
-            }
-
-            // --- Active event requirement ---
-            if (combo.requiresActiveEvent)
-            {
-                if (string.IsNullOrEmpty(activeEventId))
-                    return false;
-
-                if (!string.IsNullOrEmpty(combo.requiredEventId) && activeEventId != combo.requiredEventId)
-                    return false;
-            }
-
-            // --- Minimum money ---
-            if (combo.requiresMinMoney && playerMoney < combo.minMoneyRequired)
-                return false;
-
-            // --- Minimum territory ---
-            if (combo.requiresMinTerritory && playerTerritories < combo.minTerritoryRequired)
-                return false;
-
-            // --- Minimum active businesses ---
-            if (combo.minActiveBusinesses > 0 && activeBusinessCount < combo.minActiveBusinesses)
-                return false;
-
-            // --- Minimum market share ---
-            if (combo.minMarketShare > 0f && marketShare < combo.minMarketShare)
-                return false;
-
-            return true;
-        }
-
-        /// <summary>
-        /// Checks if a specific employee is placed in a specific business.
-        /// Used for combos like "Latte Art" (Barista in Coffee Shop).
-        /// </summary>
-        private bool CheckSpecificPlacement(string employeeCardId, string businessCardId)
-        {
-            if (boardManager == null) return false;
-            if (string.IsNullOrEmpty(employeeCardId) || string.IsNullOrEmpty(businessCardId))
-                return false;
-
-            foreach (var business in boardManager.PlayerBusinesses)
-            {
-                if (business.isClosed) continue;
-                if (business.businessCard == null) continue;
-                if (business.businessCard.cardId != businessCardId) continue;
-
-                // Found the target business, check if employee is here
-                foreach (var emp in business.employees)
-                {
-                    if (emp != null && emp.cardId == employeeCardId)
-                        return true;
-                }
-            }
-
-            return false;
-        }
+        public int GetTotalBonusIncome() => bonusProvider.GetTotalBonusIncome();
+        public int GetTotalBonusCustomers() => bonusProvider.GetTotalBonusCustomers();
+        public float GetIncomeMultiplier() => bonusProvider.GetIncomeMultiplier();
+        public float GetCustomerMultiplier() => bonusProvider.GetCustomerMultiplier();
+        public float GetShopDiscount() => bonusProvider.GetShopDiscount();
+        public int GetExtraActions() => bonusProvider.GetExtraActions();
+        public int GetExtraFBIRisk() => bonusProvider.GetExtraFBIRisk();
+        public int GetRivalCustomerPenalty() => bonusProvider.GetRivalCustomerPenalty();
 
         // ----------------------------------------------------------------
-        // Bonus Queries (used by EconomyManager, ShopManager, etc.)
+        // Queries
         // ----------------------------------------------------------------
 
-        /// <summary>
-        /// Returns total bonus income from all active combos.
-        /// </summary>
-        public int GetTotalBonusIncome()
-        {
-            int total = 0;
-            foreach (var combo in activeCombos)
-            {
-                if (combo != null)
-                    total += combo.bonusIncome;
-            }
-            return total;
-        }
+        public bool IsComboActive(string comboId) => evaluator.IsComboActive(comboId, activeCombos);
 
-        /// <summary>
-        /// Returns total bonus customers from all active combos.
-        /// </summary>
-        public int GetTotalBonusCustomers()
-        {
-            int total = 0;
-            foreach (var combo in activeCombos)
-            {
-                if (combo != null)
-                    total += combo.bonusCustomers;
-            }
-            return total;
-        }
-
-        /// <summary>
-        /// Returns the combined income multiplier from active combos.
-        /// Base is 1.0; combos multiply on top.
-        /// </summary>
-        public float GetIncomeMultiplier()
-        {
-            float multiplier = 1f;
-            foreach (var combo in activeCombos)
-            {
-                if (combo != null && combo.incomeMultiplier > 1f)
-                    multiplier *= combo.incomeMultiplier;
-            }
-            return multiplier;
-        }
-
-        /// <summary>
-        /// Returns the combined customer multiplier from active combos.
-        /// </summary>
-        public float GetCustomerMultiplier()
-        {
-            float multiplier = 1f;
-            foreach (var combo in activeCombos)
-            {
-                if (combo != null && combo.customerMultiplier > 1f)
-                    multiplier *= combo.customerMultiplier;
-            }
-            return multiplier;
-        }
-
-        /// <summary>
-        /// Returns the shop discount rate from active combos (Kriz Avcisi: 50%).
-        /// </summary>
-        public float GetShopDiscount()
-        {
-            float discount = 0f;
-            foreach (var combo in activeCombos)
-            {
-                if (combo != null && combo.shopDiscount > 0f)
-                    discount = Mathf.Max(discount, combo.shopDiscount);
-            }
-            return discount;
-        }
-
-        /// <summary>
-        /// Returns the extra action count from active combos (AI Devrimi: +1).
-        /// </summary>
-        public int GetExtraActions()
-        {
-            int extra = 0;
-            foreach (var combo in activeCombos)
-            {
-                if (combo != null)
-                    extra += combo.extraActions;
-            }
-            return extra;
-        }
-
-        /// <summary>
-        /// Returns the total rival customer penalty from active combos (Monopol: -3/turn).
-        /// </summary>
-        public int GetRivalCustomerPenalty()
-        {
-            int penalty = 0;
-            foreach (var combo in activeCombos)
-            {
-                if (combo != null)
-                    penalty += combo.rivalCustomerPenalty;
-            }
-            return penalty;
-        }
-
-        /// <summary>
-        /// Returns extra FBI risk from active combos (Yeralti: +8).
-        /// </summary>
-        public int GetExtraFBIRisk()
-        {
-            int risk = 0;
-            foreach (var combo in activeCombos)
-            {
-                if (combo != null)
-                    risk += combo.extraFBIRisk;
-            }
-            return risk;
-        }
-
-        /// <summary>
-        /// Checks if a specific combo is currently active by ID.
-        /// </summary>
-        public bool IsComboActive(string comboId)
-        {
-            foreach (var combo in activeCombos)
-            {
-                if (combo != null && combo.comboId == comboId)
-                    return true;
-            }
-            return false;
-        }
-
-        /// <summary>
-        /// Returns a copy of the active combos list.
-        /// </summary>
-        public List<ComboData> GetActiveCombos()
-        {
-            return new List<ComboData>(activeCombos);
-        }
+        public List<ComboData> GetActiveCombos() => new List<ComboData>(activeCombos);
 
         /// <summary>
         /// Resets combo state for a new run.

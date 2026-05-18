@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using EmpireOfCards.Core;
 using EmpireOfCards.Data;
+using EmpireOfCards.Gameplay.Board;
 
 namespace EmpireOfCards.Gameplay
 {
@@ -43,8 +44,8 @@ namespace EmpireOfCards.Gameplay
     }
 
     /// <summary>
-    /// Manages the physical board state: business slots, employee placement, upgrades,
-    /// business evolution (GDD 3.1), and employee leaving mechanic (GDD 4.2).
+    /// Thin coordinator for board state. Owns the ActiveBusiness list and
+    /// delegates evolution, tenure, closure, and queries to sub-systems.
     /// </summary>
     public class BoardManager : MonoBehaviour
     {
@@ -59,12 +60,28 @@ namespace EmpireOfCards.Gameplay
         [SerializeField] private CardData activeEvent;
         [SerializeField] private int activeEventTurnsRemaining;
 
+        // --- Sub-Systems ---
+        private BusinessEvolution _evolution;
+        private EmployeeTenure _tenure;
+        private ClosureManager _closure;
+
         // --- Properties ---
         public IReadOnlyList<ActiveBusiness> PlayerBusinesses => playerBusinesses;
         public IReadOnlyList<CardData> GlobalUpgrades => globalUpgrades;
         public int MaxSlots => maxSlots;
         public CardData ActiveEvent => activeEvent;
         public int ActiveEventTurnsRemaining => activeEventTurnsRemaining;
+
+        // ----------------------------------------------------------------
+        // Initialization
+        // ----------------------------------------------------------------
+
+        private void Awake()
+        {
+            _evolution = new BusinessEvolution();
+            _tenure = new EmployeeTenure(RemoveEmployee);
+            _closure = new ClosureManager(ReopenBusiness);
+        }
 
         // ----------------------------------------------------------------
         // Placement
@@ -111,7 +128,6 @@ namespace EmpireOfCards.Gameplay
 
         /// <summary>
         /// Assigns an employee card to a specific business. Returns true on success.
-        /// Checks employee slot limits including Automation upgrade reductions.
         /// </summary>
         public bool PlaceEmployee(CardData card, int businessIndex)
         {
@@ -143,14 +159,13 @@ namespace EmpireOfCards.Gameplay
             }
 
             business.employees.Add(card);
-            business.employeeTenure.Add(0); // Fresh hire, 0 turns tenure
+            business.employeeTenure.Add(0);
             EventBus.EmployeePlaced(card, businessIndex);
             return true;
         }
 
         /// <summary>
         /// Places an upgrade card on a specific business, or globally if businessIndex is -1.
-        /// Returns true on success.
         /// </summary>
         public bool PlaceUpgrade(CardData card, int businessIndex)
         {
@@ -194,11 +209,8 @@ namespace EmpireOfCards.Gameplay
             if (eventCard == null || eventCard.cardType != CardType.Event)
                 return;
 
-            // Expire previous event if any
             if (activeEvent != null)
-            {
                 EventBus.EventExpired(activeEvent);
-            }
 
             activeEvent = eventCard;
             activeEventTurnsRemaining = eventCard.eventDuration;
@@ -260,35 +272,25 @@ namespace EmpireOfCards.Gameplay
         }
 
         // ----------------------------------------------------------------
-        // Business Lifecycle
+        // Business Lifecycle (delegates to sub-systems)
         // ----------------------------------------------------------------
 
-        /// <summary>
-        /// Closes a business for the specified number of turns.
-        /// </summary>
         public void CloseBusiness(int businessIndex, int turns)
         {
-            if (businessIndex < 0 || businessIndex >= playerBusinesses.Count)
-                return;
-
-            ActiveBusiness business = playerBusinesses[businessIndex];
-            business.isClosed = true;
-            business.closedTurnsRemaining = turns;
-            EventBus.BusinessClosed(businessIndex);
+            if (businessIndex < 0 || businessIndex >= playerBusinesses.Count) return;
+            _closure.CloseBusiness(playerBusinesses[businessIndex], businessIndex, turns);
         }
 
-        /// <summary>
-        /// Reopens a previously closed business.
-        /// </summary>
         public void ReopenBusiness(int businessIndex)
         {
-            if (businessIndex < 0 || businessIndex >= playerBusinesses.Count)
-                return;
+            if (businessIndex < 0 || businessIndex >= playerBusinesses.Count) return;
+            _closure.ReopenBusiness(playerBusinesses[businessIndex], businessIndex);
+        }
 
-            ActiveBusiness business = playerBusinesses[businessIndex];
-            business.isClosed = false;
-            business.closedTurnsRemaining = 0;
-            EventBus.BusinessReopened(businessIndex);
+        public void AddCustomersAttracted(int businessIndex, int customers)
+        {
+            if (businessIndex < 0 || businessIndex >= playerBusinesses.Count) return;
+            _evolution.AddCustomersAttracted(playerBusinesses[businessIndex], customers);
         }
 
         // ----------------------------------------------------------------
@@ -296,12 +298,8 @@ namespace EmpireOfCards.Gameplay
         // ----------------------------------------------------------------
 
         /// <summary>
-        /// Advances all businesses by one turn. Handles:
-        /// - Closed business countdowns
-        /// - TurnsActive increment for open businesses
-        /// - Business evolution check (GDD 3.1)
-        /// - Employee tenure increment and leaving check (GDD 4.2)
-        /// - Active event countdown
+        /// Advances all businesses by one turn. Delegates closure ticking,
+        /// employee tenure, and evolution checks to sub-systems.
         /// </summary>
         public void TickBusinesses()
         {
@@ -309,150 +307,26 @@ namespace EmpireOfCards.Gameplay
             {
                 ActiveBusiness business = playerBusinesses[i];
 
-                // Tick closed businesses
                 if (business.isClosed)
                 {
                     business.closedTurnsRemaining--;
                     if (business.closedTurnsRemaining <= 0)
-                    {
                         ReopenBusiness(i);
-                    }
                     continue;
                 }
 
-                // Advance turns active
                 business.turnsActive++;
-
-                // Tick employee tenure and check for leaving (GDD 4.2)
-                TickEmployeeTenure(i, business);
-
-                // Check for business evolution (GDD 3.1)
-                CheckBusinessEvolution(i, business);
+                _tenure.TickTenure(i, business);
+                _evolution.CheckEvolution(i, business);
             }
 
-            // Tick active event
             TickActiveEvent();
         }
 
-        /// <summary>
-        /// Ticks closed businesses only. Use if you need to separate ticking steps.
-        /// </summary>
         public void TickClosedBusinesses()
         {
-            for (int i = 0; i < playerBusinesses.Count; i++)
-            {
-                ActiveBusiness business = playerBusinesses[i];
-                if (!business.isClosed) continue;
-
-                business.closedTurnsRemaining--;
-                if (business.closedTurnsRemaining <= 0)
-                {
-                    ReopenBusiness(i);
-                }
-            }
+            _closure.TickClosures(playerBusinesses);
         }
-
-        /// <summary>
-        /// Adds customers attracted this turn to a business's evolution tracker.
-        /// Call from EconomyManager during resolve.
-        /// </summary>
-        public void AddCustomersAttracted(int businessIndex, int customers)
-        {
-            if (businessIndex < 0 || businessIndex >= playerBusinesses.Count)
-                return;
-
-            playerBusinesses[businessIndex].totalCustomersAttracted += customers;
-        }
-
-        // ----------------------------------------------------------------
-        // Evolution (GDD Section 3.1)
-        // ----------------------------------------------------------------
-
-        /// <summary>
-        /// Checks if a business meets evolution requirements:
-        /// - 40+ total customers attracted
-        /// - 15+ turns active
-        /// - Business card has canEvolve = true and evolvedForm != null
-        /// On evolution: replaces business card with evolved form,
-        /// new stats: Diner(50/3) -> Restaurant(80/5) -> Chain(120/8)
-        /// </summary>
-        private void CheckBusinessEvolution(int index, ActiveBusiness business)
-        {
-            if (business.businessCard == null) return;
-            if (!business.businessCard.canEvolve) return;
-            if (business.businessCard.evolvedForm == null) return;
-
-            int customerReq = business.businessCard.evolutionCustomerReq > 0
-                ? business.businessCard.evolutionCustomerReq
-                : Constants.EVOLUTION_CUSTOMER_THRESHOLD;
-
-            int turnReq = business.businessCard.evolutionTurnReq > 0
-                ? business.businessCard.evolutionTurnReq
-                : Constants.EVOLUTION_TURN_REQUIREMENT;
-
-            if (business.totalCustomersAttracted >= customerReq && business.turnsActive >= turnReq)
-            {
-                CardData oldCard = business.businessCard;
-                business.businessCard = oldCard.evolvedForm;
-
-                // Advance level
-                if (business.currentLevel == BusinessLevel.Level1)
-                    business.currentLevel = BusinessLevel.Level2;
-                else if (business.currentLevel == BusinessLevel.Level2)
-                    business.currentLevel = BusinessLevel.Level3;
-
-                // Reset tracking for next evolution
-                business.totalCustomersAttracted = 0;
-                business.turnsActive = 0;
-
-                Debug.Log($"[BoardManager] Business evolved! {oldCard.cardName} -> {business.businessCard.cardName}");
-                EventBus.BusinessEvolved(index, business.currentLevel);
-            }
-        }
-
-        // ----------------------------------------------------------------
-        // Employee Tenure & Leaving (GDD Section 4.2)
-        // ----------------------------------------------------------------
-
-        /// <summary>
-        /// Increments employee tenure and checks if any employee leaves.
-        /// Employees leave after 8+ turns without salary raise (GDD says the threshold
-        /// is stored in Constants.EMPLOYEE_LEAVE_TURN_THRESHOLD).
-        /// When an employee leaves, they are removed and an event is fired.
-        /// </summary>
-        private void TickEmployeeTenure(int businessIndex, ActiveBusiness business)
-        {
-            // Iterate backwards to safely remove during iteration
-            for (int e = business.employeeTenure.Count - 1; e >= 0; e--)
-            {
-                business.employeeTenure[e]++;
-
-                if (business.employeeTenure[e] >= Constants.EMPLOYEE_LEAVE_TURN_THRESHOLD)
-                {
-                    // Employee may leave - random chance increases with tenure
-                    int overThreshold = business.employeeTenure[e] - Constants.EMPLOYEE_LEAVE_TURN_THRESHOLD;
-                    // 20% base + 10% per extra turn over threshold
-                    float leaveChance = 0.20f + (overThreshold * 0.10f);
-
-                    if (UnityEngine.Random.value < leaveChance)
-                    {
-                        CardData leavingEmployee = business.employees[e];
-
-                        // Loyal Manager prevents transfer/leaving
-                        if (leavingEmployee != null && leavingEmployee.preventsTransfer)
-                            continue;
-
-                        RemoveEmployee(businessIndex, e);
-                        Debug.Log($"[BoardManager] Employee '{(leavingEmployee != null ? leavingEmployee.cardName : "?")}' left due to tenure ({business.employeeTenure.Count} turns).");
-                        EventBus.EmployeeLeft(leavingEmployee, businessIndex);
-                    }
-                }
-            }
-        }
-
-        // ----------------------------------------------------------------
-        // Active Event Ticking
-        // ----------------------------------------------------------------
 
         private void TickActiveEvent()
         {
@@ -469,157 +343,37 @@ namespace EmpireOfCards.Gameplay
         }
 
         // ----------------------------------------------------------------
-        // Queries
+        // Queries (delegates to BoardQueries)
         // ----------------------------------------------------------------
 
-        /// <summary>
-        /// Returns the number of open (non-closed) businesses on the board.
-        /// </summary>
         public int GetActiveBusinessCount()
-        {
-            int count = 0;
-            foreach (var business in playerBusinesses)
-            {
-                if (!business.isClosed)
-                    count++;
-            }
-            return count;
-        }
+            => BoardQueries.GetActiveBusinessCount(playerBusinesses);
 
-        /// <summary>
-        /// Returns all card IDs currently active on the board (businesses, employees, upgrades).
-        /// Used for combo checking.
-        /// </summary>
         public List<string> GetAllActiveCardIds()
-        {
-            List<string> ids = new List<string>();
+            => BoardQueries.GetAllActiveCardIds(playerBusinesses, globalUpgrades, activeEvent);
 
-            foreach (var business in playerBusinesses)
-            {
-                if (business.isClosed)
-                    continue;
-
-                if (business.businessCard != null)
-                    ids.Add(business.businessCard.cardId);
-
-                foreach (var employee in business.employees)
-                {
-                    if (employee != null)
-                        ids.Add(employee.cardId);
-                }
-
-                foreach (var upgrade in business.upgrades)
-                {
-                    if (upgrade != null)
-                        ids.Add(upgrade.cardId);
-                }
-            }
-
-            foreach (var upgrade in globalUpgrades)
-            {
-                if (upgrade != null)
-                    ids.Add(upgrade.cardId);
-            }
-
-            // Include active event
-            if (activeEvent != null)
-                ids.Add(activeEvent.cardId);
-
-            return ids;
-        }
-
-        /// <summary>
-        /// Returns all tags currently active on the board.
-        /// </summary>
         public HashSet<CardTag> GetAllActiveTags()
-        {
-            HashSet<CardTag> tags = new HashSet<CardTag>();
+            => BoardQueries.GetAllActiveTags(playerBusinesses, globalUpgrades, activeEvent);
 
-            foreach (var business in playerBusinesses)
-            {
-                if (business.isClosed) continue;
-
-                AddCardTags(tags, business.businessCard);
-                foreach (var emp in business.employees) AddCardTags(tags, emp);
-                foreach (var upg in business.upgrades) AddCardTags(tags, upg);
-            }
-
-            foreach (var upg in globalUpgrades) AddCardTags(tags, upg);
-            if (activeEvent != null) AddCardTags(tags, activeEvent);
-
-            return tags;
-        }
-
-        /// <summary>
-        /// Checks if any active card on the board has the specified tag.
-        /// </summary>
         public bool HasTag(CardTag tag)
-        {
-            return GetAllActiveTags().Contains(tag);
-        }
+            => BoardQueries.HasTag(playerBusinesses, globalUpgrades, activeEvent, tag);
 
-        /// <summary>
-        /// Calculates the total customers the player is attracting this turn.
-        /// Sums base customers from businesses + employee bonuses + synergy.
-        /// Does NOT include combo or event modifiers (those are in EconomyManager).
-        /// </summary>
         public int CalculatePlayerCustomers()
-        {
-            int total = 0;
+            => BoardQueries.CalculatePlayerCustomers(playerBusinesses, globalUpgrades);
 
-            foreach (var business in playerBusinesses)
-            {
-                if (business.isClosed) continue;
-                if (business.businessCard == null) continue;
+        public int FindBusinessWithEmployee(CardData employee)
+            => BoardQueries.FindBusinessWithEmployee(playerBusinesses, employee);
 
-                // Skip businesses with activation delay not yet passed (Tech Startup)
-                if (business.businessCard.activationDelay > 0 &&
-                    business.turnsActive < business.businessCard.activationDelay)
-                    continue;
+        public int CountEmployeesById(string cardId)
+            => BoardQueries.CountEmployeesById(playerBusinesses, cardId);
 
-                int bizCustomers = business.businessCard.customersPerTurn;
+        public List<(CardData employee, int businessIndex, int employeeIndex)> GetAllIllegalEmployees()
+            => BoardQueries.GetAllIllegalEmployees(playerBusinesses);
 
-                // Add employee customer bonuses with synergy
-                foreach (var emp in business.employees)
-                {
-                    if (emp == null) continue;
+        // ----------------------------------------------------------------
+        // Utility
+        // ----------------------------------------------------------------
 
-                    // Check synergy: if employee's synergy tag matches business tags
-                    bool hasSynergy = false;
-                    if (business.businessCard.tags != null)
-                    {
-                        foreach (var bizTag in business.businessCard.tags)
-                        {
-                            if (bizTag == emp.synergyTag)
-                            {
-                                hasSynergy = true;
-                                break;
-                            }
-                        }
-                    }
-
-                    bizCustomers += hasSynergy ? emp.synergyCustomerBonus : emp.customerBonus;
-                }
-
-                // Global customer bonus from Ad Agency
-                bizCustomers += business.businessCard.globalCustomerBonus;
-
-                total += bizCustomers;
-            }
-
-            // Add global upgrade customer bonuses
-            foreach (var upgrade in globalUpgrades)
-            {
-                if (upgrade == null) continue;
-                total += (int)upgrade.upgradeValue; // GlobalCustomerFlat adds flat customers
-            }
-
-            return total;
-        }
-
-        /// <summary>
-        /// Resets the board to empty state for a new run.
-        /// </summary>
         public void Reset()
         {
             playerBusinesses.Clear();
@@ -629,92 +383,9 @@ namespace EmpireOfCards.Gameplay
             maxSlots = Constants.STARTING_SLOTS;
         }
 
-        /// <summary>
-        /// Sets the maximum number of business slots the player can use.
-        /// </summary>
         public void SetMaxSlots(int slots)
         {
             maxSlots = Mathf.Clamp(slots, 1, Constants.MAX_SLOTS);
-        }
-
-        /// <summary>
-        /// Finds the business index that contains a specific employee card.
-        /// Returns -1 if not found.
-        /// </summary>
-        public int FindBusinessWithEmployee(CardData employee)
-        {
-            for (int i = 0; i < playerBusinesses.Count; i++)
-            {
-                if (playerBusinesses[i].employees.Contains(employee))
-                    return i;
-            }
-            return -1;
-        }
-
-        /// <summary>
-        /// Counts how many employees with a specific card ID are active on the board.
-        /// </summary>
-        public int CountEmployeesById(string cardId)
-        {
-            int count = 0;
-            foreach (var biz in playerBusinesses)
-            {
-                if (biz.isClosed) continue;
-                foreach (var emp in biz.employees)
-                {
-                    if (emp != null && emp.cardId == cardId)
-                        count++;
-                }
-            }
-            return count;
-        }
-
-        /// <summary>
-        /// Returns all employees on the board that have the Illegal tag.
-        /// </summary>
-        public List<(CardData employee, int businessIndex, int employeeIndex)> GetAllIllegalEmployees()
-        {
-            var result = new List<(CardData, int, int)>();
-
-            for (int b = 0; b < playerBusinesses.Count; b++)
-            {
-                ActiveBusiness biz = playerBusinesses[b];
-                if (biz.isClosed) continue;
-
-                for (int e = 0; e < biz.employees.Count; e++)
-                {
-                    CardData emp = biz.employees[e];
-                    if (emp != null && CardHasTag(emp, CardTag.Illegal))
-                    {
-                        result.Add((emp, b, e));
-                    }
-                }
-            }
-
-            return result;
-        }
-
-        // ----------------------------------------------------------------
-        // Helpers
-        // ----------------------------------------------------------------
-
-        private void AddCardTags(HashSet<CardTag> tagSet, CardData card)
-        {
-            if (card == null || card.tags == null) return;
-            foreach (var tag in card.tags)
-            {
-                tagSet.Add(tag);
-            }
-        }
-
-        private bool CardHasTag(CardData card, CardTag tag)
-        {
-            if (card == null || card.tags == null) return false;
-            foreach (var t in card.tags)
-            {
-                if (t == tag) return true;
-            }
-            return false;
         }
     }
 }

@@ -3,11 +3,13 @@ using System.Collections.Generic;
 using UnityEngine;
 using EmpireOfCards.Core;
 using EmpireOfCards.Data;
+using EmpireOfCards.Gameplay.FBI;
 
 namespace EmpireOfCards.Gameplay
 {
     /// <summary>
     /// FBI risk and raid mechanic matching GDD Section 9.3.
+    /// Coordinator that delegates to RiskCalculator and RaidExecutor.
     ///
     /// - Risk accumulates from illegal cards (Hacker +10%, Fraudster +12%, etc.)
     /// - Each turn end: random(1-100) less than risk% => RAID!
@@ -21,20 +23,18 @@ namespace EmpireOfCards.Gameplay
         [Header("FBI Settings")]
         [SerializeField] private GameBalanceData balanceData;
 
-        // --- Runtime State ---
-        [Header("State (Read Only)")]
-        [SerializeField] private float currentRisk;             // 0-100 percentage
-        [SerializeField] private bool hasSecuritySystem;        // Guvenlik Sistemi upgrade
-        [SerializeField] private bool hasGuvenliSucCombo;       // Guvenli Suc combo active
-
         // --- Manager References ---
         [Header("References")]
         [SerializeField] private BoardManager boardManager;
         [SerializeField] private ComboSystem comboSystem;
 
+        // --- Extracted Helpers ---
+        private RiskCalculator riskCalculator;
+        private RaidExecutor raidExecutor;
+
         // --- Properties ---
-        public float CurrentRisk => currentRisk;
-        public bool HasSecuritySystem => hasSecuritySystem;
+        public float CurrentRisk => riskCalculator?.CurrentRisk ?? 0f;
+        public bool HasSecuritySystem => riskCalculator?.HasSecuritySystem ?? false;
 
         /// <summary>
         /// Assigns all dependencies without reflection.
@@ -45,59 +45,20 @@ namespace EmpireOfCards.Gameplay
             this.balanceData = balance;
             this.boardManager = board;
             this.comboSystem = combo;
+
+            riskCalculator = new RiskCalculator();
+            raidExecutor = new RaidExecutor(balanceData, boardManager, riskCalculator);
         }
 
         // ----------------------------------------------------------------
-        // Risk Management
+        // Delegated Risk Methods
         // ----------------------------------------------------------------
 
-        /// <summary>
-        /// Adds FBI risk from an illegal source. Amount is in percentage points (e.g. 10 = +10%).
-        ///
-        /// Reductions are applied multiplicatively:
-        /// - Guvenlik Sistemi: 50% reduction on incoming risk
-        /// - Guvenli Suc combo: additional 50% reduction
-        ///
-        /// Example: Hacker +10%, with security = +5%, with security+combo = +2.5%
-        /// </summary>
-        public void AddRisk(float amount)
-        {
-            if (amount <= 0f) return;
-
-            float effectiveAmount = amount;
-
-            // Guvenlik Sistemi: 50% reduction (NOT flat -%25, but 50% of incoming risk)
-            if (hasSecuritySystem)
-            {
-                effectiveAmount *= 0.5f;
-            }
-
-            // Guvenli Suc combo: further 50% reduction (stacks multiplicatively)
-            if (hasGuvenliSucCombo)
-            {
-                effectiveAmount *= 0.5f;
-            }
-
-            currentRisk = Mathf.Clamp(currentRisk + effectiveAmount, 0f, 100f);
-
-            GameManager gm = GameManager.Instance;
-            if (gm != null) gm.SetFBIRisk(currentRisk / 100f); // GameManager stores 0-1
-
-            EventBus.FBIRiskUpdated(currentRisk);
-        }
-
-        /// <summary>
-        /// Directly sets the risk level. Used for initialization/reset.
-        /// </summary>
-        public void SetRisk(float risk)
-        {
-            currentRisk = Mathf.Clamp(risk, 0f, 100f);
-
-            GameManager gm = GameManager.Instance;
-            if (gm != null) gm.SetFBIRisk(currentRisk / 100f);
-
-            EventBus.FBIRiskUpdated(currentRisk);
-        }
+        public void AddRisk(float amount) => riskCalculator.AddRisk(amount);
+        public void SetRisk(float risk) => riskCalculator.SetRisk(risk);
+        public float GetRiskPercent() => riskCalculator.GetEffectiveRisk();
+        public bool HasRisk() => riskCalculator.HasRisk();
+        public void SetSecurityActive(bool active) => riskCalculator.SetSecurityActive(active);
 
         // ----------------------------------------------------------------
         // Raid Check (GDD Section 9.3)
@@ -109,18 +70,20 @@ namespace EmpireOfCards.Gameplay
         /// </summary>
         public bool CheckForRaid()
         {
-            if (currentRisk <= 0f)
+            float risk = riskCalculator.GetEffectiveRisk();
+
+            if (risk <= 0f)
             {
                 EventBus.FBIRaidWasAvoided();
                 return false;
             }
 
             int roll = UnityEngine.Random.Range(1, 101); // 1-100 inclusive
-            bool raidTriggered = roll < Mathf.RoundToInt(currentRisk);
+            bool raidTriggered = roll < Mathf.RoundToInt(risk);
 
             if (raidTriggered)
             {
-                ExecuteRaid();
+                raidExecutor.ExecuteRaid();
             }
             else
             {
@@ -131,53 +94,12 @@ namespace EmpireOfCards.Gameplay
         }
 
         // ----------------------------------------------------------------
-        // Raid Execution (GDD Section 9.3)
-        // ----------------------------------------------------------------
-
-        /// <summary>
-        /// Executes an FBI raid:
-        /// 1. Apply 300 money penalty
-        /// 2. Remove the MOST EXPENSIVE illegal employee (by buyCost)
-        /// 3. Reset risk to 0
-        /// </summary>
-        public void ExecuteRaid()
-        {
-            Debug.Log("[FBISystem] FBI RAID! Applying penalties.");
-
-            GameManager gm = GameManager.Instance;
-            if (gm == null) return;
-
-            // Step 1: 300 penalty (from GDD, also in balanceData)
-            int penalty = balanceData != null ? balanceData.fbiRaidPenalty : Constants.FBI_RAID_PENALTY;
-            gm.SpendMoney(penalty);
-
-            EventBus.FBIRaidOccurred(penalty);
-
-            // Step 2: Remove most expensive illegal employee
-            if (boardManager != null)
-            {
-                RemoveMostExpensiveIllegalEmployee();
-            }
-
-            // Step 3: Reset risk to 0
-            currentRisk = 0f;
-            gm.SetFBIRisk(0f);
-            EventBus.FBIRiskUpdated(0f);
-        }
-
-        // ----------------------------------------------------------------
         // Per-Turn Risk Accumulation
         // ----------------------------------------------------------------
 
         /// <summary>
         /// Scans all illegal employees on the board and adds their per-turn risk.
         /// Called once per turn during the Resolve phase.
-        ///
-        /// Each illegal employee contributes fbiRiskPerTurn:
-        /// - Hacker: +10%/turn
-        /// - Dolandirici: +12%/turn
-        /// etc.
-        ///
         /// Also adds extra FBI risk from active combos (Yeralti: +8%).
         /// </summary>
         public void AccumulateRiskFromBoard()
@@ -197,7 +119,7 @@ namespace EmpireOfCards.Gameplay
             {
                 if (employee.fbiRiskPerTurn > 0)
                 {
-                    AddRisk(employee.fbiRiskPerTurn);
+                    riskCalculator.AddRisk(employee.fbiRiskPerTurn);
                 }
             }
 
@@ -207,146 +129,65 @@ namespace EmpireOfCards.Gameplay
                 int comboRisk = comboSystem.GetExtraFBIRisk();
                 if (comboRisk > 0)
                 {
-                    AddRisk(comboRisk);
+                    riskCalculator.AddRisk(comboRisk);
                 }
             }
         }
 
         // ----------------------------------------------------------------
-        // Security & Combo Status
+        // Security & Combo Status (private helpers)
         // ----------------------------------------------------------------
 
-        /// <summary>
-        /// Checks if any Guvenlik Sistemi upgrade is on the board.
-        /// Updates the hasSecuritySystem flag.
-        /// </summary>
         private void UpdateSecurityStatus()
         {
-            hasSecuritySystem = false;
+            bool found = false;
 
-            if (boardManager == null) return;
-
-            // Check global upgrades for ReduceFBIRisk type
             foreach (var upgrade in boardManager.GlobalUpgrades)
             {
                 if (upgrade != null && upgrade.upgradeEffectType == UpgradeEffectType.ReduceFBIRisk)
                 {
-                    hasSecuritySystem = true;
-                    return;
+                    found = true;
+                    break;
                 }
             }
 
-            // Check per-business upgrades
-            foreach (var business in boardManager.PlayerBusinesses)
+            if (!found)
             {
-                if (business.isClosed) continue;
-                foreach (var upgrade in business.upgrades)
+                foreach (var business in boardManager.PlayerBusinesses)
                 {
-                    if (upgrade != null && upgrade.upgradeEffectType == UpgradeEffectType.ReduceFBIRisk)
+                    if (business.isClosed) continue;
+                    foreach (var upgrade in business.upgrades)
                     {
-                        hasSecuritySystem = true;
-                        return;
+                        if (upgrade != null && upgrade.upgradeEffectType == UpgradeEffectType.ReduceFBIRisk)
+                        {
+                            found = true;
+                            break;
+                        }
+                    }
+                    if (found) break;
+                }
+            }
+
+            riskCalculator.SetSecurityActive(found);
+        }
+
+        private void UpdateComboStatus()
+        {
+            bool active = false;
+
+            if (comboSystem != null)
+            {
+                foreach (var combo in comboSystem.ActiveCombos)
+                {
+                    if (combo != null && combo.comboId != null && combo.comboId.Contains("GuvenliSuc"))
+                    {
+                        active = true;
+                        break;
                     }
                 }
             }
-        }
 
-        /// <summary>
-        /// Checks if the Guvenli Suc combo is active.
-        /// The combo ID convention is checked against comboSystem.
-        /// </summary>
-        private void UpdateComboStatus()
-        {
-            hasGuvenliSucCombo = false;
-
-            if (comboSystem == null) return;
-
-            // Check for "Guvenli Suc" or similar combo
-            foreach (var combo in comboSystem.ActiveCombos)
-            {
-                if (combo == null) continue;
-
-                // Check if combo has the tag/name pattern for the safe crime combo
-                // ComboData doesn't have a type field, so we check by ID convention
-                if (combo.comboId != null && combo.comboId.Contains("GuvenliSuc"))
-                {
-                    hasGuvenliSucCombo = true;
-                    return;
-                }
-            }
-        }
-
-        /// <summary>
-        /// Enables or disables the security system manually.
-        /// </summary>
-        public void SetSecurityActive(bool active)
-        {
-            hasSecuritySystem = active;
-        }
-
-        // ----------------------------------------------------------------
-        // Internal: Find and Remove Most Expensive Illegal Employee
-        // ----------------------------------------------------------------
-
-        /// <summary>
-        /// Finds the most expensive illegal employee (by buyCost) and removes them.
-        /// GDD says: "most expensive illegal employee is fired" on raid.
-        /// </summary>
-        private void RemoveMostExpensiveIllegalEmployee()
-        {
-            if (boardManager == null) return;
-
-            var illegals = boardManager.GetAllIllegalEmployees();
-
-            if (illegals.Count == 0)
-            {
-                Debug.Log("[FBISystem] No illegal employees to remove.");
-                return;
-            }
-
-            // Find the most expensive one
-            int mostExpensiveCost = -1;
-            int targetBizIndex = -1;
-            int targetEmpIndex = -1;
-            CardData targetEmployee = null;
-
-            foreach (var (employee, bizIndex, empIndex) in illegals)
-            {
-                if (employee.buyCost > mostExpensiveCost)
-                {
-                    mostExpensiveCost = employee.buyCost;
-                    targetBizIndex = bizIndex;
-                    targetEmpIndex = empIndex;
-                    targetEmployee = employee;
-                }
-            }
-
-            if (targetEmployee != null && targetBizIndex >= 0)
-            {
-                Debug.Log($"[FBISystem] Removing most expensive illegal employee: {targetEmployee.cardName} (cost: {mostExpensiveCost})");
-                boardManager.RemoveEmployee(targetBizIndex, targetEmpIndex);
-                EventBus.EmployeeLeft(targetEmployee, targetBizIndex);
-            }
-        }
-
-        // ----------------------------------------------------------------
-        // Queries
-        // ----------------------------------------------------------------
-
-        /// <summary>
-        /// Returns the current risk as a percentage (0-100).
-        /// </summary>
-        public float GetRiskPercent()
-        {
-            return currentRisk;
-        }
-
-        /// <summary>
-        /// Returns true if risk is above 0 (any illegal activity exists).
-        /// </summary>
-        public bool HasRisk()
-        {
-            return currentRisk > 0f;
+            riskCalculator.SetGuvenliSucCombo(active);
         }
 
         /// <summary>
@@ -354,12 +195,7 @@ namespace EmpireOfCards.Gameplay
         /// </summary>
         public void Reset()
         {
-            currentRisk = 0f;
-            hasSecuritySystem = false;
-            hasGuvenliSucCombo = false;
-
-            GameManager gm = GameManager.Instance;
-            if (gm != null) gm.SetFBIRisk(0f);
+            riskCalculator.Reset();
         }
     }
 }
