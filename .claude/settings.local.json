@@ -1,0 +1,11 @@
+{
+  "enableAllProjectMcpServers": true,
+  "enabledMcpjsonServers": [
+    "blender"
+  ],
+  "permissions": {
+    "allow": [
+      "Bash(git commit:*)"
+    ]
+  }
+}
