@@ -2,6 +2,7 @@
 using UnityEngine;
 using UnityEditor;
 using TMPro;
+using UnityEngine.TextCore.LowLevel;
 using System.IO;
 
 namespace EmpireOfCards.Editor
