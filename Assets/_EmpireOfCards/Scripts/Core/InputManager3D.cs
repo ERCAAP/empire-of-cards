@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+using UnityEngine.InputSystem;
 using EmpireOfCards.Data;
 using EmpireOfCards.World;
 
@@ -43,6 +44,7 @@ namespace EmpireOfCards.Core
         private void Update()
         {
             if (!_inputEnabled) return;
+            if (Mouse.current == null) return;
 
             if (_isDragging)
                 HandleDrag();
@@ -50,17 +52,20 @@ namespace EmpireOfCards.Core
                 HandleHover();
 
             // Pick up
-            if (Input.GetMouseButtonDown(0) && !_isDragging && _hoveredCard != null)
+            var mouse = Mouse.current;
+            if (mouse == null) return;
+
+            if (mouse.leftButton.wasPressedThisFrame && !_isDragging && _hoveredCard != null)
                 PickUpCard(_hoveredCard);
 
             // Drop
-            if (Input.GetMouseButtonUp(0) && _isDragging)
+            if (mouse.leftButton.wasReleasedThisFrame && _isDragging)
                 DropCard();
         }
 
         private void HandleHover()
         {
-            Ray ray = mainCamera.ScreenPointToRay(Input.mousePosition);
+            Ray ray = mainCamera.ScreenPointToRay(Mouse.current.position.ReadValue());
 
             if (Physics.Raycast(ray, out RaycastHit hit, 100f, cardLayer))
             {
@@ -89,7 +94,7 @@ namespace EmpireOfCards.Core
         {
             if (_draggedCard == null) return;
 
-            Ray ray = mainCamera.ScreenPointToRay(Input.mousePosition);
+            Ray ray = mainCamera.ScreenPointToRay(Mouse.current.position.ReadValue());
             Plane dragPlane = new Plane(Vector3.up, new Vector3(0, dragHeight, 0));
 
             if (dragPlane.Raycast(ray, out float dist))

@@ -52,11 +52,14 @@ namespace EmpireOfCards.UI
                 closeButton.onClick.AddListener(Close);
 
             // Wire up buy buttons once
-            for (int i = 0; i < buyButtons.Length; i++)
+            if (buyButtons != null)
             {
-                int index = i; // capture for closure
-                if (buyButtons[i] != null)
-                    buyButtons[i].onClick.AddListener(() => OnBuyClicked(index));
+                for (int i = 0; i < buyButtons.Length; i++)
+                {
+                    int index = i; // capture for closure
+                    if (buyButtons[i] != null)
+                        buyButtons[i].onClick.AddListener(() => OnBuyClicked(index));
+                }
             }
 
             RefreshDisplay();
@@ -75,10 +78,13 @@ namespace EmpireOfCards.UI
             if (closeButton != null)
                 closeButton.onClick.RemoveListener(Close);
 
-            for (int i = 0; i < buyButtons.Length; i++)
+            if (buyButtons != null)
             {
-                if (buyButtons[i] != null)
-                    buyButtons[i].onClick.RemoveAllListeners();
+                for (int i = 0; i < buyButtons.Length; i++)
+                {
+                    if (buyButtons[i] != null)
+                        buyButtons[i].onClick.RemoveAllListeners();
+                }
             }
         }
 
