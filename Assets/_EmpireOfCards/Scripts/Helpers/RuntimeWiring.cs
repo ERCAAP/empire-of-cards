@@ -3,12 +3,16 @@ using System.Reflection;
 
 namespace EmpireOfCards.Helpers
 {
+    // DEPRECATED: Use manager Init() methods instead of SetField reflection.
+    // Each manager now has a public Init() that accepts its dependencies directly.
+    // WiringService should call Init() on each manager instead of using SetField().
     /// <summary>
     /// Helper to set [SerializeField] private fields at runtime.
     /// Used by GameSceneBootstrap to wire manager references that
     /// cannot be assigned through the Inspector when components
     /// are created via AddComponent at runtime.
     /// </summary>
+    [System.Obsolete("Use manager Init() methods instead of SetField reflection.")]
     public static class RuntimeWiring
     {
         /// <summary>

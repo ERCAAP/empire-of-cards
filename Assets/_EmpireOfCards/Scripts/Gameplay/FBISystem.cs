@@ -36,6 +36,17 @@ namespace EmpireOfCards.Gameplay
         public float CurrentRisk => currentRisk;
         public bool HasSecuritySystem => hasSecuritySystem;
 
+        /// <summary>
+        /// Assigns all dependencies without reflection.
+        /// Called by WiringService instead of RuntimeWiring.SetField().
+        /// </summary>
+        public void Init(GameBalanceData balance, BoardManager board, ComboSystem combo)
+        {
+            this.balanceData = balance;
+            this.boardManager = board;
+            this.comboSystem = combo;
+        }
+
         // ----------------------------------------------------------------
         // Risk Management
         // ----------------------------------------------------------------

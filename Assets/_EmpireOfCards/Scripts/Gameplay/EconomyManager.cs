@@ -44,6 +44,17 @@ namespace EmpireOfCards.Gameplay
         public int NetIncome => netIncome;
         public int TotalCustomersThisTurn => totalCustomersThisTurn;
 
+        /// <summary>
+        /// Assigns all dependencies without reflection.
+        /// Called by WiringService instead of RuntimeWiring.SetField().
+        /// </summary>
+        public void Init(GameBalanceData balance, BoardManager board, ComboSystem combo)
+        {
+            this.balanceData = balance;
+            this.boardManager = board;
+            this.comboSystem = combo;
+        }
+
         // ----------------------------------------------------------------
         // Income Calculation (GDD Section 9)
         // ----------------------------------------------------------------

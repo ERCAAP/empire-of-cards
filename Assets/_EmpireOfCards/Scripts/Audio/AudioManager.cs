@@ -62,6 +62,17 @@ namespace EmpireOfCards.Audio
         // Track which source is currently active
         private AudioSource activeSource;
 
+        /// <summary>
+        /// Assigns all dependencies without reflection.
+        /// Called by WiringService instead of RuntimeWiring.SetField().
+        /// </summary>
+        public void Init(AudioSource musicA, AudioSource musicB, AudioSource sfx)
+        {
+            this.musicSourceA = musicA;
+            this.musicSourceB = musicB;
+            this.sfxSource = sfx;
+        }
+
         // ------------------------------------------------------------------
         // Lifecycle
         // ------------------------------------------------------------------

@@ -33,6 +33,18 @@ namespace EmpireOfCards.UI
         private float displayedFBI;
         private float targetFBI;
 
+        /// <summary>
+        /// Assigns all sub-element references without reflection.
+        /// Called by WiringService instead of RuntimeWiring.SetField().
+        /// </summary>
+        public void Init(TMP_Text money, TMP_Text turn, Image fbiFill, TMP_Text fbiText)
+        {
+            this.moneyText = money;
+            this.turnText = turn;
+            this.fbiBarFill = fbiFill;
+            this.fbiRiskText = fbiText;
+        }
+
         // ------------------------------------------------------------------
         // Lifecycle
         // ------------------------------------------------------------------

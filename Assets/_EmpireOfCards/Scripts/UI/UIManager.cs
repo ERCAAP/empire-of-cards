@@ -16,7 +16,7 @@ namespace EmpireOfCards.UI
         [SerializeField] private TopBarUI topBar;
         [SerializeField] private ActionBarUI actionBar;
         [SerializeField] private ShopPanel shopPanel;
-        [SerializeField] private HandUI handUI;
+        // HandUI removed -- Hand3D replaces it in 3D mode
         [SerializeField] private ComboPopup comboPopup;
         [SerializeField] private EventPopup eventPopup;
         [SerializeField] private RivalPopup rivalPopup;
@@ -31,7 +31,24 @@ namespace EmpireOfCards.UI
         public TopBarUI TopBar => topBar;
         public ActionBarUI ActionBar => actionBar;
         public ShopPanel Shop => shopPanel;
-        public HandUI Hand => handUI;
+
+        /// <summary>
+        /// Assigns all dependencies without reflection.
+        /// Called by WiringService instead of RuntimeWiring.SetField().
+        /// </summary>
+        public void Init(TopBarUI top, ActionBarUI action, ShopPanel shop,
+            ComboPopup combo, EventPopup eventP, RivalPopup rival,
+            ScoreScreen score, GameOverScreen gameOver)
+        {
+            this.topBar = top;
+            this.actionBar = action;
+            this.shopPanel = shop;
+            this.comboPopup = combo;
+            this.eventPopup = eventP;
+            this.rivalPopup = rival;
+            this.scoreScreen = score;
+            this.gameOverScreen = gameOver;
+        }
 
         // ------------------------------------------------------------------
         // Lifecycle
@@ -74,8 +91,7 @@ namespace EmpireOfCards.UI
             // During PlayPhase the player can interact; hide/show as needed
             bool isPlayPhase = phase == TurnPhase.PlayPhase;
 
-            if (handUI != null)
-                handUI.SetInteractable(isPlayPhase);
+            // Hand interactability now driven by Hand3D via EventBus
 
             if (actionBar != null)
                 actionBar.SetVisible(isPlayPhase);

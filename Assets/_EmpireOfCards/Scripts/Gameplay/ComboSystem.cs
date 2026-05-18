@@ -29,6 +29,16 @@ namespace EmpireOfCards.Gameplay
         // --- Properties ---
         public IReadOnlyList<ComboData> ActiveCombos => activeCombos;
 
+        /// <summary>
+        /// Assigns all dependencies without reflection.
+        /// Called by WiringService instead of RuntimeWiring.SetField().
+        /// </summary>
+        public void Init(ComboData[] combos, BoardManager board)
+        {
+            this.allCombos = combos;
+            this.boardManager = board;
+        }
+
         // ----------------------------------------------------------------
         // Main Check
         // ----------------------------------------------------------------

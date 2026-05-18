@@ -29,6 +29,15 @@ namespace EmpireOfCards.UI
         private int pulsingDotIndex = -1;
         private float pulseTimer;
 
+        /// <summary>
+        /// Assigns all sub-element references without reflection.
+        /// Called by WiringService instead of RuntimeWiring.SetField().
+        /// </summary>
+        public void Init(Image[] dots)
+        {
+            this.actionDots = dots;
+        }
+
         // ------------------------------------------------------------------
         // Lifecycle
         // ------------------------------------------------------------------

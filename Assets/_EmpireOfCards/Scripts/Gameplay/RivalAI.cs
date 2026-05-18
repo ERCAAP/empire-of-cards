@@ -60,6 +60,15 @@ namespace EmpireOfCards.Gameplay
         public string CurrentMood => currentMood;
         public RivalData Data => data;
 
+        /// <summary>
+        /// Assigns all dependencies without reflection.
+        /// Called by WiringService instead of RuntimeWiring.SetField().
+        /// </summary>
+        public void Init(RivalData rivalData)
+        {
+            this.data = rivalData;
+        }
+
         // ----------------------------------------------------------------
         // Initialization
         // ----------------------------------------------------------------

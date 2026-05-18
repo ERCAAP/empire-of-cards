@@ -41,6 +41,18 @@ namespace EmpireOfCards.Gameplay
         public IReadOnlyList<CardData> CurrentShopCards => currentShopCards;
         public float ActiveDiscount => activeDiscount;
 
+        /// <summary>
+        /// Assigns all dependencies without reflection.
+        /// Called by WiringService instead of RuntimeWiring.SetField().
+        /// </summary>
+        public void Init(CardData[] pool, DeckManager deck, EconomyManager econ, ComboSystem combo)
+        {
+            this.shopPool = pool;
+            this.deckManager = deck;
+            this.economyManager = econ;
+            this.comboSystem = combo;
+        }
+
         // ----------------------------------------------------------------
         // Initialization
         // ----------------------------------------------------------------

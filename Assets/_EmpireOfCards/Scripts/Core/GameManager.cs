@@ -85,6 +85,32 @@ namespace EmpireOfCards.Core
         public VFXManager VFXManager => vfxManager;
         public SaveManager SaveManager => saveManager;
 
+        /// <summary>
+        /// Assigns all manager dependencies without reflection.
+        /// Called by WiringService instead of RuntimeWiring.SetField().
+        /// </summary>
+        public void Init(GameBalanceData balance, DeckPresetData deck, TurnManager tm,
+            EconomyManager em, DeckManager dm, BoardManager bm, ComboSystem cs,
+            TerritoryManager ter, FBISystem fbi, RivalAI ai, ShopManager shop,
+            UIManager ui, AudioManager audio, VFXManager vfx, SaveManager save)
+        {
+            this.balanceData = balance;
+            this.startingDeck = deck;
+            this.turnManager = tm;
+            this.economyManager = em;
+            this.deckManager = dm;
+            this.boardManager = bm;
+            this.comboSystem = cs;
+            this.territoryManager = ter;
+            this.fbiSystem = fbi;
+            this.rivalAI = ai;
+            this.shopManager = shop;
+            this.uiManager = ui;
+            this.audioManager = audio;
+            this.vfxManager = vfx;
+            this.saveManager = save;
+        }
+
         private void Awake()
         {
             if (Instance != null && Instance != this)
