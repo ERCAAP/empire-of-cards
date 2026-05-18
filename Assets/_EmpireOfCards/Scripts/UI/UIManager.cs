@@ -202,5 +202,34 @@ namespace EmpireOfCards.UI
         {
             OnEndTurnClicked?.Invoke();
         }
+
+        // ------------------------------------------------------------------
+        // Pause / GameOver menu helpers
+        // ------------------------------------------------------------------
+
+        public void ShowPauseMenu()
+        {
+            // TODO: Activate pause menu panel when created
+        }
+
+        public void HidePauseMenu()
+        {
+            // TODO: Deactivate pause menu panel when created
+        }
+
+        public void ShowGameOverScreen()
+        {
+            if (gameOverScreen != null)
+            {
+                gameOverScreen.gameObject.SetActive(true);
+                gameOverScreen.Show(false);
+            }
+        }
+
+        public void HideGameOverScreen()
+        {
+            if (gameOverScreen != null)
+                gameOverScreen.gameObject.SetActive(false);
+        }
     }
 }

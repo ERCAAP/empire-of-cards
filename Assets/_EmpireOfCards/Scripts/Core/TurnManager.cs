@@ -348,48 +348,27 @@ namespace EmpireOfCards.Core
                     case ResolveStep.ComboCheck:
                         if (gm.ComboSystem != null && gm.BoardManager != null)
                         {
-                            // BoardManager exposes IReadOnlyList; ComboSystem wants List.
-                            // Create mutable copies for the combo check API.
-                            var businesses = new List<ActiveBusiness>(gm.BoardManager.PlayerBusinesses);
-                            var upgrades = new List<CardData>(gm.BoardManager.GlobalUpgrades);
-
-                            string activeEventId = gm.TurnManager.ActiveEvent != null
-                                ? gm.TurnManager.ActiveEvent.cardId
-                                : null;
+                            int activeBizCount = gm.BoardManager.GetActiveBusinessCount();
+                            int totalMarket = gm.BalanceData != null
+                                ? gm.BalanceData.GetMarketPool(gm.CurrentTurn)
+                                : Constants.BASE_MARKET_CUSTOMERS;
+                            float marketShare = totalMarket > 0
+                                ? ((float)gm.PlayerCustomers / totalMarket) * 100f
+                                : 0f;
 
                             gm.ComboSystem.CheckCombos(
-                                businesses,
-                                upgrades,
-                                activeEventId,
                                 gm.PlayerMoney,
-                                gm.PlayerTerritories);
+                                gm.PlayerTerritories,
+                                activeBizCount,
+                                marketShare);
                         }
                         break;
 
                     // 4d: Calculate and apply income, salaries, tax
                     case ResolveStep.IncomeCalculation:
-                        if (gm.EconomyManager != null && gm.BoardManager != null)
+                        if (gm.EconomyManager != null)
                         {
-                            var businesses = new List<ActiveBusiness>(gm.BoardManager.PlayerBusinesses);
-
-                            // Count accountants for tax reduction
-                            bool hasAccountant = false;
-                            int accountantCount = 0;
-                            foreach (var biz in businesses)
-                            {
-                                if (biz.isClosed) continue;
-                                foreach (var emp in biz.employees)
-                                {
-                                    if (emp != null && emp.taxReduction > 0f)
-                                    {
-                                        hasAccountant = true;
-                                        accountantCount++;
-                                    }
-                                }
-                            }
-
-                            gm.EconomyManager.ProcessEndOfTurn(
-                                businesses, hasAccountant, accountantCount);
+                            gm.EconomyManager.ProcessEndOfTurn();
                         }
                         break;
 
