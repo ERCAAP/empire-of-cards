@@ -1235,8 +1235,8 @@ namespace EmpireOfCards.Bootstrap
             cam.fieldOfView = 60f;
             cam.nearClipPlane = 0.1f;
             cam.farClipPlane = 100f;
-            cam.transform.position = new Vector3(0f, 8f, -6f);
-            cam.transform.rotation = Quaternion.Euler(50f, 0f, 0f);
+            cam.transform.position = new Vector3(0f, 10f, -5f);
+            cam.transform.rotation = Quaternion.Euler(55f, 0f, 0f);
             cam.backgroundColor = new Color(0.15f, 0.12f, 0.1f); // Warm dark wood color
             cam.clearFlags = CameraClearFlags.SolidColor;
 
@@ -1287,8 +1287,8 @@ namespace EmpireOfCards.Bootstrap
             // Create hand anchor as a child of the camera
             var handAnchor = new GameObject("HandAnchor");
             handAnchor.transform.SetParent(_mainCamera.transform);
-            handAnchor.transform.localPosition = new Vector3(0f, -2f, 4f);
-            handAnchor.transform.localRotation = Quaternion.identity;
+            handAnchor.transform.localPosition = new Vector3(0f, -1.5f, 5f);
+            handAnchor.transform.localRotation = Quaternion.Euler(-55f, 0f, 0f); // face up toward camera
 
             // Hand3D manages the fan layout of 3D cards
             var handGo = new GameObject("Hand3D");
