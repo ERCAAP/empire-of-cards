@@ -16,11 +16,21 @@ namespace EmpireOfCards.World
 
         private readonly List<Card3D> _cards = new List<Card3D>();
 
-        // Wired by RuntimeWiring from bootstrap (field names must match SetField calls)
         [SerializeField] private CardFactory cardFactory;
-        [SerializeField] private DeckManager deckManager; // reserved for future use
+        [SerializeField] private DeckManager deckManager;
 
         public IReadOnlyList<Card3D> Cards => _cards;
+
+        /// <summary>
+        /// Assigns all dependencies without reflection.
+        /// Called by WiringService instead of RuntimeWiring.SetField().
+        /// </summary>
+        public void Init(CardFactory factory, DeckManager deck, Transform anchor)
+        {
+            this.cardFactory = factory;
+            this.deckManager = deck;
+            this.handAnchor = anchor;
+        }
 
         public void SetFactory(CardFactory factory) { cardFactory = factory; }
         public void SetAnchor(Transform anchor) { handAnchor = anchor; }
@@ -31,6 +41,7 @@ namespace EmpireOfCards.World
             EventBus.OnCardDiscarded += OnCardDiscarded;
             EventBus.OnCardPlayed += OnCardPlayed;
             EventBus.OnCardBurned += OnCardBurned;
+            EventBus.OnTurnStarted += HandleTurnStarted;
         }
 
         private void OnDisable()
@@ -39,6 +50,12 @@ namespace EmpireOfCards.World
             EventBus.OnCardDiscarded -= OnCardDiscarded;
             EventBus.OnCardPlayed -= OnCardPlayed;
             EventBus.OnCardBurned -= OnCardBurned;
+            EventBus.OnTurnStarted -= HandleTurnStarted;
+        }
+
+        private void HandleTurnStarted(int turn)
+        {
+            RefreshLayout();
         }
 
         private void OnCardDrawn(CardData card)

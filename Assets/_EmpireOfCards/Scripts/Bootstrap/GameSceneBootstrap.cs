@@ -1,6 +1,5 @@
 using UnityEngine;
 using EmpireOfCards.Core;
-using EmpireOfCards.Helpers;
 using EmpireOfCards.World;
 using EmpireOfCards.UI.Cards;
 using EmpireOfCards.VFX;
@@ -115,8 +114,7 @@ namespace EmpireOfCards.Bootstrap
             handGo.transform.localRotation = Quaternion.identity;
             var hand3D = handGo.AddComponent<Hand3D>();
 
-            RuntimeWiring.SetField(hand3D, "cardFactory", cardFactory);
-            RuntimeWiring.SetField(hand3D, "handAnchor", handAnchor.transform);
+            hand3D.Init(cardFactory, null, handAnchor.transform);
 
             return hand3D;
         }

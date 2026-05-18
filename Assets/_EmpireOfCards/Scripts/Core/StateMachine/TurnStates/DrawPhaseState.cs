@@ -1,1 +1,1 @@
-// This file has been deprecated. See Core/TurnPhases/DrawPhase.cs instead.
+// Deprecated. This file is kept only to prevent Unity .meta orphan warnings.

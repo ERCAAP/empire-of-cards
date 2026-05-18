@@ -1,7 +1,6 @@
 using UnityEngine;
 using EmpireOfCards.Core;
 using EmpireOfCards.Gameplay;
-using EmpireOfCards.Helpers;
 using EmpireOfCards.UI.Cards;
 using EmpireOfCards.World;
 
@@ -10,6 +9,9 @@ namespace EmpireOfCards.Bootstrap
     /// <summary>
     /// Wires all manager cross-references, button callbacks, and 3D interaction events.
     /// Pure static helper -- no state of its own.
+    ///
+    /// All wiring uses typed Init() methods instead of the deprecated
+    /// RuntimeWiring.SetField() reflection helper.
     /// </summary>
     public static class WiringService
     {
@@ -49,85 +51,58 @@ namespace EmpireOfCards.Bootstrap
             Camera mainCamera)
         {
             // === GameManager: data + all manager references ===
-            RuntimeWiring.SetField(m.gameManager, "balanceData", data.balanceData);
-            RuntimeWiring.SetField(m.gameManager, "startingDeck", data.startingDeck);
-            RuntimeWiring.SetField(m.gameManager, "turnManager", m.turnManager);
-            RuntimeWiring.SetField(m.gameManager, "economyManager", m.economyManager);
-            RuntimeWiring.SetField(m.gameManager, "deckManager", m.deckManager);
-            RuntimeWiring.SetField(m.gameManager, "boardManager", m.boardManager);
-            RuntimeWiring.SetField(m.gameManager, "comboSystem", m.comboSystem);
-            RuntimeWiring.SetField(m.gameManager, "territoryManager", m.territoryManager);
-            RuntimeWiring.SetField(m.gameManager, "fbiSystem", m.fbiSystem);
-            RuntimeWiring.SetField(m.gameManager, "rivalAI", m.rivalAI);
-            RuntimeWiring.SetField(m.gameManager, "shopManager", m.shopManager);
-            RuntimeWiring.SetField(m.gameManager, "uiManager", m.uiManager);
-            RuntimeWiring.SetField(m.gameManager, "audioManager", m.audioManager);
-            RuntimeWiring.SetField(m.gameManager, "vfxManager", m.vfxManager);
-            RuntimeWiring.SetField(m.gameManager, "saveManager", m.saveManager);
+            m.gameManager.Init(
+                data.balanceData, data.startingDeck,
+                m.turnManager, m.economyManager, m.deckManager, m.boardManager,
+                m.comboSystem, m.territoryManager, m.fbiSystem, m.rivalAI,
+                m.shopManager, m.uiManager, m.audioManager, m.vfxManager, m.saveManager);
 
             // === EconomyManager ===
-            RuntimeWiring.SetField(m.economyManager, "balanceData", data.balanceData);
-            RuntimeWiring.SetField(m.economyManager, "boardManager", m.boardManager);
-            RuntimeWiring.SetField(m.economyManager, "comboSystem", m.comboSystem);
+            m.economyManager.Init(data.balanceData, m.boardManager, m.comboSystem);
 
             // === ComboSystem ===
-            RuntimeWiring.SetField(m.comboSystem, "allCombos", data.combos);
-            RuntimeWiring.SetField(m.comboSystem, "boardManager", m.boardManager);
+            m.comboSystem.Init(data.combos, m.boardManager);
 
             // === FBISystem ===
-            RuntimeWiring.SetField(m.fbiSystem, "balanceData", data.balanceData);
-            RuntimeWiring.SetField(m.fbiSystem, "boardManager", m.boardManager);
-            RuntimeWiring.SetField(m.fbiSystem, "comboSystem", m.comboSystem);
+            m.fbiSystem.Init(data.balanceData, m.boardManager, m.comboSystem);
 
             // === RivalAI ===
-            RuntimeWiring.SetField(m.rivalAI, "data", data.rivalData);
+            m.rivalAI.Init(data.rivalData);
 
             // === ShopManager ===
-            RuntimeWiring.SetField(m.shopManager, "shopPool", data.shopPool);
-            RuntimeWiring.SetField(m.shopManager, "deckManager", m.deckManager);
-            RuntimeWiring.SetField(m.shopManager, "economyManager", m.economyManager);
-            RuntimeWiring.SetField(m.shopManager, "comboSystem", m.comboSystem);
+            m.shopManager.Init(data.shopPool, m.deckManager, m.economyManager, m.comboSystem);
 
             // === AudioManager ===
-            RuntimeWiring.SetField(m.audioManager, "musicSourceA", m.musicSourceA);
-            RuntimeWiring.SetField(m.audioManager, "musicSourceB", m.musicSourceB);
-            RuntimeWiring.SetField(m.audioManager, "sfxSource", m.sfxSource);
+            m.audioManager.Init(m.musicSourceA, m.musicSourceB, m.sfxSource);
 
             // === UIManager: all panel references ===
-            RuntimeWiring.SetField(m.uiManager, "topBar", hud.topBarUI);
-            RuntimeWiring.SetField(m.uiManager, "actionBar", hud.actionBarUI);
-            RuntimeWiring.SetField(m.uiManager, "shopPanel", hud.shopPanel);
-            RuntimeWiring.SetField(m.uiManager, "comboPopup", hud.comboPopup);
-            RuntimeWiring.SetField(m.uiManager, "eventPopup", hud.eventPopup);
-            RuntimeWiring.SetField(m.uiManager, "rivalPopup", hud.rivalPopup);
-            RuntimeWiring.SetField(m.uiManager, "scoreScreen", hud.scoreScreen);
-            RuntimeWiring.SetField(m.uiManager, "gameOverScreen", hud.gameOverScreen);
+            m.uiManager.Init(
+                hud.topBarUI, hud.actionBarUI, hud.shopPanel,
+                hud.comboPopup, hud.eventPopup, hud.rivalPopup,
+                hud.scoreScreen, hud.gameOverScreen);
 
             // === TopBarUI: TMP_Text and Image sub-elements ===
-            RuntimeWiring.SetField(hud.topBarUI, "moneyText", hud.moneyText);
-            RuntimeWiring.SetField(hud.topBarUI, "turnText", hud.turnText);
-            RuntimeWiring.SetField(hud.topBarUI, "fbiBarFill", hud.fbiBarFillImg);
+            hud.topBarUI.Init(hud.moneyText, hud.turnText, hud.fbiBarFillImg, null);
 
             // === ActionBarUI: action dot Image[] ===
-            RuntimeWiring.SetField(hud.actionBarUI, "actionDots", hud.actionDotImages);
+            hud.actionBarUI.Init(hud.actionDotImages);
 
             // === ShopPanel: shopManager reference ===
-            RuntimeWiring.SetField(hud.shopPanel, "shopManager", m.shopManager);
+            hud.shopPanel.Init(m.shopManager);
 
             // === InputManager3D: camera reference ===
-            RuntimeWiring.SetField(m.inputManager3D, "mainCamera", mainCamera);
+            m.inputManager3D.SetCamera(mainCamera);
 
-            // === Hand3D: cardFactory + deckManager ===
-            RuntimeWiring.SetField(hand3D, "cardFactory", cardFactory);
-            RuntimeWiring.SetField(hand3D, "deckManager", m.deckManager);
+            // === Hand3D: cardFactory + deckManager + anchor (anchor already set by bootstrap) ===
+            hand3D.Init(cardFactory, m.deckManager, hand3D.transform.parent);
 
             // === Board3D: boardManager reference ===
-            RuntimeWiring.SetField(board3D, "boardManager", m.boardManager);
+            board3D.Init(m.boardManager);
 
             // === CardFactory: allCards reference for lookup ===
-            RuntimeWiring.SetField(cardFactory, "allCards", data.allCards);
+            cardFactory.Init(data.allCards);
 
-            Debug.Log("[WiringService] All manager, UI, and 3D references wired via RuntimeWiring.");
+            Debug.Log("[WiringService] All manager, UI, and 3D references wired via typed Init() calls.");
         }
 
         // ================================================================
@@ -214,20 +189,11 @@ namespace EmpireOfCards.Bootstrap
                 }
             };
 
-            // --- Enable/disable input based on turn phase ---
-            EventBus.OnPhaseStarted += phase =>
-            {
-                inputManager3D.InputEnabled = (phase == TurnPhase.PlayPhase);
-            };
+            // Phase-gating (InputManager3D) and turn-start layout refresh (Hand3D)
+            // are now handled via OnEnable/OnDisable in each MonoBehaviour,
+            // avoiding leaked lambda subscriptions on EventBus.
 
-            // --- Turn start: refresh hand layout ---
-            EventBus.OnTurnStarted += turn =>
-            {
-                if (hand3D != null)
-                    hand3D.RefreshLayout();
-            };
-
-            Debug.Log("[WiringService] 3D interaction wired: InputManager3D -> BoardManager, phase gating enabled.");
+            Debug.Log("[WiringService] 3D interaction wired: InputManager3D -> BoardManager.");
         }
     }
 }

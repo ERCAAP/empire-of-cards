@@ -33,6 +33,21 @@ namespace EmpireOfCards.Core
         public bool InputEnabled { get => _inputEnabled; set => _inputEnabled = value; }
         public Card3D DraggedCard => _draggedCard;
 
+        private void OnEnable()
+        {
+            EventBus.OnPhaseStarted += HandlePhaseStarted;
+        }
+
+        private void OnDisable()
+        {
+            EventBus.OnPhaseStarted -= HandlePhaseStarted;
+        }
+
+        private void HandlePhaseStarted(TurnPhase phase)
+        {
+            _inputEnabled = (phase == TurnPhase.PlayPhase);
+        }
+
         private void Start()
         {
             if (mainCamera == null) mainCamera = Camera.main;

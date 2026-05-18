@@ -30,6 +30,15 @@ namespace EmpireOfCards.UI
         [SerializeField] private Color affordableColor = Color.white;
         [SerializeField] private Color unaffordableColor = new Color(0.5f, 0.5f, 0.5f, 0.7f);
 
+        /// <summary>
+        /// Assigns the ShopManager reference without reflection.
+        /// Called by WiringService instead of RuntimeWiring.SetField().
+        /// </summary>
+        public void Init(ShopManager shop)
+        {
+            this.shopManager = shop;
+        }
+
         // Cached stock for affordability re-checks
         private List<CardData> currentStock;
 

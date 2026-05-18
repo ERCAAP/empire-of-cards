@@ -1,6 +1,7 @@
 using System;
 using UnityEngine;
 using EmpireOfCards.Core.StateMachine;
+using EmpireOfCards.Core.GameStates;
 using EmpireOfCards.Data;
 using EmpireOfCards.Gameplay;
 using EmpireOfCards.UI;
@@ -175,6 +176,10 @@ namespace EmpireOfCards.Core
             EventBus.FBIRiskUpdated(0f);
 
             SetGameState(GameState.Playing);
+
+            // Initialize the game state machine with InGameState (polls win/lose every frame)
+            _gameStateMachine.Initialize(new InGameState());
+
             StartNextTurn();
         }
 
@@ -220,6 +225,10 @@ namespace EmpireOfCards.Core
         {
             gameIsRunning = false;
             EventBus.GameEnded(won);
+
+            // Transition the game state machine to GameOverState (shows UI, plays music)
+            _gameStateMachine?.ChangeState(new GameOverState());
+
             SetGameState(won ? GameState.ScoreScreen : GameState.GameOver);
         }
 

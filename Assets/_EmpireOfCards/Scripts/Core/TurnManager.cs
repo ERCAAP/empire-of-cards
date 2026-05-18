@@ -12,12 +12,12 @@ namespace EmpireOfCards.Core
         // Phase state machine - polled every frame
         private StateMachine.StateMachine _phaseStateMachine;
 
-        [Header("=== Faz Durumu ===")]
+        [Header("=== Phase State ===")]
         [SerializeField] private TurnPhase currentPhase;
         [SerializeField] private int currentTurn;
         [SerializeField] private bool isTurnActive;
 
-        [Header("=== Faz Zamanlama ===")]
+        [Header("=== Phase Timing ===")]
         [SerializeField] private float eventPhaseMinDuration = 2f;
         [SerializeField] private float drawPhaseMinDuration = 1f;
         [SerializeField] private float resolveStepDelay = 0.5f;

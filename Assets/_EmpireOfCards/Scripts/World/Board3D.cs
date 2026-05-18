@@ -8,8 +8,16 @@ namespace EmpireOfCards.World
 {
     public class Board3D : MonoBehaviour
     {
-        // Wired by RuntimeWiring from bootstrap
         [SerializeField] private BoardManager boardManager;
+
+        /// <summary>
+        /// Assigns all dependencies without reflection.
+        /// Called by WiringService instead of RuntimeWiring.SetField().
+        /// </summary>
+        public void Init(BoardManager board)
+        {
+            this.boardManager = board;
+        }
 
         // Created at runtime
         private readonly List<SlotZone3D> _businessSlots = new List<SlotZone3D>();

@@ -10,6 +10,15 @@ namespace EmpireOfCards.World
     {
         [SerializeField] private CardData[] allCards;
 
+        /// <summary>
+        /// Assigns all dependencies without reflection.
+        /// Called by WiringService instead of RuntimeWiring.SetField().
+        /// </summary>
+        public void Init(CardData[] cards)
+        {
+            this.allCards = cards;
+        }
+
         // Card dimensions in world units
         private const float CARD_WIDTH = 0.6f;
         private const float CARD_HEIGHT = 0.85f;
