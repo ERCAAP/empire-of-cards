@@ -1,11 +1,13 @@
 {
+  "permissions": {
+    "allow": [
+      "Bash(git commit:*)",
+      "Bash(grep -E \"\\\\.\\(cs|meta\\)$\")",
+      "Bash(grep \"\\\\.cs$\")"
+    ]
+  },
   "enableAllProjectMcpServers": true,
   "enabledMcpjsonServers": [
     "blender"
-  ],
-  "permissions": {
-    "allow": [
-      "Bash(git commit:*)"
-    ]
-  }
+  ]
 }
