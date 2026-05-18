@@ -22,6 +22,10 @@ namespace EmpireOfCards.Bootstrap
         {
             var b = new ManagerBundle();
 
+            // --- LocalizationManager (first, so translations are available) ---
+            var locGo = new GameObject("[LocalizationManager]");
+            b.localizationManager = locGo.AddComponent<LocalizationManager>();
+
             // --- GameManager (Singleton root) ---
             var gmGo = new GameObject("[GameManager]");
             b.gameManager = gmGo.AddComponent<GameManager>();
@@ -111,6 +115,7 @@ namespace EmpireOfCards.Bootstrap
     /// </summary>
     public class ManagerBundle
     {
+        public LocalizationManager localizationManager;
         public GameManager gameManager;
         public TurnManager turnManager;
         public EconomyManager economyManager;
