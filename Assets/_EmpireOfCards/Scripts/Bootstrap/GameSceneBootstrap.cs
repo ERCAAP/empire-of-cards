@@ -11,13 +11,15 @@ using EmpireOfCards.VFX;
 using EmpireOfCards.Save;
 using EmpireOfCards.Helpers;
 using EmpireOfCards.Data;
+using EmpireOfCards.World;
 
 namespace EmpireOfCards.Bootstrap
 {
     /// <summary>
-    /// SELF-CONTAINED bootstrap: drop on an empty GameObject, press Play, game runs.
+    /// SELF-CONTAINED bootstrap for 3D card game scene.
+    /// Drop on an empty GameObject, press Play, game runs.
     /// Creates ALL 40 CardData, GameBalanceData, DeckPresetData, RivalData,
-    /// 10 ComboData, shop pool, managers, board, UI, VFX -- everything in memory.
+    /// 10 ComboData, shop pool, managers, 3D board, 3D hand, HUD -- everything in memory.
     /// No Inspector assignments required.
     /// </summary>
     public class GameSceneBootstrap : MonoBehaviour
@@ -35,7 +37,7 @@ namespace EmpireOfCards.Bootstrap
         // Card lookup by ID for deck/combo wiring
         private Dictionary<string, CardData> _cardLookup;
 
-        // References created at runtime
+        // Manager references created at runtime
         private GameManager _gameManager;
         private TurnManager _turnManager;
         private EconomyManager _economyManager;
@@ -50,20 +52,23 @@ namespace EmpireOfCards.Bootstrap
         private AudioManager _audioManager;
         private VFXManager _vfxManager;
         private SaveManager _saveManager;
+        private LevelManager _levelManager;
 
-        // UI sub-element references captured during CreateUI
+        // 3D World references
+        private Board3D _board3D;
+        private CardFactory _cardFactory;
+        private Hand3D _hand3D;
+        private InputManager3D _inputManager3D;
+
+        // UI sub-element references captured during CreateHUD
         private TopBarUI _topBarUI;
         private ActionBarUI _actionBarUI;
-        private HandUI _handUI;
         private ShopPanel _shopPanel;
         private ComboPopup _comboPopup;
         private EventPopup _eventPopup;
         private RivalPopup _rivalPopup;
         private ScoreScreen _scoreScreen;
         private GameOverScreen _gameOverScreen;
-
-        // Card prefab template (created at runtime, inactive)
-        private GameObject _cardPrefabInstance;
 
         // TopBar sub-elements
         private TMP_Text _moneyText;
@@ -73,7 +78,7 @@ namespace EmpireOfCards.Bootstrap
         // ActionBar sub-elements
         private Image[] _actionDotImages;
 
-        // Button references captured during CreateUI
+        // Button references captured during CreateHUD
         private Button _endTurnButton;
         private Button _shopButton;
         private Button _shopCloseButton;
@@ -83,6 +88,9 @@ namespace EmpireOfCards.Bootstrap
         private AudioSource _musicSourceB;
         private AudioSource _sfxSource;
 
+        // Camera reference
+        private Camera _mainCamera;
+
         private void Awake()
         {
             // ====== CREATE ALL DATA IN MEMORY ======
@@ -91,20 +99,23 @@ namespace EmpireOfCards.Bootstrap
             // ====== MANAGERS ======
             CreateManagers();
 
-            // ====== CAMERA ======
-            SetupCamera();
+            // ====== 3D CAMERA ======
+            Setup3DCamera();
 
-            // ====== BOARD ======
-            CreateBoard();
+            // ====== 3D BOARD ======
+            Create3DBoard();
 
-            // ====== UI CANVAS ======
-            CreateUI();
+            // ====== CARD FACTORY ======
+            CreateCardFactory();
+
+            // ====== 3D HAND ======
+            Create3DHand();
+
+            // ====== HUD CANVAS (UI overlay only) ======
+            CreateHUD();
 
             // ====== VFX ======
             CreateVFX();
-
-            // ====== CARD PREFAB (runtime template for HandUI) ======
-            CreateCardPrefab();
 
             // ====== WIRE REFERENCES ======
             WireManagerReferences();
@@ -112,7 +123,10 @@ namespace EmpireOfCards.Bootstrap
             // ====== WIRE BUTTON CALLBACKS ======
             WireButtonCallbacks();
 
-            Debug.Log("[GameSceneBootstrap] Scene hierarchy created successfully (self-contained).");
+            // ====== WIRE 3D INTERACTION ======
+            Wire3DInteraction();
+
+            Debug.Log("[GameSceneBootstrap] 3D scene hierarchy created successfully (self-contained).");
         }
 
         private void Start()
@@ -1115,7 +1129,7 @@ namespace EmpireOfCards.Bootstrap
         }
 
         // ================================================================
-        // MANAGERS (GDD 12.2 - Managers section)
+        // MANAGERS
         // ================================================================
 
         private void CreateManagers()
@@ -1123,7 +1137,6 @@ namespace EmpireOfCards.Bootstrap
             // --- GameManager (Singleton, DontDestroyOnLoad) ---
             var gmGo = new GameObject("[GameManager]");
             _gameManager = gmGo.AddComponent<GameManager>();
-            // GameManager handles its own DontDestroyOnLoad in Awake
 
             // --- TurnManager ---
             var tmGo = new GameObject("TurnManager");
@@ -1173,7 +1186,6 @@ namespace EmpireOfCards.Bootstrap
             // --- AudioManager ---
             var audioGo = new GameObject("[AudioManager]");
             _audioManager = audioGo.AddComponent<AudioManager>();
-            // Add audio sources (need two music sources for crossfade + one SFX)
             _musicSourceA = audioGo.AddComponent<AudioSource>();
             _musicSourceA.loop = true;
             _musicSourceA.playOnAwake = false;
@@ -1190,137 +1202,116 @@ namespace EmpireOfCards.Bootstrap
             // --- SaveManager ---
             var saveGo = new GameObject("[SaveManager]");
             _saveManager = saveGo.AddComponent<SaveManager>();
+
+            // --- InputManager3D ---
+            var inputGo = new GameObject("InputManager3D");
+            inputGo.transform.SetParent(gmGo.transform);
+            _inputManager3D = inputGo.AddComponent<InputManager3D>();
+
+            // --- LevelManager ---
+            var lvlGo = new GameObject("[LevelManager]");
+            _levelManager = lvlGo.AddComponent<LevelManager>();
         }
 
         // ================================================================
-        // CAMERA (GDD 12.2 - Kamera section)
+        // 3D CAMERA -- Perspective, angled view of the table
         // ================================================================
 
-        private void SetupCamera()
+        private void Setup3DCamera()
         {
             var cam = Camera.main;
-            if (cam != null)
+            if (cam == null)
             {
-                // Set to orthographic for 2D card game
-                cam.orthographic = true;
-                cam.orthographicSize = 6f;
-                cam.transform.position = new Vector3(0, 0, -10);
-                cam.backgroundColor = new Color(0.15f, 0.12f, 0.1f); // Warm dark wood color
-
-                // Add screen shake component
-                if (cam.GetComponent<ScreenShake>() == null)
-                    cam.gameObject.AddComponent<ScreenShake>();
-
-                if (cam.GetComponent<CameraController>() == null)
-                    cam.gameObject.AddComponent<CameraController>();
+                var camGo = new GameObject("Main Camera");
+                camGo.tag = "MainCamera";
+                cam = camGo.AddComponent<Camera>();
+                camGo.AddComponent<AudioListener>();
             }
+
+            _mainCamera = cam;
+
+            // Perspective camera looking down at the table from an angle
+            cam.orthographic = false;
+            cam.fieldOfView = 60f;
+            cam.nearClipPlane = 0.1f;
+            cam.farClipPlane = 100f;
+            cam.transform.position = new Vector3(0f, 8f, -6f);
+            cam.transform.rotation = Quaternion.Euler(50f, 0f, 0f);
+            cam.backgroundColor = new Color(0.15f, 0.12f, 0.1f); // Warm dark wood color
+            cam.clearFlags = CameraClearFlags.SolidColor;
+
+            // Add screen shake component
+            if (cam.GetComponent<ScreenShake>() == null)
+                cam.gameObject.AddComponent<ScreenShake>();
+
+            if (cam.GetComponent<CameraController>() == null)
+                cam.gameObject.AddComponent<CameraController>();
+
+            Debug.Log("[GameSceneBootstrap] 3D Perspective camera configured: pos(0,8,-6), rot(50,0,0), FOV 60.");
         }
 
         // ================================================================
-        // BOARD (GDD 12.2 - Masa section)
+        // 3D BOARD -- Board3D builds the physical table with SlotZone3D colliders
         // ================================================================
 
-        private void CreateBoard()
+        private void Create3DBoard()
         {
-            var boardRoot = new GameObject("--- BOARD ---");
+            var boardGo = new GameObject("--- BOARD 3D ---");
+            _board3D = boardGo.AddComponent<Board3D>();
 
-            // --- Background ---
-            var bg = new GameObject("Background");
-            bg.transform.SetParent(boardRoot.transform);
-            var bgRenderer = bg.AddComponent<SpriteRenderer>();
-            bgRenderer.color = new Color(0.35f, 0.25f, 0.15f); // Wood color placeholder
-            bgRenderer.sortingOrder = -10;
+            // Build the 3D board: business slots, employee sub-slots,
+            // upgrade area, action zone, sell zone, territory map, rival area
+            _board3D.BuildBoard();
 
-            // --- Territory Map (10 bolge) ---
-            var territoryMap = new GameObject("TerritoryMap");
-            territoryMap.transform.SetParent(boardRoot.transform);
-            territoryMap.transform.localPosition = new Vector3(0, 2.5f, 0);
-
-            for (int i = 0; i < 10; i++)
-            {
-                var slot = new GameObject($"Territory_{i + 1:D2}");
-                slot.transform.SetParent(territoryMap.transform);
-                float x = (i - 4.5f) * 0.9f;
-                slot.transform.localPosition = new Vector3(x, 0, 0);
-
-                var sr = slot.AddComponent<SpriteRenderer>();
-                sr.color = Color.gray; // Empty territory
-                sr.sortingOrder = 1;
-            }
-
-            // --- Event Area ---
-            var eventArea = new GameObject("EventArea");
-            eventArea.transform.SetParent(boardRoot.transform);
-            eventArea.transform.localPosition = new Vector3(0, 1.5f, 0);
-
-            // --- Player Area (3-5 Business Slots) ---
-            var playerArea = new GameObject("PlayerArea");
-            playerArea.transform.SetParent(boardRoot.transform);
-            playerArea.transform.localPosition = new Vector3(0, -0.5f, 0);
-
-            for (int i = 0; i < 5; i++)
-            {
-                var bizSlot = new GameObject($"BusinessSlot_{i + 1:D2}");
-                bizSlot.transform.SetParent(playerArea.transform);
-                float x = (i - 2f) * 2.5f;
-                bizSlot.transform.localPosition = new Vector3(x, 0, 0);
-
-                var bizDZ = bizSlot.AddComponent<DropZone>();
-                RuntimeWiring.SetField(bizDZ, "zoneType", DropZoneType.BusinessSlot);
-                RuntimeWiring.SetField(bizDZ, "slotIndex", i);
-
-                // Employee sub-slots (max 3 per business)
-                for (int e = 0; e < 3; e++)
-                {
-                    var empSlot = new GameObject($"EmpSlot_{e + 1:D2}");
-                    empSlot.transform.SetParent(bizSlot.transform);
-                    empSlot.transform.localPosition = new Vector3(0, -(e + 1) * 0.6f, 0);
-
-                    var empDZ = empSlot.AddComponent<DropZone>();
-                    RuntimeWiring.SetField(empDZ, "zoneType", DropZoneType.EmployeeSlot);
-                    RuntimeWiring.SetField(empDZ, "slotIndex", i); // employee belongs to business at index i
-                }
-
-                // Hide slots 4 and 5 initially
-                if (i >= 3)
-                    bizSlot.SetActive(false);
-            }
-
-            // --- Rival Area ---
-            var rivalArea = new GameObject("RivalArea");
-            rivalArea.transform.SetParent(boardRoot.transform);
-            rivalArea.transform.localPosition = new Vector3(0, 3.5f, 0);
-
-            for (int i = 0; i < 3; i++)
-            {
-                var rivalSlot = new GameObject($"RivalSlot_{i + 1:D2}");
-                rivalSlot.transform.SetParent(rivalArea.transform);
-                float x = (i - 1f) * 2.5f;
-                rivalSlot.transform.localPosition = new Vector3(x, 0, 0);
-            }
-
-            // --- Upgrade Area ---
-            var upgradeArea = new GameObject("UpgradeArea");
-            upgradeArea.transform.SetParent(boardRoot.transform);
-            upgradeArea.transform.localPosition = new Vector3(-5f, 0, 0);
-
-            // --- Discard / Sell Zone ---
-            var discardPile = new GameObject("DiscardPile");
-            discardPile.transform.SetParent(boardRoot.transform);
-            discardPile.transform.localPosition = new Vector3(5.5f, -3f, 0);
-            var discardDZ = discardPile.AddComponent<DropZone>();
-            RuntimeWiring.SetField(discardDZ, "zoneType", DropZoneType.SellZone);
-            RuntimeWiring.SetField(discardDZ, "slotIndex", 0);
+            Debug.Log("[GameSceneBootstrap] 3D Board created via Board3D.BuildBoard().");
         }
 
         // ================================================================
-        // UI (GDD 12.2 - UI Canvas section)
+        // CARD FACTORY -- spawns 3D Card3D objects from CardData
         // ================================================================
 
-        private void CreateUI()
+        private void CreateCardFactory()
+        {
+            var factoryGo = new GameObject("CardFactory");
+            _cardFactory = factoryGo.AddComponent<CardFactory>();
+
+            Debug.Log("[GameSceneBootstrap] CardFactory created for 3D card spawning.");
+        }
+
+        // ================================================================
+        // 3D HAND -- Hand3D anchored in front of the camera
+        // ================================================================
+
+        private void Create3DHand()
+        {
+            // Create hand anchor as a child of the camera
+            var handAnchor = new GameObject("HandAnchor");
+            handAnchor.transform.SetParent(_mainCamera.transform);
+            handAnchor.transform.localPosition = new Vector3(0f, -2f, 4f);
+            handAnchor.transform.localRotation = Quaternion.identity;
+
+            // Hand3D manages the fan layout of 3D cards
+            var handGo = new GameObject("Hand3D");
+            handGo.transform.SetParent(handAnchor.transform);
+            handGo.transform.localPosition = Vector3.zero;
+            handGo.transform.localRotation = Quaternion.identity;
+            _hand3D = handGo.AddComponent<Hand3D>();
+
+            // Wire the card factory so Hand3D can spawn cards
+            RuntimeWiring.SetField(_hand3D, "cardFactory", _cardFactory);
+
+            Debug.Log("[GameSceneBootstrap] Hand3D created, anchored to camera at local(0, -2, 4).");
+        }
+
+        // ================================================================
+        // HUD -- Simplified UI Canvas for overlay elements only
+        // (No HandUI, no 2D board, no 2D drop zones)
+        // ================================================================
+
+        private void CreateHUD()
         {
             // --- Main Canvas (Screen Space Overlay) ---
-            var canvasGo = new GameObject("GameCanvas");
+            var canvasGo = new GameObject("HUDCanvas");
             var canvas = canvasGo.AddComponent<Canvas>();
             canvas.renderMode = RenderMode.ScreenSpaceOverlay;
             canvas.sortingOrder = 100;
@@ -1335,7 +1326,9 @@ namespace EmpireOfCards.Bootstrap
             // --- UIManager on canvas ---
             _uiManager = canvasGo.AddComponent<UIManager>();
 
-            // --- TopBar ---
+            // ============================================================
+            // TOP BAR -- money, turn counter, FBI risk
+            // ============================================================
             var topBar = CreateUIPanel("TopBar", canvasGo.transform);
             SetAnchors(topBar, new Vector2(0, 1), new Vector2(1, 1), new Vector2(0.5f, 1));
             topBar.sizeDelta = new Vector2(0, 80);
@@ -1363,7 +1356,9 @@ namespace EmpireOfCards.Bootstrap
             _fbiBarFillImg = fbiBarFill.GetComponent<Image>();
             _fbiBarFillImg.color = Color.green;
 
-            // --- ActionBar ---
+            // ============================================================
+            // ACTION BAR -- action dots
+            // ============================================================
             var actionBar = CreateUIPanel("ActionBar", canvasGo.transform);
             SetAnchors(actionBar, new Vector2(0.5f, 0), new Vector2(0.5f, 0), new Vector2(0.5f, 0));
             actionBar.anchoredPosition = new Vector2(0, 200);
@@ -1379,17 +1374,13 @@ namespace EmpireOfCards.Bootstrap
                 dot.localPosition = new Vector3((i - 2) * 35f, 0, 0);
                 _actionDotImages[i] = dot.GetComponent<Image>();
                 _actionDotImages[i].color = i < 3 ? Color.green : Color.gray;
-                if (i >= 3) dot.gameObject.SetActive(false); // Hidden until upgrade
+                if (i >= 3) dot.gameObject.SetActive(false);
             }
 
-            // --- Hand Area (bottom of screen) ---
-            var handArea = CreateUIPanel("HandArea", canvasGo.transform);
-            SetAnchors(handArea, new Vector2(0, 0), new Vector2(1, 0), new Vector2(0.5f, 0));
-            handArea.anchoredPosition = new Vector2(0, 80);
-            handArea.sizeDelta = new Vector2(0, 160);
-            _handUI = handArea.gameObject.AddComponent<HandUI>();
+            // ============================================================
+            // BUTTONS -- End Turn, Shop
+            // ============================================================
 
-            // --- Buttons ---
             // End Turn Button
             var endTurnBtn = CreateButton("EndTurnButton", canvasGo.transform, "TUR BITIR");
             SetAnchors(endTurnBtn, new Vector2(1, 0), new Vector2(1, 0), new Vector2(1, 0));
@@ -1410,7 +1401,9 @@ namespace EmpireOfCards.Bootstrap
             deckBtn.anchoredPosition = new Vector2(100, 140);
             deckBtn.sizeDelta = new Vector2(140, 40);
 
-            // --- Shop Panel (hidden by default) ---
+            // ============================================================
+            // SHOP PANEL (hidden by default)
+            // ============================================================
             var shopPanel = CreateUIPanel("ShopPanel", canvasGo.transform);
             shopPanel.anchorMin = new Vector2(0.2f, 0.2f);
             shopPanel.anchorMax = new Vector2(0.8f, 0.8f);
@@ -1438,24 +1431,34 @@ namespace EmpireOfCards.Bootstrap
             shopCloseBtn.sizeDelta = new Vector2(120, 40);
             _shopCloseButton = shopCloseBtn.GetComponent<Button>();
 
-            // --- Popup overlays (hidden by default) ---
+            // ============================================================
+            // POPUP OVERLAYS (hidden by default)
+            // ============================================================
+
+            // Combo popup
             var comboPopup = CreateUIPanel("ComboPopup", canvasGo.transform);
             comboPopup.sizeDelta = new Vector2(600, 100);
             _comboPopup = comboPopup.gameObject.AddComponent<ComboPopup>();
             comboPopup.gameObject.SetActive(false);
 
+            // Event popup
             var eventPopup = CreateUIPanel("EventPopup", canvasGo.transform);
             eventPopup.sizeDelta = new Vector2(400, 300);
             _eventPopup = eventPopup.gameObject.AddComponent<EventPopup>();
             eventPopup.gameObject.SetActive(false);
 
+            // Rival popup
             var rivalPopup = CreateUIPanel("RivalPopup", canvasGo.transform);
             SetAnchors(rivalPopup, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f));
             rivalPopup.sizeDelta = new Vector2(500, 200);
             _rivalPopup = rivalPopup.gameObject.AddComponent<RivalPopup>();
             rivalPopup.gameObject.SetActive(false);
 
-            // --- Score Overlay (hidden by default) ---
+            // ============================================================
+            // SCORE & GAMEOVER OVERLAYS (hidden by default)
+            // ============================================================
+
+            // Score overlay
             var scoreOverlay = CreateUIPanel("ScoreOverlay", canvasGo.transform);
             scoreOverlay.anchorMin = Vector2.zero;
             scoreOverlay.anchorMax = Vector2.one;
@@ -1466,7 +1469,7 @@ namespace EmpireOfCards.Bootstrap
             _scoreScreen = scoreOverlay.gameObject.AddComponent<ScoreScreen>();
             scoreOverlay.gameObject.SetActive(false);
 
-            // --- GameOver Overlay (hidden by default) ---
+            // GameOver overlay
             var gameOverOverlay = CreateUIPanel("GameOverOverlay", canvasGo.transform);
             gameOverOverlay.anchorMin = Vector2.zero;
             gameOverOverlay.anchorMax = Vector2.one;
@@ -1477,7 +1480,9 @@ namespace EmpireOfCards.Bootstrap
             _gameOverScreen = gameOverOverlay.gameObject.AddComponent<GameOverScreen>();
             gameOverOverlay.gameObject.SetActive(false);
 
-            // --- EventSystem (required for UI interaction) ---
+            // ============================================================
+            // EVENT SYSTEM (required for UI interaction)
+            // ============================================================
             if (UnityEngine.EventSystems.EventSystem.current == null)
             {
                 var eventSystemGo = new GameObject("EventSystem");
@@ -1487,7 +1492,7 @@ namespace EmpireOfCards.Bootstrap
         }
 
         // ================================================================
-        // VFX (GDD 12.2 - Efektler section)
+        // VFX
         // ================================================================
 
         private void CreateVFX()
@@ -1495,145 +1500,6 @@ namespace EmpireOfCards.Bootstrap
             var vfxRoot = new GameObject("--- VFX ---");
             var poolParent = new GameObject("VFXPool");
             poolParent.transform.SetParent(vfxRoot.transform);
-        }
-
-        // ================================================================
-        // CARD PREFAB (runtime template for HandUI instantiation)
-        // ================================================================
-
-        private void CreateCardPrefab()
-        {
-            // --- Root: CardPrefab (RectTransform 150x220 + CanvasGroup) ---
-            var root = new GameObject("CardPrefab");
-            var rootRT = root.AddComponent<RectTransform>();
-            rootRT.sizeDelta = new Vector2(150, 220);
-            var rootCG = root.AddComponent<CanvasGroup>();
-
-            // --- Background child: fills parent ---
-            var bgGo = new GameObject("Background");
-            bgGo.transform.SetParent(root.transform, false);
-            var bgRT = bgGo.AddComponent<RectTransform>();
-            bgRT.anchorMin = Vector2.zero;
-            bgRT.anchorMax = Vector2.one;
-            bgRT.sizeDelta = Vector2.zero;
-            bgRT.offsetMin = Vector2.zero;
-            bgRT.offsetMax = Vector2.zero;
-            var bgImg = bgGo.AddComponent<Image>();
-            bgImg.color = new Color(0.25f, 0.25f, 0.3f);
-
-            // --- Icon child: 80x80, centered upper ---
-            var iconGo = new GameObject("Icon");
-            iconGo.transform.SetParent(root.transform, false);
-            var iconRT = iconGo.AddComponent<RectTransform>();
-            iconRT.anchorMin = new Vector2(0.5f, 0.5f);
-            iconRT.anchorMax = new Vector2(0.5f, 0.5f);
-            iconRT.pivot = new Vector2(0.5f, 0.5f);
-            iconRT.sizeDelta = new Vector2(80, 80);
-            iconRT.anchoredPosition = new Vector2(0, 30); // upper-center
-            var iconImg = iconGo.AddComponent<Image>();
-            iconImg.color = Color.white;
-
-            // --- HighlightBorder child: fills parent, outline-style, initially transparent ---
-            var hlGo = new GameObject("HighlightBorder");
-            hlGo.transform.SetParent(root.transform, false);
-            var hlRT = hlGo.AddComponent<RectTransform>();
-            hlRT.anchorMin = Vector2.zero;
-            hlRT.anchorMax = Vector2.one;
-            hlRT.sizeDelta = Vector2.zero;
-            hlRT.offsetMin = Vector2.zero;
-            hlRT.offsetMax = Vector2.zero;
-            var hlImg = hlGo.AddComponent<Image>();
-            hlImg.color = new Color(0, 0, 0, 0); // transparent initially
-            hlImg.raycastTarget = false;
-
-            // --- NameText child: top area, 16pt ---
-            var nameGo = new GameObject("NameText");
-            nameGo.transform.SetParent(root.transform, false);
-            var nameRT = nameGo.AddComponent<RectTransform>();
-            nameRT.anchorMin = new Vector2(0, 1);
-            nameRT.anchorMax = new Vector2(0.75f, 1);
-            nameRT.pivot = new Vector2(0, 1);
-            nameRT.sizeDelta = new Vector2(0, 30);
-            nameRT.anchoredPosition = new Vector2(5, -5);
-            var nameTmp = nameGo.AddComponent<TextMeshProUGUI>();
-            nameTmp.text = "";
-            nameTmp.fontSize = 16;
-            nameTmp.alignment = TextAlignmentOptions.TopLeft;
-            nameTmp.color = Color.white;
-            nameTmp.raycastTarget = false;
-
-            // --- CostText child: top-right corner, 20pt, bold ---
-            var costGo = new GameObject("CostText");
-            costGo.transform.SetParent(root.transform, false);
-            var costRT = costGo.AddComponent<RectTransform>();
-            costRT.anchorMin = new Vector2(1, 1);
-            costRT.anchorMax = new Vector2(1, 1);
-            costRT.pivot = new Vector2(1, 1);
-            costRT.sizeDelta = new Vector2(50, 30);
-            costRT.anchoredPosition = new Vector2(-5, -5);
-            var costTmp = costGo.AddComponent<TextMeshProUGUI>();
-            costTmp.text = "";
-            costTmp.fontSize = 20;
-            costTmp.fontStyle = FontStyles.Bold;
-            costTmp.alignment = TextAlignmentOptions.TopRight;
-            costTmp.color = Color.yellow;
-            costTmp.raycastTarget = false;
-
-            // --- DescriptionText child: middle area, 12pt ---
-            var descGo = new GameObject("DescriptionText");
-            descGo.transform.SetParent(root.transform, false);
-            var descRT = descGo.AddComponent<RectTransform>();
-            descRT.anchorMin = new Vector2(0, 0.25f);
-            descRT.anchorMax = new Vector2(1, 0.55f);
-            descRT.sizeDelta = Vector2.zero;
-            descRT.offsetMin = new Vector2(8, 0);
-            descRT.offsetMax = new Vector2(-8, 0);
-            var descTmp = descGo.AddComponent<TextMeshProUGUI>();
-            descTmp.text = "";
-            descTmp.fontSize = 12;
-            descTmp.alignment = TextAlignmentOptions.TopLeft;
-            descTmp.color = Color.white;
-            descTmp.enableWordWrapping = true;
-            descTmp.raycastTarget = false;
-
-            // --- StatsText child: bottom area, 11pt ---
-            var statsGo = new GameObject("StatsText");
-            statsGo.transform.SetParent(root.transform, false);
-            var statsRT = statsGo.AddComponent<RectTransform>();
-            statsRT.anchorMin = new Vector2(0, 0);
-            statsRT.anchorMax = new Vector2(1, 0.25f);
-            statsRT.sizeDelta = Vector2.zero;
-            statsRT.offsetMin = new Vector2(8, 5);
-            statsRT.offsetMax = new Vector2(-8, 0);
-            var statsTmp = statsGo.AddComponent<TextMeshProUGUI>();
-            statsTmp.text = "";
-            statsTmp.fontSize = 11;
-            statsTmp.alignment = TextAlignmentOptions.BottomLeft;
-            statsTmp.color = new Color(0.8f, 0.8f, 0.8f);
-            statsTmp.enableWordWrapping = true;
-            statsTmp.raycastTarget = false;
-
-            // --- Add CardUI + CardDragHandler components ---
-            var cardUI = root.AddComponent<CardUI>();
-            root.AddComponent<CardDragHandler>();
-
-            // --- Wire all child references into CardUI via RuntimeWiring ---
-            RuntimeWiring.SetField(cardUI, "cardBackground", bgImg);
-            RuntimeWiring.SetField(cardUI, "cardIcon", iconImg);
-            RuntimeWiring.SetField(cardUI, "highlightBorder", hlImg);
-            RuntimeWiring.SetField(cardUI, "nameText", (TMP_Text)nameTmp);
-            RuntimeWiring.SetField(cardUI, "costText", (TMP_Text)costTmp);
-            RuntimeWiring.SetField(cardUI, "descriptionText", (TMP_Text)descTmp);
-            RuntimeWiring.SetField(cardUI, "statsText", (TMP_Text)statsTmp);
-            RuntimeWiring.SetField(cardUI, "canvasGroup", rootCG);
-            // tooltipPanel, tooltipText, synergyGlow left null initially
-
-            // --- Deactivate: this is a template/prefab ---
-            root.SetActive(false);
-
-            _cardPrefabInstance = root;
-
-            Debug.Log("[GameSceneBootstrap] Card prefab template created at runtime.");
         }
 
         // ================================================================
@@ -1687,16 +1553,16 @@ namespace EmpireOfCards.Bootstrap
             RuntimeWiring.SetField(_audioManager, "musicSourceB", _musicSourceB);
             RuntimeWiring.SetField(_audioManager, "sfxSource", _sfxSource);
 
-            // === UIManager: all panel references ===
+            // === UIManager: all panel references (no handUI -- replaced by Hand3D) ===
             RuntimeWiring.SetField(_uiManager, "topBar", _topBarUI);
             RuntimeWiring.SetField(_uiManager, "actionBar", _actionBarUI);
             RuntimeWiring.SetField(_uiManager, "shopPanel", _shopPanel);
-            RuntimeWiring.SetField(_uiManager, "handUI", _handUI);
             RuntimeWiring.SetField(_uiManager, "comboPopup", _comboPopup);
             RuntimeWiring.SetField(_uiManager, "eventPopup", _eventPopup);
             RuntimeWiring.SetField(_uiManager, "rivalPopup", _rivalPopup);
             RuntimeWiring.SetField(_uiManager, "scoreScreen", _scoreScreen);
             RuntimeWiring.SetField(_uiManager, "gameOverScreen", _gameOverScreen);
+            // handUI is intentionally NOT set -- Hand3D replaces it in 3D mode
 
             // === TopBarUI: TMP_Text and Image sub-elements ===
             RuntimeWiring.SetField(_topBarUI, "moneyText", _moneyText);
@@ -1706,25 +1572,27 @@ namespace EmpireOfCards.Bootstrap
             // === ActionBarUI: action dot Image[] ===
             RuntimeWiring.SetField(_actionBarUI, "actionDots", _actionDotImages);
 
-            // === HandUI: handRoot + cardPrefab ===
-            RuntimeWiring.SetField(_handUI, "handRoot", _handUI.transform);
-            RuntimeWiring.SetField(_handUI, "cardPrefab", _cardPrefabInstance.GetComponent<CardUI>());
-
             // === ShopPanel: shopManager reference ===
             RuntimeWiring.SetField(_shopPanel, "shopManager", _shopManager);
 
-            // === DropZones: wire boardManager to all instances ===
-            var allDropZones = Object.FindObjectsByType<DropZone>(FindObjectsSortMode.None);
-            foreach (var dz in allDropZones)
-            {
-                RuntimeWiring.SetField(dz, "boardManager", _boardManager);
-            }
+            // === InputManager3D: camera reference ===
+            RuntimeWiring.SetField(_inputManager3D, "mainCamera", _mainCamera);
 
-            Debug.Log("[GameSceneBootstrap] All manager and UI references wired via RuntimeWiring.");
+            // === Hand3D: cardFactory + deckManager ===
+            RuntimeWiring.SetField(_hand3D, "cardFactory", _cardFactory);
+            RuntimeWiring.SetField(_hand3D, "deckManager", _deckManager);
+
+            // === Board3D: boardManager reference ===
+            RuntimeWiring.SetField(_board3D, "boardManager", _boardManager);
+
+            // === CardFactory: allCards reference for lookup ===
+            RuntimeWiring.SetField(_cardFactory, "allCards", _allCards);
+
+            Debug.Log("[GameSceneBootstrap] All manager, UI, and 3D references wired via RuntimeWiring.");
         }
 
         // ================================================================
-        // BUTTON CALLBACKS (Wire onClick after managers and UI exist)
+        // BUTTON CALLBACKS
         // ================================================================
 
         private void WireButtonCallbacks()
@@ -1756,7 +1624,91 @@ namespace EmpireOfCards.Bootstrap
         }
 
         // ================================================================
-        // UI Helper Methods
+        // 3D INTERACTION WIRING
+        // Connects InputManager3D card drop events to BoardManager placement,
+        // and enables/disables input based on turn phase.
+        // ================================================================
+
+        private void Wire3DInteraction()
+        {
+            // --- Card drop -> BoardManager placement ---
+            _inputManager3D.OnCardDropped += (card, slot) =>
+            {
+                var gm = GameManager.Instance;
+                if (gm == null) return;
+
+                bool success = false;
+
+                switch (slot.ZoneType)
+                {
+                    case DropZoneType.BusinessSlot:
+                        success = gm.BoardManager.PlaceBusiness(card.CardData, slot.SlotIndex);
+                        break;
+
+                    case DropZoneType.EmployeeSlot:
+                        success = gm.BoardManager.PlaceEmployee(card.CardData, slot.ParentBusinessIndex);
+                        break;
+
+                    case DropZoneType.UpgradeSlot:
+                        success = gm.BoardManager.PlaceUpgrade(card.CardData, slot.SlotIndex);
+                        break;
+
+                    case DropZoneType.ActionZone:
+                        EventBus.ActionExecuted(card.CardData);
+                        success = true;
+                        break;
+
+                    case DropZoneType.SellZone:
+                        int price = gm.EconomyManager.GetSellPrice(card.CardData);
+                        gm.GainMoney(price);
+                        success = true;
+                        break;
+                }
+
+                if (success)
+                {
+                    gm.UseAction();
+                    EventBus.CardPlayed(card.CardData);
+                    slot.PlaceCard(card);
+                }
+                else
+                {
+                    card.ReturnToHand();
+                }
+            };
+
+            // --- Enable/disable input based on turn phase ---
+            EventBus.OnPhaseStarted += phase =>
+            {
+                _inputManager3D.InputEnabled = (phase == TurnPhase.PlayPhase);
+            };
+
+            // --- Hand3D listens to draw events to spawn 3D cards ---
+            EventBus.OnCardDrawn += cardData =>
+            {
+                if (_hand3D != null)
+                    _hand3D.AddCard(cardData);
+            };
+
+            // --- Hand3D removes played cards ---
+            EventBus.OnCardPlayed += cardData =>
+            {
+                if (_hand3D != null)
+                    _hand3D.RemoveCard(cardData);
+            };
+
+            // --- Turn start: refresh hand layout ---
+            EventBus.OnTurnStarted += turn =>
+            {
+                if (_hand3D != null)
+                    _hand3D.RefreshLayout();
+            };
+
+            Debug.Log("[GameSceneBootstrap] 3D interaction wired: InputManager3D -> BoardManager, phase gating enabled.");
+        }
+
+        // ================================================================
+        // UI Helper Methods (same as before)
         // ================================================================
 
         private RectTransform CreateUIPanel(string name, Transform parent)
