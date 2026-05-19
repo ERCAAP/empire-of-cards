@@ -13,20 +13,20 @@ namespace EmpireOfCards.Bootstrap.Data
             var cards = new CardData[12];
 
             // B01 - Diner
-            cards[0] = CardHelper.CreateBusiness("B01_Bufe", "Diner", Rarity.Common,
+            cards[0] = CardHelper.CreateBusiness("B01_Diner", "Diner", Rarity.Common,
                 "Humble beginnings. Everyone's first business.", 0, 50, 3, 1,
                 new[] { CardTag.Food, CardTag.Basic });
             cards[0].canEvolve = true;
 
             // B02 - Coffee Shop
-            cards[1] = CardHelper.CreateBusiness("B02_Kahveci", "Coffee Shop", Rarity.Common,
+            cards[1] = CardHelper.CreateBusiness("B02_CoffeeShop", "Coffee Shop", Rarity.Common,
                 "Trend-sensitive. Very profitable at the right time.", 150, 80, 5, 2,
                 new[] { CardTag.Food, CardTag.Coffee, CardTag.Trendy });
             cards[1].hasTrendBonus = true;
             cards[1].trendIncomeMultiplier = 1.5f;
 
             // B03 - Burger Chain
-            cards[2] = CardHelper.CreateBusiness("B03_BurgerZinciri", "Burger Chain", Rarity.Uncommon,
+            cards[2] = CardHelper.CreateBusiness("B03_BurgerChain", "Burger Chain", Rarity.Uncommon,
                 "Many employees = many synergies. But salaries add up.", 250, 100, 6, 3,
                 new[] { CardTag.Food, CardTag.Chain });
 
@@ -37,20 +37,20 @@ namespace EmpireOfCards.Bootstrap.Data
             cards[3].activationDelay = 3;
 
             // B05 - Nightclub
-            cards[4] = CardHelper.CreateBusiness("B05_GeceKulubu", "Nightclub", Rarity.Rare,
+            cards[4] = CardHelper.CreateBusiness("B05_Nightclub", "Nightclub", Rarity.Rare,
                 "High reward, high risk. Dead when trends die.", 350, 180, 10, 2,
                 new[] { CardTag.Entertainment, CardTag.Nightlife, CardTag.Trendy });
             cards[4].requiresTrendToOperate = true;
 
             // B06 - Organic Farm
-            cards[5] = CardHelper.CreateBusiness("B06_OrganikCiftlik", "Organic Farm", Rarity.Common,
+            cards[5] = CardHelper.CreateBusiness("B06_OrganicFarm", "Organic Farm", Rarity.Common,
                 "Weak alone. But powers up all food businesses.", 120, 40, 2, 1,
                 new[] { CardTag.Food, CardTag.Organic, CardTag.Support });
             cards[5].foodBonusTag = "Food";
             cards[5].foodBonusAmount = 20;
 
             // B07 - Crypto Exchange
-            cards[6] = CardHelper.CreateBusiness("B07_KriptoBorsasi", "Crypto Exchange", Rarity.Rare,
+            cards[6] = CardHelper.CreateBusiness("B07_CryptoExchange", "Crypto Exchange", Rarity.Rare,
                 "Gambling. Sometimes zero, sometimes jackpot.", 300, 0, 2, 1,
                 new[] { CardTag.Tech, CardTag.Crypto, CardTag.Risky });
             cards[6].hasRandomIncome = true;
@@ -58,7 +58,7 @@ namespace EmpireOfCards.Bootstrap.Data
             cards[6].randomIncomeMax = 250;
 
             // B08 - Ad Agency
-            cards[7] = CardHelper.CreateBusiness("B08_ReklamAjansi", "Ad Agency", Rarity.Uncommon,
+            cards[7] = CardHelper.CreateBusiness("B08_AdAgency", "Ad Agency", Rarity.Uncommon,
                 "Low income but boosts all your businesses.", 200, 60, 3, 2,
                 new[] { CardTag.Marketing, CardTag.Support });
             cards[7].globalCustomerBonus = 2;
@@ -75,7 +75,7 @@ namespace EmpireOfCards.Bootstrap.Data
             // B10 - Luxury Boutique
             // DECISION: Extremely high income, but only 1 employee slot and requires trend.
             // Less risky than Nightclub (partial income without trend) but fewer synergy options.
-            cards[9] = CardHelper.CreateBusiness("B10_LuksButik", "Luxury Boutique", Rarity.Rare,
+            cards[9] = CardHelper.CreateBusiness("B10_LuxuryBoutique", "Luxury Boutique", Rarity.Rare,
                 "Premium goods for premium customers. Trends double the traffic.", 400, 200, 8, 1,
                 new[] { CardTag.Luxury, CardTag.Trendy });
             cards[9].hasTrendBonus = true;
@@ -84,7 +84,7 @@ namespace EmpireOfCards.Bootstrap.Data
             // B11 - Consulting Firm
             // DECISION: Zero customers (cannot claim territory) but massive income multiplier
             // for ONE other business. Pure economy card — you trade territory pressure for cash.
-            cards[10] = CardHelper.CreateBusiness("B11_DanismanlikFirmasi", "Consulting Firm", Rarity.Uncommon,
+            cards[10] = CardHelper.CreateBusiness("B11_ConsultingFirm", "Consulting Firm", Rarity.Uncommon,
                 "No customers. But your best business earns 40% more.", 220, 70, 0, 2,
                 new[] { CardTag.Consulting, CardTag.Support, CardTag.Finance });
 

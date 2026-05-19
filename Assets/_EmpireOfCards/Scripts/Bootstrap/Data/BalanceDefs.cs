@@ -85,21 +85,29 @@ namespace EmpireOfCards.Bootstrap.Data
             deck.startingMoney = 500;
 
             CardData b01 = CardHelper.FindCard("B01_Bufe");
+            CardData b02 = CardHelper.FindCard("B02_Kahveci");
             CardData c01 = CardHelper.FindCard("C01_Stajyer");
             CardData c02 = CardHelper.FindCard("C02_CaylakPazarlamaci");
+            CardData c03 = CardHelper.FindCard("C03_Barista");
             CardData a01 = CardHelper.FindCard("A01_ElIlani");
             CardData a02 = CardHelper.FindCard("A02_KucukYatirim");
             CardData u01 = CardHelper.FindCard("U01_OfisMalzemeleri");
 
-            // 14 cards: 2xB01, 3xC01, 2xC02, 3xA01, 2xA02, 2xU01
+            // 14 cards: diverse starter with combo potential
+            // 2x Business (Bufe + Kahveci = early combo potential with Barista)
+            // 3x Employee (1 Intern + 1 Jr Marketer + 1 Barista = variety + Latte Art combo piece)
+            // 4x Action (2 Flyer + 2 Small Investment = choices between customers vs money)
+            // 2x Upgrade (Office Supplies = immediate value)
             deck.cards = new DeckEntry[]
             {
-                new DeckEntry { card = b01, count = 2 },
-                new DeckEntry { card = c01, count = 3 },
-                new DeckEntry { card = c02, count = 2 },
-                new DeckEntry { card = a01, count = 3 },
-                new DeckEntry { card = a02, count = 2 },
-                new DeckEntry { card = u01, count = 2 },
+                new DeckEntry { card = b01, count = 1 },   // 1x Bufe (venture gives another)
+                new DeckEntry { card = b02, count = 1 },   // 1x Kahveci (combo potential!)
+                new DeckEntry { card = c01, count = 1 },   // 1x Intern (cheap starter)
+                new DeckEntry { card = c02, count = 1 },   // 1x Jr Marketer (income boost)
+                new DeckEntry { card = c03, count = 1 },   // 1x Barista (Latte Art combo!)
+                new DeckEntry { card = a01, count = 2 },   // 2x Flyer (customer burst)
+                new DeckEntry { card = a02, count = 2 },   // 2x Small Investment (money burst)
+                new DeckEntry { card = u01, count = 2 },   // 2x Office Supplies (immediate value)
             };
 
             return deck;

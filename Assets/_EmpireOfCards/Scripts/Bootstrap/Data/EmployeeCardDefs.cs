@@ -13,7 +13,7 @@ namespace EmpireOfCards.Bootstrap.Data
             var cards = new CardData[14];
 
             // C01 - Intern
-            cards[0] = CardHelper.CreateEmployee("C01_Stajyer", "Intern", Rarity.Common,
+            cards[0] = CardHelper.CreateEmployee("C01_Intern", "Intern", Rarity.Common,
                 "Cheap but weak. Starter card.", 15,
                 tags: new[] { CardTag.Basic });
             cards[0].customerBonus = 1;
@@ -23,7 +23,7 @@ namespace EmpireOfCards.Bootstrap.Data
             cards[0].abilityValue2 = 3;
 
             // C02 - Junior Marketer
-            cards[1] = CardHelper.CreateEmployee("C02_CaylakPazarlamaci", "Junior Marketer", Rarity.Common,
+            cards[1] = CardHelper.CreateEmployee("C02_JuniorMarketer", "Junior Marketer", Rarity.Common,
                 "Small but consistent bonus.", 20,
                 tags: new[] { CardTag.Marketing, CardTag.Basic });
             cards[1].incomeMultiplier = 0.10f;
@@ -45,7 +45,7 @@ namespace EmpireOfCards.Bootstrap.Data
             cards[2].abilityValue1 = 2f;
 
             // C04 - Chef
-            cards[3] = CardHelper.CreateEmployee("C04_Sef", "Chef", Rarity.Uncommon,
+            cards[3] = CardHelper.CreateEmployee("C04_Chef", "Chef", Rarity.Uncommon,
                 "Strong in food sector.", 30,
                 tags: new[] { CardTag.Food });
             cards[3].customerBonus = 3;
@@ -57,7 +57,7 @@ namespace EmpireOfCards.Bootstrap.Data
             cards[3].abilityValue1 = 1.5f;
 
             // C05 - Marketing Guru
-            cards[4] = CardHelper.CreateEmployee("C05_MarketingGurusu", "Marketing Guru", Rarity.Rare,
+            cards[4] = CardHelper.CreateEmployee("C05_MarketingGuru", "Marketing Guru", Rarity.Rare,
                 "Expensive but powerful. Combo piece.", 45,
                 tags: new[] { CardTag.Marketing, CardTag.Guru });
             cards[4].incomeMultiplier = 0.25f;
@@ -89,7 +89,7 @@ namespace EmpireOfCards.Bootstrap.Data
             cards[6].activeAbilityDesc = "Steals 4 customers from rival each turn (passive).";
 
             // C08 - Accountant
-            cards[7] = CardHelper.CreateEmployee("C08_Muhasebeci", "Accountant", Rarity.Uncommon,
+            cards[7] = CardHelper.CreateEmployee("C08_Accountant", "Accountant", Rarity.Uncommon,
                 "Boring but saves every penny.", 30,
                 tags: new[] { CardTag.Finance });
             cards[7].taxReduction = 0.5f;
@@ -98,7 +98,7 @@ namespace EmpireOfCards.Bootstrap.Data
             cards[7].activeAbilityDesc = "Tax is nullified this turn.";
 
             // C09 - Fraudster
-            cards[8] = CardHelper.CreateEmployee("C09_Dolandirici", "Fraudster", Rarity.Rare,
+            cards[8] = CardHelper.CreateEmployee("C09_Fraudster", "Fraudster", Rarity.Rare,
                 "Fast money. But FBI is knocking.", 40,
                 tags: new[] { CardTag.Illegal, CardTag.Finance });
             cards[8].illegalIncomePerTurn = 120;
@@ -109,7 +109,7 @@ namespace EmpireOfCards.Bootstrap.Data
             cards[8].abilityValue2 = 300;
 
             // C10 - Loyal Manager
-            cards[9] = CardHelper.CreateEmployee("C10_SadikMudur", "Loyal Manager", Rarity.Uncommon,
+            cards[9] = CardHelper.CreateEmployee("C10_LoyalManager", "Loyal Manager", Rarity.Uncommon,
                 "Rival can't steal employees. Defensive.", 45,
                 tags: new[] { CardTag.Management });
             cards[9].customerBonus = 0;
@@ -123,7 +123,7 @@ namespace EmpireOfCards.Bootstrap.Data
             // DECISION: Low immediate value but income grows +5 every turn the consultant stays.
             // Patience vs. replacing with a stronger immediate employee.
             // After 6 turns: +30 income (overtakes most employees). Risk: employee leaving mechanic.
-            cards[10] = CardHelper.CreateEmployee("C11_Danismani", "Consultant", Rarity.Uncommon,
+            cards[10] = CardHelper.CreateEmployee("C11_Consultant", "Consultant", Rarity.Uncommon,
                 "Weak at first. But grows stronger every turn. Patience pays.", 35,
                 tags: new[] { CardTag.Consulting, CardTag.Scaling });
             cards[10].customerBonus = 1;
@@ -136,7 +136,7 @@ namespace EmpireOfCards.Bootstrap.Data
             // C12 - Bouncer
             // DECISION: Negative income impact (-10 income) but steals 3 customers from rival
             // every turn. Aggressive territory play. Pairs with Nightclub for flavor.
-            cards[11] = CardHelper.CreateEmployee("C12_Fedai", "Bouncer", Rarity.Uncommon,
+            cards[11] = CardHelper.CreateEmployee("C12_Bouncer", "Bouncer", Rarity.Uncommon,
                 "Costs you income but intimidates the competition. -3 rival customers/turn.", 25,
                 tags: new[] { CardTag.Nightlife, CardTag.Aggressive, CardTag.Defensive });
             cards[11].customerBonus = 2;
@@ -163,7 +163,7 @@ namespace EmpireOfCards.Bootstrap.Data
             // C14 - Lobbyist
             // DECISION: Expensive salary, no direct income. But rival's next business costs 25% more.
             // Pure disruption card. Slows rival expansion but doesn't help you earn.
-            cards[13] = CardHelper.CreateEmployee("C14_Lobici", "Lobbyist", Rarity.Rare,
+            cards[13] = CardHelper.CreateEmployee("C14_Lobbyist", "Lobbyist", Rarity.Rare,
                 "Plays dirty politics. Rival businesses cost 25% more.", 60,
                 tags: new[] { CardTag.Finance, CardTag.Aggressive });
             cards[13].customerBonus = 0;

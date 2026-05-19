@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
+using DG.Tweening;
 using EmpireOfCards.Core;
 
 namespace EmpireOfCards.UI
@@ -9,12 +10,24 @@ namespace EmpireOfCards.UI
     /// Displays money (animated counter), turn indicator, and FBI risk bar.
     /// Subscribes to EventBus events -- never calls manager methods for data.
     /// All animations use Update() polling, no coroutines.
+    ///
+    /// Money counter personality:
+    ///   - Color flashes green/red on gain/loss
+    ///   - Pulses red when low or critical
+    ///   - Scale punches on large changes
     /// </summary>
     public class TopBarUI : MonoBehaviour
     {
         [Header("Money")]
         [SerializeField] private TMP_Text moneyText;
         [SerializeField] private float moneyLerpSpeed = 8f;
+
+        [Header("Money Personality")]
+        [SerializeField] private Color moneyColorNormal = new Color(1f, 0.85f, 0.2f);
+        [SerializeField] private Color moneyColorGain = Color.green;
+        [SerializeField] private Color moneyColorLoss = Color.red;
+        [SerializeField] private float moneyFlashDuration = 0.2f;
+        [SerializeField] private int moneyLowThreshold = 100;
 
         [Header("Turn")]
         [SerializeField] private TMP_Text turnText;
@@ -32,6 +45,12 @@ namespace EmpireOfCards.UI
         private float targetMoney;
         private float displayedFBI;
         private float targetFBI;
+
+        // Money personality state
+        private int _previousMoney;
+        private float _moneyFlashTimer;       // Counts down from moneyFlashDuration
+        private Color _moneyFlashColor;       // The flash color (green or red)
+        private float _moneyPulseTimer;       // Accumulates for low-money pulse
 
         /// <summary>
         /// Assigns all sub-element references without reflection.
@@ -77,6 +96,10 @@ namespace EmpireOfCards.UI
                     moneyText.text = $"${Mathf.RoundToInt(displayedMoney):N0}";
             }
 
+            // --- Money color personality ---
+            if (moneyText != null)
+                moneyText.color = GetMoneyColor();
+
             // Lerp FBI bar fill and color
             if (!Mathf.Approximately(displayedFBI, targetFBI))
             {
@@ -99,6 +122,36 @@ namespace EmpireOfCards.UI
 
         private void OnMoneyChanged(int newAmount)
         {
+            int delta = newAmount - _previousMoney;
+
+            // --- Color flash based on direction ---
+            if (delta > 0)
+            {
+                _moneyFlashColor = moneyColorGain;
+                _moneyFlashTimer = moneyFlashDuration;
+            }
+            else if (delta < 0)
+            {
+                _moneyFlashColor = moneyColorLoss;
+                _moneyFlashTimer = moneyFlashDuration;
+            }
+
+            // --- Scale punch based on magnitude ---
+            int absDelta = Mathf.Abs(delta);
+            if (absDelta > 200 && moneyText != null)
+            {
+                moneyText.transform.DOKill();
+                moneyText.transform.DOPunchScale(Vector3.one * 0.1f, 0.2f, 6, 0.5f)
+                    .SetLink(moneyText.gameObject);
+            }
+            else if (absDelta > 50 && moneyText != null)
+            {
+                moneyText.transform.DOKill();
+                moneyText.transform.DOPunchScale(Vector3.one * 0.05f, 0.15f, 6, 0.5f)
+                    .SetLink(moneyText.gameObject);
+            }
+
+            _previousMoney = newAmount;
             SetTargetMoney(newAmount);
         }
 
@@ -126,11 +179,13 @@ namespace EmpireOfCards.UI
 
         /// <summary>
         /// Immediately sets the money display without animation.
+        /// Also syncs previous money so no false flash triggers.
         /// </summary>
         public void UpdateMoney(int amount)
         {
             targetMoney = amount;
             displayedMoney = amount;
+            _previousMoney = amount;
 
             if (moneyText != null)
                 moneyText.text = $"${amount:N0}";

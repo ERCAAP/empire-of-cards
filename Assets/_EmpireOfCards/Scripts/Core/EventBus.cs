@@ -64,6 +64,7 @@ namespace EmpireOfCards.Core
         public static event Action<int> OnMoneyChanged;                    // newAmount
         public static event Action<int> OnIncomeReceived;                  // amount
         public static event Action<int> OnMoneySpent;                      // amount
+        public static event Action<IncomeBreakdown> OnIncomeBreakdown;     // detailed cascade
         #endregion
 
         #region Turn Flow Events
@@ -81,6 +82,8 @@ namespace EmpireOfCards.Core
         #region Rival Events
         public static event Action<string> OnRivalAction;                  // description
         public static event Action<string> OnRivalTaunt;                   // taunt text
+        public static event Action<string> OnRivalMoodChanged;             // mood icon string
+        public static event Action<string> OnRivalStrategyComment;         // one-time strategy remark
         #endregion
 
         #region Company Tier Events
@@ -141,6 +144,7 @@ namespace EmpireOfCards.Core
         public static void MoneyUpdated(int amount) => OnMoneyChanged?.Invoke(amount);
         public static void IncomeReceived(int amount) => OnIncomeReceived?.Invoke(amount);
         public static void MoneySpent(int amount) => OnMoneySpent?.Invoke(amount);
+        public static void IncomeBreakdownReported(IncomeBreakdown breakdown) => OnIncomeBreakdown?.Invoke(breakdown);
         #endregion
 
         #region Turn Flow Invoke Helpers
@@ -158,6 +162,8 @@ namespace EmpireOfCards.Core
         #region Rival Invoke Helpers
         public static void RivalActed(string desc) => OnRivalAction?.Invoke(desc);
         public static void RivalTaunted(string taunt) => OnRivalTaunt?.Invoke(taunt);
+        public static void RivalMoodChanged(string moodIcon) => OnRivalMoodChanged?.Invoke(moodIcon);
+        public static void RivalStrategyCommented(string comment) => OnRivalStrategyComment?.Invoke(comment);
         #endregion
 
         #region Company Tier Invoke Helpers
@@ -216,6 +222,7 @@ namespace EmpireOfCards.Core
             OnMoneyChanged = null;
             OnIncomeReceived = null;
             OnMoneySpent = null;
+            OnIncomeBreakdown = null;
 
             // Turn flow
             OnTurnStarted = null;
@@ -230,6 +237,8 @@ namespace EmpireOfCards.Core
             // Rival
             OnRivalAction = null;
             OnRivalTaunt = null;
+            OnRivalMoodChanged = null;
+            OnRivalStrategyComment = null;
 
             // Company Tier
             OnCompanyTierChanged = null;

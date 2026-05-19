@@ -6,7 +6,7 @@ namespace EmpireOfCards.Gameplay
 {
     public class CompanyTierSystem : MonoBehaviour
     {
-        [SerializeField] private CompanyTier currentTier = CompanyTier.Esnaf;
+        [SerializeField] private CompanyTier currentTier = CompanyTier.Trader;
 
         private BoardManager _board;
         private ComboSystem _combo;
@@ -21,7 +21,7 @@ namespace EmpireOfCards.Gameplay
 
         public void Reset()
         {
-            currentTier = CompanyTier.Esnaf;
+            currentTier = CompanyTier.Trader;
         }
 
         /// <summary>
@@ -49,30 +49,30 @@ namespace EmpireOfCards.Gameplay
         private CompanyTier CalculateTier(int businesses, int combos, int territories)
         {
             // Check from highest to lowest
-            if (businesses >= Constants.TIER_HOLDING_BUSINESSES &&
-                combos >= Constants.TIER_HOLDING_COMBOS &&
-                territories >= Constants.TIER_HOLDING_TERRITORIES)
-                return CompanyTier.Holding;
+            if (businesses >= Constants.TIER_CONGLOMERATE_BUSINESSES &&
+                combos >= Constants.TIER_CONGLOMERATE_COMBOS &&
+                territories >= Constants.TIER_CONGLOMERATE_TERRITORIES)
+                return CompanyTier.Conglomerate;
 
-            if (businesses >= Constants.TIER_SIRKET_BUSINESSES &&
-                combos >= Constants.TIER_SIRKET_COMBOS &&
-                territories >= Constants.TIER_SIRKET_TERRITORIES)
-                return CompanyTier.Sirket;
+            if (businesses >= Constants.TIER_CORPORATION_BUSINESSES &&
+                combos >= Constants.TIER_CORPORATION_COMBOS &&
+                territories >= Constants.TIER_CORPORATION_TERRITORIES)
+                return CompanyTier.Corporation;
 
-            if (businesses >= Constants.TIER_GIRISIMCI_BUSINESSES &&
-                combos >= Constants.TIER_GIRISIMCI_COMBOS)
-                return CompanyTier.Girisimci;
+            if (businesses >= Constants.TIER_ENTREPRENEUR_BUSINESSES &&
+                combos >= Constants.TIER_ENTREPRENEUR_COMBOS)
+                return CompanyTier.Entrepreneur;
 
-            return CompanyTier.Esnaf;
+            return CompanyTier.Trader;
         }
 
         public int GetTierScoreBonus()
         {
             return currentTier switch
             {
-                CompanyTier.Girisimci => Constants.TIER_SCORE_GIRISIMCI,
-                CompanyTier.Sirket => Constants.TIER_SCORE_SIRKET,
-                CompanyTier.Holding => Constants.TIER_SCORE_HOLDING,
+                CompanyTier.Entrepreneur => Constants.TIER_SCORE_ENTREPRENEUR,
+                CompanyTier.Corporation => Constants.TIER_SCORE_CORPORATION,
+                CompanyTier.Conglomerate => Constants.TIER_SCORE_CONGLOMERATE,
                 _ => 0
             };
         }

@@ -43,6 +43,13 @@ namespace EmpireOfCards.Core
             return Instance._strings.TryGetValue(key, out string val) ? val : key;
         }
 
+        // Lookup with explicit fallback - returns fallback if key not found
+        public static string GetWithFallback(string key, string fallback)
+        {
+            if (Instance == null) return fallback;
+            return Instance._strings.TryGetValue(key, out string val) ? val : fallback;
+        }
+
         // Shorthand with format args
         public static string Get(string key, params object[] args)
         {

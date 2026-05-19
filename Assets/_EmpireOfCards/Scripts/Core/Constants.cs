@@ -94,21 +94,21 @@ namespace EmpireOfCards.Core
         #endregion
 
         #region Company Tier (GDD Section 1.6)
-        public const int TIER_GIRISIMCI_BUSINESSES = 2;
-        public const int TIER_GIRISIMCI_COMBOS = 1;
-        public const int TIER_SIRKET_BUSINESSES = 3;
-        public const int TIER_SIRKET_COMBOS = 2;
-        public const int TIER_SIRKET_TERRITORIES = 4;
-        public const int TIER_HOLDING_BUSINESSES = 3;
-        public const int TIER_HOLDING_COMBOS = 3;
-        public const int TIER_HOLDING_TERRITORIES = 5;
-        public const int TIER_SCORE_GIRISIMCI = 200;
-        public const int TIER_SCORE_SIRKET = 500;
-        public const int TIER_SCORE_HOLDING = 1000;
+        public const int TIER_ENTREPRENEUR_BUSINESSES = 2;
+        public const int TIER_ENTREPRENEUR_COMBOS = 1;
+        public const int TIER_CORPORATION_BUSINESSES = 3;
+        public const int TIER_CORPORATION_COMBOS = 2;
+        public const int TIER_CORPORATION_TERRITORIES = 4;
+        public const int TIER_CONGLOMERATE_BUSINESSES = 3;
+        public const int TIER_CONGLOMERATE_COMBOS = 3;
+        public const int TIER_CONGLOMERATE_TERRITORIES = 5;
+        public const int TIER_SCORE_ENTREPRENEUR = 200;
+        public const int TIER_SCORE_CORPORATION = 500;
+        public const int TIER_SCORE_CONGLOMERATE = 1000;
         #endregion
 
         #region First Venture (GDD Section 1.5)
-        public const int KARANLIK_PAZAR_BONUS_MONEY = 200;  // Extra $200 for black market
+        public const int BLACK_MARKET_BONUS_MONEY = 200;  // Extra $200 for black market
         #endregion
 
         #region Special Business Mechanics
