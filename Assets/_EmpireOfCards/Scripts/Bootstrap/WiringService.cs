@@ -73,6 +73,10 @@ namespace EmpireOfCards.Bootstrap
             m.metaProgressionSystem.Init(data.metaProgressionData);
             m.gameManager.SetMetaProgressionSystem(m.metaProgressionSystem);
 
+            // === CompanyTierSystem ===
+            m.companyTierSystem.Init(m.boardManager, m.comboSystem);
+            m.gameManager.SetCompanyTierSystem(m.companyTierSystem);
+
             // === ShopManager ===
             m.shopManager.Init(data.shopPool, m.deckManager, m.economyManager, m.comboSystem);
 

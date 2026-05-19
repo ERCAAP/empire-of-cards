@@ -38,6 +38,115 @@ Her tur:
 
 ---
 
+# BÖLÜM 1.5: İLK GİRİŞİM SEÇİMİ (First Venture)
+
+## 1.5.1 Konsept
+
+Oyun başladığında oyuncuya "İlk girişimini seç" ekranı gösterilir. Bu bir class/archetype kilidi **DEĞİLDİR.** Sadece başlangıç yönü verir: 1 işletme tahtaya yerleşir + destene 1 bonus kart eklenir. Run'ın geri kalanında oyuncu istediği stratejiyi izleyebilir.
+
+**Neden bu sistem?** Oyuncu boş masaya bakınca "nereden başlayacağım?" hissi yaşıyor. İlk Girişim bu sorunu çözer — ilk turdan itibaren masada bir şey var, elde bir yön var.
+
+## 1.5.2 Girişim Seçenekleri (4 adet)
+
+### 🍔 1. BÜFE (Diner)
+
+Büfe tahtaya yerleşik gelir. Destene +1 Şef eklenir. Food combo'lara doğru yönlendirir ama kilitlemez.
+
+| Özellik | Değer |
+|---|---|
+| Board | B01 Büfe otomatik Slot 1'e yerleşir |
+| Deste | Standart 14 kart + 1 Şef (C04) = 15 kart |
+| Başlangıç Parası | 💰500 |
+| Yönlendirme | Food combo'lar (Organik Sinerji, Fast Food İmparatorluğu) |
+
+### 💻 2. TECH STARTUP
+
+Tech Startup tahtaya yerleşik gelir (delay sayacı 1'den başlar = 2 tur bekleme). Destene +1 Hacker eklenir.
+
+| Özellik | Değer |
+|---|---|
+| Board | B04 Tech Startup otomatik Slot 1'e yerleşir |
+| Deste | Standart 14 kart + 1 Hacker (C07) = 15 kart |
+| Başlangıç Parası | 💰500 |
+| Yönlendirme | Tech combo'lar (AI Devrimi), agresif oyun |
+
+### 📢 3. REKLAM AJANSI
+
+Reklam Ajansı tahtaya yerleşik gelir. Destene +1 Marketing Gurusu eklenir.
+
+| Özellik | Değer |
+|---|---|
+| Board | B08 Reklam Ajansı otomatik Slot 1'e yerleşir |
+| Deste | Standart 14 kart + 1 Marketing Gurusu (C05) = 15 kart |
+| Başlangıç Parası | 💰500 |
+| Yönlendirme | Marketing combo'lar (Reklam Bombardımanı, Viral Fırtına) |
+
+### 🕶️ 4. KARANLIK PAZAR
+
+Hiçbir business yerleşmez. Ama +200 ekstra para ve destene +1 Dolandırıcı eklenir. Riskli ama hızlı para.
+
+| Özellik | Değer |
+|---|---|
+| Board | Boş (oyuncu kendi seçer) |
+| Deste | Standart 14 kart + 1 Dolandırıcı (C09) = 15 kart |
+| Başlangıç Parası | 💰700 |
+| Yönlendirme | İllegal strateji, hızlı para, yüksek risk |
+
+## 1.5.3 Tasarım Kuralları
+
+- **Pasif bonus yok.** Girişim seçimi sadece başlangıç kartları verir, run boyunca pasif etki uygulamaz.
+- **Class kilidi yok.** Büfe seçen oyuncu Tech Startup da açabilir, Hacker da alabilir.
+- **Shop'ta her zaman tüm 40 kart havuzu dönmeli.** Girişim seçimi Shop içeriğini filtrelemez.
+- **Seçim sadece başlangıç yönü verir, run'ı kilitlemez.** Oyuncu istediği anda farklı stratejiye geçebilir.
+- **Tutorial run'ında Büfe otomatik seçilir.** Yeni oyuncu seçim ekranını görmez, doğrudan Büfe ile başlar. İlk run tamamlandıktan sonra seçim ekranı açılır.
+
+---
+
+# BÖLÜM 1.6: ŞİRKET SEVİYESİ (Company Tier)
+
+## 1.6.1 Konsept
+
+Oyuncunun board state'ine göre şirket seviyesi otomatik belirlenir. Yeni kart tipi gerektirmez. Sadece board state kontrolü + görsel/ses feedback sistemi. Oyuncuya "büyüyorum" hissini somutlaştırır — soyut bir skor yerine, şirketinin ismi ve görünümü değişir.
+
+## 1.6.2 Tier Tablosu (4 Seviye)
+
+| Tier | İsim | Koşul | Görsel Feedback |
+|------|------|-------|-----------------|
+| 1 | ESNAF | Oyun başı (varsayılan) | Küçük logo, sade board |
+| 2 | GİRİŞİMCİ | 2+ aktif business + 1+ combo tetiklenmiş | "TEBRİKLER: GİRİŞİMCİ oldun!" popup, logo büyür |
+| 3 | ŞİRKET | 3 aktif business + 2+ combo + 4+ territory | Board rengi değişir, rival ciddi olmaya başlar, müzik yoğunlaşır |
+| 4 | HOLDİNG | 3 aktif business + 3+ combo + 5+ territory | Taç efekti, dominant his, board kenarları altın yanar |
+
+## 1.6.3 Tier Kuralları
+
+- **Kontrol zamanı:** Tier her tur sonunda Resolve Phase'de kontrol edilir (combo check'ten sonra, gelir hesaplamasından önce).
+- **Tier asla düşmez.** Bir kere Girişimci oldun mu geri Esnaf olamazsın. İşletme kapansa bile tier korunur.
+- **Tier atlama anında:** Popup + ses efekti + kısa animasyon oynar. Oyun 1-2 saniye durur, oyuncu anı yaşar.
+- **Skor bonusu:** Tier, run sonu skor hesaplamasına bonus verir:
+
+| Tier | Skor Bonusu |
+|------|-------------|
+| Tier 1 — ESNAF | +0 |
+| Tier 2 — GİRİŞİMCİ | +200 |
+| Tier 3 — ŞİRKET | +500 |
+| Tier 4 — HOLDİNG | +1000 |
+
+## 1.6.4 Unity Entegrasyonu
+
+```
+Resolve Phase sırası (güncellenmiş):
+  Adım 4a: İşletmeler üretir
+  Adım 4b: Müşteriler kayar
+  Adım 4c: Combo kontrolü
+  Adım 4c.5: TIER KONTROLÜ ← YENİ
+  Adım 4d: Gelir hesaplanır
+  Adım 4e: Bozulma kontrolü
+```
+
+Tier kontrolü için `CompanyTierManager.cs` gerekir. Bu manager her tur sonunda board state'i okur (aktif business sayısı, tetiklenmiş combo sayısı, territory sayısı) ve mevcut tier'ı güncellemesi gerekip gerekmediğini kontrol eder.
+
+---
+
 # BÖLÜM 2: MASA DÜZENİ
 
 ## 2.1 Masada Ne Var?

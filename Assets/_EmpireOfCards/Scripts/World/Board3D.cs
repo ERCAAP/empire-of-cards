@@ -38,7 +38,7 @@ namespace EmpireOfCards.World
             table.name = "Table";
             table.transform.SetParent(transform);
             table.transform.localPosition = new Vector3(0, -0.25f, 0);
-            table.transform.localScale = new Vector3(14, 0.5f, 10);
+            table.transform.localScale = new Vector3(16, 0.5f, 12);
             table.GetComponent<MeshRenderer>().material.color = new Color(0.35f, 0.22f, 0.12f); // Wood
             table.layer = LayerMask.NameToLayer("Default");
             Destroy(table.GetComponent<Collider>()); // Table doesn't need raycast
@@ -49,9 +49,9 @@ namespace EmpireOfCards.World
                 var terr = GameObject.CreatePrimitive(PrimitiveType.Cube);
                 terr.name = $"Territory_{i + 1:D2}";
                 terr.transform.SetParent(transform);
-                float x = (i - 4.5f) * 1.1f;
-                terr.transform.localPosition = new Vector3(x, 0.1f, 3.5f);
-                terr.transform.localScale = new Vector3(0.9f, 0.2f, 0.9f);
+                float x = (i - 4.5f) * 1.2f;
+                terr.transform.localPosition = new Vector3(x, 0.1f, 4.5f);
+                terr.transform.localScale = new Vector3(1.0f, 0.25f, 1.0f);
                 terr.GetComponent<MeshRenderer>().material.color = Color.gray;
                 Destroy(terr.GetComponent<Collider>());
                 _territoryBlocks.Add(terr);
@@ -65,7 +65,7 @@ namespace EmpireOfCards.World
                 slot.name = $"BusinessSlot_{i + 1:D2}";
                 slot.transform.SetParent(transform);
                 float x = (i - 2) * 2.5f;
-                slot.transform.localPosition = new Vector3(x, 0.05f, -0.5f);
+                slot.transform.localPosition = new Vector3(x, 0.05f, -1.5f);
                 slot.transform.localScale = new Vector3(1.8f, 0.1f, 2.5f);
                 slot.GetComponent<MeshRenderer>().material.color = new Color(0.25f, 0.25f, 0.3f);
 
@@ -79,7 +79,7 @@ namespace EmpireOfCards.World
                     var empSlot = GameObject.CreatePrimitive(PrimitiveType.Cube);
                     empSlot.name = $"EmpSlot_{e + 1:D2}";
                     empSlot.transform.SetParent(slot.transform);
-                    empSlot.transform.localPosition = new Vector3(0, 1f, -(e + 1) * 0.35f);
+                    empSlot.transform.localPosition = new Vector3((e - 1) * 0.38f, 1f, -0.45f);
                     empSlot.transform.localScale = new Vector3(0.45f, 0.5f, 0.3f);
                     empSlot.GetComponent<MeshRenderer>().material.color = new Color(0.2f, 0.35f, 0.2f);
 
@@ -99,8 +99,8 @@ namespace EmpireOfCards.World
                 rivalSlot.name = $"RivalSlot_{i + 1:D2}";
                 rivalSlot.transform.SetParent(transform);
                 float x = (i - 1) * 2.8f;
-                rivalSlot.transform.localPosition = new Vector3(x, 0.05f, 2f);
-                rivalSlot.transform.localScale = new Vector3(1.8f, 0.1f, 1.5f);
+                rivalSlot.transform.localPosition = new Vector3(x, 0.05f, 2.5f);
+                rivalSlot.transform.localScale = new Vector3(1.5f, 0.1f, 1.2f);
                 rivalSlot.GetComponent<MeshRenderer>().material.color = new Color(0.5f, 0.15f, 0.15f);
                 Destroy(rivalSlot.GetComponent<Collider>()); // Read-only
             }
@@ -111,7 +111,7 @@ namespace EmpireOfCards.World
                 var upSlot = GameObject.CreatePrimitive(PrimitiveType.Cube);
                 upSlot.name = $"UpgradeSlot_{i + 1:D2}";
                 upSlot.transform.SetParent(transform);
-                upSlot.transform.localPosition = new Vector3(-5.5f, 0.05f, -1f + i * 1.2f);
+                upSlot.transform.localPosition = new Vector3(-6.5f, 0.05f, -2f + i * 1.3f);
                 upSlot.transform.localScale = new Vector3(1.2f, 0.1f, 1f);
                 upSlot.GetComponent<MeshRenderer>().material.color = new Color(0.35f, 0.2f, 0.45f);
 
@@ -124,7 +124,7 @@ namespace EmpireOfCards.World
             var sell = GameObject.CreatePrimitive(PrimitiveType.Cube);
             sell.name = "SellZone";
             sell.transform.SetParent(transform);
-            sell.transform.localPosition = new Vector3(5.5f, 0.05f, -1f);
+            sell.transform.localPosition = new Vector3(6.5f, 0.05f, -1.5f);
             sell.transform.localScale = new Vector3(1.5f, 0.1f, 1.5f);
             sell.GetComponent<MeshRenderer>().material.color = new Color(0.6f, 0.4f, 0.1f);
             _sellZone = sell.AddComponent<SlotZone3D>();
@@ -134,7 +134,7 @@ namespace EmpireOfCards.World
             var action = GameObject.CreatePrimitive(PrimitiveType.Cube);
             action.name = "ActionZone";
             action.transform.SetParent(transform);
-            action.transform.localPosition = new Vector3(5.5f, 0.05f, 1f);
+            action.transform.localPosition = new Vector3(6.5f, 0.05f, 0.5f);
             action.transform.localScale = new Vector3(1.5f, 0.1f, 1.5f);
             action.GetComponent<MeshRenderer>().material.color = new Color(0.6f, 0.15f, 0.15f);
             _actionZone = action.AddComponent<SlotZone3D>();
@@ -144,10 +144,29 @@ namespace EmpireOfCards.World
             var eventArea = GameObject.CreatePrimitive(PrimitiveType.Cube);
             eventArea.name = "EventDisplay";
             eventArea.transform.SetParent(transform);
-            eventArea.transform.localPosition = new Vector3(0, 0.15f, 2f);
+            eventArea.transform.localPosition = new Vector3(3.5f, 0.15f, 2.5f);
             eventArea.transform.localScale = new Vector3(1.2f, 0.02f, 1.7f);
             eventArea.GetComponent<MeshRenderer>().material.color = new Color(0.9f, 0.8f, 0.15f, 0.3f);
             Destroy(eventArea.GetComponent<Collider>());
+
+            // === VISUAL DIVIDERS ===
+            // Divider between player zone and territory map
+            var div1 = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            div1.name = "Divider_PlayerTerritory";
+            div1.transform.SetParent(transform);
+            div1.transform.localPosition = new Vector3(0, 0.06f, 1.5f);
+            div1.transform.localScale = new Vector3(14f, 0.02f, 0.05f);
+            div1.GetComponent<MeshRenderer>().material.color = new Color(0.5f, 0.5f, 0.5f, 0.5f);
+            Destroy(div1.GetComponent<Collider>());
+
+            // Divider between territory map and rival zone
+            var div2 = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            div2.name = "Divider_TerritoryRival";
+            div2.transform.SetParent(transform);
+            div2.transform.localPosition = new Vector3(0, 0.06f, 3.5f);
+            div2.transform.localScale = new Vector3(14f, 0.02f, 0.05f);
+            div2.GetComponent<MeshRenderer>().material.color = new Color(0.5f, 0.5f, 0.5f, 0.5f);
+            Destroy(div2.GetComponent<Collider>());
 
             // === FLOATING BOARD LABELS ===
             CreateBoardLabels();
@@ -183,24 +202,28 @@ namespace EmpireOfCards.World
             float fontSize = 4f;
             Quaternion labelRot = Quaternion.Euler(55f, 0f, 0f); // Match camera angle
 
+            // COMPANY TIER -- top-left corner
+            CreateLabel("ESNAF", new Vector3(-6f, labelY, 4.2f), labelRot, fontSize * 0.9f,
+                        new Color(0.9f, 0.75f, 0.3f));
+
             // YOUR BUSINESSES -- above player business slots (center-bottom)
-            CreateLabel("YOUR BUSINESSES", new Vector3(0f, labelY, -0.5f), labelRot, fontSize,
+            CreateLabel("YOUR BUSINESSES", new Vector3(0f, labelY, -0.2f), labelRot, fontSize,
                         new Color(0.5f, 0.7f, 1f));
 
             // RIVAL -- above rival area (center-top)
-            CreateLabel("RIVAL", new Vector3(0f, labelY, 2.5f), labelRot, fontSize,
+            CreateLabel("RIVAL", new Vector3(0f, labelY, 3.2f), labelRot, fontSize,
                         new Color(1f, 0.4f, 0.4f));
 
             // TERRITORIES -- above territory bar (very top)
-            CreateLabel("TERRITORIES", new Vector3(0f, labelY, 4.2f), labelRot, fontSize,
+            CreateLabel("TERRITORIES", new Vector3(0f, labelY, 5.2f), labelRot, fontSize,
                         new Color(0.9f, 0.9f, 0.9f));
 
             // UPGRADES -- above upgrade area (left side)
-            CreateLabel("UPGRADES", new Vector3(-5.5f, labelY, 1.5f), labelRot, fontSize * 0.85f,
+            CreateLabel("UPGRADES", new Vector3(-6.5f, labelY, 1f), labelRot, fontSize * 0.85f,
                         new Color(0.7f, 0.45f, 0.9f));
 
             // SELL -- above sell zone (right side)
-            CreateLabel("SELL", new Vector3(5.5f, labelY, -0.5f), labelRot, fontSize * 0.85f,
+            CreateLabel("SELL", new Vector3(6.5f, labelY, -1f), labelRot, fontSize * 0.85f,
                         new Color(0.9f, 0.7f, 0.2f));
         }
 

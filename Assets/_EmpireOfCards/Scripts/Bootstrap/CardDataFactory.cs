@@ -33,6 +33,8 @@ namespace EmpireOfCards.Bootstrap
 
             var meta = BalanceDefs.CreateMetaProgression();
 
+            var ventures = VentureDataFactory.CreateAllVentures(allCards);
+
             var lookup = CardHelper.EndSession();
 
             var bundle = new GameDataBundle
@@ -44,11 +46,13 @@ namespace EmpireOfCards.Bootstrap
                 rivalData   = rival,
                 shopPool    = shop,
                 cardLookup  = lookup,
-                metaProgressionData = meta
+                metaProgressionData = meta,
+                ventures    = ventures
             };
 
             Debug.Log($"[CardDataFactory] Data created: {bundle.allCards.Length} cards, " +
-                      $"{bundle.combos.Length} combos, shop pool: {bundle.shopPool.Length} cards.");
+                      $"{bundle.combos.Length} combos, shop pool: {bundle.shopPool.Length} cards, " +
+                      $"{bundle.ventures.Length} ventures.");
 
             return bundle;
         }
@@ -83,5 +87,6 @@ namespace EmpireOfCards.Bootstrap
         public ComboData[] combos;
         public Dictionary<string, CardData> cardLookup;
         public MetaProgressionData metaProgressionData;
+        public VentureData[] ventures;
     }
 }

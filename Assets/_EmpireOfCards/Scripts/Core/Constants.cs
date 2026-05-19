@@ -75,5 +75,23 @@ namespace EmpireOfCards.Core
         #region Employee Leaving (GDD Section 4.2)
         public const int EMPLOYEE_LEAVE_TURN_THRESHOLD = 8; // Employee working 8+ turns
         #endregion
+
+        #region Company Tier (GDD Section 1.6)
+        public const int TIER_GIRISIMCI_BUSINESSES = 2;
+        public const int TIER_GIRISIMCI_COMBOS = 1;
+        public const int TIER_SIRKET_BUSINESSES = 3;
+        public const int TIER_SIRKET_COMBOS = 2;
+        public const int TIER_SIRKET_TERRITORIES = 4;
+        public const int TIER_HOLDING_BUSINESSES = 3;
+        public const int TIER_HOLDING_COMBOS = 3;
+        public const int TIER_HOLDING_TERRITORIES = 5;
+        public const int TIER_SCORE_GIRISIMCI = 200;
+        public const int TIER_SCORE_SIRKET = 500;
+        public const int TIER_SCORE_HOLDING = 1000;
+        #endregion
+
+        #region First Venture (GDD Section 1.5)
+        public const int KARANLIK_PAZAR_BONUS_MONEY = 200;  // Extra $200 for black market
+        #endregion
     }
 }

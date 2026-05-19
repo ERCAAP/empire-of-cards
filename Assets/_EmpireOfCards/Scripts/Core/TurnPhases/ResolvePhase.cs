@@ -113,6 +113,10 @@ namespace EmpireOfCards.Core.TurnPhases
                             activeBizCount,
                             marketShare);
                     }
+
+                    // Evaluate Company Tier (GDD Section 1.6) - after combo check
+                    if (gm.CompanyTierSystem != null)
+                        gm.CompanyTierSystem.EvaluateTier(gm.PlayerTerritories);
                     break;
 
                 // 4d: Calculate and apply income, salaries, tax

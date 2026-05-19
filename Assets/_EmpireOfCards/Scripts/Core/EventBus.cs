@@ -78,6 +78,10 @@ namespace EmpireOfCards.Core
         public static event Action<string> OnRivalTaunt;                   // taunt text
         #endregion
 
+        #region Company Tier Events
+        public static event Action<CompanyTier> OnCompanyTierChanged;      // new tier
+        #endregion
+
         // ======================================================================
         //  INVOKE HELPERS
         // ======================================================================
@@ -146,6 +150,10 @@ namespace EmpireOfCards.Core
         public static void RivalTaunted(string taunt) => OnRivalTaunt?.Invoke(taunt);
         #endregion
 
+        #region Company Tier Invoke Helpers
+        public static void CompanyTierChanged(CompanyTier tier) => OnCompanyTierChanged?.Invoke(tier);
+        #endregion
+
         // ======================================================================
         //  CLEANUP
         // ======================================================================
@@ -208,6 +216,9 @@ namespace EmpireOfCards.Core
             // Rival
             OnRivalAction = null;
             OnRivalTaunt = null;
+
+            // Company Tier
+            OnCompanyTierChanged = null;
         }
     }
 }

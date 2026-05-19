@@ -114,6 +114,11 @@ namespace EmpireOfCards.Bootstrap
             metaGo.transform.SetParent(gmGo.transform);
             b.metaProgressionSystem = metaGo.AddComponent<MetaProgressionSystem>();
 
+            // --- CompanyTierSystem ---
+            var ctsGo = new GameObject("CompanyTierSystem");
+            ctsGo.transform.SetParent(gmGo.transform);
+            b.companyTierSystem = ctsGo.AddComponent<CompanyTierSystem>();
+
             // --- ActionCardResolver ---
             var acrGo = new GameObject("ActionCardResolver");
             acrGo.transform.SetParent(gmGo.transform);
@@ -149,6 +154,7 @@ namespace EmpireOfCards.Bootstrap
         public AbilitySystem abilitySystem;
         public LevelManager levelManager;
         public MetaProgressionSystem metaProgressionSystem;
+        public CompanyTierSystem companyTierSystem;
         public ActionCardResolver actionCardResolver;
 
         // AudioManager sub-sources

@@ -52,6 +52,10 @@ namespace EmpireOfCards.Core
         [SerializeField] private VFXManager vfxManager;
         [SerializeField] private SaveManager saveManager;
         [SerializeField] private MetaProgressionSystem metaProgressionSystem;
+        [SerializeField] private CompanyTierSystem companyTierSystem;
+
+        [Header("=== First Venture ===")]
+        [SerializeField] private VentureData selectedVenture;
 
         // === Extracted Sub-Objects (prefer these over backward-compat properties) ===
         public PlayerResources Resources => resources;
@@ -90,6 +94,7 @@ namespace EmpireOfCards.Core
         public VFXManager VFXManager => vfxManager;
         public SaveManager SaveManager => saveManager;
         public MetaProgressionSystem MetaProgressionSystem => metaProgressionSystem;
+        public CompanyTierSystem CompanyTierSystem => companyTierSystem;
 
         /// <summary>
         /// Assigns the MetaProgressionSystem. Called by WiringService after bootstrap.
@@ -97,6 +102,16 @@ namespace EmpireOfCards.Core
         public void SetMetaProgressionSystem(MetaProgressionSystem mps)
         {
             this.metaProgressionSystem = mps;
+        }
+
+        public void SetCompanyTierSystem(CompanyTierSystem cts)
+        {
+            this.companyTierSystem = cts;
+        }
+
+        public void SetSelectedVenture(VentureData venture)
+        {
+            this.selectedVenture = venture;
         }
 
         /// <summary>
@@ -175,12 +190,31 @@ namespace EmpireOfCards.Core
             // Initialize subsystems
             if (deckManager != null && startingDeck != null)
                 deckManager.InitializeDeck(startingDeck);
+
+            // Apply First Venture (GDD Section 1.5)
+            if (selectedVenture != null)
+            {
+                // Add bonus money
+                if (selectedVenture.bonusMoney > 0)
+                    resources.GainMoney(selectedVenture.bonusMoney);
+
+                // Place starting business on board
+                if (selectedVenture.startingBusiness != null && boardManager != null)
+                    boardManager.PlaceBusiness(selectedVenture.startingBusiness, 0);
+
+                // Add bonus card to deck
+                if (selectedVenture.bonusDeckCard != null && deckManager != null)
+                    deckManager.AddCardToDeck(selectedVenture.bonusDeckCard);
+            }
+
             if (boardManager != null)
                 boardManager.SetMaxSlots(resources.BusinessSlots);
             if (rivalAI != null)
                 rivalAI.Initialize();
             if (shopManager != null)
                 shopManager.RefreshShop();
+            if (companyTierSystem != null)
+                companyTierSystem.Reset();
 
             // Fire initial events so UI updates
             EventBus.MoneyUpdated(resources.Money);

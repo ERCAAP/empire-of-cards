@@ -137,4 +137,22 @@ namespace EmpireOfCards.Core
         Level2, // Shop
         Level3  // Store/Chain
     }
+
+    // First Venture selection at game start (GDD Section 1.5)
+    public enum VentureType
+    {
+        Bufe,           // Diner - food starter
+        TechStartup,    // Tech Startup - tech starter
+        ReklamAjansi,   // Ad Agency - marketing starter
+        KaranlikPazar   // Black Market - no business, extra money
+    }
+
+    // Company Tier progression (GDD Section 1.6)
+    public enum CompanyTier
+    {
+        Esnaf,          // Tier 1: Default start
+        Girisimci,      // Tier 2: 2+ businesses + 1+ combo
+        Sirket,         // Tier 3: 3 businesses + 2+ combos + 4+ territories
+        Holding         // Tier 4: 3 businesses + 3+ combos + 5+ territories
+    }
 }

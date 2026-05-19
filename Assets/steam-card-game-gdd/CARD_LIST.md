@@ -35,6 +35,25 @@ Oyuncu her run'a bu desteyle başlar. Zayıf ama temel mekanikleri öğretir.
 
 ---
 
+## İLK GİRİŞİM SEÇENEKLERİ
+
+Oyuncu her run başında bir girişim seçer. Bu seçim başlangıç destesini ve board'u değiştirir. Class kilidi yoktur — sadece başlangıç yönü verir.
+
+| # | Girişim | Board'a Yerleşen | Destene Eklenen | Başlangıç Parası | Toplam Deste |
+|---|---|---|---|---|---|
+| 1 | 🍔 BÜFE | B01 Büfe → Slot 1 | +1 Şef (C04) | 💰500 | 15 kart |
+| 2 | 💻 TECH STARTUP | B04 Tech Startup → Slot 1 | +1 Hacker (C07) | 💰500 | 15 kart |
+| 3 | 📢 REKLAM AJANSI | B08 Reklam Ajansı → Slot 1 | +1 Marketing Gurusu (C05) | 💰500 | 15 kart |
+| 4 | 🕶️ KARANLIK PAZAR | Boş (oyuncu seçer) | +1 Dolandırıcı (C09) | 💰700 | 15 kart |
+
+**Notlar:**
+- Tutorial run'ında Büfe otomatik seçilir (yeni oyuncu seçim ekranını görmez).
+- Girişim seçimi Shop içeriğini etkilemez — her zaman 40 kartlık havuz döner.
+- Büfe girişiminde B01 hem board'a yerleşir hem destede kalır (yani destede hala 2x B01 var, biri board'da biri destede).
+- Karanlik Pazar'da board boş başlar ama 💰200 ekstra para ile telafi edilir.
+
+---
+
 ## İŞLETME KARTLARI (8 adet)
 
 İşletmeler slota konur, kalıcıdır. Her tur otomatik gelir üretir ve müşteri çeker.

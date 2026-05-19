@@ -32,6 +32,7 @@ namespace EmpireOfCards.Gameplay
 
         // --- Properties ---
         public IReadOnlyList<ComboData> ActiveCombos => activeCombos;
+        public int ActiveComboCount => activeCombos.Count;
 
         /// <summary>
         /// Assigns all dependencies without reflection.
