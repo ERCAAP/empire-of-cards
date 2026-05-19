@@ -374,7 +374,7 @@ namespace EmpireOfCards.UI
                 yield return null;
             }
 
-            Object.Destroy(go);
+            UnityEngine.Object.Destroy(go);
         }
 
         /// <summary>
@@ -452,7 +452,7 @@ namespace EmpireOfCards.UI
                 yield return null;
             }
 
-            Object.Destroy(go);
+            UnityEngine.Object.Destroy(go);
         }
 
         private void Update()
