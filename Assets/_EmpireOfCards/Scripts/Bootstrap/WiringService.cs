@@ -170,7 +170,8 @@ namespace EmpireOfCards.Bootstrap
                         break;
 
                     case DropZoneType.UpgradeSlot:
-                        success = gm.BoardManager.PlaceUpgrade(card.CardData, slot.SlotIndex);
+                        // Upgrade area is separate from businesses - use -1 for global placement
+                        success = gm.BoardManager.PlaceUpgrade(card.CardData, -1);
                         if (success)
                         {
                             // Apply immediate upgrade effects (P2 #14)
