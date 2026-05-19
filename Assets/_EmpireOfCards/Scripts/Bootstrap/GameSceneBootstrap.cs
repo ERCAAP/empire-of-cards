@@ -5,6 +5,7 @@ using EmpireOfCards.UI;
 using EmpireOfCards.UI.Cards;
 using EmpireOfCards.VFX;
 using EmpireOfCards.Helpers;
+using EmpireOfCards.Data;
 
 namespace EmpireOfCards.Bootstrap
 {
@@ -48,6 +49,20 @@ namespace EmpireOfCards.Bootstrap
             // 9. Wire everything together
             WiringService.WireAll(data, managers, board3D, cardFactory, hand3D, hud, mainCamera);
 
+            // 9.5. Store venture selection references
+            _ventureSelectionUI = hud.ventureSelectionUI;
+            _ventures = data.ventures;
+
+            // Wire venture UI card buttons and start button
+            if (_ventureSelectionUI != null && hud.ventureCards != null)
+            {
+                // Set card references via fields approach - use a simple init
+                _ventureSelectionUI.SetUIReferences(
+                    hud.ventureCards, hud.ventureCardImages,
+                    hud.ventureNameTexts, hud.ventureDescTexts,
+                    hud.ventureStartButton);
+            }
+
             // 10. Create Tutorial system (after all wiring is complete)
             _tutorialManager = CreateTutorial(hud);
 
@@ -56,12 +71,41 @@ namespace EmpireOfCards.Bootstrap
 
         // Tutorial reference kept for Start()
         private TutorialManager _tutorialManager;
+        private VentureSelectionUI _ventureSelectionUI;
+        private VentureData[] _ventures;
 
         private void Start()
         {
-            GameManager.Instance?.StartNewRun();
+            // Show venture selection instead of starting immediately
+            if (_ventureSelectionUI != null && _ventures != null && _ventures.Length > 0)
+            {
+                _ventureSelectionUI.Init(_ventures);
+                _ventureSelectionUI.OnVentureSelected += OnVentureChosen;
+                _ventureSelectionUI.Show();
+            }
+            else
+            {
+                // Fallback: start without venture selection
+                StartRun(null);
+            }
+        }
 
-            // Start tutorial after the first turn begins so the player can see the board
+        private void OnVentureChosen(VentureData venture)
+        {
+            _ventureSelectionUI.OnVentureSelected -= OnVentureChosen;
+            StartRun(venture);
+        }
+
+        private void StartRun(VentureData venture)
+        {
+            var gm = GameManager.Instance;
+            if (gm == null) return;
+
+            if (venture != null)
+                gm.SetSelectedVenture(venture);
+
+            gm.StartNewRun();
+
             if (_tutorialManager != null)
                 _tutorialManager.TryStartTutorial();
         }

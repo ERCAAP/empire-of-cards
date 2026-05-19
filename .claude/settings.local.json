@@ -5,7 +5,8 @@
       "Bash(grep -E \"\\\\.\\(cs|meta\\)$\")",
       "Bash(grep \"\\\\.cs$\")",
       "Bash(git add:*)",
-      "Bash(git push:*)"
+      "Bash(git push:*)",
+      "Bash(git status:*)"
     ]
   },
   "enableAllProjectMcpServers": true,

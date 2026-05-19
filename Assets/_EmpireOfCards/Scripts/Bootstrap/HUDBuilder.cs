@@ -163,6 +163,28 @@ namespace EmpireOfCards.Bootstrap
             hud.rivalPopup = rivalPopup.gameObject.AddComponent<RivalPopup>();
             rivalPopup.gameObject.SetActive(false);
 
+            // Tier promotion popup
+            var tierPopupRt = CreateUIPanel("TierPopup", canvasGo.transform);
+            SetAnchors(tierPopupRt, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f));
+            tierPopupRt.sizeDelta = new Vector2(600, 200);
+            var tierCg = tierPopupRt.gameObject.AddComponent<CanvasGroup>();
+            tierCg.alpha = 0f;
+            var tierPopup = tierPopupRt.gameObject.AddComponent<TierPopup>();
+
+            var tierTitleText = CreateTextElement("TierTitle", tierPopupRt, "GİRİŞİMCİ", 48);
+            tierTitleText.anchoredPosition = new Vector2(0, 30);
+            tierTitleText.sizeDelta = new Vector2(500, 60);
+
+            var tierSubText = CreateTextElement("TierSubtitle", tierPopupRt, "", 22);
+            tierSubText.anchoredPosition = new Vector2(0, -30);
+            tierSubText.sizeDelta = new Vector2(500, 40);
+
+            tierPopup.SetReferences(
+                tierTitleText.GetComponent<TMP_Text>(),
+                tierSubText.GetComponent<TMP_Text>(),
+                tierCg);
+            hud.tierPopup = tierPopup;
+
             // ============================================================
             // SCORE & GAMEOVER OVERLAYS (hidden by default)
             // ============================================================
@@ -188,6 +210,93 @@ namespace EmpireOfCards.Bootstrap
             gameOverOverlay.GetComponent<Image>().color = new Color(0, 0, 0, 0.85f);
             hud.gameOverScreen = gameOverOverlay.gameObject.AddComponent<GameOverScreen>();
             gameOverOverlay.gameObject.SetActive(false);
+
+            // ============================================================
+            // VENTURE SELECTION PANEL (shown at game start, hidden after)
+            // ============================================================
+            var venturePanel = CreateUIPanel("VentureSelectionPanel", canvasGo.transform);
+            venturePanel.anchorMin = Vector2.zero;
+            venturePanel.anchorMax = Vector2.one;
+            venturePanel.sizeDelta = Vector2.zero;
+            venturePanel.offsetMin = Vector2.zero;
+            venturePanel.offsetMax = Vector2.zero;
+            venturePanel.GetComponent<Image>().color = new Color(0.05f, 0.05f, 0.1f, 0.95f);
+
+            // Title
+            var ventureTitle = CreateTextElement("VentureTitle", venturePanel, "İLK GİRİŞİMİNİ SEÇ", 42);
+            ventureTitle.anchoredPosition = new Vector2(0, 350);
+            ventureTitle.sizeDelta = new Vector2(800, 60);
+
+            // 4 Venture cards in a row
+            var ventureCards = new RectTransform[4];
+            var ventureCardImages = new Image[4];
+            var ventureNameTexts = new TMP_Text[4];
+            var ventureDescTexts = new TMP_Text[4];
+            string[] ventureNames = { "🍔 BÜFE", "💻 TECH STARTUP", "📢 REKLAM AJANSI", "🕶️ KARANLIK PAZAR" };
+            string[] ventureDescs = {
+                "Büfe tahtada hazır.\nDestene +1 Şef.\nFood combo'lara yön verir.",
+                "Tech Startup tahtada hazır.\nDestene +1 Hacker.\nGeç oyun gücü.",
+                "Reklam Ajansı tahtada hazır.\nDestene +1 Marketing Guru.\nMüşteri odaklı.",
+                "İşletme yok, +200 ekstra para.\nDestene +1 Dolandırıcı.\nRiskli ama hızlı."
+            };
+            Color[] ventureColors = {
+                new Color(0.9f, 0.5f, 0.2f),
+                new Color(0.3f, 0.6f, 0.9f),
+                new Color(0.9f, 0.3f, 0.5f),
+                new Color(0.4f, 0.4f, 0.4f)
+            };
+
+            for (int i = 0; i < 4; i++)
+            {
+                var card = CreateUIPanel($"VentureCard_{i}", venturePanel);
+                card.sizeDelta = new Vector2(320, 400);
+                card.anchoredPosition = new Vector2((i - 1.5f) * 340f, -20);
+                var cardImg = card.GetComponent<Image>();
+                cardImg.color = new Color(0.15f, 0.15f, 0.2f, 0.95f);
+                card.gameObject.AddComponent<Button>().targetGraphic = cardImg;
+
+                // Accent bar at top of card
+                var accent = CreateUIPanel("Accent", card);
+                SetAnchors(accent, new Vector2(0, 1), new Vector2(1, 1), new Vector2(0.5f, 1));
+                accent.sizeDelta = new Vector2(0, 8);
+                accent.offsetMin = new Vector2(0, 0);
+                accent.offsetMax = new Vector2(0, 0);
+                accent.anchoredPosition = new Vector2(0, 0);
+                accent.GetComponent<Image>().color = ventureColors[i];
+
+                // Name text
+                var nameText = CreateTextElement("Name", card, ventureNames[i], 26);
+                nameText.anchoredPosition = new Vector2(0, 140);
+                nameText.sizeDelta = new Vector2(280, 40);
+
+                // Description text
+                var descText = CreateTextElement("Desc", card, ventureDescs[i], 16);
+                descText.anchoredPosition = new Vector2(0, 0);
+                descText.sizeDelta = new Vector2(280, 200);
+                descText.GetComponent<TMP_Text>().alignment = TextAlignmentOptions.Center;
+
+                ventureCards[i] = card;
+                ventureCardImages[i] = cardImg;
+                ventureNameTexts[i] = nameText.GetComponent<TMP_Text>();
+                ventureDescTexts[i] = descText.GetComponent<TMP_Text>();
+            }
+
+            // START button (disabled until selection)
+            var ventureStartBtn = CreateButton("VentureStartButton", venturePanel, "BAŞLA");
+            ventureStartBtn.anchoredPosition = new Vector2(0, -280);
+            ventureStartBtn.sizeDelta = new Vector2(200, 60);
+            ventureStartBtn.GetComponent<Image>().color = new Color(0.2f, 0.5f, 0.3f);
+            ventureStartBtn.GetComponent<Button>().interactable = false;
+
+            // Add VentureSelectionUI component and assign references
+            var ventureUI = venturePanel.gameObject.AddComponent<VentureSelectionUI>();
+            // We need to assign via serialized fields - use reflection-free Init pattern
+            hud.ventureSelectionUI = ventureUI;
+            hud.ventureCards = ventureCards;
+            hud.ventureCardImages = ventureCardImages;
+            hud.ventureNameTexts = ventureNameTexts;
+            hud.ventureDescTexts = ventureDescTexts;
+            hud.ventureStartButton = ventureStartBtn.GetComponent<Button>();
 
             // ============================================================
             // EVENT SYSTEM (required for UI interaction)
@@ -282,6 +391,7 @@ namespace EmpireOfCards.Bootstrap
         public ComboPopup comboPopup;
         public EventPopup eventPopup;
         public RivalPopup rivalPopup;
+        public TierPopup tierPopup;
         public ScoreScreen scoreScreen;
         public GameOverScreen gameOverScreen;
 
@@ -297,5 +407,13 @@ namespace EmpireOfCards.Bootstrap
         public Button endTurnButton;
         public Button shopButton;
         public Button shopCloseButton;
+
+        // Venture Selection
+        public VentureSelectionUI ventureSelectionUI;
+        public RectTransform[] ventureCards;
+        public Image[] ventureCardImages;
+        public TMP_Text[] ventureNameTexts;
+        public TMP_Text[] ventureDescTexts;
+        public Button ventureStartButton;
     }
 }

@@ -21,6 +21,7 @@ namespace EmpireOfCards.World
         }
 
         // Created at runtime
+        private TextMeshPro _tierLabel;
         private readonly List<SlotZone3D> _businessSlots = new List<SlotZone3D>();
         private readonly List<SlotZone3D> _employeeSlots = new List<SlotZone3D>();
         private readonly List<SlotZone3D> _upgradeSlots = new List<SlotZone3D>();
@@ -203,7 +204,7 @@ namespace EmpireOfCards.World
             Quaternion labelRot = Quaternion.Euler(55f, 0f, 0f); // Match camera angle
 
             // COMPANY TIER -- top-left corner
-            CreateLabel("ESNAF", new Vector3(-6f, labelY, 4.2f), labelRot, fontSize * 0.9f,
+            _tierLabel = CreateLabel("ESNAF", new Vector3(-6f, labelY, 4.2f), labelRot, fontSize * 0.9f,
                         new Color(0.9f, 0.75f, 0.3f));
 
             // YOUR BUSINESSES -- above player business slots (center-bottom)
@@ -230,7 +231,7 @@ namespace EmpireOfCards.World
         /// <summary>
         /// Creates a single floating 3D TextMeshPro label as a child of the board.
         /// </summary>
-        private void CreateLabel(string text, Vector3 localPos, Quaternion localRot, float fontSize, Color color)
+        private TextMeshPro CreateLabel(string text, Vector3 localPos, Quaternion localRot, float fontSize, Color color)
         {
             var go = new GameObject($"Label_{text.Replace(" ", "")}");
             go.transform.SetParent(transform);
@@ -249,6 +250,38 @@ namespace EmpireOfCards.World
             var rt = go.GetComponent<RectTransform>();
             if (rt != null)
                 rt.sizeDelta = new Vector2(6f, 1.5f);
+
+            return tmp;
+        }
+
+        // ================================================================
+        //  Tier Change -- update the board label when company tier changes
+        // ================================================================
+
+        private static readonly string[] TierNames = { "ESNAF", "GİRİŞİMCİ", "ŞİRKET", "HOLDİNG" };
+        private static readonly Color[] TierLabelColors = {
+            new Color(0.9f, 0.75f, 0.3f),
+            new Color(0.3f, 0.8f, 0.4f),
+            new Color(0.3f, 0.6f, 1f),
+            new Color(1f, 0.8f, 0.2f)
+        };
+
+        private void OnEnable()
+        {
+            EventBus.OnCompanyTierChanged += HandleTierChanged;
+        }
+
+        private void OnDisable()
+        {
+            EventBus.OnCompanyTierChanged -= HandleTierChanged;
+        }
+
+        private void HandleTierChanged(CompanyTier newTier)
+        {
+            if (_tierLabel == null) return;
+            int idx = (int)newTier;
+            _tierLabel.text = TierNames[idx];
+            _tierLabel.color = TierLabelColors[idx];
         }
     }
 }
