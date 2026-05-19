@@ -188,7 +188,7 @@ namespace EmpireOfCards.Gameplay
             {
                 foreach (var combo in comboSystem.ActiveCombos)
                 {
-                    if (combo != null && combo.comboId != null && combo.comboId.Contains("GuvenliSuc"))
+                    if (combo != null && combo.comboId != null && combo.comboId.Contains("SafeCrime"))
                     {
                         active = true;
                         break;

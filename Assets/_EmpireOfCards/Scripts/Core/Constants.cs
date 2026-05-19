@@ -110,5 +110,11 @@ namespace EmpireOfCards.Core
         #region First Venture (GDD Section 1.5)
         public const int KARANLIK_PAZAR_BONUS_MONEY = 200;  // Extra $200 for black market
         #endregion
+
+        #region Special Business Mechanics
+        public const int FRANCHISE_HUB_INCOME_PER_BUSINESS = 40;  // B09: +40 income per active business
+        public const float CONSULTING_FIRM_MULTIPLIER = 1.4f;     // B11: best business earns 40% more
+        public const int POPUP_SHOP_LIFETIME_TURNS = 4;           // B12: self-destructs after 4 turns
+        #endregion
     }
 }

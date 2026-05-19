@@ -145,9 +145,20 @@ namespace EmpireOfCards.Gameplay
                 return;
             }
 
+            // Black Friday event: show 5 cards at 30% discount
+            GameManager gm = GameManager.Instance;
+            bool blackFridayActive = false;
+            if (gm != null && gm.BoardManager != null && gm.BoardManager.ActiveEvent != null
+                && gm.BoardManager.ActiveEvent.eventEffectType == EventEffectType.ShopFloodRare)
+            {
+                blackFridayActive = true;
+                activeDiscount = Mathf.Max(activeDiscount, 0.3f);
+            }
+
             // Build a temporary list to avoid duplicates
             List<CardData> available = new List<CardData>(shopPool);
-            int cardsToPick = Mathf.Min(shopSize, available.Count);
+            int effectiveShopSize = blackFridayActive ? 5 : shopSize;
+            int cardsToPick = Mathf.Min(effectiveShopSize, available.Count);
 
             // Venture bias: guarantee 1 biased card for the first N turns
             bool biasApplied = false;

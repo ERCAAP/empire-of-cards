@@ -84,13 +84,13 @@ namespace EmpireOfCards.Bootstrap.Data
                 combos[2] = c;
             }
 
-            // COMBO 04 - Fast Food Empire (Medium)
+            // COMBO 04 - Nightlife Frenzy (Medium)
             {
                 var c = ScriptableObject.CreateInstance<ComboData>();
-                c.name = "COMBO_04_FastFoodEmpire";
-                c.comboId = "COMBO_04_FastFoodEmpire";
-                c.comboName = "Fast Food Empire";
-                c.displayText = "FAST FOOD EMPIRE!";
+                c.name = "COMBO_04_NightlifeFrenzy";
+                c.comboId = "COMBO_04_NightlifeFrenzy";
+                c.comboName = "Nightlife Frenzy";
+                c.displayText = "NIGHTLIFE FRENZY!";
                 c.tier = ComboTier.Medium;
                 c.description = "Nightclub + Influencer + Viral Trend event = customers x3.";
                 c.requiredCardIds = new[] { "B05_GeceKulubu", "C06_Influencer" };

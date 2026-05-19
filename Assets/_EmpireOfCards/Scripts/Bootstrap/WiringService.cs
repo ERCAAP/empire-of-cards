@@ -58,7 +58,7 @@ namespace EmpireOfCards.Bootstrap
                 m.shopManager, m.uiManager, m.audioManager, m.vfxManager, m.saveManager);
 
             // === EconomyManager ===
-            m.economyManager.Init(data.balanceData, m.boardManager, m.comboSystem);
+            m.economyManager.Init(data.balanceData, m.boardManager, m.comboSystem, m.abilitySystem);
 
             // === ComboSystem ===
             m.comboSystem.Init(data.combos, m.boardManager);

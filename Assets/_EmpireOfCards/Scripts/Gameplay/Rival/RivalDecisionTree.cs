@@ -1,3 +1,4 @@
+using EmpireOfCards.Core;
 using EmpireOfCards.Data;
 
 namespace EmpireOfCards.Gameplay
@@ -42,14 +43,31 @@ namespace EmpireOfCards.Gameplay
                 return "aggressive";
             }
 
+            // Patent Wall: if player has this upgrade, rival costs increase by 25%
+            float patentWallMultiplier = 1f;
+            GameManager gm = GameManager.Instance;
+            if (gm != null && gm.BoardManager != null)
+            {
+                foreach (var upgrade in gm.BoardManager.GlobalUpgrades)
+                {
+                    if (upgrade != null && upgrade.upgradeEffectType == UpgradeEffectType.RivalCostIncrease)
+                    {
+                        patentWallMultiplier = 1.25f;
+                        break;
+                    }
+                }
+            }
+
             // 2. Rival money >= business cost AND < 3 businesses => OPEN BUSINESS
-            if (rivalMoney >= data.businessCostThreshold && businessCount < 3)
+            int effectiveBusinessCost = (int)(data.businessCostThreshold * patentWallMultiplier);
+            if (rivalMoney >= effectiveBusinessCost && businessCount < 3)
             {
                 return "open_business";
             }
 
             // 3. Empty employee slots => HIRE
-            if (hasEmptyEmployeeSlots && rivalMoney >= data.hireCostThreshold)
+            int effectiveHireCost = (int)(data.hireCostThreshold * patentWallMultiplier);
+            if (hasEmptyEmployeeSlots && rivalMoney >= effectiveHireCost)
             {
                 return "hire_employee";
             }

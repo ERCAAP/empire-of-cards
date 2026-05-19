@@ -40,6 +40,10 @@ namespace EmpireOfCards.Gameplay.Economy
             int comboIncomeBonus = GetComboIncomeBonus();
             float comboIncomeMultiplier = GetComboIncomeMultiplier();
 
+            // --- Track highest business income for Consulting Firm (B11) multiplier ---
+            bool hasConsultingFirm = false;
+            int highestBusinessIncome = 0;
+
             for (int i = 0; i < businesses.Count; i++)
             {
                 ActiveBusiness business = businesses[i];
@@ -47,6 +51,10 @@ namespace EmpireOfCards.Gameplay.Economy
                 if (business.businessCard == null) continue;
 
                 CardData card = business.businessCard;
+
+                // Check if any active business is a Consulting Firm
+                if (HasTag(card, CardTag.Consulting))
+                    hasConsultingFirm = true;
 
                 // --- Tech Startup delay: 0 income until activationDelay turns pass ---
                 if (card.activationDelay > 0 && business.turnsActive < card.activationDelay)
@@ -137,7 +145,28 @@ namespace EmpireOfCards.Gameplay.Economy
                     businessIncome += card.foodBonusAmount * foodBusinessCount;
                 }
 
+                // --- Franchise Hub (B09): +40 income per OTHER active business on the board ---
+                if (HasTag(card, CardTag.Franchise))
+                {
+                    int activeCount = CountActiveBusinesses(businesses);
+                    int otherCount = activeCount - 1; // Exclude the Franchise Hub itself
+                    if (otherCount > 0)
+                        businessIncome += Constants.FRANCHISE_HUB_INCOME_PER_BUSINESS * otherCount;
+                }
+
+                // Track highest business income (excluding Consulting Firm itself)
+                if (!HasTag(card, CardTag.Consulting) && businessIncome > highestBusinessIncome)
+                    highestBusinessIncome = businessIncome;
+
                 total += businessIncome;
+            }
+
+            // --- Consulting Firm (B11): best business earns 40% more ---
+            if (hasConsultingFirm && highestBusinessIncome > 0)
+            {
+                int consultingBonus = Mathf.RoundToInt(
+                    highestBusinessIncome * (Constants.CONSULTING_FIRM_MULTIPLIER - 1f));
+                total += consultingBonus;
             }
 
             // --- Add combo income bonuses ---
@@ -185,6 +214,11 @@ namespace EmpireOfCards.Gameplay.Economy
             {
                 case EventEffectType.AllIncomeReduction:
                     income = Mathf.RoundToInt(income * (1f + eventCard.eventMultiplier));
+                    break;
+
+                case EventEffectType.TerritoryScramble:
+                    // Gold Rush: all businesses get +30% income bonus
+                    income = Mathf.RoundToInt(income * 1.3f);
                     break;
 
                 case EventEffectType.TagDoubleEffect:
@@ -239,6 +273,16 @@ namespace EmpireOfCards.Gameplay.Economy
             {
                 if (biz.isClosed || biz.businessCard == null) continue;
                 if (HasTag(biz.businessCard, tag)) count++;
+            }
+            return count;
+        }
+
+        private int CountActiveBusinesses(IReadOnlyList<ActiveBusiness> businesses)
+        {
+            int count = 0;
+            foreach (var biz in businesses)
+            {
+                if (!biz.isClosed && biz.businessCard != null) count++;
             }
             return count;
         }

@@ -29,6 +29,9 @@ namespace EmpireOfCards.Gameplay
         [SerializeField] private int netIncome;
         [SerializeField] private int totalCustomersThisTurn;
 
+        // --- Ability System Reference ---
+        private AbilitySystem abilitySystem;
+
         // --- Sub-systems ---
         private IncomeCalculator incomeCalculator;
         private TaxCalculator taxCalculator;
@@ -46,11 +49,12 @@ namespace EmpireOfCards.Gameplay
         /// Assigns all dependencies without reflection.
         /// Called by WiringService during bootstrap.
         /// </summary>
-        public void Init(GameBalanceData balance, BoardManager board, ComboSystem combo)
+        public void Init(GameBalanceData balance, BoardManager board, ComboSystem combo, AbilitySystem ability = null)
         {
             this.balanceData = balance;
             this.boardManager = board;
             this.comboSystem = combo;
+            this.abilitySystem = ability;
 
             incomeCalculator = new IncomeCalculator(comboSystem);
             taxCalculator = new TaxCalculator(balanceData);
@@ -85,14 +89,30 @@ namespace EmpireOfCards.Gameplay
             // Step 1: Income
             grossIncome = incomeCalculator.CalculateTurnIncome(
                 businesses, activeEvent, debtTracker.DebtPercent, debtTracker.TurnsRemaining);
+
+            // Apply AbilitySystem income multiplier (e.g., Chef "Special Menu", Consultant scaling)
+            if (abilitySystem != null && abilitySystem.IncomeMultiplier != 1f)
+            {
+                grossIncome = Mathf.RoundToInt(grossIncome * abilitySystem.IncomeMultiplier);
+                Debug.Log($"[EconomyManager] AbilitySystem income multiplier applied: x{abilitySystem.IncomeMultiplier} -> gross={grossIncome}");
+            }
+
             EventBus.IncomeReceived(grossIncome);
 
             // Step 2: Salaries
             totalSalaries = CalculateSalaries(businesses);
 
-            // Step 3-4: Tax
+            // Step 3-4: Tax (skip if AbilitySystem grants tax-free this turn)
             int accountantCount = taxCalculator.CountAccountants(businesses);
-            taxAmount = taxCalculator.CalculateTax(grossIncome, accountantCount);
+            if (abilitySystem != null && abilitySystem.TaxFree)
+            {
+                taxAmount = 0;
+                Debug.Log("[EconomyManager] AbilitySystem: tax-free this turn");
+            }
+            else
+            {
+                taxAmount = taxCalculator.CalculateTax(grossIncome, accountantCount);
+            }
 
             // Step 5: Net
             netIncome = grossIncome - totalSalaries - taxAmount;
@@ -124,6 +144,21 @@ namespace EmpireOfCards.Gameplay
                 int bizCustomers = CalculateBusinessCustomers(businesses[i]);
                 boardManager.AddCustomersAttracted(i, bizCustomers);
                 totalCustomersThisTurn += bizCustomers;
+            }
+
+            // Apply AbilitySystem customer modifiers (multiplier + extra)
+            if (abilitySystem != null)
+            {
+                if (abilitySystem.CustomerMultiplier != 1f)
+                {
+                    totalCustomersThisTurn = Mathf.RoundToInt(totalCustomersThisTurn * abilitySystem.CustomerMultiplier);
+                    Debug.Log($"[EconomyManager] AbilitySystem customer multiplier applied: x{abilitySystem.CustomerMultiplier}");
+                }
+                if (abilitySystem.ExtraCustomers > 0)
+                {
+                    totalCustomersThisTurn += abilitySystem.ExtraCustomers;
+                    Debug.Log($"[EconomyManager] AbilitySystem extra customers applied: +{abilitySystem.ExtraCustomers}");
+                }
             }
         }
 

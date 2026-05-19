@@ -48,6 +48,9 @@ namespace EmpireOfCards.Gameplay
         private RivalGrowth growth;
         private RivalDialogue dialogue;
 
+        // --- Cost Sabotage (Lobbyist ability) ---
+        [SerializeField] private float nextPurchaseCostMultiplier = 0f;
+
         // --- Properties ---
         public int RivalMoney => rivalMoney;
         public int RivalCustomers => rivalCustomers;
@@ -230,6 +233,15 @@ namespace EmpireOfCards.Gameplay
                     }
                     break;
                 case "open_business":
+                    // Apply Lobbyist cost-increase sabotage if active
+                    if (nextPurchaseCostMultiplier > 0f)
+                    {
+                        int baseCost = data.businessCostThreshold;
+                        int surcharge = Mathf.RoundToInt(baseCost * nextPurchaseCostMultiplier);
+                        rivalMoney -= surcharge;
+                        Debug.Log($"[RivalAI] Lobbyist sabotage: paid {surcharge} extra for business ({nextPurchaseCostMultiplier * 100}% surcharge)");
+                        nextPurchaseCostMultiplier = 0f;
+                    }
                     growth.OpenBusiness(rivalBusinesses, ref rivalMoney);
                     break;
                 case "hire_employee":
@@ -264,6 +276,17 @@ namespace EmpireOfCards.Gameplay
             rivalCustomers = economy.CalculateRivalCustomers(rivalBusinesses);
         }
 
+        /// <summary>
+        /// Marks the rival's next business purchase as more expensive.
+        /// Called by AbilitySystem when the Lobbyist "Red Tape" ability fires.
+        /// The multiplier stacks additively (e.g., 0.25 = +25% cost).
+        /// </summary>
+        public void ApplyNextPurchaseCostIncrease(float multiplier)
+        {
+            nextPurchaseCostMultiplier += multiplier;
+            Debug.Log($"[RivalAI] Next business purchase cost increased by +{multiplier * 100}% (total +{nextPurchaseCostMultiplier * 100}%)");
+        }
+
         public void CloseWeakestBusiness(int turns)
         {
             growth.CloseWeakestBusiness(rivalBusinesses, ref totalRivalEmployees);
@@ -289,6 +312,7 @@ namespace EmpireOfCards.Gameplay
             rivalCustomers = 0;
             totalRivalEmployees = 0;
             aggressionEnabled = false;
+            nextPurchaseCostMultiplier = 0f;
             rivalBusinesses.Clear();
             dialogue?.Reset();
         }

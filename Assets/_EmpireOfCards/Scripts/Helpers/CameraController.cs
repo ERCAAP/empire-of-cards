@@ -120,16 +120,16 @@ namespace EmpireOfCards.Helpers
 
             resolveCamera = CreateVCam(
                 "ResolveCamera",
-                new Vector3(0f, 7.0f, -4.0f),
-                new Vector3(0f, 0f, -1.0f),
-                40f,
+                new Vector3(0f, 8.0f, -5.0f),   // Subtle zoom: slightly closer than play
+                new Vector3(0f, 0f, -0.5f),      // Slight focus shift toward businesses
+                43f,                              // Tighter FOV but not jarring
                 0);
 
             rivalCamera = CreateVCam(
                 "RivalCamera",
-                new Vector3(0f, 8.0f, -3.0f),
-                new Vector3(0f, 0f, 2.5f),
-                42f,
+                new Vector3(0f, 8.3f, -4.5f),   // Gentle forward shift toward rival
+                new Vector3(0f, 0f, 1.5f),       // Look slightly toward rival area
+                44f,
                 0);
         }
 

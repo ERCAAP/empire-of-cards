@@ -73,9 +73,11 @@ namespace EmpireOfCards.World
         {
             for (int i = _cards.Count - 1; i >= 0; i--)
             {
-                if (_cards[i].CardData == card)
+                if (_cards[i] != null && _cards[i].CardData == card)
                 {
-                    Destroy(_cards[i].gameObject);
+                    // Only destroy if the card is still in hand (not placed on board)
+                    if (_cards[i].IsInHand)
+                        Destroy(_cards[i].gameObject);
                     _cards.RemoveAt(i);
                     break;
                 }

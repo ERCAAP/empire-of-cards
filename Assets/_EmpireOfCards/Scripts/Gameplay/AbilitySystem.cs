@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 using EmpireOfCards.Core;
 using EmpireOfCards.Data;
@@ -18,6 +19,9 @@ namespace EmpireOfCards.Gameplay
         private int _extraCustomersThisTurn = 0;
         private bool _taxFreeThisTurn = false;
         private int _ponziDebtNextTurn = 0;
+
+        // --- Consultant scaling: maps employee instance -> accumulated bonus ---
+        private readonly Dictionary<CardData, int> _scalingIncomeBonuses = new Dictionary<CardData, int>();
 
         // --- Public accessors for EconomyManager to read ---
         public float CustomerMultiplier => _customerMultiplierThisTurn;
@@ -118,6 +122,55 @@ namespace EmpireOfCards.Gameplay
                     Debug.Log($"[AbilitySystem] {employee.cardName}: +{totalEmployees} customers ({totalEmployees} employees motivated)");
                     break;
 
+                case ActiveAbilityType.ReduceRivalCustomers:
+                    // Bouncer "Intimidate": rival loses abilityValue2 customers
+                    if (gm.RivalAI != null)
+                    {
+                        gm.RivalAI.ApplyCustomerPenalty(employee.abilityValue2);
+                        Debug.Log($"[AbilitySystem] {employee.cardName}: rival lost {employee.abilityValue2} customers");
+                    }
+                    break;
+
+                case ActiveAbilityType.ScaleIncomePerTurn:
+                    // Consultant "Experience": income bonus grows by abilityValue2 each activation
+                    if (!_scalingIncomeBonuses.ContainsKey(employee))
+                        _scalingIncomeBonuses[employee] = 0;
+                    _scalingIncomeBonuses[employee] += employee.abilityValue2;
+                    int currentBonus = _scalingIncomeBonuses[employee];
+                    _incomeMultiplierThisTurn += currentBonus * 0.01f; // +5 => +5% cumulative
+                    Debug.Log($"[AbilitySystem] {employee.cardName}: scaling income bonus now +{currentBonus} (+{currentBonus}% income)");
+                    break;
+
+                case ActiveAbilityType.CopyRandomEmployeeAbility:
+                    // Headhunter "Poach Talent": pick random other employee and fire their ability
+                    CardData copied = PickRandomOtherEmployee(gm.BoardManager, employee);
+                    if (copied != null && copied.activeAbilityType != ActiveAbilityType.None
+                        && copied.activeAbilityType != ActiveAbilityType.CopyRandomEmployeeAbility)
+                    {
+                        // Refund the action we already spent -- the recursive call will spend one
+                        gm.AddExtraAction(1);
+                        bool copyResult = TryUseAbility(copied, businessIndex);
+                        if (!copyResult)
+                        {
+                            // Recursive call failed and already refunded; nothing to do
+                        }
+                        Debug.Log($"[AbilitySystem] {employee.cardName}: copied ability from {copied.cardName}");
+                    }
+                    else
+                    {
+                        Debug.Log($"[AbilitySystem] {employee.cardName}: no valid employee to copy");
+                    }
+                    break;
+
+                case ActiveAbilityType.SabotageCostIncrease:
+                    // Lobbyist "Red Tape": rival's next business purchase costs 25% more
+                    if (gm.RivalAI != null)
+                    {
+                        gm.RivalAI.ApplyNextPurchaseCostIncrease(employee.abilityValue1);
+                        Debug.Log($"[AbilitySystem] {employee.cardName}: rival's next purchase costs +{employee.abilityValue1 * 100}% more");
+                    }
+                    break;
+
                 default:
                     // Unknown ability type, refund the action
                     gm.AddExtraAction(1);
@@ -170,6 +223,32 @@ namespace EmpireOfCards.Gameplay
                 count += business.employees.Count;
             }
             return count;
+        }
+
+        /// <summary>
+        /// Picks a random employee on the board that is NOT the given employee
+        /// and has a usable active ability (not None, not CopyRandomEmployeeAbility).
+        /// </summary>
+        private CardData PickRandomOtherEmployee(BoardManager boardManager, CardData exclude)
+        {
+            if (boardManager == null) return null;
+
+            var candidates = new List<CardData>();
+            foreach (var business in boardManager.PlayerBusinesses)
+            {
+                if (business == null || business.isClosed) continue;
+                foreach (var emp in business.employees)
+                {
+                    if (emp == null) continue;
+                    if (emp == exclude) continue;
+                    if (emp.activeAbilityType == ActiveAbilityType.None) continue;
+                    if (emp.activeAbilityType == ActiveAbilityType.CopyRandomEmployeeAbility) continue;
+                    candidates.Add(emp);
+                }
+            }
+
+            if (candidates.Count == 0) return null;
+            return candidates[Random.Range(0, candidates.Count)];
         }
     }
 }

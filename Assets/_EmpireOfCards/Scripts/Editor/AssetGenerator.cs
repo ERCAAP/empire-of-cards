@@ -890,12 +890,12 @@ namespace EmpireOfCards.Editor
                 MarkDirty(combo);
             }
 
-            // COMBO 04 - Fast Food Empire (Medium)
+            // COMBO 04 - Nightlife Frenzy (Medium)
             {
-                var combo = CreateOrReplace<ComboData>(CombosRoot + "/COMBO_04_FastFoodEmpire.asset");
-                combo.comboId       = "COMBO_04_FastFoodEmpire";
-                combo.comboName     = "Fast Food Empire";
-                combo.displayText   = "FAST FOOD EMPIRE!";
+                var combo = CreateOrReplace<ComboData>(CombosRoot + "/COMBO_04_NightlifeFrenzy.asset");
+                combo.comboId       = "COMBO_04_NightlifeFrenzy";
+                combo.comboName     = "Nightlife Frenzy";
+                combo.displayText   = "NIGHTLIFE FRENZY!";
                 combo.tier          = ComboTier.Medium;
                 combo.description   = "Nightclub + Influencer + Viral Trend event = customers x3.";
                 combo.requiredCardIds = new[] { "B05_GeceKulubu", "C06_Influencer" };

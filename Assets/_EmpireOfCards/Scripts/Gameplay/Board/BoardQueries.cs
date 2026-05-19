@@ -117,6 +117,15 @@ namespace EmpireOfCards.Gameplay.Board
         {
             int total = 0;
 
+            // Sum all globalCustomerBonus values from active businesses (e.g. Ad Agency: +2)
+            // This bonus applies to EVERY active business, not just the one that has it
+            int totalGlobalCustomerBonus = 0;
+            foreach (var biz in businesses)
+            {
+                if (biz.isClosed || biz.businessCard == null) continue;
+                totalGlobalCustomerBonus += biz.businessCard.globalCustomerBonus;
+            }
+
             foreach (var business in businesses)
             {
                 if (business.isClosed) continue;
@@ -150,8 +159,8 @@ namespace EmpireOfCards.Gameplay.Board
                     bizCustomers += hasSynergy ? emp.synergyCustomerBonus : emp.customerBonus;
                 }
 
-                // Global customer bonus from Ad Agency
-                bizCustomers += business.businessCard.globalCustomerBonus;
+                // Apply global customer bonus from all sources (Ad Agency etc.) to every business
+                bizCustomers += totalGlobalCustomerBonus;
 
                 total += bizCustomers;
             }

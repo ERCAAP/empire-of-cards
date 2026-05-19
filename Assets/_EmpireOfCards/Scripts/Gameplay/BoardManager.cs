@@ -325,6 +325,18 @@ namespace EmpireOfCards.Gameplay
                 business.turnsActive++;
                 business.neglectTurns++;
 
+                // --- Pop-Up Shop (B12): self-destructs after POPUP_SHOP_LIFETIME_TURNS ---
+                if (business.businessCard.cardId != null &&
+                    business.businessCard.cardId.StartsWith("B12_") &&
+                    business.turnsActive >= Constants.POPUP_SHOP_LIFETIME_TURNS)
+                {
+                    Debug.Log($"[BoardManager] Pop-Up Shop in slot {i} expired after {business.turnsActive} turns.");
+                    EventBus.BusinessClosed(i);
+                    RemoveBusiness(i);
+                    i--; // Adjust index since we removed an element
+                    continue;
+                }
+
                 if (business.neglectTurns == Constants.NEGLECT_THRESHOLD_MINOR ||
                     business.neglectTurns == Constants.NEGLECT_THRESHOLD_MAJOR)
                     EventBus.BusinessNeglected(i, business.neglectTurns);

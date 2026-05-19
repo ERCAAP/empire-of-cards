@@ -82,7 +82,7 @@ namespace EmpireOfCards.Bootstrap.Data
             cards[6] = CardHelper.CreateEmployee("C07_Hacker", "Hacker", Rarity.Rare,
                 "Powerful but dangerous. FBI risk every turn.", 60,
                 tags: new[] { CardTag.Tech, CardTag.Illegal });
-            cards[6].customerBonus = -4;
+            cards[6].customerBonus = 0;
             cards[6].fbiRiskPerTurn = 10;
             cards[6].activeAbilityType = ActiveAbilityType.None;
             cards[6].activeAbilityName = "Passive Infiltration";
