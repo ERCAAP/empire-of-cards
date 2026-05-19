@@ -140,14 +140,64 @@ namespace EmpireOfCards.Bootstrap
             biasText.GetComponent<TMP_Text>().color = new Color(0.7f, 0.9f, 0.7f);
             hud.shopBiasText = biasText.GetComponent<TMP_Text>();
 
-            // Shop card slots
+            // Shop card slots -- full card UI with name, cost, and buy button
+            var shopCardUIs = new EmpireOfCards.UI.Cards.CardUI[3];
+            var shopPriceTexts = new TMP_Text[3];
+            var shopBuyButtons = new Button[3];
+
             for (int i = 0; i < 3; i++)
             {
+                // Card container
                 var shopCard = CreateUIPanel($"ShopCard_{i + 1}", shopPanel);
-                shopCard.sizeDelta = new Vector2(150, 220);
-                shopCard.localPosition = new Vector3((i - 1) * 200f, 0, 0);
-                shopCard.GetComponent<Image>().color = new Color(0.3f, 0.3f, 0.35f);
+                shopCard.sizeDelta = new Vector2(160, 220);
+                shopCard.localPosition = new Vector3((i - 1) * 200f, -10, 0);
+                var cardBgImg = shopCard.GetComponent<Image>();
+                cardBgImg.color = new Color(0.25f, 0.25f, 0.3f);
+
+                // CanvasGroup for affordability dimming
+                shopCard.gameObject.AddComponent<CanvasGroup>();
+
+                // CardUI component -- wire its background reference
+                var cardUI = shopCard.gameObject.AddComponent<EmpireOfCards.UI.Cards.CardUI>();
+                shopCardUIs[i] = cardUI;
+
+                // Card name text (top of card)
+                var nameRt = CreateTextElement("CardName", shopCard, "", 18);
+                nameRt.anchoredPosition = new Vector2(0, 70);
+                nameRt.sizeDelta = new Vector2(140, 50);
+                nameRt.GetComponent<TMP_Text>().alignment = TextAlignmentOptions.Center;
+
+                // Card description / stats (middle)
+                var descRt = CreateTextElement("CardDesc", shopCard, "", 12);
+                descRt.anchoredPosition = new Vector2(0, 15);
+                descRt.sizeDelta = new Vector2(140, 60);
+                descRt.GetComponent<TMP_Text>().alignment = TextAlignmentOptions.Center;
+                descRt.GetComponent<TMP_Text>().color = new Color(0.8f, 0.8f, 0.8f);
+
+                // Price text (below description)
+                var priceRt = CreateTextElement("PriceText", shopCard, "$0", 22);
+                priceRt.anchoredPosition = new Vector2(0, -35);
+                priceRt.sizeDelta = new Vector2(140, 30);
+                priceRt.GetComponent<TMP_Text>().alignment = TextAlignmentOptions.Center;
+                priceRt.GetComponent<TMP_Text>().color = new Color(1f, 0.9f, 0.3f);
+                shopPriceTexts[i] = priceRt.GetComponent<TMP_Text>();
+
+                // Buy button (bottom of card)
+                var buyBtn = CreateButton("BuyButton", shopCard, "BUY");
+                buyBtn.anchoredPosition = new Vector2(0, -80);
+                buyBtn.sizeDelta = new Vector2(100, 35);
+                buyBtn.GetComponent<Image>().color = new Color(0.2f, 0.6f, 0.3f);
+                shopBuyButtons[i] = buyBtn.GetComponent<Button>();
+
+                // Wire CardUI serialized fields via reflection-free approach:
+                // CardUI.SetupCard() uses nameText, costText, descriptionText, cardBackground.
+                // We set them through a lightweight init helper.
+                cardUI.InitShopSlot(cardBgImg, nameRt.GetComponent<TMP_Text>(),
+                    priceRt.GetComponent<TMP_Text>(), descRt.GetComponent<TMP_Text>());
             }
+
+            // Pass slot references into ShopPanel
+            hud.shopPanel.SetSlotReferences(shopCardUIs, shopPriceTexts, shopBuyButtons);
 
             var shopCloseBtn = CreateButton("CloseButton", shopPanel, "CLOSE");
             shopCloseBtn.anchoredPosition = new Vector2(0, -200);

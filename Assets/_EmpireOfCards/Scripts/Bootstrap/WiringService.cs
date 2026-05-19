@@ -211,7 +211,7 @@ namespace EmpireOfCards.Bootstrap
                         int price = gm.EconomyManager.GetSellPrice(card.CardData);
                         gm.GainMoney(price);
                         gm.DeckManager.BurnCard(card.CardData); // Remove from deck permanently
-                        EventBus.CardPlayed(card.CardData);
+                        // CardPlayed fired by shared success path below — don't double-fire
                         success = true;
                         break;
                 }

@@ -300,6 +300,7 @@ namespace EmpireOfCards.Core
             resources.AddBusinessSlot(balanceData);
             if (boardManager != null)
                 boardManager.SetMaxSlots(resources.BusinessSlots);
+            EventBus.BusinessSlotsChanged(resources.BusinessSlots);
         }
 
         // === Territory & Customer Updates ===

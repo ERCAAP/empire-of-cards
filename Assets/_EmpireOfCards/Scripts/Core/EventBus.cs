@@ -56,6 +56,10 @@ namespace EmpireOfCards.Core
         public static event Action<int, int> OnTerritoryChanged;           // playerCount, rivalCount
         #endregion
 
+        #region Board Slot Events
+        public static event Action<int> OnBusinessSlotsChanged;            // newMaxSlots
+        #endregion
+
         #region Economy Events
         public static event Action<int> OnMoneyChanged;                    // newAmount
         public static event Action<int> OnIncomeReceived;                  // amount
@@ -129,6 +133,10 @@ namespace EmpireOfCards.Core
         public static void TerritoryUpdated(int p, int r) => OnTerritoryChanged?.Invoke(p, r);
         #endregion
 
+        #region Board Slot Invoke Helpers
+        public static void BusinessSlotsChanged(int maxSlots) => OnBusinessSlotsChanged?.Invoke(maxSlots);
+        #endregion
+
         #region Economy Invoke Helpers
         public static void MoneyUpdated(int amount) => OnMoneyChanged?.Invoke(amount);
         public static void IncomeReceived(int amount) => OnIncomeReceived?.Invoke(amount);
@@ -200,6 +208,9 @@ namespace EmpireOfCards.Core
 
             // Territory
             OnTerritoryChanged = null;
+
+            // Board Slots
+            OnBusinessSlotsChanged = null;
 
             // Economy
             OnMoneyChanged = null;

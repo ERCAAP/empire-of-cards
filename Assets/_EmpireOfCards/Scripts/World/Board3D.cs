@@ -21,6 +21,18 @@ namespace EmpireOfCards.World
             this.boardManager = board;
         }
 
+        /// <summary>
+        /// Shows or hides business slots based on max slot count.
+        /// Called when player unlocks extra business slots.
+        /// </summary>
+        public void UpdateVisibleSlots(int maxSlots)
+        {
+            for (int i = 0; i < _businessSlots.Count; i++)
+            {
+                _businessSlots[i].gameObject.SetActive(i < maxSlots);
+            }
+        }
+
         // Created at runtime
         private TextMeshPro _tierLabel;
         private readonly List<SlotZone3D> _businessSlots = new List<SlotZone3D>();
@@ -276,6 +288,8 @@ namespace EmpireOfCards.World
             EventBus.OnBusinessNeglected += HandleBusinessNeglected;
             EventBus.OnEmployeePlaced += HandleSlotRefresh;
             EventBus.OnUpgradePlaced += HandleSlotRefresh;
+            EventBus.OnTerritoryChanged += HandleTerritoryChanged;
+            EventBus.OnBusinessSlotsChanged += UpdateVisibleSlots;
         }
 
         private void OnDisable()
@@ -284,6 +298,13 @@ namespace EmpireOfCards.World
             EventBus.OnBusinessNeglected -= HandleBusinessNeglected;
             EventBus.OnEmployeePlaced -= HandleSlotRefresh;
             EventBus.OnUpgradePlaced -= HandleSlotRefresh;
+            EventBus.OnTerritoryChanged -= HandleTerritoryChanged;
+            EventBus.OnBusinessSlotsChanged -= UpdateVisibleSlots;
+        }
+
+        private void HandleTerritoryChanged(int playerCount, int rivalCount)
+        {
+            UpdateTerritoryVisuals(playerCount, rivalCount);
         }
 
         private void HandleTierChanged(CompanyTier newTier)

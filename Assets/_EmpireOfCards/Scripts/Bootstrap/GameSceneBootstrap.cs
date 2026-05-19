@@ -126,10 +126,10 @@ namespace EmpireOfCards.Bootstrap
             }
 
             cam.orthographic = false;
-            cam.fieldOfView = 65f;
-            cam.nearClipPlane = 0.1f;
-            cam.farClipPlane = 100f;
-            cam.transform.position = new Vector3(0f, 12f, -6f);
+            cam.fieldOfView = 45f;
+            cam.nearClipPlane = 0.3f;
+            cam.farClipPlane = 50f;
+            cam.transform.position = new Vector3(0f, 8.5f, -5.5f);
             cam.transform.rotation = Quaternion.Euler(55f, 0f, 0f);
             cam.backgroundColor = new Color(0.15f, 0.12f, 0.1f);
             cam.clearFlags = CameraClearFlags.SolidColor;

@@ -58,6 +58,18 @@ namespace EmpireOfCards.UI.Cards
         // ------------------------------------------------------------------
 
         /// <summary>
+        /// Assigns UI element references for procedurally-built shop card slots.
+        /// Called by HUDBuilder since there are no prefabs to serialize against.
+        /// </summary>
+        public void InitShopSlot(Image background, TMP_Text name, TMP_Text cost, TMP_Text description)
+        {
+            cardBackground = background;
+            nameText = name;
+            costText = cost;
+            descriptionText = description;
+        }
+
+        /// <summary>
         /// Populates all UI elements from the supplied CardData.
         /// </summary>
         public void SetupCard(CardData cardData)

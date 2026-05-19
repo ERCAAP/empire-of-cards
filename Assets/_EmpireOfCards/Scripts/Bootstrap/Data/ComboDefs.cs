@@ -14,6 +14,8 @@ namespace EmpireOfCards.Bootstrap.Data
             var combos = new ComboData[10];
 
             // COMBO 01 - Latte Art (Easy)
+            // Buffed from +40/+4 effective to +60/+6 flat (was ~19% of turn 10 income, now ~30%).
+            // Easy 2-card combos should provide 15-25% of mid-game income.
             {
                 var c = ScriptableObject.CreateInstance<ComboData>();
                 c.name = "COMBO_01_LatteArt";
@@ -21,14 +23,14 @@ namespace EmpireOfCards.Bootstrap.Data
                 c.comboName = "Latte Art";
                 c.displayText = "LATTE ART!";
                 c.tier = ComboTier.Easy;
-                c.description = "Coffee Shop + Barista = customers x2, income +50%.";
+                c.description = "Coffee Shop + Barista = +60 income, +6 customers.";
                 c.requiredCardIds = new[] { "B02_Kahveci", "C03_Barista" };
                 c.requiredTags = new[] { CardTag.Coffee };
                 c.requiresSpecificPlacement = true;
                 c.employeeCardId = "C03_Barista";
                 c.businessCardId = "B02_Kahveci";
-                c.customerMultiplier = 2f;
-                c.incomeMultiplier = 1.5f;
+                c.bonusIncome = 60;
+                c.bonusCustomers = 6;
                 c.glowColor = new Color(0.6f, 0.4f, 0.2f, 1f);
                 c.comboSoundId = "combo_trigger";
                 c.screenShakeIntensity = 0.3f;
@@ -37,6 +39,7 @@ namespace EmpireOfCards.Bootstrap.Data
             }
 
             // COMBO 02 - Organic Synergy (Easy)
+            // Buffed from +30 to +40 income (was ~14%, now ~19% of turn 10 income).
             {
                 var c = ScriptableObject.CreateInstance<ComboData>();
                 c.name = "COMBO_02_OrganicSynergy";
@@ -44,13 +47,13 @@ namespace EmpireOfCards.Bootstrap.Data
                 c.comboName = "Organic Synergy";
                 c.displayText = "ORGANIC SYNERGY!";
                 c.tier = ComboTier.Easy;
-                c.description = "Burger Chain + Chef = income +30, customers +50%.";
+                c.description = "Burger Chain + Chef = income +40, customers +50%.";
                 c.requiredCardIds = new[] { "B03_BurgerZinciri", "C04_Sef" };
                 c.requiredTags = new[] { CardTag.Food };
                 c.requiresSpecificPlacement = true;
                 c.employeeCardId = "C04_Sef";
                 c.businessCardId = "B03_BurgerZinciri";
-                c.bonusIncome = 30;
+                c.bonusIncome = 40;
                 c.customerMultiplier = 1.5f;
                 c.glowColor = new Color(1f, 0.5f, 0f, 1f);
                 c.comboSoundId = "combo_trigger";

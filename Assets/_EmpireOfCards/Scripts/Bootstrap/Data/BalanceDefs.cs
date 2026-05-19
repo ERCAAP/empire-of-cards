@@ -161,6 +161,8 @@ namespace EmpireOfCards.Bootstrap.Data
             rival.ventureMatchedCustomers = new[] { 3, 0, 3, 5 };
 
             // Growth Schedule (GDD Section 8.3)
+            // Rival pacing slowed: territories reduced at each milestone
+            // to give players a comeback window (old values reached 6 territories by turn 15).
             rival.growthMilestones = new RivalMilestone[]
             {
                 new RivalMilestone
@@ -168,20 +170,28 @@ namespace EmpireOfCards.Bootstrap.Data
                     turn = 5,
                     targetBusinesses = 2,
                     targetEmployees = 2,
-                    targetTerritories = 3,
+                    targetTerritories = 2,
                     enableAggression = false
                 },
                 new RivalMilestone
                 {
                     turn = 8,
-                    targetBusinesses = 3,
-                    targetEmployees = 4,
-                    targetTerritories = 4,
+                    targetBusinesses = 2,
+                    targetEmployees = 3,
+                    targetTerritories = 3,
                     enableAggression = true
                 },
                 new RivalMilestone
                 {
                     turn = 12,
+                    targetBusinesses = 3,
+                    targetEmployees = 5,
+                    targetTerritories = 4,
+                    enableAggression = true
+                },
+                new RivalMilestone
+                {
+                    turn = 15,
                     targetBusinesses = 3,
                     targetEmployees = 6,
                     targetTerritories = 5,
@@ -189,9 +199,9 @@ namespace EmpireOfCards.Bootstrap.Data
                 },
                 new RivalMilestone
                 {
-                    turn = 15,
+                    turn = 20,
                     targetBusinesses = 4,
-                    targetEmployees = 8,
+                    targetEmployees = 7,
                     targetTerritories = 6,
                     enableAggression = true
                 },

@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+using TMPro;
 using EmpireOfCards.Core;
 using EmpireOfCards.Data;
 

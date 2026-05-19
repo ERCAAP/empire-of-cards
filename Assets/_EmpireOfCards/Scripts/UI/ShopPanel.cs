@@ -48,6 +48,17 @@ namespace EmpireOfCards.UI
         /// </summary>
         public void SetBiasText(TMP_Text biasText) { _biasText = biasText; }
 
+        /// <summary>
+        /// Assigns the procedurally-built shop card slot references.
+        /// Called by HUDBuilder after creating the shop card UI elements.
+        /// </summary>
+        public void SetSlotReferences(CardUI[] cards, TMP_Text[] prices, Button[] buttons)
+        {
+            shopCards = cards;
+            priceTexts = prices;
+            buyButtons = buttons;
+        }
+
         // Cached stock for affordability re-checks
         private List<CardData> currentStock;
 
