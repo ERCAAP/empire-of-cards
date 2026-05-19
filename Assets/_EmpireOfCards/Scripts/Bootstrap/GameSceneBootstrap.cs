@@ -117,8 +117,8 @@ namespace EmpireOfCards.Bootstrap
         {
             var handAnchor = new GameObject("HandAnchor");
             handAnchor.transform.SetParent(mainCamera.transform);
-            handAnchor.transform.localPosition = new Vector3(0f, -3f, 2f);
-            handAnchor.transform.localRotation = Quaternion.Euler(-40f, 0f, 0f);
+            handAnchor.transform.localPosition = new Vector3(0f, -1.2f, 4f);
+            handAnchor.transform.localRotation = Quaternion.Euler(-50f, 0f, 0f);
 
             var handGo = new GameObject("Hand3D");
             handGo.transform.SetParent(handAnchor.transform);
