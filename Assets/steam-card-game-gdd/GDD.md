@@ -1,7 +1,7 @@
 # GAME DESIGN DOCUMENT
 # "Empire of Cards"
 
-> Versiyon: 2.1 | Tarih: 2026-05-19
+> Versiyon: 2.2 | Tarih: 2026-05-20
 > Engine: Unity (C#) | Platform: PC (Steam)
 > Ekip: Solo Developer | Fiyat: $9.99-$12.99
 
@@ -1292,6 +1292,562 @@ DÜKKAN:
 
 ---
 
-> Bu dokuman v2.1'dir. Tum tartisma, premortem, ve tasarim revizyonlarini icerir.
+> Bu dokuman v2.2'dir. Tum tartisma, premortem, ve tasarim revizyonlarini icerir.
 > v2.1 eklemeleri: Rakip Ayna Sistemi, Shop Yanliligi, Isletme Bakimi, Dinamik Oyun Suresi
-> Engine: Unity (C#) | Son guncelleme: 2026-05-19
+> v2.2 eklemeleri: Appendix A -- Sektor Deneyim Senaryolari, Etik Ikilem Sistemi, Sonuc Zinciri
+> Engine: Unity (C#) | Son guncelleme: 2026-05-20
+
+---
+
+# APPENDIX A: SEKTOR DENEYIM SENARYOLARI (Business Experience Scenarios)
+
+> Bu appendix, her is tipi icin GERCEKCI hikaye akislari, etik ikilemler, kestirme yollar ve sonuclari tasarlar. Oyuncu sadece kart koymaz -- gercek is kararlari verir.
+
+---
+
+## A.1 TASARIM FELSEFESI
+
+Empire of Cards bir "is kurma simulasyonu" degil, bir **is DENEYIMI simulasyonu**dur. Oyuncu sunu hissetmeli:
+
+1. **Kestirme yollar CAZIP gorunmeli** -- anlik kazanc buyuk, risk belirsiz
+2. **Risk GECKMELI olmali** -- FBI belki gelir... belki gelmez
+3. **Kucuk adimlar buyuk sorunlara donusmeli** -- "bir kerelik" psikolojisi
+4. **Durust yol YAVAS ama GUVENLI olmali** -- sabir oduller
+5. **Geri donus MUMKUN ama PAHALI olmali** -- iflas = oyun sonu degil
+
+---
+
+## A.2 ETIK IKILEM SISTEMI (Ethical Dilemma System)
+
+### A.2.1 Temel Mekanik
+
+Her riskli action/upgrade karti oynandiginda, ekranda **Ikilem Popup** cikar:
+
+```
+  +================================+
+  |   KARAR ZAMANI                 |
+  |                                |
+  |   "Sahte Yorumlar" oynamak    |
+  |   istiyorsun.                  |
+  |                                |
+  |   KAZANC: +8 musteri HEMEN    |
+  |   RISK: FBI +%12              |
+  |   (Mevcut FBI: %8 -> %20)     |
+  |                                |
+  |   [ONAYLA]     [VAZGEC]       |
+  +================================+
+```
+
+**Tasarim Kurali:** Kazanc SOMUT ve ANLIK gosterilir ("+8 musteri HEMEN"). Risk SOYUT ve BELIRSIZ gosterilir ("FBI +%12" -- bu ne demek? Yakalanir miyim?). Bu asimetri gercek is hayatindaki yolsuzluk psikolojisini yansitir.
+
+### A.2.2 "Sadece Bir Kerelik" Mekaniği (Escalation Tracker)
+
+Oyun her illegal/risky aksiyonu sessizce sayar. Artan sayi sunu tetikler:
+
+| Illegal Aksiyon Sayisi | Etki |
+|---|---|
+| 1-2 | Normal FBI risk artisi |
+| 3-4 | FBI risk artisi x1.5 (suc profili olusuyor) |
+| 5-6 | FBI risk artisi x2.0 + "Supheli Sirket" etiketi (rival taunt degisir) |
+| 7+ | FBI risk artisi x2.5 + event havuzuna "Buyuk Juri Sorusturmasi" eklenir |
+
+Oyuncu bunu GORMEZ. Sadece hisseder: "Neden FBI riskim bu kadar hizli artiyor?"
+
+### A.2.3 Cazibe Tasarimi (Temptation Design)
+
+Her riskli kartin "cazip ani" vardir -- ozellikle su durumlarda popup icinde EKSTRA motivasyon gosterilir:
+
+| Durum | Ekstra Cazibe |
+|---|---|
+| Paran < 200 | "Iflasin 1 tur uzaginda. Bu seni kurtarabilir." |
+| Rakip 5+ bolge | "Rakip domine ediyor. Normal yoldan yetisemezsin." |
+| Son 5 tur (25+) | "Son sanslar... kural kitabini yak." |
+| Combo icin 1 kart eksik | "Bu karti oynarsan COMBO tetiklenir!" |
+
+---
+
+## A.3 SONUC ZINCIRI (Consequence Chain)
+
+5 katli sonuc sistemi. Her kat oncekinden agir ama GERI DONUS mekanigi var.
+
+### Seviye 1: UYARI (Warning)
+
+| Ozellik | Deger |
+|---|---|
+| Tetik | FBI riski %15-25 arasinda yakalanma |
+| Ceza | 150 para cezasi |
+| Gorsel | Sari flash, uyari sesi, "UYARI: Supheli faaliyet tespit edildi" |
+| Geri Donus | Otomatik -- cezayi ode, devam et |
+
+### Seviye 2: GECICI KAPANMA (Temporary Shutdown)
+
+| Ozellik | Deger |
+|---|---|
+| Tetik | FBI riski %25-40 arasinda yakalanma VEYA 2. kez Level 1 |
+| Ceza | 300 para + 1 isletme 2 tur kapali + illegal calisan kovulur |
+| Gorsel | Kirmizi flash, siren, isletme kartina "KAPALI" damgasi |
+| Geri Donus | 2 tur bekle VEYA "Avukat" calisanini kullan (aninda ac) |
+
+### Seviye 3: SKANDAL (Major Scandal)
+
+| Ozellik | Deger |
+|---|---|
+| Tetik | FBI riski %40-60 arasinda VEYA sektor-ozel skandal event'i |
+| Ceza | 600 para + TUM isletmeler 1 tur gelir -%50 + 10 musteri kaybi |
+| Gorsel | Ekran sallanir, gazete manset efekti: "SKANDAL: [Sirket Adi] Yolsuzluk!" |
+| Geri Donus | "Halka Ozur" action karti (200 para, 3 musteri geri kazanir) VEYA "PR Krizi Yonetimi" upgrade (500 para, skandal etkisini yarilatiyor) |
+
+### Seviye 4: FBI BASKINI (FBI Raid)
+
+| Ozellik | Deger |
+|---|---|
+| Tetik | FBI riski %60+ VEYA 3. kez yakalanma |
+| Ceza | 1000 para + TUM illegal calisanlar kovulur + 1 tur TUM isletmeler durur + FBI riski sifirlanir |
+| Gorsel | Tam ekran kirmizi flash, siren sesi, FBI rozet animasyonu, "FBI BASKINI!" text |
+| Geri Donus | "Tanik Koruma" action karti (tutar 400 -- FBI riskini sifirlar ve 5 tur boyunca artisini yarilatiyor) |
+
+### Seviye 5: TAM KAPANMA (Complete Shutdown)
+
+| Ozellik | Deger |
+|---|---|
+| Tetik | FBI riski %80+ VEYA iflas + yakalanma VEYA "Buyuk Juri" event'i |
+| Ceza | TUM isletmeler kapanir, para %70 el konulur, TUM calisanlar gider |
+| Gorsel | Ekran kararir, zincir sesi, "OYUN BITTI... mi?" text, sonra comeback ekrani |
+| Geri Donus | "Yeni Baslangiç" mekanigi: 1 isletme sec (en dusuk tier), 200 para ile yeniden basla. Tier KORUNUR. "Pheonix" skoru icin bonus puan |
+
+---
+
+## A.4 SEKTOR SENARYOLARI
+
+---
+
+### A.4.1 MOBIL UYGULAMA / TECH STARTUP
+
+**Hikaye Akisi:**
+```
+Tur 1-3:   Basit uygulama yap, kullanici topla (delay mekanigi -- 3 tur bekle)
+Tur 4-8:   Buyume -- kullanici sayisi artiyor, gelir basliyor
+Tur 9-14:  Karar ani -- durust buyume mi, kestirme mi?
+Tur 15+:   Ya saglam SaaS sirket ya da skandala gomulmus startup
+```
+
+**DURUST YOL:**
+
+| Kart | Tip | Maliyet | Etki |
+|---|---|---|---|
+| App Developer | Calisan (C11) | Maas 35/tur | Tech isletmelerde +4 musteri, passif: bug fix (isletme kapanma riski -%30) |
+| UX Designer | Calisan (C12) | Maas 40/tur | Tech isletmelerde gelir +%20, aktif: "Kullanici Arastirmasi" -- sonraki turda musteri x1.5 |
+| SaaS Donusumu | Upgrade (U07) | 350 | Tech isletme geliri sabit +80/tur olur (rastgelelik kalkar), +2 calisan slotu |
+| Bulut Altyapisi | Upgrade (U08) | 300 | Tech isletmelerde musteri cap'i %50 artar |
+
+**Durust Combo:** "Temiz Kod" -- App Developer + UX Designer + Tech Startup(aktif) = Gelir +%40, musteri kaybi yok, isletme ASLA kapanmaz (bug-free)
+
+**KESTIRME YOL:**
+
+| Kart | Tip | Maliyet | Etki | Risk |
+|---|---|---|---|---|
+| Growth Hacker | Calisan (C13) | Maas 50/tur | +8 musteri/tur (agresif taktikler) | FBI +%6/tur |
+| Dark Pattern | Action (A11) | 100 | +12 musteri bu tur (kullanicilari kandirma) | FBI +%10, sonraki tur -4 musteri (churn) |
+| Sahte Indirimler | Action (A12) | 60 | +200 para aninda (fake sale metrics) | FBI +%8 |
+| Veri Madenciligi | Upgrade (U09) | 200 | +100 para/tur (kullanici verileri sat) | FBI +%5/tur, "Veri Sizintisi" event olasiligini x2 yapar |
+
+**Kestirme Combo:** "Buyume Hack'i" -- Growth Hacker + Dark Pattern = +20 musteri bu tur AMA FBI +%18
+
+**SEKTORE OZEL EVENT'LER:**
+
+| Event | Sure | Etki |
+|---|---|---|
+| E07: App Store Bani | 2 tur | Tech isletmeler 2 tur gelir SIFIR (uygulama kaldirildi). Growth Hacker varsa TETIKLENIR, yoksa normal havuzda |
+| E08: Veri Sizintisi | 1 tur | Tech isletmeler -8 musteri, 300 para ceza. Bulut Altyapisi varsa hasar yariya iner |
+| E09: Yatirimci Ilgisi | 1 tur | Tech isletmeler gelir x2 bu tur (funding round!) |
+
+**GERI DONUS KARTLARI:**
+
+| Kart | Tip | Maliyet | Etki |
+|---|---|---|---|
+| Pivot to SaaS | Action (A13) | 200 | Tech isletmenin TUM illegal bonuslarini kaldir, yerine sabit +60 gelir/tur koy. FBI risk artisi sifirla. |
+| Etik AI Manifestosu | Upgrade (U10) | 250 | Tech isletmelerde FBI risk artisi SIFIR olur. Musteri kaybi -%50. |
+
+---
+
+### A.4.2 YEMEK / RESTORAN ZINCIRI
+
+**Hikaye Akisi:**
+```
+Tur 1-3:   Kucuk bufe, durust malzemeler, az gelir
+Tur 4-8:   Zincire genisle, tedarik kararlari
+Tur 9-14:  Ucuz malzeme mi, kaliteli mi? Organik mi, sahte organik mi?
+Tur 15+:   Ya guvenilir zincir ya da saglik skandaliyla kapali
+```
+
+**DURUST YOL:**
+
+| Kart | Tip | Maliyet | Etki |
+|---|---|---|---|
+| Sef (mevcut C04) | Calisan | Maas 30 | +3 musteri (food: gelir +30), aktif: Ozel Menu |
+| Gida Guvenligi Muduru | Calisan (C14) | Maas 35/tur | Food isletmelerde: saglik denetimi event'lerine BAGISIK, +2 musteri (guven) |
+| Organik Ciftlik (mevcut B06) | Isletme | 120 | Tum food'lara +20 bonus |
+| Farm-to-Table | Upgrade (U11) | 280 | 1 food isletme gelir +%35, musteri +3, "Organik" tag'i kazanir |
+
+**Durust Combo:** "Organik Sinerji" (mevcut #2) + "Gurme Mutfak" -- Sef + Gida Guvenligi Muduru + Farm-to-Table = Food gelir x1.8, musteri kaybi SIFIR, saglik event'lerine tam bagisiklik
+
+**KESTIRME YOL:**
+
+| Kart | Tip | Maliyet | Etki | Risk |
+|---|---|---|---|---|
+| Ucuz Et Tedarikcisi | Upgrade (U12) | 80 | Food isletme maliyeti -%40, gelir +%15 | FBI +%4/tur, "Saglik Denetimi" event olasiligi x3 |
+| Kose Kesme | Action (A14) | 50 | Bu tur food gelir x1.5 (ucuz malzeme, buyuk porsiyon) | FBI +%6, %20 sans: sonraki tur "Gida Zehirlenmesi" event'i |
+| Sahte Organik Etiketi | Action (A15) | 100 | Food isletmeye "Organik" tag'i ekle (sahte) -- Organik combo bonuslari AL ama illegal | FBI +%10, yakalanirsa TUM organik bonuslari geri alinir + 400 ceza |
+| Son Kullanim Hilesi | Upgrade (U13) | 60 | Food isletme giderleri -%50 (suresi gecmis malzeme) | FBI +%3/tur, her tur %10 sans: musteri zehirlenmesi (-6 musteri, 200 ceza) |
+
+**Kestirme Combo:** "Kitle Uretimi" -- Ucuz Et + Son Kullanim Hilesi + Burger Zinciri = Gelir x2 AMA her tur %25 sans buyuk saglik skandali
+
+**SEKTORE OZEL EVENT'LER:**
+
+| Event | Sure | Etki |
+|---|---|---|
+| E10: Saglik Denetimi | 1 tur | TUM food isletmeleri denetlenir. Illegal upgrade varsa: isletme 3 tur KAPALI + 400 ceza. Gida Guvenligi Muduru varsa: GECERSIN |
+| E11: Gida Zehirlenmesi Salgini | 2 tur | Ucuz Et veya Son Kullanim varsa: -15 musteri, isletme kapali. Yoksa: -3 musteri (genel etki) |
+| E12: Gurme Trend'i | 2 tur | Organik tag'li food isletmeler gelir x2, musteri x1.5 |
+
+**GERI DONUS KARTLARI:**
+
+| Kart | Tip | Maliyet | Etki |
+|---|---|---|---|
+| Halka Ozur Yemegi | Action (A16) | 150 | Skandal sonrasi: 5 musteri geri kazan, food isletme hemen ac |
+| Tedarik Zinciri Reformu | Upgrade (U14) | 300 | TUM illegal food upgrade'lerini kaldir. Yerine: food gelir +%20 (temiz). FBI riski -20 puan |
+
+---
+
+### A.4.3 MODA / GIYIM MARKASI
+
+**Hikaye Akisi:**
+```
+Tur 1-3:   Kucuk butik, yerel tasarimlar
+Tur 4-8:   Seri uretime gec, isci maliyeti karari
+Tur 9-14:  Ucuz iscilik mi, tasarim hirsizligi mi, vergi kacirma mi?
+Tur 15+:   Ya saygin marka ya da boykot edilen skandal markasi
+```
+
+**DURUST YOL:**
+
+| Kart | Tip | Maliyet | Etki |
+|---|---|---|---|
+| Moda Tasarimcisi | Calisan (C15) | Maas 45/tur | Luxury/Fashion isletmelerde +5 musteri, gelir +%15. Trend aktifken x2 |
+| Surdurulebilir Uretim | Upgrade (U15) | 350 | Fashion isletme: isci skandali event'lerine BAGISIK, musteri +4 (etik tuketici) |
+| Marka Elcisi | Calisan (C16) | Maas 55/tur | TUM isletmelere +3 musteri (marka bilinirli), aktif: "Marka Lansmani" -- bu tur musteri x2 |
+
+**Durust Combo:** "Etik Moda" -- Moda Tasarimcisi + Surdurulebilir Uretim + Luxury Boutique = Gelir x1.6, skandal event'lerine tam bagisiklik, her tur +2 ekstra musteri (sadik kitle)
+
+**KESTIRME YOL:**
+
+| Kart | Tip | Maliyet | Etki | Risk |
+|---|---|---|---|---|
+| Sweatshop Mudurlugu | Upgrade (U16) | 100 | Fashion/Luxury isletme calisan maaslari -%60, gelir +%20 | FBI +%7/tur, "Isci Skandali" event olasiligi x3 |
+| Tasarim Hirsizligi | Action (A17) | 80 | +10 musteri bu tur (sahte tasarimci marka kopyasi) | FBI +%12, %30 sans: "Telif Davasi" -- 500 ceza |
+| Vergi Cenneti | Upgrade (U17) | 200 | Vergi SIFIR olur (offshore hesap) | FBI +%5/tur, "Vergi Denetimi" event olasiligi x2 |
+| Hizli Moda | Upgrade (U18) | 150 | Fashion isletme gelir +%40, musteri +6 (ucuz trend kopyalari) | Her 3 turda -2 musteri (marka erozyonu), FBI +%3/tur |
+
+**Kestirme Combo:** "Ucuz Imparatorluk" -- Sweatshop + Hizli Moda = Gelir x2.5 AMA FBI +%15/tur ve her 2 turda "Boykot Riski" kontrolu (%20 sans: -8 musteri)
+
+**SEKTORE OZEL EVENT'LER:**
+
+| Event | Sure | Etki |
+|---|---|---|
+| E13: Isci Skandali | 2 tur | Sweatshop varsa: -12 musteri, isletme 2 tur kapali, sosyal medya firtinasi. Yoksa: -2 musteri |
+| E14: Vergi Denetimi | 1 tur | Vergi Cenneti varsa: 800 ceza + upgrade kaldirilir. Yoksa: normal vergi |
+| E15: Moda Haftasi | 2 tur | Fashion/Luxury isletmeler gelir x2, musteri x1.5. Trend tag'li isletmeler ekstra +5 musteri |
+
+**GERI DONUS KARTLARI:**
+
+| Kart | Tip | Maliyet | Etki |
+|---|---|---|---|
+| Marka Yenilenmesi | Action (A18) | 300 | Boykot/skandal sonrasi: TUM moda musteri kaybini sifirla, +5 musteri |
+| Adil Ticaret Sertifikasi | Upgrade (U19) | 400 | TUM illegal moda upgrade'lerini kaldir. Fashion gelir +%25, musteri +5 (etik marka imaji) |
+
+---
+
+### A.4.4 KRIPTO / FINTECH
+
+**Hikaye Akisi:**
+```
+Tur 1-3:   Token lansman veya borsa kur (yuksek volatilite)
+Tur 4-8:   Hacim artir, topluluk kur
+Tur 9-14:  Pump and dump mi, organik buyume mi?
+Tur 15+:   Ya regulasyona uyumlu fintech ya da donmus hesaplar
+```
+
+**DURUST YOL:**
+
+| Kart | Tip | Maliyet | Etki |
+|---|---|---|---|
+| Blockchain Developer | Calisan (C17) | Maas 50/tur | Crypto isletmelerde volatiliteyi azaltir (min gelir +50), +3 musteri |
+| Regulasyon Uyumu | Upgrade (U20) | 400 | Crypto isletme: "Regulatory Crackdown" event'ine BAGISIK, gelir sabit +120/tur (rastgelelik kalkar) |
+| DeFi Altyapisi | Upgrade (U21) | 350 | Crypto isletmeye +3 calisan slotu, gelir +%30 |
+
+**Durust Combo:** "Guvenilir Borsa" -- Blockchain Developer + Regulasyon Uyumu + Crypto Exchange = Gelir sabit 180/tur (rastgelelik YOK), musteri +6, regulator event'lerine tam bagisik
+
+**KESTIRME YOL:**
+
+| Kart | Tip | Maliyet | Etki | Risk |
+|---|---|---|---|---|
+| Crypto Bro | Calisan (C18) | Maas 30/tur | +6 musteri (influencer marketing), Crypto gelir +%30 | FBI +%5/tur, "Rug Pull" suphesi |
+| Pump and Dump | Action (A19) | 0 | +400 para ANINDA (fiyat manipulasyonu) | FBI +%15, sonraki 2 tur Crypto gelir SIFIR (crash) |
+| Sahte Hacim | Upgrade (U22) | 100 | Crypto musteri x2 (borsada wash trading) | FBI +%8/tur |
+| Rug Pull | Action (A20) | 0 | +800 para ANINDA ama Crypto isletme KALICI KAPANIR | FBI +%25, TUM crypto bonuslari kaybolur |
+
+**Kestirme Combo:** "Ponzi Zinciri" -- Crypto Bro + Sahte Hacim + Dolandirici(C09) = +300 para/tur AMA FBI +%20/tur ve her tur %15 sans "Market Crash"
+
+**SEKTORE OZEL EVENT'LER:**
+
+| Event | Sure | Etki |
+|---|---|---|
+| E16: Regulatory Crackdown | 2 tur | TUM crypto isletmeler dondurulur (gelir SIFIR). Regulasyon Uyumu varsa: BAGISIK |
+| E17: Market Crash | 1 tur | Crypto isletme gelir SIFIR + -6 musteri. Sahte Hacim varsa: ek -10 musteri |
+| E18: Bull Run | 2 tur | Crypto isletmeler gelir x3, musteri x2. Altın cag! |
+
+**GERI DONUS KARTLARI:**
+
+| Kart | Tip | Maliyet | Etki |
+|---|---|---|---|
+| DeFi Pivot | Action (A21) | 250 | Kapanmis Crypto isletmeyi yeniden ac, TUM illegal bonuslari temizle, sabit +100 gelir/tur |
+| Topluluk Guven Onarimi | Upgrade (U23) | 300 | Pump/crash sonrasi: 8 musteri geri kazan, FBI risk -15 puan |
+
+---
+
+### A.4.5 GAYRIMENKUL / INSAAT
+
+**Hikaye Akisi:**
+```
+Tur 1-3:   Ucuz arsa al, renovasyon yap
+Tur 4-8:   Daire insaat, ev cevirme
+Tur 9-14:  Ucuz malzeme mi, rusvet mi, izinsiz insaat mi?
+Tur 15+:   Ya saygindeveloper ya da mahkum
+```
+
+**DURUST YOL:**
+
+| Kart | Tip | Maliyet | Etki |
+|---|---|---|---|
+| Mimar | Calisan (C19) | Maas 45/tur | Construction isletmelerde gelir +%25, musteri +3, "Bina Cokme" riskini SIFIRLAR |
+| Yesil Bina Sertifikasi | Upgrade (U24) | 350 | Construction isletme gelir +%20, musteri +4 (cevreci imaj), "Deprem Testi" event'ine GECERSIN |
+
+**Durust Combo:** "Kaliteli Insaat" -- Mimar + Yesil Bina Sertifikasi = Gelir +%50, HICBIR insaat event'i seni etkilemez
+
+**KESTIRME YOL:**
+
+| Kart | Tip | Maliyet | Etki | Risk |
+|---|---|---|---|---|
+| Serefsiz Muteahhit | Calisan (C20) | Maas 20/tur | Construction gelir +%40 (ucuz is) | FBI +%6/tur, her tur %8 sans "Bina Cokme" |
+| Malzeme Kismasi | Action (A22) | 50 | Bu tur Construction gelir x2 (ucuz beton, ince demir) | FBI +%8, "Bina Denetimi" event olasiligi x3 |
+| Imar Rusveti | Action (A23) | 150 | Yeni isletme slotu AC (izinsiz insaat) | FBI +%15, %20 sans: "Imar Iptali" -- slot geri kapanir + 500 ceza |
+| Izinsiz Kat | Upgrade (U25) | 100 | Construction gelir +%50 (ekstra kat, ekstra daire) | FBI +%5/tur, "Deprem Testi" event'inde OTOMATIK KAPANIR |
+
+**SEKTORE OZEL EVENT'LER:**
+
+| Event | Sure | Etki |
+|---|---|---|
+| E19: Bina Denetimi | 1 tur | Illegal upgrade varsa: isletme 3 tur KAPALI + 500 ceza. Mimar varsa: GECERSIN |
+| E20: Bina Cokme | 1 tur | Serefsiz Muteahhit veya Malzeme Kismasi varsa: isletme KALICI KAPANIR + 800 ceza + -10 musteri. Yoksa: etki yok |
+| E21: Emlak Patlamasi | 2 tur | Construction isletmeler gelir x2, musteri x1.5 |
+
+**GERI DONUS KARTLARI:**
+
+| Kart | Tip | Maliyet | Etki |
+|---|---|---|---|
+| Bina Guclendirme | Action (A24) | 400 | Kapanmis Construction isletmeyi ac, TUM illegal upgrade'leri kaldir, gelir +%15 (guvenli) |
+| Belediye Anlasma | Upgrade (U26) | 350 | Construction: imar sorunlarina bagisik, FBI risk -10 puan |
+
+---
+
+### A.4.6 REKLAM / PAZARLAMA AJANSI
+
+**Hikaye Akisi:**
+```
+Tur 1-3:   Kucuk ajans, durust kampanyalar
+Tur 4-8:   Buyuk musteriler kazan, vaatler buyut
+Tur 9-14:  Sahte metrikler mi, gercek sonuclar mi?
+Tur 15+:   Ya saygin ajans ya da dava edilen dolandirici
+```
+
+**DURUST YOL:**
+
+| Kart | Tip | Maliyet | Etki |
+|---|---|---|---|
+| Kreatif Direktor | Calisan (C21) | Maas 45/tur | Marketing isletmelerde gelir +%25, aktif: "Yaratici Kampanya" -- TUM isletmelere +4 musteri bu tur |
+| Veri Analisti | Calisan (C22) | Maas 35/tur | Marketing isletmelerde musteri hedefleme: her tur +3 musteri (garanti, randomsiz) |
+
+**Durust Combo:** "Durust Reklam" -- Kreatif Direktor + Veri Analisti + Reklam Ajansi = TUM isletmelere +6 musteri/tur (garanti), gelir +%30
+
+**KESTIRME YOL:**
+
+| Kart | Tip | Maliyet | Etki | Risk |
+|---|---|---|---|---|
+| Click Bot Ciftligi | Upgrade (U27) | 150 | Marketing musteri x2 (sahte trafik) | FBI +%6/tur, "Platform Bani" event olasiligi x3 |
+| Viral Dolandiricilik | Action (A25) | 80 | +15 musteri bu tur (sahte viral kampanya) | FBI +%10, sonraki tur -8 musteri (gercek ortaya cikinca) |
+| Calinti Kreative | Action (A26) | 60 | Marketing gelir x1.5 bu tur (baskasinin isini kopyala) | FBI +%8, %25 sans: "Telif Davasi" 400 ceza |
+| Sisirmis Metrikler | Upgrade (U28) | 120 | Marketing isletme gelir +%40 (musteriye sahte rapor) | FBI +%5/tur, her 4 turda %20 sans: musteri sirketi terk eder (-5 musteri, -100 gelir) |
+
+**SEKTORE OZEL EVENT'LER:**
+
+| Event | Sure | Etki |
+|---|---|---|
+| E22: Platform Bani | 2 tur | Click Bot varsa: Marketing isletme 2 tur KAPALI + bot upgrade kaldirilir. Yoksa: etki yok |
+| E23: Musteri Davasi | 1 tur | Sisirmis Metrikler varsa: 600 ceza + upgrade kaldirilir. Yoksa: -100 para (kucuk anlasamazlik) |
+| E24: Reklam Festivali | 1 tur | Marketing isletmeler gelir x2, TUM isletmelere +5 ekstra musteri |
+
+**GERI DONUS KARTLARI:**
+
+| Kart | Tip | Maliyet | Etki |
+|---|---|---|---|
+| Ajans Rebrand | Action (A27) | 250 | TUM illegal marketing upgrade'lerini kaldir, +5 musteri, FBI risk -10 |
+| Seffaflik Raporu | Upgrade (U29) | 200 | Marketing: sahte metrik riski SIFIR, musteri kaybi -%50, FBI risk artisi -%50 |
+
+---
+
+## A.5 CROSECTOR COMBOLAR (Cross-Sector Combos)
+
+Birden fazla sektore yatirim yapan oyunculari odullendiren ozel combolar:
+
+| # | Isim | Gerekli | Bonus | Zorluk |
+|---|---|---|---|---|
+| 11 | Dikey Entegrasyon | Food isletme + Construction isletme + Mimar | Her ikisine gelir +%30, musteri +4 | Orta |
+| 12 | Dijital Donusum | Herhangi isletme + Tech Startup(aktif) + App Developer | Secilen isletme musteri +8, gelir +%20 | Orta |
+| 13 | Marka Imparatorlugu | Fashion isletme + Ad Agency + Marka Elcisi | TUM isletmelere +5 musteri, Fashion gelir x2 | Zor |
+| 14 | Kripto Odeme | Crypto Exchange(aktif) + herhangi 2 isletme | 2 isletmenin geliri +%15, Crypto +4 musteri | Orta |
+| 15 | Tam Legal Holding | 4 isletme aktif + SIFIR FBI riski + Tier 3+ | TUM gelir +%25, her tur +3 musteri, "Clean Business" skoru +500 | Cok Zor |
+| 16 | Karanlik Imparatorluk | 3+ illegal upgrade/calisan aktif + FBI riski %50+ | TUM gelir +%50 AMA her tur FBI kontrolu x2 | Intihar Misyonu |
+
+---
+
+## A.6 SEKTOR-OZEL CALISANLAR OZET TABLOSU
+
+Mevcut calisanlara (C01-C10) ek olarak sektor uzmanlarinin tam listesi:
+
+| ID | Isim | Maas | Sektor | Passif | Aktif | Risk |
+|---|---|---|---|---|---|---|
+| C11 | App Developer | 35 | Tech | +4 musteri, bug fix -%30 kapanma | "Deploy": Tech gelir x1.3 bu tur | Yok |
+| C12 | UX Designer | 40 | Tech | Gelir +%20 | "Kullanici Arastirmasi": sonraki tur musteri x1.5 | Yok |
+| C13 | Growth Hacker | 50 | Tech | +8 musteri (agresif) | "Hack the System": +15 musteri bu tur | FBI +%6/tur |
+| C14 | Gida Guvenligi Muduru | 35 | Food | Saglik event bagisikligi, +2 musteri | "Denetim Hazirlik": 3 tur saglik event'lerine tam koruma | Yok |
+| C15 | Moda Tasarimcisi | 45 | Fashion | +5 musteri, gelir +%15 | "Koleksiyon Lansmani": musteri x2 bu tur (trend varsa x3) | Yok |
+| C16 | Marka Elcisi | 55 | Fashion | TUM isletmelere +3 musteri | "Marka Lansmani": bu tur musteri x2 | Yok |
+| C17 | Blockchain Dev | 50 | Crypto | Volatilite azalt (min +50) , +3 musteri | "Smart Contract": Crypto gelir sabit 150 bu tur | Yok |
+| C18 | Crypto Bro | 30 | Crypto | +6 musteri, gelir +%30 | "Shill Campaign": +12 musteri bu tur | FBI +%5/tur |
+| C19 | Mimar | 45 | Construction | Gelir +%25, +3 musteri, cokme riski SIFIR | "Blueprint": sonraki insaat karti %50 indirimli | Yok |
+| C20 | Serefsiz Muteahhit | 20 | Construction | Gelir +%40 | "Hizli Insaat": Construction gelir x2 bu tur | FBI +%6/tur |
+| C21 | Kreatif Direktor | 45 | Marketing | Gelir +%25 | "Yaratici Kampanya": TUM +4 musteri | Yok |
+| C22 | Veri Analisti | 35 | Marketing | +3 musteri (garanti) | "Hedefli Reklam": secilen isletmeye +8 musteri | Yok |
+
+---
+
+## A.7 GERI DONUS MEKANIGI (Comeback System)
+
+### A.7.1 "Phoenix" Skor Bonusu
+
+Tam kapanma (Seviye 5) sonrasi geri donup oyunu KAZANAN oyuncu ekstra skor alir:
+
+| Durum | Bonus Puan |
+|---|---|
+| Seviye 5 sonrasi geri don + oyunu kazan | +2000 |
+| Seviye 4 sonrasi geri don + oyunu kazan | +1000 |
+| Seviye 3 sonrasi geri don + oyunu kazan | +500 |
+| Hic yakalanmadan kazan (Clean Run) | +800 |
+
+### A.7.2 "Yeni Baslangiç" Mekanigi
+
+Seviye 5 (Tam Kapanma) sonrasi oyun BITMEZ. Bunun yerine:
+
+```
+1. Ekran kararir. "Her sey bitti..." text'i belirir.
+2. 2 saniye bekleme.
+3. "...mi acaba?" text'i belirir.
+4. "YENI BASLANGIC" ekrani:
+   - 1 isletme sec (mevcut isletmelerinden en dusuk tier)
+   - 200 para ile basla
+   - TUM illegal kart/upgrade/calisan GIDER
+   - Tier KORUNUR (motivasyon)
+   - FBI riski SIFIRLANIR
+   - Escalation tracker SIFIRLANIR
+5. Oyun devam eder. Rakip avantajli ama oyuncu temiz sayfa ile baslar.
+```
+
+### A.7.3 Genel Geri Donus Kartlari (Sektorler arasi)
+
+| Kart | Tip | Maliyet | Etki |
+|---|---|---|---|
+| Avukat | Calisan (C23) | Maas 60/tur | FBI riski -%10/tur (passif), aktif: "Savunma": bir sonraki FBI kontrolunu OTOMATIK GECIR |
+| Halka Ozur | Action (A28) | 200 | Skandal sonrasi: 5 musteri geri kazan, 1 kapali isletmeyi hemen ac |
+| PR Krizi Yonetimi | Upgrade (U30) | 500 | TUM skandal cezalari -%50, musteri kayiplari -%50 |
+| Lobicilik | Upgrade (U31) | 600 | FBI risk cap'i %50 olur (asla %50'yi gecmez), vergi -%25 |
+| Tanik Koruma | Action (A29) | 400 | FBI riskini SIFIRLA + 5 tur boyunca FBI risk artisi -%50 |
+
+---
+
+## A.8 UYGULAMA NOTLARI (Implementation Notes)
+
+### A.8.1 Yeni Tag'ler
+
+Mevcut tag sistemi (CardTag enum) genisletilmeli:
+
+```
+Mevcut:   Food, Coffee, Tech, Crypto, Marketing, Luxury, ...
+Yeni:     Fashion, Construction, Illegal, Organic, Sustainable, 
+          Fraudulent, Regulated, CleanBusiness
+```
+
+### A.8.2 Escalation Tracker
+
+GameManager veya EconomyManager'a yeni field:
+
+```
+int illegalActionCount;     // Toplam illegal aksiyon sayisi
+float fbiRiskMultiplier;    // illegalActionCount'a gore 1.0 - 2.5 arasi
+```
+
+### A.8.3 Sektor Event Havuzu
+
+EventSystem'e sektor-bazli event filtering:
+
+```
+- Temel event havuzu: E01-E06 (mevcut, her zaman aktif)
+- Sektor event'leri: Oyuncunun AKTIF isletme tag'lerine gore havuza eklenir
+  Ornek: Food isletme varsa -> E10, E11, E12 havuza girer
+  Ornek: Illegal upgrade varsa -> o sektore ozel negatif event olasiligi artar
+```
+
+### A.8.4 Ikilem Popup
+
+UIManager'a yeni popup tipi. Mevcut ComboPopup/EventPopup/RivalPopup yapisini takip eder:
+
+```
+DilemmaPopup.cs
+  - Show(CardData riskyCard, float currentFbiRisk, float riskIncrease, string reward)
+  - OnConfirm -> karti oyna
+  - OnCancel -> kart eline doner (aksiyon HARCANMAZ)
+```
+
+### A.8.5 Consequence Chain Manager
+
+Yeni manager veya EconomyManager'a extension. FBI baskin sonucunu belirler:
+
+```
+int consecutiveCatches;     // Art arda yakalanma sayisi
+ConsequenceLevel GetLevel() // consecutiveCatches + fbiRisk'e gore Level 1-5 dondurur
+```
+
+---
+
+## A.9 DENGE HEDEFLERI (Balance Targets)
+
+| Yol | Erken Oyun (Tur 1-8) | Orta Oyun (Tur 9-18) | Gec Oyun (Tur 19+) |
+|---|---|---|---|
+| Durust | Yavas buyume, 400-700 para, 2 bolge | Sabit buyume, 800-1500 para, 3-4 bolge | Saglam motor, 1500-3000 para, 5-6 bolge |
+| Kestirme | Hizli buyume, 600-1200 para, 3 bolge | Yuksek risk, 1000-2500 para VEYA skandal, 3-5 bolge | Ya domine (6+ bolge) ya da cokus (FBI) |
+| Karisik | En esnek, 500-900 para, 2-3 bolge | Stratejik riskler, 900-2000 para, 3-5 bolge | Dengeyi bul, 1500-3000 para, 5-6 bolge |
+
+**Hedef:** Durust yol ile kazanma orani %55, kestirme yol ile %40, karisik %50. Kestirme yol DAHA HIZLI ama DAHA RISKLI -- beklenen deger benzer olmali ama varyans cok daha yuksek.
+
+---
+
+> Appendix A sonu. Bu senaryo tasarimlari MVP sonrasi ilk guncelleme (Hafta 29-32) icin oncelikli icerik olarak planlanmistir. Temel sistemler (Escalation Tracker, Consequence Chain, Dilemma Popup) MVP'de implement edilebilir, sektor kartlari kademeli olarak eklenir.

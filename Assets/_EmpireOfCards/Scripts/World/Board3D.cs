@@ -44,6 +44,9 @@ namespace EmpireOfCards.World
         private SlotZone3D _sellZone;
         private SlotZone3D _actionZone;
 
+        // Employee marker cubes — keyed by "bizIndex_empSlotIndex"
+        private readonly Dictionary<string, GameObject> _employeeMarkers = new Dictionary<string, GameObject>();
+
         public IReadOnlyList<SlotZone3D> BusinessSlots => _businessSlots;
 
         public void BuildBoard()
@@ -288,6 +291,7 @@ namespace EmpireOfCards.World
             EventBus.OnBusinessNeglected += HandleBusinessNeglected;
             EventBus.OnEmployeePlaced += HandleSlotRefresh;
             EventBus.OnUpgradePlaced += HandleSlotRefresh;
+            EventBus.OnEmployeeLeft += HandleEmployeeLeft;
             EventBus.OnTerritoryChanged += HandleTerritoryChanged;
             EventBus.OnBusinessSlotsChanged += UpdateVisibleSlots;
         }
@@ -298,6 +302,7 @@ namespace EmpireOfCards.World
             EventBus.OnBusinessNeglected -= HandleBusinessNeglected;
             EventBus.OnEmployeePlaced -= HandleSlotRefresh;
             EventBus.OnUpgradePlaced -= HandleSlotRefresh;
+            EventBus.OnEmployeeLeft -= HandleEmployeeLeft;
             EventBus.OnTerritoryChanged -= HandleTerritoryChanged;
             EventBus.OnBusinessSlotsChanged -= UpdateVisibleSlots;
         }
@@ -305,6 +310,22 @@ namespace EmpireOfCards.World
         private void HandleTerritoryChanged(int playerCount, int rivalCount)
         {
             UpdateTerritoryVisuals(playerCount, rivalCount);
+        }
+
+        private void HandleEmployeeLeft(CardData card, int businessIndex)
+        {
+            // Remove all employee markers for this business
+            var keysToRemove = new List<string>();
+            foreach (var kvp in _employeeMarkers)
+            {
+                if (kvp.Key.StartsWith($"{businessIndex}_"))
+                {
+                    if (kvp.Value != null) Destroy(kvp.Value);
+                    keysToRemove.Add(kvp.Key);
+                }
+            }
+            foreach (var key in keysToRemove)
+                _employeeMarkers.Remove(key);
         }
 
         private void HandleTierChanged(CompanyTier newTier)
@@ -339,6 +360,57 @@ namespace EmpireOfCards.World
             var renderer = _businessSlotRenderers[businessIndex];
             if (renderer != null)
                 renderer.material.color = new Color(0.25f, 0.25f, 0.3f); // Original color
+
+            // Spawn a small marker cube for employee placements
+            if (card != null && card.cardType == CardType.Employee)
+                SpawnEmployeeMarker(card, businessIndex);
+        }
+
+        // ================================================================
+        //  Employee Markers -- small cubes indicating workers on a slot
+        // ================================================================
+
+        /// <summary>
+        /// Spawns a small colored cube above an employee sub-slot to indicate
+        /// a worker is stationed there. Placeholder visual -- proper models later.
+        /// </summary>
+        private void SpawnEmployeeMarker(CardData card, int businessIndex)
+        {
+            if (businessIndex < 0 || businessIndex >= _businessSlots.Count) return;
+
+            // Find the first unoccupied employee sub-slot index for this business
+            int empIndex = -1;
+            for (int i = 0; i < _employeeSlots.Count; i++)
+            {
+                if (_employeeSlots[i].ParentBusinessIndex == businessIndex && _employeeSlots[i].IsOccupied)
+                {
+                    // Use the most recently occupied one (the one we just placed)
+                    empIndex = i;
+                }
+            }
+
+            if (empIndex < 0) return;
+
+            string key = $"{businessIndex}_{empIndex}";
+            // Don't double-spawn
+            if (_employeeMarkers.ContainsKey(key)) return;
+
+            var marker = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            marker.name = $"EmpMarker_{key}";
+            marker.transform.SetParent(_employeeSlots[empIndex].transform);
+            marker.transform.localPosition = new Vector3(0f, 1.2f, 0f);
+            marker.transform.localScale = new Vector3(0.3f, 0.3f, 0.3f);
+
+            // Use employee green tint, slightly varied by card
+            Color markerColor = Card3D.GetCardTypeColor(CardType.Employee);
+            markerColor *= 1.2f; // Brighter than the card
+            markerColor.a = 1f;
+            marker.GetComponent<MeshRenderer>().material.color = markerColor;
+
+            // Remove collider -- marker is decorative only
+            Destroy(marker.GetComponent<Collider>());
+
+            _employeeMarkers[key] = marker;
         }
     }
 }

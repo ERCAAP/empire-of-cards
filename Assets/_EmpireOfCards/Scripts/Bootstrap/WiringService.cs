@@ -210,8 +210,12 @@ namespace EmpireOfCards.Bootstrap
                     case DropZoneType.SellZone:
                         int price = gm.EconomyManager.GetSellPrice(card.CardData);
                         gm.GainMoney(price);
+                        // Mark as not-in-hand BEFORE BurnCard, because BurnCard fires
+                        // EventBus.CardBurned which triggers Hand3D.RemoveCardFromHand.
+                        // If IsInHand is still true, Hand3D would Destroy the 3D object
+                        // before our delayed Destroy gets a chance to show it briefly.
+                        card.IsInHand = false;
                         gm.DeckManager.BurnCard(card.CardData); // Remove from deck permanently
-                        // CardPlayed fired by shared success path below — don't double-fire
                         success = true;
                         break;
                 }
@@ -219,8 +223,26 @@ namespace EmpireOfCards.Bootstrap
                 if (success)
                 {
                     gm.UseAction();
-                    EventBus.CardPlayed(card.CardData);
+
+                    // PlaceCard MUST run before CardPlayed so IsInHand is false
+                    // when Hand3D.RemoveCardFromHand checks — otherwise it destroys
+                    // the card that should stay on the board.
                     slot.PlaceCard(card);
+                    EventBus.CardPlayed(card.CardData);
+
+                    // Action / Sell / Burn cards are instant — destroy after brief display
+                    switch (slot.ZoneType)
+                    {
+                        case DropZoneType.ActionZone:
+                            UnityEngine.Object.Destroy(card.gameObject, 0.5f);
+                            slot.RemoveCard();
+                            break;
+                        case DropZoneType.SellZone:
+                        case DropZoneType.BurnZone:
+                            UnityEngine.Object.Destroy(card.gameObject, 0.3f);
+                            slot.RemoveCard();
+                            break;
+                    }
                 }
                 else
                 {

@@ -93,7 +93,22 @@ namespace EmpireOfCards.World
             _isOccupied = true;
             _placedCard = card;
             card.IsInHand = false;
-            card.SetTargetPosition(transform.position + Vector3.up * 0.15f, Quaternion.identity);
+
+            // Position card above slot and snap for juicy feedback
+            Vector3 target = transform.position + Vector3.up * 0.15f;
+            card.SnapToPosition(target, Quaternion.identity);
+
+            // Scale card to fit slot — smaller cards for sub-slots
+            float scale = zoneType switch
+            {
+                DropZoneType.EmployeeSlot => 0.5f,
+                DropZoneType.UpgradeSlot  => 0.6f,
+                DropZoneType.ActionZone   => 0.7f,
+                DropZoneType.SellZone     => 0.7f,
+                DropZoneType.BurnZone     => 0.7f,
+                _                         => 0.7f   // BusinessSlot default
+            };
+            card.SetBoardScale(scale);
         }
 
         public void RemoveCard()

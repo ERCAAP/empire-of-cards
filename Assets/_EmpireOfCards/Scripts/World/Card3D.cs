@@ -42,6 +42,23 @@ namespace EmpireOfCards.World
         public bool IsInHand { get => _isInHand; set => _isInHand = value; }
         public bool IsDragging => _isDragging;
 
+        /// <summary>
+        /// Returns the display color for a given card type.
+        /// Used by Board3D for employee marker cubes.
+        /// </summary>
+        public static Color GetCardTypeColor(CardType type)
+        {
+            return type switch
+            {
+                CardType.Business => BusinessColor,
+                CardType.Employee => EmployeeColor,
+                CardType.Action   => ActionColor,
+                CardType.Upgrade  => UpgradeColor,
+                CardType.Event    => EventColor,
+                _                 => Color.gray
+            };
+        }
+
         public void Initialize(CardData data, MeshRenderer mr, TMP_Text nameT, TMP_Text costT, TMP_Text descT, TMP_Text statsT, GameObject glow)
         {
             _cardData = data;
@@ -127,6 +144,15 @@ namespace EmpireOfCards.World
         {
             _targetPos = pos;
             _targetRot = rot;
+        }
+
+        /// <summary>
+        /// Sets the target scale for a card placed on the board.
+        /// The card lerps smoothly to this scale in Update().
+        /// </summary>
+        public void SetBoardScale(float uniformScale)
+        {
+            _targetScale = Vector3.one * uniformScale;
         }
 
         public void ReturnToOriginal(Vector3 pos, Quaternion rot)
