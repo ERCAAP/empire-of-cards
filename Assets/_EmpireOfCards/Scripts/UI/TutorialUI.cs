@@ -161,7 +161,7 @@ namespace EmpireOfCards.UI
             arrowRT.anchorMax = new Vector2(0.5f, 0.5f);
 
             var arrowTMP = arrowGo.AddComponent<TextMeshProUGUI>();
-            arrowTMP.text = "\u25B6"; // Right-pointing triangle by default
+            arrowTMP.text = "-->"; // Right-pointing triangle by default
             arrowTMP.fontSize = 42;
             arrowTMP.alignment = TextAlignmentOptions.Center;
             arrowTMP.color = new Color(1f, 0.85f, 0.2f); // Gold
@@ -282,7 +282,7 @@ namespace EmpireOfCards.UI
 
             // Choose arrow glyph based on dominant axis
             if (_arrow2DText != null)
-                _arrow2DText.text = "\u25B6"; // Always use right-pointing, rotation handles direction
+                _arrow2DText.text = "-->"; // Always use right-pointing, rotation handles direction
         }
 
         /// <summary>

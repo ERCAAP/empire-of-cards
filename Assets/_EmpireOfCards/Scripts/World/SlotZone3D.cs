@@ -33,16 +33,34 @@ namespace EmpireOfCards.World
         {
             if (card == null || _isOccupied) return false;
 
-            return zoneType switch
+            switch (zoneType)
             {
-                DropZoneType.BusinessSlot => card.cardType == CardType.Business,
-                DropZoneType.EmployeeSlot => card.cardType == CardType.Employee,
-                DropZoneType.UpgradeSlot => card.cardType == CardType.Upgrade,
-                DropZoneType.ActionZone => card.cardType == CardType.Action,
-                DropZoneType.SellZone => true,
-                DropZoneType.BurnZone => true,
-                _ => false
-            };
+                case DropZoneType.BusinessSlot:
+                    return card.cardType == CardType.Business && !_isOccupied;
+
+                case DropZoneType.EmployeeSlot:
+                    if (card.cardType != CardType.Employee || _isOccupied) return false;
+                    // Only accept if parent business slot has a business placed
+                    var gm = GameManager.Instance;
+                    if (gm == null || gm.BoardManager == null) return false;
+                    var businesses = gm.BoardManager.PlayerBusinesses;
+                    return parentBusinessIndex >= 0 && parentBusinessIndex < businesses.Count
+                           && businesses[parentBusinessIndex] != null
+                           && !businesses[parentBusinessIndex].isClosed;
+
+                case DropZoneType.UpgradeSlot:
+                    return card.cardType == CardType.Upgrade && !_isOccupied;
+
+                case DropZoneType.ActionZone:
+                    return card.cardType == CardType.Action;
+
+                case DropZoneType.SellZone:
+                case DropZoneType.BurnZone:
+                    return true;
+
+                default:
+                    return false;
+            }
         }
 
         public void PlaceCard(Card3D card)
