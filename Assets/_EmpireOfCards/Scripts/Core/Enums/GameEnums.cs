@@ -26,7 +26,8 @@ namespace EmpireOfCards.Core
         Nightlife, Entertainment, Organic, Support, Crypto,
         Risky, Aggressive, Pricing, Investor, Hiring,
         Desperate, Office, Automation, Logistics, Security,
-        AI, Guru, Influencer, Management, Viral
+        AI, Guru, Influencer, Management, Viral,
+        Franchise, Luxury, Consulting, Defensive, Scaling
     }
 
     // 5-phase turn system from GDD Section 4
@@ -70,8 +71,9 @@ namespace EmpireOfCards.Core
     public enum ResolveStep
     {
         BusinessProduce,    // 4a: Businesses produce
-        CustomerFlow,       // 4b: Customers flow
+        CustomerFlow,       // 4b: Customers flow / territory
         ComboCheck,         // 4c: Combo check
+        TierCheck,          // 4c.5: Company tier evaluation
         IncomeCalculation,  // 4d: Income calculated
         DeteriorationCheck  // 4e: Deterioration check (FBI, closure, leaving)
     }
@@ -87,7 +89,11 @@ namespace EmpireOfCards.Core
         AddCustomersToAll,          // Marketing Guru: +3 to all businesses
         NullifyTaxThisTurn,         // Accountant: 0% tax this turn
         BonusIncomeWithPenalty,     // Fraudster: +300 but -150 next turn
-        MotivateAllEmployees        // Loyal Manager: all employees +1 customer
+        MotivateAllEmployees,       // Loyal Manager: all employees +1 customer
+        ScaleIncomePerTurn,         // Consultant: income grows each turn employee is active
+        ReduceRivalCustomers,       // Bouncer: remove customers from rival each turn
+        CopyRandomEmployeeAbility,  // Headhunter: activates a random ally employee ability
+        SabotageCostIncrease        // Lobbyist: rival pays more for businesses
     }
 
     // Action card effect types from GDD Section 3.3
@@ -103,7 +109,10 @@ namespace EmpireOfCards.Core
         DisableRivalOneTurn,        // Sabotage: rival can't produce for 1 turn, FBI +15%
         MoneyNowPayLater,           // Investor Pitch: +600 instant, 3 turns 15%
         DrawAndPlayEmployee,        // Emergency Hire: draw random employee and play
-        SacrificeBusiness           // Liquidation: sell business, get 2x price
+        SacrificeBusiness,          // Liquidation: sell business, get 2x price
+        SwapBusinessWithRival,      // Hostile Merger: swap your weakest business with rival's strongest
+        GambleDoubleOrNothing,      // All In: double your money or lose half
+        ProtectBusinessOneTurn      // Insurance Claim: one business immune to events/rival this turn
     }
 
     // Upgrade effect types from GDD Section 3.4
@@ -115,7 +124,9 @@ namespace EmpireOfCards.Core
         GlobalCustomerPerTurn,      // Delivery Network: +2 customers/turn to all businesses
         GlobalCustomerFlat,         // Billboard: +3 customers/turn global
         ReduceFBIRisk,              // Security System: FBI risk -25%
-        ExtraAction                 // AI Assistant: +1 action
+        ExtraAction,                // AI Assistant: +1 action
+        IncomePerEmployeeSingle,    // Break Room: +15 income per employee in this business
+        RivalCostIncrease           // Patent Wall: rival businesses cost 25% more
     }
 
     // Event effect types from GDD Section 3.5
@@ -127,7 +138,9 @@ namespace EmpireOfCards.Core
         TagDoubleEffect,            // Viral Trend: marketing cards 2x
         TagCustomerPenalty,         // Data Breach: tech -5 customers
         TagDoubleEffectFinance,     // Investor Season: finance cards 2x
-        HighFBICustomerPenalty      // Cancel Culture: FBI>30% -> customers -40%
+        HighFBICustomerPenalty,     // Cancel Culture: FBI>30% -> customers -40%
+        TerritoryScramble,          // Gold Rush: unclaimed territories generate bonus income
+        ShopFloodRare               // Black Friday: shop has 5 cards, all rare+, 30% off
     }
 
     // Business evolution levels from GDD Section 3.1

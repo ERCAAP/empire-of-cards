@@ -1,4 +1,6 @@
 using UnityEngine;
+using UnityEngine.Rendering;
+using UnityEngine.Rendering.Universal;
 using EmpireOfCards.Core;
 using EmpireOfCards.World;
 using EmpireOfCards.UI;
@@ -30,6 +32,9 @@ namespace EmpireOfCards.Bootstrap
 
             // 3. Setup 3D camera
             var mainCamera = Setup3DCamera();
+
+            // 3.5. Setup lighting and post-processing
+            SetupLightingAndPostProcessing();
 
             // 4. Build 3D board
             var board3D = Build3DBoard();
@@ -208,6 +213,82 @@ namespace EmpireOfCards.Bootstrap
             tutorialManager.Init(tutorialUI);
 
             return tutorialManager;
+        }
+
+        // ================================================================
+        // Lighting & Post-Processing
+        // ================================================================
+
+        private void SetupLightingAndPostProcessing()
+        {
+            // --- Ambient Light ---
+            RenderSettings.ambientMode = UnityEngine.Rendering.AmbientMode.Flat;
+            RenderSettings.ambientLight = new Color(0.15f, 0.12f, 0.1f);
+
+            // --- 1. Main Directional Light (Sun) ---
+            var sunGo = new GameObject("Directional Light (Sun)");
+            var sunLight = sunGo.AddComponent<Light>();
+            sunLight.type = LightType.Directional;
+            sunLight.color = new Color(1.0f, 0.95f, 0.85f);
+            sunLight.intensity = 1.2f;
+            sunLight.shadows = LightShadows.Soft;
+            sunGo.transform.rotation = Quaternion.Euler(50f, -30f, 0f);
+
+            // --- 2. Fill Light ---
+            var fillGo = new GameObject("Directional Light (Fill)");
+            var fillLight = fillGo.AddComponent<Light>();
+            fillLight.type = LightType.Directional;
+            fillLight.color = new Color(0.7f, 0.8f, 1.0f);
+            fillLight.intensity = 0.3f;
+            fillLight.shadows = LightShadows.None;
+            fillGo.transform.rotation = Quaternion.Euler(30f, 150f, 0f);
+
+            // --- 3. Point Light on Table Center ---
+            var tableLightGo = new GameObject("Point Light (Table)");
+            var tableLight = tableLightGo.AddComponent<Light>();
+            tableLight.type = LightType.Point;
+            tableLight.color = new Color(1.0f, 0.85f, 0.6f);
+            tableLight.intensity = 2.0f;
+            tableLight.range = 12f;
+            tableLight.shadows = LightShadows.Soft;
+            tableLightGo.transform.position = new Vector3(0f, 3f, 1f);
+
+            // --- 4. Global Volume (Post Processing) ---
+            var volumeGo = new GameObject("--- POST PROCESSING ---");
+            var volume = volumeGo.AddComponent<Volume>();
+            volume.isGlobal = true;
+            volume.priority = 1f;
+
+            var profile = ScriptableObject.CreateInstance<VolumeProfile>();
+            volume.profile = profile;
+
+            // Bloom
+            var bloom = profile.Add<Bloom>(overrides: true);
+            bloom.intensity.Override(0.3f);
+            bloom.threshold.Override(0.9f);
+            bloom.scatter.Override(0.65f);
+
+            // Color Adjustments
+            var colorAdj = profile.Add<ColorAdjustments>(overrides: true);
+            colorAdj.postExposure.Override(0.1f);
+            colorAdj.contrast.Override(10f);
+            colorAdj.saturation.Override(15f);
+
+            // Vignette
+            var vignette = profile.Add<Vignette>(overrides: true);
+            vignette.intensity.Override(0.25f);
+            vignette.smoothness.Override(0.4f);
+
+            // Tonemapping
+            var tonemap = profile.Add<Tonemapping>(overrides: true);
+            tonemap.mode.Override(TonemappingMode.ACES);
+
+            // Film Grain
+            var grain = profile.Add<FilmGrain>(overrides: true);
+            grain.intensity.Override(0.1f);
+            grain.type.Override(FilmGrainLookup.Thin1);
+
+            Debug.Log("[GameSceneBootstrap] Lighting & post-processing configured.");
         }
     }
 }

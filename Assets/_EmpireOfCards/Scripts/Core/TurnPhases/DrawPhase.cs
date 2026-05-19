@@ -18,12 +18,18 @@ namespace EmpireOfCards.Core.TurnPhases
         {
             _timer = 0f;
 
-            var dm = GameManager.Instance.DeckManager;
+            var gm = GameManager.Instance;
+            var dm = gm != null ? gm.DeckManager : null;
             if (dm != null)
             {
                 dm.DiscardHand();
                 dm.ResetRedraws();
-                dm.DrawCards(Constants.HAND_SIZE);
+
+                // First turn: constrained hand for onboarding (1 Business + 1 Employee guaranteed)
+                if (_turnManager.CurrentTurnNumber == 1)
+                    dm.DrawFirstTurnHand();
+                else
+                    dm.DrawCards(Constants.HAND_SIZE);
             }
             // Always mark as drawn so the phase can complete even if DeckManager is null
             _cardsDrawn = true;

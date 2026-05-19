@@ -24,6 +24,9 @@ namespace EmpireOfCards.World
         private const float CARD_HEIGHT = 0.85f;
         private const float CARD_THICKNESS = 0.03f;
 
+        // Card text styling
+        private static readonly Color GoldColor = new Color(1f, 0.85f, 0.2f);
+
         public Card3D CreateCard(CardData data)
         {
             // Root - UNIFORM scale (1,1,1) so children aren't distorted
@@ -63,21 +66,31 @@ namespace EmpireOfCards.World
             float pixelToWorld = CARD_WIDTH / 200f; // 0.003
             canvasGo.transform.localScale = new Vector3(pixelToWorld, pixelToWorld, pixelToWorld);
 
-            // Card name (top center)
+            // Card name (top center) - auto-sized to prevent truncation
             var nameText = CreateText(canvasGo.transform, "NameText",
-                new Vector2(0, 100), new Vector2(180, 40), 28, FontStyles.Bold, Color.white);
+                new Vector2(0, 100), new Vector2(180, 45), 28, FontStyles.Bold, Color.white);
+            nameText.enableAutoSizing = true;
+            nameText.fontSizeMin = 14;
+            nameText.fontSizeMax = 28;
+            nameText.enableWordWrapping = true;
 
-            // Cost (top right)
+            // Cost (top right) - gold color for visibility
             var costText = CreateText(canvasGo.transform, "CostText",
-                new Vector2(70, 120), new Vector2(50, 30), 22, FontStyles.Bold, Color.yellow);
+                new Vector2(70, 120), new Vector2(55, 32), 24, FontStyles.Bold, GoldColor);
 
-            // Description (center)
+            // Description (center) - larger and more readable
             var descText = CreateText(canvasGo.transform, "DescText",
-                new Vector2(0, -10), new Vector2(170, 120), 16, FontStyles.Normal, new Color(0.9f, 0.9f, 0.9f));
+                new Vector2(0, -10), new Vector2(170, 120), 18, FontStyles.Normal, new Color(0.92f, 0.92f, 0.92f, 0.95f));
+            descText.enableAutoSizing = true;
+            descText.fontSizeMin = 12;
+            descText.fontSizeMax = 18;
 
-            // Stats (bottom)
+            // Stats (bottom) - player-friendly summary
             var statsText = CreateText(canvasGo.transform, "StatsText",
-                new Vector2(0, -110), new Vector2(170, 40), 14, FontStyles.Italic, new Color(0.7f, 0.85f, 1f));
+                new Vector2(0, -110), new Vector2(170, 40), 13, FontStyles.Normal, new Color(0.75f, 0.9f, 1f));
+            statsText.enableAutoSizing = true;
+            statsText.fontSizeMin = 10;
+            statsText.fontSizeMax = 14;
 
             // Glow outline (slightly larger card body, transparent)
             var glow = GameObject.CreatePrimitive(PrimitiveType.Cube);

@@ -16,6 +16,8 @@ namespace EmpireOfCards.World
         private Color _baseColor;
         private bool _isOccupied;
         private Card3D _placedCard;
+        private bool _isPulsing;
+        private Color _pulseColor;
 
         public DropZoneType ZoneType => zoneType;
         public int SlotIndex => slotIndex;
@@ -27,6 +29,29 @@ namespace EmpireOfCards.World
         {
             _renderer = GetComponent<MeshRenderer>();
             if (_renderer != null) _baseColor = _renderer.material.color;
+        }
+
+        private void Update()
+        {
+            if (!_isPulsing || _renderer == null) return;
+
+            // Oscillate alpha between 0.3 and 0.7 at 1.5 Hz
+            float alpha = 0.5f + 0.2f * Mathf.Sin(Time.time * 1.5f * 2f * Mathf.PI);
+            Color c = _pulseColor;
+            c.a = alpha;
+            _renderer.material.color = c;
+        }
+
+        /// <summary>
+        /// Enables a green pulsing glow on valid drop zones while a card is being dragged.
+        /// </summary>
+        public void SetPulse(bool on)
+        {
+            _isPulsing = on;
+            if (!on && _renderer != null)
+                _renderer.material.color = _baseColor;
+            else if (on)
+                _pulseColor = new Color(0.2f, 0.9f, 0.3f, 0.5f);
         }
 
         public bool CanAccept(CardData card)
@@ -82,11 +107,17 @@ namespace EmpireOfCards.World
             if (_renderer == null) return;
 
             if (on)
+            {
+                // Direct hover highlight overrides pulse temporarily
+                _isPulsing = false;
                 _renderer.material.color = valid
                     ? new Color(0.2f, 0.9f, 0.3f, 1f)
                     : new Color(0.9f, 0.2f, 0.2f, 1f);
+            }
             else
+            {
                 _renderer.material.color = _baseColor;
+            }
         }
 
         public void RuntimeInit(DropZoneType type, int slot, int parentBiz = -1)

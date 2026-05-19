@@ -5,13 +5,13 @@ using EmpireOfCards.Data;
 namespace EmpireOfCards.Bootstrap.Data
 {
     /// <summary>
-    /// Definitions for the 10 Combos.
+    /// Definitions for the 15 Combos.
     /// </summary>
     public static class ComboDefs
     {
         public static ComboData[] Create(CardData[] allCards)
         {
-            var combos = new ComboData[10];
+            var combos = new ComboData[15];
 
             // COMBO 01 - Latte Art (Easy)
             // Buffed from +40/+4 effective to +60/+6 flat (was ~19% of turn 10 income, now ~30%).
@@ -236,6 +236,132 @@ namespace EmpireOfCards.Bootstrap.Data
                 c.screenShakeIntensity = 0.7f;
                 c.screenShakeDuration = 0.6f;
                 combos[9] = c;
+            }
+
+            // COMBO 11 - Franchise Network (Medium)
+            // Franchise Hub + any 2 other businesses + Delivery Network
+            // Reward: Franchise Hub income doubles. Discoverable because players naturally
+            // build multiple businesses, but the combo only fires with Delivery Network attached.
+            {
+                var c = ScriptableObject.CreateInstance<ComboData>();
+                c.name = "COMBO_11_FranchiseNetwork";
+                c.comboId = "COMBO_11_FranchiseNetwork";
+                c.comboName = "Franchise Network";
+                c.displayText = "FRANCHISE NETWORK!";
+                c.tier = ComboTier.Medium;
+                c.description = "Franchise Hub + Delivery Network + 3 businesses = Franchise income x2.";
+                c.requiredCardIds = new[] { "B09_FranchiseHub", "U03_TeslimatAgi" };
+                c.requiredTags = new[] { CardTag.Chain, CardTag.Logistics };
+                c.requiresSpecificPlacement = false;
+                c.minActiveBusinesses = 3;
+                c.incomeMultiplier = 2f;
+                c.glowColor = new Color(1f, 0.6f, 0f, 1f);
+                c.comboSoundId = "combo_trigger";
+                c.screenShakeIntensity = 0.5f;
+                c.screenShakeDuration = 0.4f;
+                combos[10] = c;
+            }
+
+            // COMBO 12 - VIP Lounge (Easy)
+            // Luxury Boutique + Bouncer = +80 income, +4 customers
+            // Thematic: bouncer at the door of a luxury establishment.
+            // Easy to discover because Bouncer's nightlife tag hints at entertainment pairing.
+            {
+                var c = ScriptableObject.CreateInstance<ComboData>();
+                c.name = "COMBO_12_VIPLounge";
+                c.comboId = "COMBO_12_VIPLounge";
+                c.comboName = "VIP Lounge";
+                c.displayText = "VIP LOUNGE!";
+                c.tier = ComboTier.Easy;
+                c.description = "Luxury Boutique + Bouncer = +80 income, +4 customers.";
+                c.requiredCardIds = new[] { "B10_LuksButik", "C12_Fedai" };
+                c.requiredTags = new[] { CardTag.Luxury };
+                c.requiresSpecificPlacement = true;
+                c.employeeCardId = "C12_Fedai";
+                c.businessCardId = "B10_LuksButik";
+                c.bonusIncome = 80;
+                c.bonusCustomers = 4;
+                c.glowColor = new Color(0.8f, 0.6f, 1f, 1f);
+                c.comboSoundId = "combo_trigger";
+                c.screenShakeIntensity = 0.3f;
+                c.screenShakeDuration = 0.3f;
+                combos[11] = c;
+            }
+
+            // COMBO 13 - Shadow Consultant (Hard)
+            // Consulting Firm + Fraudster + Accountant = illegal income doubled, tax-free.
+            // Three-card combo that rewards building the "white collar crime" archetype.
+            // Hard to assemble but creates a money printing engine.
+            {
+                var c = ScriptableObject.CreateInstance<ComboData>();
+                c.name = "COMBO_13_ShadowConsultant";
+                c.comboId = "COMBO_13_ShadowConsultant";
+                c.comboName = "Shadow Consultant";
+                c.displayText = "SHADOW CONSULTANT!";
+                c.tier = ComboTier.Hard;
+                c.description = "Consulting Firm + Fraudster + Accountant = illegal income x2, tax-free.";
+                c.requiredCardIds = new[] { "B11_DanismanlikFirmasi", "C09_Dolandirici", "C08_Muhasebeci" };
+                c.requiredTags = new[] { CardTag.Finance, CardTag.Consulting };
+                c.requiresSpecificPlacement = false;
+                c.incomeMultiplier = 2f;
+                c.bonusIncome = 0;
+                c.extraFBIRisk = 5;
+                c.glowColor = new Color(0.3f, 0.1f, 0.3f, 1f);
+                c.comboSoundId = "combo_trigger";
+                c.screenShakeIntensity = 0.5f;
+                c.screenShakeDuration = 0.4f;
+                combos[12] = c;
+            }
+
+            // COMBO 14 - Flash Sale (Medium)
+            // Pop-Up Shop + Influencer + during any trend event = customers x4.
+            // The Pop-Up Shop only lasts 4 turns, so timing the trend event overlap
+            // with the influencer placement is the challenge. Huge payoff if you nail it.
+            {
+                var c = ScriptableObject.CreateInstance<ComboData>();
+                c.name = "COMBO_14_FlashSale";
+                c.comboId = "COMBO_14_FlashSale";
+                c.comboName = "Flash Sale";
+                c.displayText = "FLASH SALE!";
+                c.tier = ComboTier.Medium;
+                c.description = "Pop-Up Shop + Influencer + Viral Trend = customers x4.";
+                c.requiredCardIds = new[] { "B12_PopUpShop", "C06_Influencer" };
+                c.requiredTags = new[] { CardTag.Trendy };
+                c.requiresSpecificPlacement = true;
+                c.employeeCardId = "C06_Influencer";
+                c.businessCardId = "B12_PopUpShop";
+                c.requiresActiveEvent = true;
+                c.requiredEventId = "E03_ViralTrend";
+                c.customerMultiplier = 4f;
+                c.glowColor = new Color(1f, 0.2f, 0.6f, 1f);
+                c.comboSoundId = "combo_trigger";
+                c.screenShakeIntensity = 0.6f;
+                c.screenShakeDuration = 0.5f;
+                combos[13] = c;
+            }
+
+            // COMBO 15 - Scaling Empire (Hard / Automatic hybrid)
+            // Consultant employee has been active for 8+ turns + Franchise Hub + Break Room
+            // The consultant's scaling bonus + franchise scaling + break room synergy
+            // creates exponential late-game income. Reward for patient, long-term play.
+            {
+                var c = ScriptableObject.CreateInstance<ComboData>();
+                c.name = "COMBO_15_ScalingEmpire";
+                c.comboId = "COMBO_15_ScalingEmpire";
+                c.comboName = "Scaling Empire";
+                c.displayText = "SCALING EMPIRE!";
+                c.tier = ComboTier.Hard;
+                c.description = "Franchise Hub + Consultant + Break Room = income +100, customers +8.";
+                c.requiredCardIds = new[] { "B09_FranchiseHub", "C11_Danismani", "U07_DinlenmeOdasi" };
+                c.requiredTags = new[] { CardTag.Scaling };
+                c.requiresSpecificPlacement = false;
+                c.bonusIncome = 100;
+                c.bonusCustomers = 8;
+                c.glowColor = new Color(0.2f, 1f, 0.4f, 1f);
+                c.comboSoundId = "combo_trigger";
+                c.screenShakeIntensity = 0.6f;
+                c.screenShakeDuration = 0.5f;
+                combos[14] = c;
             }
 
             return combos;

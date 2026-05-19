@@ -4,13 +4,13 @@ using EmpireOfCards.Data;
 namespace EmpireOfCards.Bootstrap.Data
 {
     /// <summary>
-    /// Definitions for the 6 Event cards.
+    /// Definitions for the 8 Event cards.
     /// </summary>
     public static class EventCardDefs
     {
         public static CardData[] Create()
         {
-            var cards = new CardData[6];
+            var cards = new CardData[8];
 
             // E01 - Coffee Craze
             cards[0] = CardHelper.CreateEvent("E01_KahveCilginligi", "Coffee Craze", Rarity.Common,
@@ -47,6 +47,24 @@ namespace EmpireOfCards.Bootstrap.Data
                 "Disaster for dirty players. Opportunity for clean ones.", 1,
                 EventEffectType.HighFBICustomerPenalty, -0.4f,
                 new CardTag[0], 0, 0.3f);
+
+            // E07 - Gold Rush
+            // DECISION: Every unclaimed territory generates +20 bonus income for BOTH players.
+            // Creates a race to claim territories before the opponent profits.
+            // Rewards aggressive expansion. Punishes sitting on cash.
+            cards[6] = CardHelper.CreateEvent("E07_AltinaTehacum", "Gold Rush", Rarity.Uncommon,
+                "Unclaimed land is worth gold. Expand or let your rival profit.", 2,
+                EventEffectType.TerritoryScramble, 0.0f,
+                new CardTag[0], 0, 0f);
+
+            // E08 - Black Friday
+            // DECISION: Shop floods with 5 rare+ cards at 30% off.
+            // Both players get access. Creates a spending frenzy.
+            // Do you blow your savings on discounted power cards, or let the rival grab them?
+            cards[7] = CardHelper.CreateEvent("E08_KaraCuma", "Black Friday", Rarity.Rare,
+                "The shop is overflowing with rare deals. Buy fast or lose out.", 1,
+                EventEffectType.ShopFloodRare, 0.3f,
+                new CardTag[0], 0, 0f);
 
             return cards;
         }

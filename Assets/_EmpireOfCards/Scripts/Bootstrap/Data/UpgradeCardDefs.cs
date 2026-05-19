@@ -4,13 +4,13 @@ using EmpireOfCards.Data;
 namespace EmpireOfCards.Bootstrap.Data
 {
     /// <summary>
-    /// Definitions for the 6 Upgrade cards.
+    /// Definitions for the 8 Upgrade cards.
     /// </summary>
     public static class UpgradeCardDefs
     {
         public static CardData[] Create()
         {
-            var cards = new CardData[6];
+            var cards = new CardData[8];
 
             // U01 - Office Supplies
             cards[0] = CardHelper.CreateUpgrade("U01_OfisMalzemeleri", "Office Supplies", Rarity.Common,
@@ -47,6 +47,24 @@ namespace EmpireOfCards.Bootstrap.Data
                 "The game's strongest upgrade. Extra action per turn.", 400,
                 UpgradeEffectType.ExtraAction, 0f, true, 0, 1,
                 new[] { CardTag.Tech, CardTag.AI });
+
+            // U07 - Break Room
+            // DECISION: +15 income per employee in the business. Worthless on a 1-slot business.
+            // Amazing on Burger Chain (3 slots = +45). Competes with Automation for the slot.
+            // Automation gives +30% but kills a slot; Break Room rewards FILLING slots.
+            cards[6] = CardHelper.CreateUpgrade("U07_DinlenmeOdasi", "Break Room", Rarity.Uncommon,
+                "Happy workers, happy income. +15 per employee in this business.", 180,
+                UpgradeEffectType.IncomePerEmployeeSingle, 15f, false, 0, 0,
+                new[] { CardTag.Office, CardTag.Management });
+
+            // U08 - Patent Wall
+            // DECISION: Global upgrade that makes rival's businesses cost 25% more.
+            // Defensive and disruptive. Does nothing for your income.
+            // Costs 320 that could buy a business. Worth it only if rival is expanding.
+            cards[7] = CardHelper.CreateUpgrade("U08_PatentDuvari", "Patent Wall", Rarity.Rare,
+                "Bureaucracy as a weapon. Rival businesses cost 25% more.", 320,
+                UpgradeEffectType.RivalCostIncrease, 25f, true, 0, 0,
+                new[] { CardTag.Tech, CardTag.Defensive });
 
             return cards;
         }

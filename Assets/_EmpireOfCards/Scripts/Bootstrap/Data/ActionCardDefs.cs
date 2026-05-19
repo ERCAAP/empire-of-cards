@@ -4,13 +4,13 @@ using EmpireOfCards.Data;
 namespace EmpireOfCards.Bootstrap.Data
 {
     /// <summary>
-    /// Definitions for the 10 Action cards.
+    /// Definitions for the 13 Action cards.
     /// </summary>
     public static class ActionCardDefs
     {
         public static CardData[] Create()
         {
-            var cards = new CardData[10];
+            var cards = new CardData[13];
 
             // A01 - Flyer
             cards[0] = CardHelper.CreateAction("A01_ElIlani", "Flyer", Rarity.Common,
@@ -74,6 +74,34 @@ namespace EmpireOfCards.Bootstrap.Data
                 "Last resort. Or strategic move.", 0,
                 ActionEffectType.SacrificeBusiness, 0, 0f, 0,
                 new[] { CardTag.Finance, CardTag.Desperate });
+
+            // A11 - Hostile Merger
+            // DECISION: Swap your WEAKEST business with the rival's STRONGEST.
+            // Incredible if you have a Pop-Up Shop about to expire or a failing Diner.
+            // Terrible if your board is already strong. Timing is everything.
+            cards[10] = CardHelper.CreateAction("A11_DusmancaBirlesme", "Hostile Merger", Rarity.Rare,
+                "Swap your weakest business with the rival's strongest. Bold move.", 350,
+                ActionEffectType.SwapBusinessWithRival, 0, 0f, 0,
+                new[] { CardTag.Aggressive, CardTag.Finance });
+
+            // A12 - All In
+            // DECISION: 50/50 gamble. Double your current money or lose half.
+            // Incredible when broke (double a small amount = low risk).
+            // Terrifying when rich (lose half of 2000 = devastating).
+            // Creates a "when do I play this?" tension every time it is in hand.
+            cards[11] = CardHelper.CreateAction("A12_HepsiYaHic", "All In", Rarity.Rare,
+                "Flip a coin. Heads: double your money. Tails: lose half.", 0,
+                ActionEffectType.GambleDoubleOrNothing, 0, 2.0f, 0,
+                new[] { CardTag.Finance, CardTag.Risky, CardTag.Crypto });
+
+            // A13 - Insurance Claim
+            // DECISION: Spend 200 to make one business immune to events and rival attacks
+            // for 1 turn. Incredible before an Economic Crisis or when rival is aggressive.
+            // Wasted if nothing bad happens. Rewards prediction and scouting.
+            cards[12] = CardHelper.CreateAction("A13_SigortaTalebi", "Insurance Claim", Rarity.Uncommon,
+                "One business is untouchable this turn. Worth it?", 200,
+                ActionEffectType.ProtectBusinessOneTurn, 0, 0f, 0,
+                new[] { CardTag.Finance, CardTag.Defensive });
 
             return cards;
         }

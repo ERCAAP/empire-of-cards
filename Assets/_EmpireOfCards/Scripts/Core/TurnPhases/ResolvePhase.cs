@@ -1,13 +1,15 @@
 using System;
 using UnityEngine;
 using EmpireOfCards.Core.StateMachine;
+using EmpireOfCards.Data;
 
 namespace EmpireOfCards.Core.TurnPhases
 {
     /// <summary>
     /// Turn phase 4: System calculates everything step by step (GDD Section 4.1, Step 4).
     /// Sub-steps: 4a BusinessProduce -> 4b CustomerFlow -> 4c ComboCheck
-    ///         -> 4d IncomeCalculation -> 4e DeteriorationCheck
+    ///         -> 4c.5 TierCheck -> 4d IncomeCalculation -> 4e DeteriorationCheck
+    /// Each step has a cinematic delay tuned for readability and drama.
     /// </summary>
     public class ResolvePhase : IState
     {
@@ -15,7 +17,11 @@ namespace EmpireOfCards.Core.TurnPhases
         private readonly ResolveStep[] _steps;
         private int _stepIndex;
         private float _stepTimer;
+        private float _currentStepDelay;
         private bool _stepExecuted;
+
+        // Track whether tier changed this resolve for variable delay
+        private bool _tierChangedThisResolve;
 
         public ResolvePhase(TurnManager tm)
         {
@@ -28,6 +34,8 @@ namespace EmpireOfCards.Core.TurnPhases
             _stepIndex = 0;
             _stepTimer = 0f;
             _stepExecuted = false;
+            _currentStepDelay = 0f;
+            _tierChangedThisResolve = false;
         }
 
         public void Tick()
@@ -41,16 +49,34 @@ namespace EmpireOfCards.Core.TurnPhases
             if (!_stepExecuted)
             {
                 ExecuteStep(_steps[_stepIndex]);
+                _currentStepDelay = GetStepDelay(_steps[_stepIndex]);
                 _stepExecuted = true;
                 _stepTimer = 0f;
             }
 
             _stepTimer += Time.deltaTime;
-            if (_stepTimer >= _turnManager.ResolveStepDelay)
+            if (_stepTimer >= _currentStepDelay)
             {
                 _stepIndex++;
                 _stepExecuted = false;
             }
+        }
+
+        /// <summary>
+        /// Returns the cinematic delay after each resolve sub-step.
+        /// </summary>
+        private float GetStepDelay(ResolveStep step)
+        {
+            return step switch
+            {
+                ResolveStep.BusinessProduce    => 0.4f,
+                ResolveStep.CustomerFlow       => 0.6f,  // Territory shifting is important
+                ResolveStep.ComboCheck         => 1.0f,  // Let combo popup show
+                ResolveStep.TierCheck          => _tierChangedThisResolve ? 1.5f : 0.3f,
+                ResolveStep.IncomeCalculation  => 0.8f,  // Money counter rolling
+                ResolveStep.DeteriorationCheck => 0.5f,
+                _                              => 0.5f
+            };
         }
 
         private void ExecuteStep(ResolveStep step)
@@ -113,10 +139,16 @@ namespace EmpireOfCards.Core.TurnPhases
                             activeBizCount,
                             marketShare);
                     }
+                    break;
 
-                    // Evaluate Company Tier (GDD Section 1.6) - after combo check
+                // 4c.5: Evaluate Company Tier (GDD Section 1.6) - after combo check
+                case ResolveStep.TierCheck:
                     if (gm.CompanyTierSystem != null)
+                    {
+                        CompanyTier tierBefore = gm.CompanyTierSystem.CurrentTier;
                         gm.CompanyTierSystem.EvaluateTier(gm.PlayerTerritories);
+                        _tierChangedThisResolve = gm.CompanyTierSystem.CurrentTier != tierBefore;
+                    }
                     break;
 
                 // 4d: Calculate and apply income, salaries, tax

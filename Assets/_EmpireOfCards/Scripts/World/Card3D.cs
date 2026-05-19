@@ -1,5 +1,6 @@
 using UnityEngine;
 using TMPro;
+using DG.Tweening;
 using EmpireOfCards.Data;
 using EmpireOfCards.Core;
 
@@ -27,6 +28,7 @@ namespace EmpireOfCards.World
         private Quaternion _targetRot;
         private Vector3 _targetScale;
         private float _lerpSpeed = 12f;
+        private bool _isSnapping; // True while DOTween snap animation is running
 
         // Colors per card type
         private static readonly Color BusinessColor = new Color(0.2f, 0.4f, 0.8f);
@@ -59,12 +61,13 @@ namespace EmpireOfCards.World
 
         private void Update()
         {
-            if (!_isDragging)
+            if (!_isDragging && !_isSnapping)
             {
                 transform.position = Vector3.Lerp(transform.position, _targetPos, Time.deltaTime * _lerpSpeed);
                 transform.rotation = Quaternion.Lerp(transform.rotation, _targetRot, Time.deltaTime * _lerpSpeed);
             }
-            transform.localScale = Vector3.Lerp(transform.localScale, _targetScale, Time.deltaTime * _lerpSpeed);
+            if (!_isSnapping)
+                transform.localScale = Vector3.Lerp(transform.localScale, _targetScale, Time.deltaTime * _lerpSpeed);
         }
 
         public void ApplyCardVisuals()
@@ -92,11 +95,13 @@ namespace EmpireOfCards.World
             {
                 _statsText.text = _cardData.cardType switch
                 {
-                    CardType.Business => $"${_cardData.incomePerTurn}/turn  {_cardData.customersPerTurn} customers",
+                    CardType.Business => $"${_cardData.incomePerTurn}/turn  {_cardData.customersPerTurn} cust.",
                     CardType.Employee => $"Salary: ${_cardData.salaryPerTurn}/turn",
-                    CardType.Action => _cardData.actionEffectType.ToString(),
-                    CardType.Upgrade => _cardData.upgradeEffectType.ToString(),
-                    CardType.Event => $"{_cardData.eventDuration} turns",
+                    CardType.Action => GetActionLabel(_cardData.actionEffectType),
+                    CardType.Upgrade => GetUpgradeLabel(_cardData.upgradeEffectType),
+                    CardType.Event => _cardData.eventDuration > 1
+                        ? $"Lasts {_cardData.eventDuration} turns"
+                        : "Lasts 1 turn",
                     _ => ""
                 };
             }
@@ -140,13 +145,83 @@ namespace EmpireOfCards.World
 
         /// <summary>
         /// Called when a card drop fails and the card needs to animate back
-        /// to its previous hand position. Uses the last target set by SetHandPosition.
+        /// to its previous hand position. Uses snap-overshoot for crisp feedback.
         /// </summary>
         public void ReturnToHand()
         {
             _isDragging = false;
             _isInHand = true;
-            // Card will lerp back to _targetPos/_targetRot (its last hand slot)
+            SnapToPosition(_targetPos, _targetRot);
+        }
+
+        /// <summary>
+        /// Snaps card to target with overshoot bounce and scale punch via DOTween.
+        /// Used for slot placement and return-to-hand to give crisp, juicy feedback.
+        /// </summary>
+        public void SnapToPosition(Vector3 target, Quaternion rotation)
+        {
+            if (this == null || gameObject == null) return;
+
+            _isSnapping = true;
+            _targetPos = target;
+            _targetRot = rotation;
+
+            // Kill any existing tweens on this transform to avoid conflicts
+            transform.DOKill();
+
+            // Move with OutBack ease (overshoots ~5% then settles)
+            transform.DOMove(target, 0.12f).SetEase(Ease.OutBack).SetLink(gameObject);
+            transform.DORotateQuaternion(rotation, 0.12f).SetEase(Ease.OutBack).SetLink(gameObject);
+
+            // Scale punch: briefly inflate to 1.08x then return to 1.0x
+            transform.DOPunchScale(Vector3.one * 0.08f, 0.15f, 6, 0.5f)
+                .SetLink(gameObject)
+                .OnComplete(() =>
+                {
+                    if (this != null)
+                    {
+                        _isSnapping = false;
+                        transform.localScale = _targetScale;
+                    }
+                });
+        }
+
+        /// <summary>
+        /// Returns a player-friendly label for action effect types.
+        /// </summary>
+        private static string GetActionLabel(ActionEffectType effect)
+        {
+            return effect switch
+            {
+                ActionEffectType.AddCustomersToRandom   => "Instant: +Customers",
+                ActionEffectType.AddMoneyInstant        => "Instant: +Money",
+                ActionEffectType.MultiplyAllCustomers   => "Instant: x2 Customers",
+                ActionEffectType.CloseRivalWeakestBusiness => "Attack: Close Rival",
+                ActionEffectType.AddCustomersWithFBI    => "Risky: +Customers",
+                ActionEffectType.StealCustomersHalfIncome => "Trade: Steal Cust.",
+                ActionEffectType.DisableRivalOneTurn    => "Sabotage: Stun Rival",
+                ActionEffectType.MoneyNowPayLater       => "Loan: +Money Now",
+                ActionEffectType.DrawAndPlayEmployee    => "Instant: Free Hire",
+                ActionEffectType.SacrificeBusiness      => "Sell: 2x Value",
+                _                                       => "Action"
+            };
+        }
+
+        /// <summary>
+        /// Returns a player-friendly label for upgrade effect types.
+        /// </summary>
+        private static string GetUpgradeLabel(UpgradeEffectType effect)
+        {
+            return effect switch
+            {
+                UpgradeEffectType.IncomePercentSingle         => "Boost: +10% Income",
+                UpgradeEffectType.IncomePercentWithSlotLoss   => "Boost: +30%, -1 Slot",
+                UpgradeEffectType.GlobalCustomerPerTurn        => "All: +Cust./Turn",
+                UpgradeEffectType.GlobalCustomerFlat           => "All: +Customers",
+                UpgradeEffectType.ReduceFBIRisk                => "Safety: -25% FBI",
+                UpgradeEffectType.ExtraAction                  => "Bonus: +1 Action",
+                _                                              => "Upgrade"
+            };
         }
     }
 }

@@ -317,6 +317,70 @@ namespace EmpireOfCards.Gameplay
         }
 
         // ----------------------------------------------------------------
+        // First Turn Draw (Onboarding - constrained hand)
+        // ----------------------------------------------------------------
+
+        /// <summary>
+        /// Draws a constrained first-turn hand to guide the player:
+        /// 1 Business card + 1 Employee card + fill remaining to handSize.
+        /// Searches the draw pile for the required types and pulls them to front.
+        /// Falls back to normal draw if the types are not available.
+        /// </summary>
+        public List<CardData> DrawFirstTurnHand()
+        {
+            List<CardData> drawnCards = new List<CardData>();
+
+            // Pull one Business card from draw pile to front
+            PullCardTypeToFront(CardType.Business);
+            // Pull one Employee card right after
+            PullCardTypeToFront(CardType.Employee, 1);
+
+            // Now draw normally -- the first 2 cards are guaranteed types
+            int toDraw = Mathf.Max(0, handSize - hand.Count);
+            for (int i = 0; i < toDraw; i++)
+            {
+                if (drawPile.Count == 0)
+                {
+                    RecycleDiscardPile();
+                    if (drawPile.Count == 0)
+                    {
+                        Debug.Log("[DeckManager] No cards left to draw (first turn).");
+                        break;
+                    }
+                }
+
+                CardData drawn = drawPile[0];
+                drawPile.RemoveAt(0);
+                hand.Add(drawn);
+                drawnCards.Add(drawn);
+                EventBus.CardDrawn(drawn);
+            }
+
+            Debug.Log($"[DeckManager] First turn hand drawn: {drawnCards.Count} cards.");
+            return drawnCards;
+        }
+
+        /// <summary>
+        /// Finds the first card of the given type in the draw pile at or after
+        /// startIndex, and moves it to that position.
+        /// </summary>
+        private void PullCardTypeToFront(CardType type, int insertAt = 0)
+        {
+            for (int i = insertAt; i < drawPile.Count; i++)
+            {
+                if (drawPile[i] != null && drawPile[i].cardType == type)
+                {
+                    if (i == insertAt) return; // Already in position
+                    CardData card = drawPile[i];
+                    drawPile.RemoveAt(i);
+                    drawPile.Insert(insertAt, card);
+                    return;
+                }
+            }
+            // Type not found in draw pile -- normal draw will handle it
+        }
+
+        // ----------------------------------------------------------------
         // Recycle
         // ----------------------------------------------------------------
 

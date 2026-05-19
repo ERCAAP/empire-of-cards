@@ -154,7 +154,13 @@ namespace EmpireOfCards.Core
                 {
                     if (slot != _hoveredSlot)
                     {
-                        _hoveredSlot?.SetHighlight(false);
+                        // Restore previous hovered slot back to pulse if valid
+                        if (_hoveredSlot != null)
+                        {
+                            _hoveredSlot.SetHighlight(false);
+                            if (_hoveredSlot.CanAccept(_draggedCard.CardData))
+                                _hoveredSlot.SetPulse(true);
+                        }
                         _hoveredSlot = slot;
                         bool valid = _hoveredSlot.CanAccept(_draggedCard.CardData);
                         _hoveredSlot.SetHighlight(true, valid);
@@ -163,12 +169,16 @@ namespace EmpireOfCards.Core
                 else if (_hoveredSlot != null)
                 {
                     _hoveredSlot.SetHighlight(false);
+                    if (_hoveredSlot.CanAccept(_draggedCard.CardData))
+                        _hoveredSlot.SetPulse(true);
                     _hoveredSlot = null;
                 }
             }
             else if (_hoveredSlot != null)
             {
                 _hoveredSlot.SetHighlight(false);
+                if (_hoveredSlot.CanAccept(_draggedCard.CardData))
+                    _hoveredSlot.SetPulse(true);
                 _hoveredSlot = null;
             }
         }
@@ -214,12 +224,12 @@ namespace EmpireOfCards.Core
             card.SetDragging(true);
             card.transform.rotation = Quaternion.Euler(0, 0, 0);
 
-            // Highlight valid slots
+            // Pulse all valid drop zones green while dragging
             var allSlots = FindObjectsByType<SlotZone3D>(FindObjectsSortMode.None);
             foreach (var s in allSlots)
             {
                 if (s.CanAccept(card.CardData))
-                    s.SetHighlight(true, true);
+                    s.SetPulse(true);
             }
 
             OnCardPickedUp?.Invoke(card);
@@ -229,22 +239,27 @@ namespace EmpireOfCards.Core
         {
             if (_draggedCard == null) return;
 
-            // Clear all highlights
+            // Clear all highlights and pulses
             var allSlots = FindObjectsByType<SlotZone3D>(FindObjectsSortMode.None);
             foreach (var s in allSlots)
+            {
                 s.SetHighlight(false);
+                s.SetPulse(false);
+            }
 
             if (_hoveredSlot != null && _hoveredSlot.CanAccept(_draggedCard.CardData))
             {
-                // Valid drop
-                OnCardDropped?.Invoke(_draggedCard, _hoveredSlot);
+                // Valid drop -- snap card to slot with overshoot animation
                 _draggedCard.SetDragging(false);
+                Vector3 slotTarget = _hoveredSlot.transform.position + Vector3.up * 0.15f;
+                _draggedCard.SnapToPosition(slotTarget, Quaternion.identity);
+                OnCardDropped?.Invoke(_draggedCard, _hoveredSlot);
             }
             else
             {
-                // Return to hand
-                _draggedCard.ReturnToOriginal(_cardOriginalPos, _cardOriginalRot);
+                // Return to hand with snap animation
                 _draggedCard.SetDragging(false);
+                _draggedCard.ReturnToHand();
                 OnCardReturnedToHand?.Invoke(_draggedCard);
             }
 

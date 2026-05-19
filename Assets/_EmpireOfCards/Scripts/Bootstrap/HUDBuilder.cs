@@ -11,6 +11,9 @@ namespace EmpireOfCards.Bootstrap
     /// </summary>
     public static class HUDBuilder
     {
+        // HUD color palette
+        private static readonly Color GoldColor = new Color(1f, 0.85f, 0.2f);
+        private static readonly Color LightGold = new Color(1f, 0.9f, 0.3f);
         /// <summary>
         /// Creates the HUD canvas, all panels, buttons, and popups.
         /// Returns a HUDBundle with every reference the wiring step needs.
@@ -43,15 +46,20 @@ namespace EmpireOfCards.Bootstrap
             topBar.sizeDelta = new Vector2(0, 80);
             hud.topBarUI = topBar.gameObject.AddComponent<TopBarUI>();
 
-            // Money display
-            var moneyObj = CreateTextElement("MoneyDisplay", topBar, "$500", 36);
+            // Money display - large gold text for emphasis
+            var moneyObj = CreateTextElement("MoneyDisplay", topBar, "$500", 42);
             moneyObj.localPosition = new Vector3(-700, -40, 0);
+            moneyObj.sizeDelta = new Vector2(280, 60);
             hud.moneyText = moneyObj.GetComponent<TMP_Text>();
+            hud.moneyText.color = GoldColor;
+            hud.moneyText.fontStyle = FontStyles.Bold;
 
-            // Turn counter
-            var turnObj = CreateTextElement("TurnCounter", topBar, "Turn 1/20", 24);
+            // Turn counter - clear and readable
+            var turnObj = CreateTextElement("TurnCounter", topBar, "Turn 1/20", 28);
             turnObj.localPosition = new Vector3(0, -40, 0);
+            turnObj.sizeDelta = new Vector2(240, 50);
             hud.turnText = turnObj.GetComponent<TMP_Text>();
+            hud.turnText.fontStyle = FontStyles.Bold;
 
             // FBI Risk bar
             var fbiBarBg = CreateUIPanel("FBIRiskBar", topBar);
@@ -66,11 +74,13 @@ namespace EmpireOfCards.Bootstrap
             hud.fbiBarFillImg.color = Color.green;
 
             // Neglect warning (shows briefly when a business is neglected)
-            var neglectWarning = CreateTextElement("NeglectWarning", topBar, "", 18);
+            var neglectWarning = CreateTextElement("NeglectWarning", topBar, "", 20);
             neglectWarning.anchoredPosition = new Vector2(0, -65);
-            neglectWarning.sizeDelta = new Vector2(400, 30);
-            neglectWarning.GetComponent<TMP_Text>().color = new Color(1f, 0.5f, 0.2f); // Orange warning
-            hud.neglectWarningText = neglectWarning.GetComponent<TMP_Text>();
+            neglectWarning.sizeDelta = new Vector2(500, 35);
+            var neglectTmp = neglectWarning.GetComponent<TMP_Text>();
+            neglectTmp.color = new Color(1f, 0.5f, 0.2f); // Orange warning
+            neglectTmp.fontStyle = FontStyles.Bold;
+            hud.neglectWarningText = neglectTmp;
 
             // ============================================================
             // ACTION BAR -- action dots
@@ -97,11 +107,13 @@ namespace EmpireOfCards.Bootstrap
             // BUTTONS -- End Turn, Shop, Deck
             // ============================================================
 
-            // End Turn Button
+            // End Turn Button - prominent and readable
             var endTurnBtn = CreateButton("EndTurnButton", canvasGo.transform, "END TURN");
             SetAnchors(endTurnBtn, new Vector2(1, 0), new Vector2(1, 0), new Vector2(1, 0));
             endTurnBtn.anchoredPosition = new Vector2(-100, 200);
-            endTurnBtn.sizeDelta = new Vector2(160, 50);
+            endTurnBtn.sizeDelta = new Vector2(180, 55);
+            endTurnBtn.GetComponentInChildren<TMP_Text>().fontSize = 24;
+            endTurnBtn.GetComponentInChildren<TMP_Text>().fontStyle = FontStyles.Bold;
             hud.endTurnButton = endTurnBtn.GetComponent<Button>();
 
             // Shop Button
@@ -161,26 +173,37 @@ namespace EmpireOfCards.Bootstrap
                 var cardUI = shopCard.gameObject.AddComponent<EmpireOfCards.UI.Cards.CardUI>();
                 shopCardUIs[i] = cardUI;
 
-                // Card name text (top of card)
-                var nameRt = CreateTextElement("CardName", shopCard, "", 18);
+                // Card name text (top of card) - auto-sized to fit
+                var nameRt = CreateTextElement("CardName", shopCard, "", 20);
                 nameRt.anchoredPosition = new Vector2(0, 70);
                 nameRt.sizeDelta = new Vector2(140, 50);
-                nameRt.GetComponent<TMP_Text>().alignment = TextAlignmentOptions.Center;
+                var shopNameTmp = nameRt.GetComponent<TMP_Text>();
+                shopNameTmp.alignment = TextAlignmentOptions.Center;
+                shopNameTmp.fontStyle = FontStyles.Bold;
+                shopNameTmp.enableAutoSizing = true;
+                shopNameTmp.fontSizeMin = 12;
+                shopNameTmp.fontSizeMax = 20;
 
                 // Card description / stats (middle)
-                var descRt = CreateTextElement("CardDesc", shopCard, "", 12);
+                var descRt = CreateTextElement("CardDesc", shopCard, "", 14);
                 descRt.anchoredPosition = new Vector2(0, 15);
                 descRt.sizeDelta = new Vector2(140, 60);
-                descRt.GetComponent<TMP_Text>().alignment = TextAlignmentOptions.Center;
-                descRt.GetComponent<TMP_Text>().color = new Color(0.8f, 0.8f, 0.8f);
+                var shopDescTmp = descRt.GetComponent<TMP_Text>();
+                shopDescTmp.alignment = TextAlignmentOptions.Center;
+                shopDescTmp.color = new Color(0.85f, 0.85f, 0.85f);
+                shopDescTmp.enableAutoSizing = true;
+                shopDescTmp.fontSizeMin = 10;
+                shopDescTmp.fontSizeMax = 14;
 
-                // Price text (below description)
-                var priceRt = CreateTextElement("PriceText", shopCard, "$0", 22);
+                // Price text (below description) - bold gold
+                var priceRt = CreateTextElement("PriceText", shopCard, "$0", 24);
                 priceRt.anchoredPosition = new Vector2(0, -35);
                 priceRt.sizeDelta = new Vector2(140, 30);
-                priceRt.GetComponent<TMP_Text>().alignment = TextAlignmentOptions.Center;
-                priceRt.GetComponent<TMP_Text>().color = new Color(1f, 0.9f, 0.3f);
-                shopPriceTexts[i] = priceRt.GetComponent<TMP_Text>();
+                var shopPriceTmp = priceRt.GetComponent<TMP_Text>();
+                shopPriceTmp.alignment = TextAlignmentOptions.Center;
+                shopPriceTmp.color = GoldColor;
+                shopPriceTmp.fontStyle = FontStyles.Bold;
+                shopPriceTexts[i] = shopPriceTmp;
 
                 // Buy button (bottom of card)
                 var buyBtn = CreateButton("BuyButton", shopCard, "BUY");
@@ -216,14 +239,17 @@ namespace EmpireOfCards.Bootstrap
             comboCg.alpha = 0f;
             hud.comboPopup = comboPopup.gameObject.AddComponent<ComboPopup>();
 
-            var comboTextRt = CreateTextElement("ComboText", comboPopup, "", 40);
+            var comboTextRt = CreateTextElement("ComboText", comboPopup, "", 48);
             comboTextRt.anchorMin = Vector2.zero;
             comboTextRt.anchorMax = Vector2.one;
             comboTextRt.sizeDelta = Vector2.zero;
             comboTextRt.offsetMin = Vector2.zero;
             comboTextRt.offsetMax = Vector2.zero;
+            var comboTmp = comboTextRt.GetComponent<TMP_Text>();
+            comboTmp.fontStyle = FontStyles.Bold;
+            comboTmp.color = LightGold;
 
-            hud.comboPopup.SetReferences(comboTextRt.GetComponent<TMP_Text>(), comboCg);
+            hud.comboPopup.SetReferences(comboTmp, comboCg);
 
             // Event popup (CanvasGroup for fade animation)
             var eventPopup = CreateUIPanel("EventPopup", canvasGo.transform);
@@ -243,11 +269,12 @@ namespace EmpireOfCards.Bootstrap
             rivalCg.alpha = 0f;
             hud.rivalPopup = rivalPopup.gameObject.AddComponent<RivalPopup>();
 
-            var rivalActionRt = CreateTextElement("RivalActionText", rivalPopup, "", 26);
+            var rivalActionRt = CreateTextElement("RivalActionText", rivalPopup, "", 30);
             rivalActionRt.anchoredPosition = new Vector2(0, 30);
-            rivalActionRt.sizeDelta = new Vector2(460, 40);
+            rivalActionRt.sizeDelta = new Vector2(460, 45);
+            rivalActionRt.GetComponent<TMP_Text>().fontStyle = FontStyles.Bold;
 
-            var rivalTauntRt = CreateTextElement("RivalTauntText", rivalPopup, "", 20);
+            var rivalTauntRt = CreateTextElement("RivalTauntText", rivalPopup, "", 22);
             rivalTauntRt.anchoredPosition = new Vector2(0, -30);
             rivalTauntRt.sizeDelta = new Vector2(460, 40);
             rivalTauntRt.GetComponent<TMP_Text>().fontStyle = FontStyles.Italic;
@@ -266,13 +293,16 @@ namespace EmpireOfCards.Bootstrap
             tierCg.alpha = 0f;
             var tierPopup = tierPopupRt.gameObject.AddComponent<TierPopup>();
 
-            var tierTitleText = CreateTextElement("TierTitle", tierPopupRt, "GİRİŞİMCİ", 48);
+            var tierTitleText = CreateTextElement("TierTitle", tierPopupRt, "GİRİŞİMCİ", 52);
             tierTitleText.anchoredPosition = new Vector2(0, 30);
-            tierTitleText.sizeDelta = new Vector2(500, 60);
+            tierTitleText.sizeDelta = new Vector2(500, 70);
+            var tierTitleTmp = tierTitleText.GetComponent<TMP_Text>();
+            tierTitleTmp.fontStyle = FontStyles.Bold;
+            tierTitleTmp.color = GoldColor;
 
-            var tierSubText = CreateTextElement("TierSubtitle", tierPopupRt, "", 22);
+            var tierSubText = CreateTextElement("TierSubtitle", tierPopupRt, "", 24);
             tierSubText.anchoredPosition = new Vector2(0, -30);
-            tierSubText.sizeDelta = new Vector2(500, 40);
+            tierSubText.sizeDelta = new Vector2(500, 45);
 
             tierPopup.SetReferences(
                 tierTitleText.GetComponent<TMP_Text>(),
