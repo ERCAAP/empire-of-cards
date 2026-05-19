@@ -67,6 +67,15 @@ namespace EmpireOfCards.UI
         // ------------------------------------------------------------------
 
         /// <summary>
+        /// Assigns UI element references at runtime.
+        /// Called by HUDBuilder after creating child elements.
+        /// </summary>
+        public void SetReferences(CanvasGroup cg)
+        {
+            canvasGroup = cg;
+        }
+
+        /// <summary>
         /// Shows the event card with a flip animation followed by a glow pulse.
         /// </summary>
         public void Show(CardData eventCard)

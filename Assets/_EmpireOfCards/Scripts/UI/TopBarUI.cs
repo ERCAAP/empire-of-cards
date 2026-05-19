@@ -138,11 +138,17 @@ namespace EmpireOfCards.UI
 
         /// <summary>
         /// Updates the turn counter text.
+        /// Before soft cap: "Turn X" (dynamic game length, no max shown).
+        /// After soft cap (turn 25+): "Turn X ⚠️" (penalty warning).
         /// </summary>
         public void UpdateTurn(int current, int max)
         {
-            if (turnText != null)
-                turnText.text = $"Turn {current}/{max}";
+            if (turnText == null) return;
+
+            if (current >= Constants.SOFT_CAP_TURN)
+                turnText.text = $"Turn {current} \u26a0\ufe0f"; // Warning: penalty active
+            else
+                turnText.text = $"Turn {current}";
         }
 
         /// <summary>

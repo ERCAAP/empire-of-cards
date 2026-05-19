@@ -69,6 +69,16 @@ namespace EmpireOfCards.UI
         // ------------------------------------------------------------------
 
         /// <summary>
+        /// Assigns UI element references at runtime.
+        /// Called by HUDBuilder after creating child elements.
+        /// </summary>
+        public void SetReferences(TMP_Text text, CanvasGroup cg)
+        {
+            comboText = text;
+            canvasGroup = cg;
+        }
+
+        /// <summary>
         /// Displays the combo text with fly-up, scale punch, and fade.
         /// </summary>
         public void Show(string text, Color color)

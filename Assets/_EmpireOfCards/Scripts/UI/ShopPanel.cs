@@ -26,6 +26,9 @@ namespace EmpireOfCards.UI
         [SerializeField] private ShopManager shopManager;
         [SerializeField] private Button closeButton;
 
+        [Header("Bias Indicator")]
+        [SerializeField] private TMP_Text _biasText;
+
         [Header("Styling")]
         [SerializeField] private Color affordableColor = Color.white;
         [SerializeField] private Color unaffordableColor = new Color(0.5f, 0.5f, 0.5f, 0.7f);
@@ -38,6 +41,12 @@ namespace EmpireOfCards.UI
         {
             this.shopManager = shop;
         }
+
+        /// <summary>
+        /// Sets the bias indicator TMP_Text reference.
+        /// Called by WiringService after Init().
+        /// </summary>
+        public void SetBiasText(TMP_Text biasText) { _biasText = biasText; }
 
         // Cached stock for affordability re-checks
         private List<CardData> currentStock;
@@ -137,6 +146,7 @@ namespace EmpireOfCards.UI
             if (shopManager == null || shopCards == null || shopCards.Length == 0)
                 return;
 
+            UpdateBiasIndicator();
             currentStock = new List<CardData>(shopManager.CurrentShopCards);
 
             for (int i = 0; i < shopCards.Length; i++)
@@ -194,6 +204,30 @@ namespace EmpireOfCards.UI
                     if (cg != null)
                         cg.alpha = canAfford ? 1f : 0.5f;
                 }
+            }
+        }
+
+        private void UpdateBiasIndicator()
+        {
+            if (_biasText == null || shopManager == null) return;
+
+            int currentTurn = GameManager.Instance != null ? GameManager.Instance.CurrentTurn : 0;
+            if (shopManager.BiasActive && currentTurn <= Constants.SHOP_BIAS_TURNS)
+            {
+                string tagName = shopManager.BiasTag switch
+                {
+                    CardTag.Food => "Food",
+                    CardTag.Tech => "Tech",
+                    CardTag.Marketing => "Marketing",
+                    CardTag.Illegal => "Illegal",
+                    _ => ""
+                };
+                int remaining = Constants.SHOP_BIAS_TURNS - currentTurn + 1;
+                _biasText.text = $"\u0130lk {Constants.SHOP_BIAS_TURNS} turda {tagName} kartlar\u0131 \u00F6ncelikli ({remaining} tur kald\u0131)";
+            }
+            else
+            {
+                _biasText.text = "";
             }
         }
 

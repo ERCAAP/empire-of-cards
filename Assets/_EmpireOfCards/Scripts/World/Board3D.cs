@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
 using EmpireOfCards.Core;
+using EmpireOfCards.Data;
 using EmpireOfCards.Gameplay;
 using EmpireOfCards.UI.Cards;
 
@@ -27,6 +28,7 @@ namespace EmpireOfCards.World
         private readonly List<SlotZone3D> _upgradeSlots = new List<SlotZone3D>();
         private readonly List<GameObject> _territoryBlocks = new List<GameObject>();
         private readonly List<MeshRenderer> _territoryRenderers = new List<MeshRenderer>();
+        private readonly List<MeshRenderer> _businessSlotRenderers = new List<MeshRenderer>();
         private SlotZone3D _sellZone;
         private SlotZone3D _actionZone;
 
@@ -69,6 +71,8 @@ namespace EmpireOfCards.World
                 slot.transform.localPosition = new Vector3(x, 0.05f, -1.5f);
                 slot.transform.localScale = new Vector3(1.8f, 0.1f, 2.5f);
                 slot.GetComponent<MeshRenderer>().material.color = new Color(0.25f, 0.25f, 0.3f);
+
+                _businessSlotRenderers.Add(slot.GetComponent<MeshRenderer>());
 
                 var zone = slot.AddComponent<SlotZone3D>();
                 zone.RuntimeInit(DropZoneType.BusinessSlot, i);
@@ -145,7 +149,7 @@ namespace EmpireOfCards.World
             var eventArea = GameObject.CreatePrimitive(PrimitiveType.Cube);
             eventArea.name = "EventDisplay";
             eventArea.transform.SetParent(transform);
-            eventArea.transform.localPosition = new Vector3(3.5f, 0.15f, 2.5f);
+            eventArea.transform.localPosition = new Vector3(3.5f, 0.15f, 3.5f);
             eventArea.transform.localScale = new Vector3(1.2f, 0.02f, 1.7f);
             eventArea.GetComponent<MeshRenderer>().material.color = new Color(0.9f, 0.8f, 0.15f, 0.3f);
             Destroy(eventArea.GetComponent<Collider>());
@@ -269,11 +273,17 @@ namespace EmpireOfCards.World
         private void OnEnable()
         {
             EventBus.OnCompanyTierChanged += HandleTierChanged;
+            EventBus.OnBusinessNeglected += HandleBusinessNeglected;
+            EventBus.OnEmployeePlaced += HandleSlotRefresh;
+            EventBus.OnUpgradePlaced += HandleSlotRefresh;
         }
 
         private void OnDisable()
         {
             EventBus.OnCompanyTierChanged -= HandleTierChanged;
+            EventBus.OnBusinessNeglected -= HandleBusinessNeglected;
+            EventBus.OnEmployeePlaced -= HandleSlotRefresh;
+            EventBus.OnUpgradePlaced -= HandleSlotRefresh;
         }
 
         private void HandleTierChanged(CompanyTier newTier)
@@ -282,6 +292,32 @@ namespace EmpireOfCards.World
             int idx = (int)newTier;
             _tierLabel.text = TierNames[idx];
             _tierLabel.color = TierLabelColors[idx];
+        }
+
+        // ================================================================
+        //  Business Neglect -- darken slot when business is neglected
+        // ================================================================
+
+        private void HandleBusinessNeglected(int businessIndex, int neglectTurns)
+        {
+            if (businessIndex < 0 || businessIndex >= _businessSlotRenderers.Count) return;
+
+            var renderer = _businessSlotRenderers[businessIndex];
+            if (renderer == null) return;
+
+            // Darken the business slot based on neglect level
+            if (neglectTurns >= 6) // Major neglect
+                renderer.material.color = new Color(0.15f, 0.1f, 0.1f); // Dark red tint
+            else if (neglectTurns >= 4) // Minor neglect
+                renderer.material.color = new Color(0.2f, 0.18f, 0.15f); // Slightly darker
+        }
+
+        private void HandleSlotRefresh(CardData card, int businessIndex)
+        {
+            if (businessIndex < 0 || businessIndex >= _businessSlotRenderers.Count) return;
+            var renderer = _businessSlotRenderers[businessIndex];
+            if (renderer != null)
+                renderer.material.color = new Color(0.25f, 0.25f, 0.3f); // Original color
         }
     }
 }

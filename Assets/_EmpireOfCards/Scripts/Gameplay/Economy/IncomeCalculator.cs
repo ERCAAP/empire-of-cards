@@ -117,6 +117,12 @@ namespace EmpireOfCards.Gameplay.Economy
 
                 businessIncome = Mathf.RoundToInt(businessIncome * upgradeMultiplier);
 
+                // --- Business neglect penalty (GDD Section 3.1) ---
+                if (business.neglectTurns >= Constants.NEGLECT_THRESHOLD_MAJOR)
+                    businessIncome = Mathf.RoundToInt(businessIncome * (1f - Constants.NEGLECT_PENALTY_MAJOR));
+                else if (business.neglectTurns >= Constants.NEGLECT_THRESHOLD_MINOR)
+                    businessIncome = Mathf.RoundToInt(businessIncome * (1f - Constants.NEGLECT_PENALTY_MINOR));
+
                 // --- Event effects on income ---
                 if (activeEvent != null)
                 {

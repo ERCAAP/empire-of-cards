@@ -23,6 +23,10 @@ namespace EmpireOfCards.UI
         [SerializeField] private ScoreScreen scoreScreen;
         [SerializeField] private GameOverScreen gameOverScreen;
 
+        [Header("Neglect Warning")]
+        [SerializeField] private TMP_Text neglectWarningText;
+        private float _neglectWarningTimer;
+
         // --- Events for external listeners (e.g. TurnManager) ---
         public event Action OnEndTurnClicked;
         public event Action<bool> OnShopToggled;
@@ -50,6 +54,12 @@ namespace EmpireOfCards.UI
             this.gameOverScreen = gameOver;
         }
 
+        /// <summary>
+        /// Sets the neglect warning TMP_Text reference.
+        /// Called by WiringService after Init().
+        /// </summary>
+        public void SetNeglectWarningText(TMP_Text text) { neglectWarningText = text; }
+
         // ------------------------------------------------------------------
         // Lifecycle
         // ------------------------------------------------------------------
@@ -66,6 +76,7 @@ namespace EmpireOfCards.UI
             EventBus.OnTerritoryChanged += HandleTerritoryChanged;
             EventBus.OnFBIRiskChanged += HandleFBIRiskChanged;
             EventBus.OnTurnStarted += HandleTurnStarted;
+            EventBus.OnBusinessNeglected += HandleBusinessNeglected;
         }
 
         private void OnDisable()
@@ -80,6 +91,7 @@ namespace EmpireOfCards.UI
             EventBus.OnTerritoryChanged -= HandleTerritoryChanged;
             EventBus.OnFBIRiskChanged -= HandleFBIRiskChanged;
             EventBus.OnTurnStarted -= HandleTurnStarted;
+            EventBus.OnBusinessNeglected -= HandleBusinessNeglected;
         }
 
         // ------------------------------------------------------------------
@@ -162,6 +174,25 @@ namespace EmpireOfCards.UI
         {
             if (topBar != null)
                 topBar.UpdateTurn(turnNumber, Constants.MAX_TURNS);
+        }
+
+        private void HandleBusinessNeglected(int businessIndex, int neglectTurns)
+        {
+            if (neglectWarningText == null) return;
+
+            string severity = neglectTurns >= 6 ? "KR\u0130T\u0130K" : "UYARI";
+            neglectWarningText.text = $"\u26A0 {severity}: \u0130\u015Fletme {businessIndex + 1} bak\u0131m bekliyor! (Gelir -{(neglectTurns >= 6 ? 40 : 20)}%)";
+            _neglectWarningTimer = 3f; // Show for 3 seconds
+        }
+
+        private void Update()
+        {
+            if (_neglectWarningTimer > 0)
+            {
+                _neglectWarningTimer -= Time.deltaTime;
+                if (_neglectWarningTimer <= 0 && neglectWarningText != null)
+                    neglectWarningText.text = "";
+            }
         }
 
         // ------------------------------------------------------------------

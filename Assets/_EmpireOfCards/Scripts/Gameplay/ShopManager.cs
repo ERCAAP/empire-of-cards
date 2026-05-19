@@ -27,6 +27,15 @@ namespace EmpireOfCards.Gameplay
         [SerializeField] private EconomyManager economyManager;
         [SerializeField] private ComboSystem comboSystem;
 
+        // --- Venture Bias ---
+        private CardTag _biasTag = CardTag.Basic;
+        private bool _biasActive = false;
+
+        /// <summary>Whether shop bias is currently active.</summary>
+        public bool BiasActive => _biasActive;
+        /// <summary>The card tag being biased toward.</summary>
+        public CardTag BiasTag => _biasTag;
+
         // --- Runtime State ---
         [Header("Current Shop (Read Only)")]
         [SerializeField] private List<CardData> currentShopCards = new List<CardData>();
@@ -85,6 +94,27 @@ namespace EmpireOfCards.Gameplay
         }
 
         // ----------------------------------------------------------------
+        // Venture Bias (GDD Section 1.5)
+        // ----------------------------------------------------------------
+
+        /// <summary>
+        /// Activates shop bias so 1 of 3 offered cards matches the player's
+        /// venture sector for the first SHOP_BIAS_TURNS turns.
+        /// </summary>
+        public void SetVentureBias(VentureType venture)
+        {
+            _biasActive = true;
+            _biasTag = venture switch
+            {
+                VentureType.Bufe => CardTag.Food,
+                VentureType.TechStartup => CardTag.Tech,
+                VentureType.ReklamAjansi => CardTag.Marketing,
+                VentureType.KaranlikPazar => CardTag.Illegal,
+                _ => CardTag.Basic
+            };
+        }
+
+        // ----------------------------------------------------------------
         // Refresh (each turn)
         // ----------------------------------------------------------------
 
@@ -119,6 +149,35 @@ namespace EmpireOfCards.Gameplay
             List<CardData> available = new List<CardData>(shopPool);
             int cardsToPick = Mathf.Min(shopSize, available.Count);
 
+            // Venture bias: guarantee 1 biased card for the first N turns
+            bool biasApplied = false;
+            if (_biasActive && GameManager.Instance != null
+                && GameManager.Instance.CurrentTurn <= Constants.SHOP_BIAS_TURNS)
+            {
+                // Find all cards in pool that carry the bias tag
+                List<int> biasIndices = new List<int>();
+                for (int i = 0; i < available.Count; i++)
+                {
+                    if (available[i].tags != null)
+                    {
+                        foreach (var t in available[i].tags)
+                        {
+                            if (t == _biasTag) { biasIndices.Add(i); break; }
+                        }
+                    }
+                }
+
+                if (biasIndices.Count > 0)
+                {
+                    int pick = biasIndices[UnityEngine.Random.Range(0, biasIndices.Count)];
+                    currentShopCards.Add(available[pick]);
+                    available.RemoveAt(pick);
+                    cardsToPick--;
+                    biasApplied = true;
+                }
+            }
+
+            // Fill remaining slots randomly
             for (int i = 0; i < cardsToPick; i++)
             {
                 int randomIndex = UnityEngine.Random.Range(0, available.Count);

@@ -12,7 +12,24 @@ namespace EmpireOfCards.Core
         #endregion
 
         #region Run Structure (GDD Section 10)
-        public const int MAX_TURNS = 20;             // Premortem revision: 25->20
+        public const int MAX_TURNS = 30;             // Hard cap (GDD dynamic game length)
+        #endregion
+
+        #region Dynamic Game Length (GDD Section 1.7)
+        public const int SOFT_CAP_TURN = 25;                    // Income penalty starts
+        public const float SOFT_CAP_PENALTY = 0.05f;            // -5% per turn after soft cap
+        public const int HARD_CAP_TURN = 30;                    // Forced end
+        #endregion
+
+        #region Business Maintenance (GDD Section 3.1)
+        public const int NEGLECT_THRESHOLD_MINOR = 4;           // 20% income loss
+        public const int NEGLECT_THRESHOLD_MAJOR = 6;           // 40% income loss
+        public const float NEGLECT_PENALTY_MINOR = 0.20f;
+        public const float NEGLECT_PENALTY_MAJOR = 0.40f;
+        #endregion
+
+        #region Shop Bias (GDD Section 1.5)
+        public const int SHOP_BIAS_TURNS = 5;                   // Bias active for first 5 turns
         #endregion
 
         #region Turn Mechanics (GDD Section 4)

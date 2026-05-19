@@ -108,6 +108,43 @@ namespace EmpireOfCards.Gameplay
         }
 
         /// <summary>
+        /// Initializes the rival so its first business mirrors the player's venture choice.
+        /// </summary>
+        public void Initialize(VentureType playerVenture)
+        {
+            Initialize(); // Base init (creates default first business)
+
+            if (data == null || rivalBusinesses == null || rivalBusinesses.Count == 0) return;
+
+            var firstBiz = rivalBusinesses[0];
+            switch (playerVenture)
+            {
+                case VentureType.Bufe:
+                    firstBiz.name = "Rival Büfe";
+                    firstBiz.income = 50;
+                    firstBiz.customers = 3;
+                    break;
+                case VentureType.TechStartup:
+                    firstBiz.name = "Rival Tech Startup";
+                    firstBiz.income = 0;
+                    firstBiz.customers = 0;
+                    break;
+                case VentureType.ReklamAjansi:
+                    firstBiz.name = "Rival Reklam Ajansı";
+                    firstBiz.income = 60;
+                    firstBiz.customers = 3;
+                    break;
+                case VentureType.KaranlikPazar:
+                    // Player chose no business, rival keeps default
+                    break;
+            }
+
+            // Sync totals with updated business stats
+            rivalIncome = economy.CalculateRivalIncome(rivalBusinesses);
+            rivalCustomers = economy.CalculateRivalCustomers(rivalBusinesses);
+        }
+
+        /// <summary>
         /// Initializes with a specific RivalData asset (for mid-game rival switch).
         /// </summary>
         public void Initialize(RivalData rivalData)

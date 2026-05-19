@@ -57,6 +57,17 @@ namespace EmpireOfCards.UI
         // ------------------------------------------------------------------
 
         /// <summary>
+        /// Assigns UI element references at runtime.
+        /// Called by HUDBuilder after creating child elements.
+        /// </summary>
+        public void SetReferences(TMP_Text action, TMP_Text taunt, CanvasGroup cg)
+        {
+            actionText = action;
+            tauntText = taunt;
+            canvasGroup = cg;
+        }
+
+        /// <summary>
         /// Displays the rival popup with an action description and optional taunt.
         /// </summary>
         public void Show(string action, string taunt)

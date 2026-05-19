@@ -89,6 +89,10 @@ namespace EmpireOfCards.Bootstrap
                 hud.comboPopup, hud.eventPopup, hud.rivalPopup,
                 hud.scoreScreen, hud.gameOverScreen);
 
+            // === Neglect warning text -> UIManager ===
+            if (hud.neglectWarningText != null)
+                m.uiManager.SetNeglectWarningText(hud.neglectWarningText);
+
             // === TopBarUI: TMP_Text and Image sub-elements ===
             hud.topBarUI.Init(hud.moneyText, hud.turnText, hud.fbiBarFillImg, null);
 
@@ -97,6 +101,10 @@ namespace EmpireOfCards.Bootstrap
 
             // === ShopPanel: shopManager reference ===
             hud.shopPanel.Init(m.shopManager);
+
+            // === Shop bias indicator text -> ShopPanel ===
+            if (hud.shopBiasText != null)
+                hud.shopPanel.SetBiasText(hud.shopBiasText);
 
             // === InputManager3D: camera reference ===
             m.inputManager3D.SetCamera(mainCamera);

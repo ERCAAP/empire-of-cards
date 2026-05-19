@@ -15,6 +15,7 @@ namespace EmpireOfCards.UI
         public int moneyScore;
         public int comboScore;
         public int businessScore;
+        public int tierScoreBonus;
         public int earlyFinishBonus;
         public int fbiEvasionBonus;
         public int winBonus;
@@ -34,6 +35,7 @@ namespace EmpireOfCards.UI
         [SerializeField] private TMP_Text moneyScoreText;
         [SerializeField] private TMP_Text comboScoreText;
         [SerializeField] private TMP_Text businessScoreText;
+        [SerializeField] private TMP_Text tierBonusText;
         [SerializeField] private TMP_Text earlyFinishText;
         [SerializeField] private TMP_Text fbiEvasionText;
         [SerializeField] private TMP_Text winBonusText;
@@ -157,6 +159,7 @@ namespace EmpireOfCards.UI
                 new ScoreLine { textField = moneyScoreText,     targetValue = data.moneyScore },
                 new ScoreLine { textField = comboScoreText,     targetValue = data.comboScore },
                 new ScoreLine { textField = businessScoreText,  targetValue = data.businessScore },
+                new ScoreLine { textField = tierBonusText,      targetValue = data.tierScoreBonus },
                 new ScoreLine { textField = earlyFinishText,    targetValue = data.earlyFinishBonus },
                 new ScoreLine { textField = fbiEvasionText,     targetValue = data.fbiEvasionBonus },
                 new ScoreLine { textField = winBonusText,       targetValue = data.winBonus },

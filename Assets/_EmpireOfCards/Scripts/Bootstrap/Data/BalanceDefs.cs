@@ -21,7 +21,7 @@ namespace EmpireOfCards.Bootstrap.Data
 
             // General
             gb.startingMoney = 500;
-            gb.maxTurns = 20;
+            gb.maxTurns = 30;
             gb.startingActions = 3;
             gb.maxActions = 5;
             gb.startingBusinessSlots = 3;
@@ -153,6 +153,12 @@ namespace EmpireOfCards.Bootstrap.Data
                 "Cafe Chain",
                 "Fitness Center"
             };
+
+            // Venture Mirror (GDD Section 1.7) — indexed by VentureType ordinal
+            // [0] Bufe, [1] TechStartup, [2] ReklamAjansi, [3] KaranlikPazar
+            rival.ventureMatchedNames     = new[] { "Rival Bufe", "Rival Tech Startup", "Rival Reklam Ajansi", "MegaCorp HQ" };
+            rival.ventureMatchedIncome    = new[] { 50, 0, 60, 80 };
+            rival.ventureMatchedCustomers = new[] { 3, 0, 3, 5 };
 
             // Growth Schedule (GDD Section 8.3)
             rival.growthMilestones = new RivalMilestone[]

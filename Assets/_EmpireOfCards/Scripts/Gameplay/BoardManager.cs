@@ -22,6 +22,7 @@ namespace EmpireOfCards.Gameplay
         public int totalCustomersAttracted;                         // For evolution (GDD 3.1: 40 threshold)
         public bool isClosed;
         public int closedTurnsRemaining;
+        public int neglectTurns;                                     // Consecutive turns without employee/upgrade added
         public BusinessLevel currentLevel = BusinessLevel.Level1;
 
         /// <summary>
@@ -164,6 +165,7 @@ namespace EmpireOfCards.Gameplay
 
             business.employees.Add(card);
             business.employeeTenure.Add(0);
+            business.neglectTurns = 0;
             EventBus.EmployeePlaced(card, businessIndex);
             return true;
         }
@@ -201,6 +203,7 @@ namespace EmpireOfCards.Gameplay
             }
 
             business.upgrades.Add(card);
+            business.neglectTurns = 0;
             EventBus.UpgradePlaced(card, businessIndex);
             return true;
         }
@@ -320,6 +323,12 @@ namespace EmpireOfCards.Gameplay
                 }
 
                 business.turnsActive++;
+                business.neglectTurns++;
+
+                if (business.neglectTurns == Constants.NEGLECT_THRESHOLD_MINOR ||
+                    business.neglectTurns == Constants.NEGLECT_THRESHOLD_MAJOR)
+                    EventBus.BusinessNeglected(i, business.neglectTurns);
+
                 _tenure.TickTenure(i, business);
                 _evolution.CheckEvolution(i, business);
             }

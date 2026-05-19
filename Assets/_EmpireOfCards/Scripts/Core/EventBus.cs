@@ -49,6 +49,7 @@ namespace EmpireOfCards.Core
         public static event Action<int> OnBusinessReopened;
         public static event Action<CardData, int> OnEmployeeLeft;          // employee, businessIndex
         public static event Action<int, BusinessLevel> OnBusinessEvolved;   // businessIndex, newLevel
+        public static event Action<int, int> OnBusinessNeglected;          // businessIndex, neglectTurns
         #endregion
 
         #region Territory Events
@@ -121,6 +122,7 @@ namespace EmpireOfCards.Core
         public static void BusinessReopened(int idx) => OnBusinessReopened?.Invoke(idx);
         public static void EmployeeLeft(CardData emp, int bizIdx) => OnEmployeeLeft?.Invoke(emp, bizIdx);
         public static void BusinessEvolved(int idx, BusinessLevel lvl) => OnBusinessEvolved?.Invoke(idx, lvl);
+        public static void BusinessNeglected(int idx, int turns) => OnBusinessNeglected?.Invoke(idx, turns);
         #endregion
 
         #region Territory Invoke Helpers
@@ -194,6 +196,7 @@ namespace EmpireOfCards.Core
             OnBusinessReopened = null;
             OnEmployeeLeft = null;
             OnBusinessEvolved = null;
+            OnBusinessNeglected = null;
 
             // Territory
             OnTerritoryChanged = null;

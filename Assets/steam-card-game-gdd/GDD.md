@@ -1,7 +1,7 @@
 # GAME DESIGN DOCUMENT
 # "Empire of Cards"
 
-> Versiyon: 2.0 | Tarih: 2026-05-18
+> Versiyon: 2.1 | Tarih: 2026-05-19
 > Engine: Unity (C#) | Platform: PC (Steam)
 > Ekip: Solo Developer | Fiyat: $9.99-$12.99
 
@@ -96,7 +96,7 @@ Hiçbir business yerleşmez. Ama +200 ekstra para ve destene +1 Dolandırıcı e
 
 - **Pasif bonus yok.** Girişim seçimi sadece başlangıç kartları verir, run boyunca pasif etki uygulamaz.
 - **Class kilidi yok.** Büfe seçen oyuncu Tech Startup da açabilir, Hacker da alabilir.
-- **Shop'ta her zaman tüm 40 kart havuzu dönmeli.** Girişim seçimi Shop içeriğini filtrelemez.
+- **Shop yanliligi (ilk 5 tur):** Ilk 5 turda 3 dukkan kartindan en az 1'i oyuncunun girisim sektorune uygun tag tasir (bkz. Bolum 1.7.3). Tur 6'dan itibaren tam 40 kart havuzundan saf rastgele.
 - **Seçim sadece başlangıç yönü verir, run'ı kilitlemez.** Oyuncu istediği anda farklı stratejiye geçebilir.
 - **Tutorial run'ında Büfe otomatik seçilir.** Yeni oyuncu seçim ekranını görmez, doğrudan Büfe ile başlar. İlk run tamamlandıktan sonra seçim ekranı açılır.
 
@@ -147,6 +147,64 @@ Tier kontrolü için `CompanyTierManager.cs` gerekir. Bu manager her tur sonunda
 
 ---
 
+# BÖLÜM 1.7: RAKİP AYNA SİSTEMİ (Rival Mirror)
+
+## 1.7.1 Konsept
+
+Oyun basinda oyuncunun sectigi girisim tipine gore rakip de **ayni turde** is kurarak baslar. Bu "ayna" etkisi, oyuncunun ilk turlardan itibaren dogrudan bir rakiple karsilasmasini saglar -- ayni sektorde iki rakip firmanin cekismesi hissi yaratir.
+
+**Neden bu sistem?** Oyuncu Bufe secip rakip Tech Startup ile baslayinca sektorel cekisme hissi zayifliyor. Ayni sektorden baslamak "bu mahallede iki bufe mi olur?" gerilimini ilk turdan verir.
+
+## 1.7.2 Ayna Tablosu
+
+| Oyuncu Secimi | Rakip Baslangic Isleri | Rakip Gelir | Rakip Musteri | Not |
+|---|---|---|---|---|
+| Bufe | Rival Bufe | 50/tur | 3 | Birebir ayni statlar |
+| Tech Startup | Rival Tech Startup | 0 (ilk 3 tur), sonra 150 | 0 (ilk 3 tur), sonra 4 | Ayni delay mekanigi |
+| Reklam Ajansi | Rival Reklam Ajansi | 60/tur | 3 + tum isletmelere +2 | Ayni destek etkisi |
+| Karanlik Pazar | MegaCorp HQ (varsayilan) | 80/tur | 5 | Oyuncunun isletmesi yok, rakip varsayilana doner |
+
+## 1.7.3 Shop Yanliligi (Shop Bias)
+
+Ilk 5 tur boyunca dukkan, oyuncunun girisim sektorune uygun en az 1 kart gosterir:
+
+| Girisim | Zorunlu Tag (3 karttan 1'i) |
+|---|---|
+| Bufe | `food` |
+| Tech Startup | `tech` |
+| Reklam Ajansi | `marketing` |
+| Karanlik Pazar | `illegal` |
+
+Tur 6'dan itibaren dukkan tamamen rastgeledir (yanlilik kalkar).
+
+## 1.7.4 Dinamik Oyun Suresi
+
+Sabit tur limiti kaldirildi. Oyun organik olarak biter:
+
+| Kosul | Sonuc |
+|---|---|
+| Oyuncu 6 bolge alirsa | **KAZANDIN** -- run biter |
+| Rakip 7 bolge alirsa | **KAYBETTIN** -- rakip domine etti |
+| Tur 25 sonrasi | Yumusak cap: her iki taraf da tur basina -%5 gelir cezasi alir (baskiya zorlar) |
+| Tur 30 | Sert cap: kim daha cok bolgeye sahipse kazanir (esitlikte rakip kazanir) |
+
+**Neden?** Sabit 20 tur bazen cok kisa (epik build'ler tamamlanamiyordu), bazen cok uzun (erken domination sonrasi bos turlar). Dinamik sistem hizli oyunlara (tur 12) ve epik maratonlara (tur 28) izin verir. Yumusak cap oyunu bitmeye zorlar, sert cap garantili bir son verir.
+
+## 1.7.5 Isletme Bakimi (Business Maintenance)
+
+Isletmeler surekli ilgi ister. Cok uzun sure ihmal edilen isletmeler verim kaybeder.
+
+**Ihmal Sayaci:** Her isletme icin ayri tutulan bir sayac. Eger bir turda o isletmeye calisan eklenmez VEYA upgrade yapilmazsa sayac +1 artar. Herhangi bir calisan veya upgrade eklendiginde sayac sifirlanir.
+
+| Ihmal Turu | Ardisik Tur | Etki | Gorsel |
+|---|---|---|---|
+| Hafif Ihmal | 4 tur | Gelir -%20 | Isletme karti hafif kararir |
+| Agir Ihmal | 6 tur | Gelir -%40 | Isletme karti belirgin sekilde kararir, uyari ikonu |
+
+**Tasarim Amaci:** Oyuncuyu "kur ve unut" stratejisinden uzaklastirmak. Isletmelere duzenli yatirim yapmak onemli. Bu ayni zamanda calisan ve upgrade kartlarina ek deger katiyor -- sadece stat icin degil, ihmal sayacini sifirlamak icin de kullanilirlar.
+
+---
+
 # BÖLÜM 2: MASA DÜZENİ
 
 ## 2.1 Masada Ne Var?
@@ -172,7 +230,7 @@ Tier kontrolü için `CompanyTierManager.cs` gerekir. Bu manager her tur sonunda
 │   └─Çalışan 1     └─Çalışan 1                       │
 │   └─Çalışan 2     └─___boş                          │
 │                                                      │
-│  💰 620    ⚖️ FBI: %12    🔄 Tur 8/15               │
+│  💰 620    ⚖️ FBI: %12    🔄 Tur 8                   │
 │  Aksiyon: ●●● (3 kaldı)                             │
 │                                                      │
 │  ┌────────── ELİNDEKİ KARTLAR ──────────┐           │
@@ -631,12 +689,13 @@ Ses: "ding" + çıtırtı
 
 | Durum | Sonuç |
 |---|---|
-| 6+ bölge senin | **KAZANDIN** — Run biter |
-| 7+ bölge rakibin | **KAYBETTİN** — Rakip domine etti |
-| Paran 💰0'a düşerse | **İFLAS** — Run biter |
-| 15 tur doldu, 6 bölge yok | Skor hesaplanır, "yeterli değil" |
+| 6+ bolge senin | **KAZANDIN** -- Run biter |
+| 7+ bolge rakibin | **KAYBETTIN** -- Rakip domine etti |
+| Paran 0'a duserse | **IFLAS** -- Run biter |
+| Tur 25+ | Yumusak cap: -%5 gelir cezasi/tur (iki tarafa) |
+| Tur 30, 6 bolge yok | Sert cap: en cok bolgeye sahip olan kazanir |
 
-**Dinamik bitiş:** %60'a (6 bölge) ulaştığın AN run biter. 15. turu beklemek zorunda değilsin. Erken bitirirsen bonus skor.
+**Dinamik bitis:** %60'a (6 bolge) ulastigin AN run biter. Sabit tur limiti yok. Erken bitirirsen bonus skor. Tur 25'ten sonra baski artar, tur 30'da oyun kesin biter.
 
 ---
 
@@ -710,11 +769,13 @@ MegaCorp:
 
 | Tur | Rakip Durumu |
 |---|---|
-| 1 | 1 işletme (💰80/tur), 1 çalışan. Bölge: 2 |
-| 5 | 2 işletme, 2-3 çalışan. Bölge: 3 |
-| 8 | 2-3 işletme, 3-4 çalışan. Bölge: 3-4 |
-| 12 | 3 işletme, 4-5 çalışan, agresif. Bölge: 4-5 |
-| 15 | 3-4 işletme, 5-6 çalışan. Bölge: 4-6 |
+| 1 | 1 isletme (girisim aynasi -- oyuncuyla ayni tip), 1 calisan. Bolge: 2 |
+| 5 | 2 isletme, 2-3 calisan. Bolge: 3 |
+| 8 | 2-3 isletme, 3-4 calisan. Bolge: 3-4 |
+| 12 | 3 isletme, 4-5 calisan, agresif. Bolge: 4-5 |
+| 15 | 3-4 isletme, 5-6 calisan. Bolge: 4-6 |
+| 20 | 4 isletme, 6-7 calisan. Bolge: 5-6 |
+| 25+ | Yumusak cap etkili -- rakip de -%5 gelir/tur. Bolge: 5-7 |
 
 ---
 
@@ -736,12 +797,13 @@ Para 0'a düşerse = İFLAS = oyun biter
 
 ## 9.2 Denge Hedefleri
 
-| Tur | Beklenen Para | Beklenen Bölge | His |
+| Tur | Beklenen Para | Beklenen Bolge | His |
 |---|---|---|---|
-| 1-3 | 💰400-550 | 1-2 | Para sıkı, her kuruş önemli |
-| 4-7 | 💰500-800 | 2-3 | İlk combo, ilk büyüme hissi |
-| 8-11 | 💰700-1200 | 3-5 | Motor çalışıyor, rakip baskısı başlıyor |
-| 12-15 | 💰1000-2500 | 4-6 | Final kavgası, kriz riski |
+| 1-5 | 400-600 | 1-2 | Para siki, her kurus onemli. Shop yanliligi yardimci |
+| 6-12 | 600-1200 | 2-4 | Ilk combo, buyume, ihmal sayacina dikkat |
+| 13-20 | 1000-2500 | 4-6 | Motor calisiyor, rakip baskisi, bolge kavgasi |
+| 21-24 | 2000-3500 | 5-6 | Final kavgasi, kriz riski, cogu oyun burada biter |
+| 25-30 | Azalan (-%5/tur) | 5-7 | Yumusak cap baskisi, her iki taraf zayifliyor |
 
 ## 9.3 FBI Sistemi
 
@@ -762,37 +824,44 @@ Güvenlik Sistemi: risk artışını %50 azaltır
 
 # BÖLÜM 10: RUN YAPISI
 
-## 10.1 15 Tur, 3 Aşama
+## 10.1 Dinamik Tur Yapisi, 4 Asama
 
 ```
-AŞAMA 1: KURULUŞ (Tur 1-5)
-├── İlk işletme + çalışanlar
-├── Para sıkıntısı
-├── Basit kararlar
-├── Oyuncu mekaniği öğrenir
-└── İlk combo keşfi (tur 4-5)
+ASAMA 1: KURULUS (Tur 1-5)
++-- Ilk isletme + calisanlar
++-- Para sikintisi
++-- Basit kararlar
++-- Oyuncu mekanigi ogrenir
++-- Ilk combo kesfi (tur 4-5)
++-- Shop yanliligi aktif (girisim sektorune uygun kart)
 
-AŞAMA 2: BÜYÜME (Tur 6-10)
-├── 2-3 işletme aktif
-├── Combo'lar güçleniyor
-├── Rakip agresifleşiyor
-├── Eventler stratejiyi değiştiriyor
-└── Bölge kavgası kızışıyor
+ASAMA 2: BUYUME (Tur 6-15)
++-- 2-3 isletme aktif
++-- Combo'lar gucleniyor
++-- Rakip agresiflesiyor
++-- Eventler stratejiyi degistiriyor
++-- Bolge kavgasi kizisiyor
++-- Ihmal sayaclarina dikkat (4+ tur = gelir dususu)
 
-AŞAMA 3: FİNAL (Tur 11-15)
-├── Ya domine et ya hayatta kal
-├── Büyük combo'lar / riskli hamleler
-├── Krizler ve bozulmalar
-├── 6. bölgeye ulaşırsan run biter (erken bitiş bonusu)
-└── 15. tur sonunda 6 bölge yoksa: skor hesaplanır
+ASAMA 3: GECIS (Tur 16-24)
++-- Ya domine et ya hayatta kal
++-- Buyuk combo'lar / riskli hamleler
++-- Krizler ve bozulmalar
++-- 6. bolgeye ulasirsan run biter (erken bitis bonusu)
+
+ASAMA 4: BASKI (Tur 25-30)
++-- Yumusak cap: Her tur -%5 gelir cezasi (iki tarafa da)
++-- Oyun bitise zorlanir
++-- Tur 30 = SERT CAP: En cok bolgeye sahip olan kazanir
 ```
 
-## 10.2 Dinamik Bitiş
+## 10.2 Dinamik Bitis
 
-Run 15 turda bitmek ZORUNDA DEĞİL:
-- 6 bölge aldığın anda → "MARKET HAKİMİYETİ!" → Run biter + bonus
-- Tur 8'de 6 bölge aldıysan = "Speed Run" başarımı
-- 15 tur sonunda 6 bölge yoksa = skor hesaplanır, "yeterli değil"
+Run sabit turda bitmez. Organik olarak sona erer:
+- 6 bolge aldigin anda -> "MARKET HAKIMIYETI!" -> Run biter + bonus
+- Tur 8'de 6 bolge aldiysan = "Speed Run" basarimi
+- Tur 25 sonrasi: yumusak cap -- her iki taraf tur basina -%5 gelir cezasi alir
+- Tur 30: sert cap -- en cok bolgeye sahip olan kazanir (esitlikte rakip kazanir)
 
 ## 10.3 Skor
 
@@ -1198,10 +1267,12 @@ PARA:
   - Vergi %15 (muhasebeci: %7.5)
   Para = 0 → İFLAS
 
-BÖLGE (market share):
-  Müşterilerin çok → bölge çok
-  6 bölge = KAZANDIN
-  Rakip 7 bölge = KAYBETTİN
+BOLGE (market share):
+  Musterilerin cok -> bolge cok
+  6 bolge = KAZANDIN
+  Rakip 7 bolge = KAYBETTIN
+  Tur 25+: -%5 gelir/tur (yumusak cap)
+  Tur 30: en cok bolgeye sahip olan kazanir (sert cap)
 
 COMBO:
   2-3 kart aynı anda aktif → otomatik tetiklenir
@@ -1221,5 +1292,6 @@ DÜKKAN:
 
 ---
 
-> Bu doküman v2.0'dır. Tüm tartışma, premortem, ve tasarım revizyonlarını içerir.
-> Engine: Unity (C#) | Son güncelleme: 2026-05-18
+> Bu dokuman v2.1'dir. Tum tartisma, premortem, ve tasarim revizyonlarini icerir.
+> v2.1 eklemeleri: Rakip Ayna Sistemi, Shop Yanliligi, Isletme Bakimi, Dinamik Oyun Suresi
+> Engine: Unity (C#) | Son guncelleme: 2026-05-19

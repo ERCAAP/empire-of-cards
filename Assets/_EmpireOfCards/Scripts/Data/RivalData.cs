@@ -27,6 +27,11 @@ namespace EmpireOfCards.Data
         public int maxBusinesses = 4;
         public int maxEmployeesPerBusiness = 3;
 
+        [Header("--- Venture Mirror (GDD Section 1.7) ---")]
+        public string[] ventureMatchedNames;        // Business name per VentureType ordinal
+        public int[] ventureMatchedIncome;           // Starting income per VentureType ordinal
+        public int[] ventureMatchedCustomers;        // Starting customers per VentureType ordinal
+
         [Header("--- Growth Parameters ---")]
         public int businessCostThreshold = 200;
         public int hireCostThreshold = 80;

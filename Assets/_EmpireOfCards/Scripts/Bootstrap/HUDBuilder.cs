@@ -65,6 +65,13 @@ namespace EmpireOfCards.Bootstrap
             hud.fbiBarFillImg = fbiBarFill.GetComponent<Image>();
             hud.fbiBarFillImg.color = Color.green;
 
+            // Neglect warning (shows briefly when a business is neglected)
+            var neglectWarning = CreateTextElement("NeglectWarning", topBar, "", 18);
+            neglectWarning.anchoredPosition = new Vector2(0, -65);
+            neglectWarning.sizeDelta = new Vector2(400, 30);
+            neglectWarning.GetComponent<TMP_Text>().color = new Color(1f, 0.5f, 0.2f); // Orange warning
+            hud.neglectWarningText = neglectWarning.GetComponent<TMP_Text>();
+
             // ============================================================
             // ACTION BAR -- action dots
             // ============================================================
@@ -126,6 +133,13 @@ namespace EmpireOfCards.Bootstrap
             // Shop title
             CreateTextElement("ShopTitle", shopPanel, "SHOP", 32);
 
+            // Shop bias indicator
+            var biasText = CreateTextElement("BiasIndicator", shopPanel, "", 14);
+            biasText.anchoredPosition = new Vector2(0, 120);
+            biasText.sizeDelta = new Vector2(300, 25);
+            biasText.GetComponent<TMP_Text>().color = new Color(0.7f, 0.9f, 0.7f);
+            hud.shopBiasText = biasText.GetComponent<TMP_Text>();
+
             // Shop card slots
             for (int i = 0; i < 3; i++)
             {
@@ -144,24 +158,55 @@ namespace EmpireOfCards.Bootstrap
             // POPUP OVERLAYS (hidden by default)
             // ============================================================
 
-            // Combo popup
+            // Combo popup (CanvasGroup + text for animated show/fade)
             var comboPopup = CreateUIPanel("ComboPopup", canvasGo.transform);
+            SetAnchors(comboPopup, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f));
             comboPopup.sizeDelta = new Vector2(600, 100);
+            var comboCg = comboPopup.gameObject.AddComponent<CanvasGroup>();
+            comboCg.alpha = 0f;
             hud.comboPopup = comboPopup.gameObject.AddComponent<ComboPopup>();
-            comboPopup.gameObject.SetActive(false);
 
-            // Event popup
+            var comboTextRt = CreateTextElement("ComboText", comboPopup, "", 40);
+            comboTextRt.anchorMin = Vector2.zero;
+            comboTextRt.anchorMax = Vector2.one;
+            comboTextRt.sizeDelta = Vector2.zero;
+            comboTextRt.offsetMin = Vector2.zero;
+            comboTextRt.offsetMax = Vector2.zero;
+
+            hud.comboPopup.SetReferences(comboTextRt.GetComponent<TMP_Text>(), comboCg);
+
+            // Event popup (CanvasGroup for fade animation)
             var eventPopup = CreateUIPanel("EventPopup", canvasGo.transform);
+            SetAnchors(eventPopup, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f));
             eventPopup.sizeDelta = new Vector2(400, 300);
+            var eventCg = eventPopup.gameObject.AddComponent<CanvasGroup>();
+            eventCg.alpha = 0f;
             hud.eventPopup = eventPopup.gameObject.AddComponent<EventPopup>();
-            eventPopup.gameObject.SetActive(false);
+            hud.eventPopup.SetReferences(eventCg);
 
-            // Rival popup
+            // Rival popup (CanvasGroup + text elements for fade animation)
             var rivalPopup = CreateUIPanel("RivalPopup", canvasGo.transform);
             SetAnchors(rivalPopup, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f));
             rivalPopup.sizeDelta = new Vector2(500, 200);
+            rivalPopup.GetComponent<Image>().color = new Color(0.1f, 0.1f, 0.15f, 0.9f);
+            var rivalCg = rivalPopup.gameObject.AddComponent<CanvasGroup>();
+            rivalCg.alpha = 0f;
             hud.rivalPopup = rivalPopup.gameObject.AddComponent<RivalPopup>();
-            rivalPopup.gameObject.SetActive(false);
+
+            var rivalActionRt = CreateTextElement("RivalActionText", rivalPopup, "", 26);
+            rivalActionRt.anchoredPosition = new Vector2(0, 30);
+            rivalActionRt.sizeDelta = new Vector2(460, 40);
+
+            var rivalTauntRt = CreateTextElement("RivalTauntText", rivalPopup, "", 20);
+            rivalTauntRt.anchoredPosition = new Vector2(0, -30);
+            rivalTauntRt.sizeDelta = new Vector2(460, 40);
+            rivalTauntRt.GetComponent<TMP_Text>().fontStyle = FontStyles.Italic;
+            rivalTauntRt.GetComponent<TMP_Text>().color = new Color(0.8f, 0.7f, 0.5f);
+
+            hud.rivalPopup.SetReferences(
+                rivalActionRt.GetComponent<TMP_Text>(),
+                rivalTauntRt.GetComponent<TMP_Text>(),
+                rivalCg);
 
             // Tier promotion popup
             var tierPopupRt = CreateUIPanel("TierPopup", canvasGo.transform);
@@ -399,6 +444,8 @@ namespace EmpireOfCards.Bootstrap
         public TMP_Text moneyText;
         public TMP_Text turnText;
         public Image fbiBarFillImg;
+        public TMP_Text neglectWarningText;
+        public TMP_Text shopBiasText;
 
         // ActionBar sub-elements
         public Image[] actionDotImages;

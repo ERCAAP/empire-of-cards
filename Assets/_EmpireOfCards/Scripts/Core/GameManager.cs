@@ -210,9 +210,18 @@ namespace EmpireOfCards.Core
             if (boardManager != null)
                 boardManager.SetMaxSlots(resources.BusinessSlots);
             if (rivalAI != null)
-                rivalAI.Initialize();
+            {
+                if (selectedVenture != null)
+                    rivalAI.Initialize(selectedVenture.ventureType);
+                else
+                    rivalAI.Initialize();
+            }
             if (shopManager != null)
+            {
+                if (selectedVenture != null)
+                    shopManager.SetVentureBias(selectedVenture.ventureType);
                 shopManager.RefreshShop();
+            }
             if (companyTierSystem != null)
                 companyTierSystem.Reset();
 

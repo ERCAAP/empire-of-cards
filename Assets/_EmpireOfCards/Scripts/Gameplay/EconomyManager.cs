@@ -97,6 +97,16 @@ namespace EmpireOfCards.Gameplay
             // Step 5: Net
             netIncome = grossIncome - totalSalaries - taxAmount;
 
+            // Soft cap penalty: -5% income per turn after turn 25 (GDD Section 1.7)
+            int currentTurn = gm != null ? gm.CurrentTurn : 0;
+            if (currentTurn > Constants.SOFT_CAP_TURN)
+            {
+                int penaltyTurns = currentTurn - Constants.SOFT_CAP_TURN;
+                float penaltyRate = penaltyTurns * Constants.SOFT_CAP_PENALTY;
+                penaltyRate = Mathf.Min(penaltyRate, 0.5f); // Cap at 50% max penalty
+                netIncome = Mathf.RoundToInt(netIncome * (1f - penaltyRate));
+            }
+
             // Step 6: Apply
             if (netIncome > 0)
                 gm.GainMoney(netIncome);
