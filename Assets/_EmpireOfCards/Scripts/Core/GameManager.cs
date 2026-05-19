@@ -51,6 +51,7 @@ namespace EmpireOfCards.Core
         [SerializeField] private AudioManager audioManager;
         [SerializeField] private VFXManager vfxManager;
         [SerializeField] private SaveManager saveManager;
+        [SerializeField] private MetaProgressionSystem metaProgressionSystem;
 
         // === Extracted Sub-Objects (prefer these over backward-compat properties) ===
         public PlayerResources Resources => resources;
@@ -88,6 +89,15 @@ namespace EmpireOfCards.Core
         public AudioManager AudioManager => audioManager;
         public VFXManager VFXManager => vfxManager;
         public SaveManager SaveManager => saveManager;
+        public MetaProgressionSystem MetaProgressionSystem => metaProgressionSystem;
+
+        /// <summary>
+        /// Assigns the MetaProgressionSystem. Called by WiringService after bootstrap.
+        /// </summary>
+        public void SetMetaProgressionSystem(MetaProgressionSystem mps)
+        {
+            this.metaProgressionSystem = mps;
+        }
 
         /// <summary>
         /// Assigns all manager dependencies without reflection.
@@ -144,6 +154,13 @@ namespace EmpireOfCards.Core
         {
             currentTurn = 0;
             gameIsRunning = true;
+
+            // Apply meta-progression ascension modifiers before resource reset
+            if (metaProgressionSystem != null && saveManager != null)
+            {
+                var saveData = saveManager.Load();
+                metaProgressionSystem.ApplyAscension(saveData.currentAscension, balanceData);
+            }
 
             // Reset extracted resource state
             resources.Reset(balanceData);

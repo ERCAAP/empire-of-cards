@@ -29,12 +29,16 @@ namespace EmpireOfCards.Core.TurnPhases
 
             if (shouldFireEvent && _turnManager.ActiveEvent == null)
             {
-                // PENDING: Event deck not yet implemented.
-                // Implementation plan:
-                // 1. Draw random event card from a dedicated EventDeck
-                // 2. Call _turnManager.SetActiveEvent(card) to activate it
-                // 3. BoardManager.SetActiveEvent(card) will fire EventBus.EventActivated
-                // 4. UIManager routes it to EventPopup.Show(card) automatically
+                var eventCard = _turnManager.DrawRandomEvent();
+                if (eventCard != null)
+                {
+                    _turnManager.SetActiveEvent(eventCard);
+                    Debug.Log($"[EventPhase] Event activated: {eventCard.cardName} (duration: {eventCard.eventDuration} turns)");
+                }
+                else
+                {
+                    Debug.LogWarning("[EventPhase] Event should fire but event deck is empty.");
+                }
             }
         }
 

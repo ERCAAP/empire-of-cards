@@ -55,6 +55,10 @@ namespace EmpireOfCards.Gameplay
         [SerializeField] private List<CardData> globalUpgrades = new List<CardData>();
         [SerializeField] private int maxSlots = 3;
 
+        // --- Sabotage State ---
+        [Header("Sabotage")]
+        [SerializeField] private bool productionDisabledNextTurn;
+
         // --- Active Event ---
         [Header("Active Event")]
         [SerializeField] private CardData activeEvent;
@@ -380,12 +384,47 @@ namespace EmpireOfCards.Gameplay
             globalUpgrades.Clear();
             activeEvent = null;
             activeEventTurnsRemaining = 0;
+            productionDisabledNextTurn = false;
             maxSlots = Constants.STARTING_SLOTS;
         }
 
         public void SetMaxSlots(int slots)
         {
             maxSlots = Mathf.Clamp(slots, 1, Constants.MAX_SLOTS);
+        }
+
+        // ----------------------------------------------------------------
+        // Sabotage (Rival aggressive action)
+        // ----------------------------------------------------------------
+
+        /// <summary>
+        /// When true, the next Resolve phase skips business production for 1 turn.
+        /// Automatically resets after being consumed.
+        /// </summary>
+        public bool IsProductionDisabled => productionDisabledNextTurn;
+
+        /// <summary>
+        /// Sets or clears the production-disabled flag. Called by RivalAI
+        /// when an aggressive sabotage action fires.
+        /// </summary>
+        public void SetProductionDisabledNextTurn(bool disabled)
+        {
+            productionDisabledNextTurn = disabled;
+            if (disabled)
+                Debug.Log("[BoardManager] Production will be disabled next resolve phase.");
+        }
+
+        /// <summary>
+        /// Consumes and clears the production-disabled flag.
+        /// Call this at the start of the Resolve phase.
+        /// Returns true if production was disabled (and should be skipped).
+        /// </summary>
+        public bool ConsumeProductionDisabled()
+        {
+            if (!productionDisabledNextTurn) return false;
+            productionDisabledNextTurn = false;
+            Debug.Log("[BoardManager] Production disabled this turn due to rival sabotage.");
+            return true;
         }
     }
 }

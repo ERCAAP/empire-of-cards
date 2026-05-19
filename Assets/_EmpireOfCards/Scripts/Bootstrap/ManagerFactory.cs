@@ -100,9 +100,24 @@ namespace EmpireOfCards.Bootstrap
             inputGo.transform.SetParent(gmGo.transform);
             b.inputManager3D = inputGo.AddComponent<InputManager3D>();
 
+            // --- AbilitySystem ---
+            var abGo = new GameObject("AbilitySystem");
+            abGo.transform.SetParent(gmGo.transform);
+            b.abilitySystem = abGo.AddComponent<AbilitySystem>();
+
             // --- LevelManager ---
             var lvlGo = new GameObject("[LevelManager]");
             b.levelManager = lvlGo.AddComponent<LevelManager>();
+
+            // --- MetaProgressionSystem ---
+            var metaGo = new GameObject("MetaProgressionSystem");
+            metaGo.transform.SetParent(gmGo.transform);
+            b.metaProgressionSystem = metaGo.AddComponent<MetaProgressionSystem>();
+
+            // --- ActionCardResolver ---
+            var acrGo = new GameObject("ActionCardResolver");
+            acrGo.transform.SetParent(gmGo.transform);
+            b.actionCardResolver = acrGo.AddComponent<ActionCardResolver>();
 
             Debug.Log("[ManagerFactory] All managers created.");
 
@@ -131,7 +146,10 @@ namespace EmpireOfCards.Bootstrap
         public VFXManager vfxManager;
         public SaveManager saveManager;
         public InputManager3D inputManager3D;
+        public AbilitySystem abilitySystem;
         public LevelManager levelManager;
+        public MetaProgressionSystem metaProgressionSystem;
+        public ActionCardResolver actionCardResolver;
 
         // AudioManager sub-sources
         public AudioSource musicSourceA;

@@ -118,6 +118,18 @@ namespace EmpireOfCards.Gameplay
             if (gm != null) gm.SetTerritories(playerTerritoryCount, rivalTerritoryCount);
 
             EventBus.TerritoryUpdated(playerTerritoryCount, rivalTerritoryCount);
+
+            // Dynamic ending: instant win/lose at territory thresholds (GDD Section 6)
+            if (playerTerritoryCount >= Constants.WIN_TERRITORIES)
+            {
+                Debug.Log($"[TerritoryManager] Player reached {playerTerritoryCount} territories - instant win!");
+                if (gm != null) gm.EndRun(true);
+            }
+            else if (rivalTerritoryCount >= Constants.LOSE_TERRITORIES)
+            {
+                Debug.Log($"[TerritoryManager] Rival reached {rivalTerritoryCount} territories - instant loss!");
+                if (gm != null) gm.EndRun(false);
+            }
         }
 
         // ----------------------------------------------------------------

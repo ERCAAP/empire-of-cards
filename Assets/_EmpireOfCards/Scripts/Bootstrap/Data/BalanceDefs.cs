@@ -222,6 +222,82 @@ namespace EmpireOfCards.Bootstrap.Data
         }
 
         // ----------------------------------------------------------------
+        // Meta Progression (GDD Section 10)
+        // ----------------------------------------------------------------
+
+        public static MetaProgressionData CreateMetaProgression()
+        {
+            var meta = ScriptableObject.CreateInstance<MetaProgressionData>();
+            meta.name = "MetaProgression_Runtime";
+
+            // Unlock tiers: XP thresholds that gate content
+            meta.unlockTiers = new UnlockTier[]
+            {
+                new UnlockTier
+                {
+                    xpRequired = 50,
+                    unlockDescription = "Uncommon cards enter the shop pool"
+                },
+                new UnlockTier
+                {
+                    xpRequired = 200,
+                    unlockDescription = "Rare cards enter the shop pool"
+                },
+                new UnlockTier
+                {
+                    xpRequired = 500,
+                    unlockDescription = "Shadow Inc. rival unlocked"
+                },
+                new UnlockTier
+                {
+                    xpRequired = 1000,
+                    unlockDescription = "Epic cards enter the shop pool"
+                },
+                new UnlockTier
+                {
+                    xpRequired = 2000,
+                    unlockDescription = "The Cartel rival unlocked"
+                },
+                new UnlockTier
+                {
+                    xpRequired = 5000,
+                    unlockDescription = "Legendary cards enter the shop pool"
+                }
+            };
+
+            // Ascension levels: harder modifiers for repeat players
+            meta.ascensionLevels = new AscensionLevel[]
+            {
+                new AscensionLevel
+                {
+                    level = 1,
+                    description = "Rival more aggressive",
+                    rivalAggressionMultiplier = 1.2f,
+                    startingMoneyModifier = 0,
+                    crisisFrequencyMultiplier = 1f
+                },
+                new AscensionLevel
+                {
+                    level = 2,
+                    description = "Less starting money",
+                    rivalAggressionMultiplier = 1.5f,
+                    startingMoneyModifier = -100,
+                    crisisFrequencyMultiplier = 1f
+                },
+                new AscensionLevel
+                {
+                    level = 3,
+                    description = "Crises strike more often",
+                    rivalAggressionMultiplier = 1.5f,
+                    startingMoneyModifier = -100,
+                    crisisFrequencyMultiplier = 1.5f
+                }
+            };
+
+            return meta;
+        }
+
+        // ----------------------------------------------------------------
         // Shop Pool (all non-starter, non-event cards)
         // ----------------------------------------------------------------
 

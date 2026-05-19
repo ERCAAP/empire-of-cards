@@ -31,6 +31,8 @@ namespace EmpireOfCards.Bootstrap
             var rival   = BalanceDefs.CreateRival();
             var shop    = BalanceDefs.CreateShopPool(allCards, deck);
 
+            var meta = BalanceDefs.CreateMetaProgression();
+
             var lookup = CardHelper.EndSession();
 
             var bundle = new GameDataBundle
@@ -41,7 +43,8 @@ namespace EmpireOfCards.Bootstrap
                 startingDeck = deck,
                 rivalData   = rival,
                 shopPool    = shop,
-                cardLookup  = lookup
+                cardLookup  = lookup,
+                metaProgressionData = meta
             };
 
             Debug.Log($"[CardDataFactory] Data created: {bundle.allCards.Length} cards, " +
@@ -79,5 +82,6 @@ namespace EmpireOfCards.Bootstrap
         public RivalData rivalData;
         public ComboData[] combos;
         public Dictionary<string, CardData> cardLookup;
+        public MetaProgressionData metaProgressionData;
     }
 }

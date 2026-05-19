@@ -2,6 +2,7 @@ using System;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using EmpireOfCards.Data;
+using EmpireOfCards.Gameplay;
 using EmpireOfCards.World;
 
 namespace EmpireOfCards.Core
@@ -29,6 +30,7 @@ namespace EmpireOfCards.Core
         public event Action<Card3D> OnCardPickedUp;
         public event Action<Card3D, SlotZone3D> OnCardDropped;
         public event Action<Card3D> OnCardReturnedToHand;
+        public event Action<Card3D> OnAbilityUsed;
 
         public bool InputEnabled { get => _inputEnabled; set => _inputEnabled = value; }
         public Card3D DraggedCard => _draggedCard;
@@ -63,12 +65,28 @@ namespace EmpireOfCards.Core
             else
                 HandleHover();
 
-            // Pick up
+            // Pick up / Ability activation
             var mouse = Mouse.current;
             if (mouse == null) return;
 
             if (mouse.leftButton.wasPressedThisFrame && !_isDragging && _hoveredCard != null)
-                PickUpCard(_hoveredCard);
+            {
+                if (_hoveredCard.IsInHand)
+                    PickUpCard(_hoveredCard);
+                else
+                    TryActivateAbility(_hoveredCard);
+            }
+
+            // Right-click: redraw a card in hand (P1 #8)
+            if (mouse.rightButton.wasPressedThisFrame && _hoveredCard != null && _hoveredCard.IsInHand)
+            {
+                var dm = GameManager.Instance?.DeckManager;
+                if (dm != null && dm.RedrawsRemaining > 0)
+                {
+                    dm.RedrawCard(_hoveredCard.CardData);
+                    // Card removal from hand is handled via EventBus.OnCardDiscarded -> Hand3D
+                }
+            }
 
             // Drop
             if (mouse.leftButton.wasReleasedThisFrame && _isDragging)
@@ -155,10 +173,35 @@ namespace EmpireOfCards.Core
             }
         }
 
+        /// <summary>
+        /// Attempts to activate a placed employee's active ability (P0 #3).
+        /// Only works on Employee-type cards that are placed on the board (not in hand).
+        /// </summary>
+        private void TryActivateAbility(Card3D card)
+        {
+            if (card.CardData == null) return;
+            if (card.CardData.cardType != CardType.Employee) return;
+            if (card.CardData.activeAbilityType == ActiveAbilityType.None) return;
+
+            var gm = GameManager.Instance;
+            if (gm == null || gm.PlayerActions <= 0) return;
+            if (gm.TurnManager == null || gm.TurnManager.CurrentPhase != TurnPhase.PlayPhase) return;
+
+            var abilitySys = FindFirstObjectByType<AbilitySystem>();
+            if (abilitySys == null) return;
+
+            int businessIndex = gm.BoardManager != null
+                ? gm.BoardManager.FindBusinessWithEmployee(card.CardData)
+                : -1;
+
+            if (abilitySys.TryUseAbility(card.CardData, businessIndex))
+            {
+                OnAbilityUsed?.Invoke(card);
+            }
+        }
+
         private void PickUpCard(Card3D card)
         {
-            if (!card.IsInHand) return;
-
             var gm = GameManager.Instance;
             if (gm == null || gm.PlayerActions <= 0) return;
             if (gm.TurnManager == null || gm.TurnManager.CurrentPhase != TurnPhase.PlayPhase) return;

@@ -62,7 +62,17 @@ namespace EmpireOfCards.Core.TurnPhases
                 // 4a: Businesses produce products/customers
                 case ResolveStep.BusinessProduce:
                     if (gm.BoardManager != null)
-                        gm.BoardManager.TickBusinesses();
+                    {
+                        // Check if rival sabotage disabled production this turn
+                        if (gm.BoardManager.ConsumeProductionDisabled())
+                        {
+                            EventBus.RivalActed("Your businesses couldn't produce this turn due to rival sabotage!");
+                        }
+                        else
+                        {
+                            gm.BoardManager.TickBusinesses();
+                        }
+                    }
                     break;
 
                 // 4b: Calculate total customers and territory distribution

@@ -80,13 +80,28 @@ namespace EmpireOfCards.Gameplay
         private const float AGGRESSIVE_INVESTMENT_RATE = 0.3f;
 
         /// <summary>
-        /// Aggressive action: invests 30% of money into the strongest business.
+        /// Result of an aggressive action that may affect the player.
+        /// Caller (RivalAI) is responsible for applying player-side effects.
         /// </summary>
-        public void AggressiveAction(
+        public struct AggressiveResult
+        {
+            public int stolenCustomers; // > 0 if customers were stolen from player
+            public bool isSabotage;     // true if this was a sabotage (production loss)
+        }
+
+        /// <summary>
+        /// Aggressive action: 50% chance to steal customers from the player,
+        /// 50% chance to invest aggressively in the strongest rival business.
+        /// Returns an AggressiveResult so the caller can apply player-side effects
+        /// without coupling this class to GameManager.
+        /// </summary>
+        public AggressiveResult AggressiveAction(
             List<RivalBusiness> businesses,
             ref int rivalMoney)
         {
-            if (data == null || businesses.Count == 0) return;
+            var result = new AggressiveResult();
+
+            if (data == null || businesses.Count == 0) return result;
 
             RivalBusiness strongest = businesses[0];
             foreach (var biz in businesses)
@@ -96,13 +111,27 @@ namespace EmpireOfCards.Gameplay
             }
 
             int investmentCost = Mathf.RoundToInt(rivalMoney * AGGRESSIVE_INVESTMENT_RATE);
-            if (investmentCost <= 0) return;
+            if (investmentCost <= 0) return result;
 
             rivalMoney -= investmentCost;
-            strongest.customers += data.aggressiveCustomerBoost;
-            strongest.income += data.aggressiveIncomeBoost;
 
-            EventBus.RivalActed($"Rival made an aggressive move: {strongest.name}!");
+            // 50% chance: steal customers from the player
+            if (Random.Range(0f, 1f) < 0.5f)
+            {
+                result.stolenCustomers = data.aggressiveCustomerBoost;
+                strongest.customers += data.aggressiveCustomerBoost;
+                EventBus.RivalActed($"Rival stole {result.stolenCustomers} of your customers!");
+            }
+            else
+            {
+                // Invest aggressively in own business AND flag sabotage
+                strongest.customers += data.aggressiveCustomerBoost;
+                strongest.income += data.aggressiveIncomeBoost;
+                result.isSabotage = true;
+                EventBus.RivalActed($"Rival sabotaged your supply lines and invested in {strongest.name}!");
+            }
+
+            return result;
         }
 
         /// <summary>

@@ -174,7 +174,23 @@ namespace EmpireOfCards.Gameplay
             switch (action)
             {
                 case "aggressive":
-                    growth.AggressiveAction(rivalBusinesses, ref rivalMoney);
+                    var result = growth.AggressiveAction(rivalBusinesses, ref rivalMoney);
+                    // Apply player-side effects (RivalGrowth returns data, we apply it here)
+                    var gm = GameManager.Instance;
+                    if (gm != null)
+                    {
+                        if (result.stolenCustomers > 0)
+                        {
+                            gm.SetPlayerCustomers(
+                                Mathf.Max(0, gm.PlayerCustomers - result.stolenCustomers));
+                        }
+                        if (result.isSabotage)
+                        {
+                            // Flag a 1-turn production loss on the player's board.
+                            // BoardManager will skip BusinessProduce step next resolve.
+                            gm.BoardManager.SetProductionDisabledNextTurn(true);
+                        }
+                    }
                     break;
                 case "open_business":
                     growth.OpenBusiness(rivalBusinesses, ref rivalMoney);

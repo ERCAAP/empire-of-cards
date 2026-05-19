@@ -237,8 +237,14 @@ namespace EmpireOfCards.Save
 
             score += gm.PlayerTerritories * Constants.SCORE_TERRITORY;
             score += gm.PlayerMoney * Constants.SCORE_MONEY;
-            // Combo and business scores would be provided by ComboSystem / BoardManager
-            // For now, territory and money are the primary automatic inputs
+
+            // Active combos score (GDD Section 10.3)
+            if (gm.ComboSystem != null)
+                score += gm.ComboSystem.ActiveCombos.Count * Constants.SCORE_COMBO;
+
+            // Active businesses score (GDD Section 10.3)
+            if (gm.BoardManager != null)
+                score += gm.BoardManager.GetActiveBusinessCount() * Constants.SCORE_BUSINESS;
 
             // Early finish bonus
             int turnsRemaining = Constants.MAX_TURNS - gm.CurrentTurn;

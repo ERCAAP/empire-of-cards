@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using EmpireOfCards.Core;
 using EmpireOfCards.Gameplay;
@@ -67,6 +69,10 @@ namespace EmpireOfCards.Bootstrap
             // === RivalAI ===
             m.rivalAI.Init(data.rivalData);
 
+            // === MetaProgressionSystem ===
+            m.metaProgressionSystem.Init(data.metaProgressionData);
+            m.gameManager.SetMetaProgressionSystem(m.metaProgressionSystem);
+
             // === ShopManager ===
             m.shopManager.Init(data.shopPool, m.deckManager, m.economyManager, m.comboSystem);
 
@@ -99,6 +105,10 @@ namespace EmpireOfCards.Bootstrap
 
             // === CardFactory: allCards reference for lookup ===
             cardFactory.Init(data.allCards);
+
+            // === Event Deck: filter event cards from allCards and pass to TurnManager ===
+            var eventCards = data.allCards.Where(c => c != null && c.cardType == CardType.Event).ToList();
+            m.turnManager.SetEventDeck(eventCards);
 
             Debug.Log("[WiringService] All manager, UI, and 3D references wired via typed Init() calls.");
         }
@@ -161,6 +171,22 @@ namespace EmpireOfCards.Bootstrap
 
                     case DropZoneType.UpgradeSlot:
                         success = gm.BoardManager.PlaceUpgrade(card.CardData, slot.SlotIndex);
+                        if (success)
+                        {
+                            // Apply immediate upgrade effects (P2 #14)
+                            switch (card.CardData.upgradeEffectType)
+                            {
+                                case UpgradeEffectType.ExtraAction:
+                                    gm.AddExtraAction(card.CardData.extraActions);
+                                    break;
+                                case UpgradeEffectType.ReduceFBIRisk:
+                                    // FBI system already checks for security upgrade
+                                    // on the board each resolve phase; nothing extra needed.
+                                    break;
+                                // Other upgrades (IncomePercent*, GlobalCustomer*, etc.)
+                                // are passive and handled by IncomeCalculator each turn.
+                            }
+                        }
                         break;
 
                     case DropZoneType.ActionZone:
@@ -171,6 +197,8 @@ namespace EmpireOfCards.Bootstrap
                     case DropZoneType.SellZone:
                         int price = gm.EconomyManager.GetSellPrice(card.CardData);
                         gm.GainMoney(price);
+                        gm.DeckManager.BurnCard(card.CardData); // Remove from deck permanently
+                        EventBus.CardPlayed(card.CardData);
                         success = true;
                         break;
                 }

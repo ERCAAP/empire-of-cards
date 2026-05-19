@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 using EmpireOfCards.Core.StateMachine;
 using EmpireOfCards.Core.TurnPhases;
@@ -30,6 +31,9 @@ namespace EmpireOfCards.Core
         private CardData _activeEvent;
         private int _activeEventTurnsRemaining;
 
+        // Event deck (populated by WiringService from CardDataFactory event cards)
+        private List<CardData> _eventDeck = new List<CardData>();
+
         // === Properties ===
         public TurnPhase CurrentPhase => currentPhase;
         public bool IsTurnActive => isTurnActive;
@@ -37,6 +41,7 @@ namespace EmpireOfCards.Core
         public int ActiveEventTurnsRemaining => _activeEventTurnsRemaining;
 
         // Properties exposed for external phase handlers
+        public IReadOnlyList<CardData> EventDeck => _eventDeck;
         public int CurrentTurnNumber => currentTurn;
         public float EventPhaseMinDuration => eventPhaseMinDuration;
         public float DrawPhaseMinDuration => drawPhaseMinDuration;
@@ -111,6 +116,29 @@ namespace EmpireOfCards.Core
             _activeEventTurnsRemaining = eventCard != null ? eventCard.eventDuration : 0;
             if (eventCard != null)
                 EventBus.EventActivated(eventCard);
+        }
+
+        /// <summary>
+        /// Populates the event deck used by EventPhase to draw random events.
+        /// Called by WiringService during bootstrap.
+        /// </summary>
+        public void SetEventDeck(List<CardData> events)
+        {
+            _eventDeck = events ?? new List<CardData>();
+            Debug.Log($"[TurnManager] Event deck set with {_eventDeck.Count} event cards.");
+        }
+
+        /// <summary>
+        /// Picks a random event card from the event deck.
+        /// Returns null if the deck is empty.
+        /// </summary>
+        public CardData DrawRandomEvent()
+        {
+            if (_eventDeck == null || _eventDeck.Count == 0)
+                return null;
+
+            int index = UnityEngine.Random.Range(0, _eventDeck.Count);
+            return _eventDeck[index];
         }
 
         // === Phase Transitions (State Machine) ===
