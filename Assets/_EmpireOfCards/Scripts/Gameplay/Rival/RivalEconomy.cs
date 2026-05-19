@@ -80,7 +80,7 @@ namespace EmpireOfCards.Gameplay
 
         /// <summary>
         /// Returns the total income that would be lost if production is disabled
-        /// for one turn (Sabotaj action card).
+        /// for one turn (Sabotage action card).
         /// </summary>
         public int CalculateDisabledProductionLoss(List<RivalBusiness> businesses)
         {

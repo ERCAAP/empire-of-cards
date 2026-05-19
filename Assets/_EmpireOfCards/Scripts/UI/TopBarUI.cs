@@ -218,6 +218,45 @@ namespace EmpireOfCards.UI
         // Helpers
         // ------------------------------------------------------------------
 
+        /// <summary>
+        /// Resolves the money text color each frame:
+        ///   1. If a flash is active (gain/loss), lerp flash -> normal over duration
+        ///   2. Else if money below 0: fast red pulse (2 Hz)
+        ///   3. Else if money below threshold: slow red pulse (1 Hz)
+        ///   4. Otherwise: normal gold color
+        /// </summary>
+        private Color GetMoneyColor()
+        {
+            // 1. Flash from gain/loss (highest priority)
+            if (_moneyFlashTimer > 0f)
+            {
+                _moneyFlashTimer -= Time.deltaTime;
+                float t = Mathf.Clamp01(_moneyFlashTimer / moneyFlashDuration);
+                return Color.Lerp(moneyColorNormal, _moneyFlashColor, t);
+            }
+
+            // 2. Critical: money at or below zero -- fast pulse (2 Hz)
+            int currentMoney = Mathf.RoundToInt(targetMoney);
+            if (currentMoney <= 0)
+            {
+                _moneyPulseTimer += Time.deltaTime;
+                float pulse = (Mathf.Sin(_moneyPulseTimer * 2f * Mathf.PI * 2f) + 1f) * 0.5f; // 0..1
+                return Color.Lerp(moneyColorNormal, moneyColorLoss, pulse);
+            }
+
+            // 3. Low money: slow heartbeat pulse (1 Hz)
+            if (currentMoney < moneyLowThreshold)
+            {
+                _moneyPulseTimer += Time.deltaTime;
+                float pulse = (Mathf.Sin(_moneyPulseTimer * 2f * Mathf.PI * 1f) + 1f) * 0.5f; // 0..1
+                return Color.Lerp(moneyColorNormal, moneyColorLoss, pulse * 0.6f);
+            }
+
+            // 4. Normal
+            _moneyPulseTimer = 0f;
+            return moneyColorNormal;
+        }
+
         private Color GetFBIColor(float t)
         {
             // 0..0.5 -> green..yellow, 0.5..1 -> yellow..red

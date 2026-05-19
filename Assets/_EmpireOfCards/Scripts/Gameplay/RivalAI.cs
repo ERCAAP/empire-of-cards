@@ -25,7 +25,7 @@ namespace EmpireOfCards.Gameplay
     ///   - RivalDecisionTree  (action selection)
     ///   - RivalEconomy       (income, customers, penalties)
     ///   - RivalGrowth        (businesses, employees, milestones)
-    ///   - RivalDialogue      (taunts, mood)
+    ///   - RivalDialogue      (taunts, mood, strategy reactions)
     /// </summary>
     public class RivalAI : MonoBehaviour
     {
@@ -57,6 +57,7 @@ namespace EmpireOfCards.Gameplay
         public int RivalIncome => rivalIncome;
         public IReadOnlyList<RivalBusiness> RivalBusinesses => rivalBusinesses;
         public string CurrentMood => dialogue != null ? dialogue.CurrentMood : "neutral";
+        public string MoodIcon => dialogue != null ? dialogue.MoodIcon : "";
         public RivalData Data => data;
 
         /// <summary>
@@ -122,8 +123,8 @@ namespace EmpireOfCards.Gameplay
             var firstBiz = rivalBusinesses[0];
             switch (playerVenture)
             {
-                case VentureType.Bufe:
-                    firstBiz.name = "Rival Büfe";
+                case VentureType.Diner:
+                    firstBiz.name = "Rival Diner";
                     firstBiz.income = 50;
                     firstBiz.customers = 3;
                     break;
@@ -132,12 +133,12 @@ namespace EmpireOfCards.Gameplay
                     firstBiz.income = 0;
                     firstBiz.customers = 0;
                     break;
-                case VentureType.ReklamAjansi:
-                    firstBiz.name = "Rival Reklam Ajansı";
+                case VentureType.AdAgency:
+                    firstBiz.name = "Rival Ad Agency";
                     firstBiz.income = 60;
                     firstBiz.customers = 3;
                     break;
-                case VentureType.KaranlikPazar:
+                case VentureType.BlackMarket:
                     // Player chose no business, rival keeps default
                     break;
             }
@@ -174,30 +175,57 @@ namespace EmpireOfCards.Gameplay
             if (growth.ApplyGrowthMilestones(currentTurn, rivalBusinesses, ref totalRivalEmployees))
                 aggressionEnabled = true;
 
-            // Step 3: Update mood
-            dialogue.UpdateMood(playerTerritories, rivalTerritories);
+            // Step 3: Pre-determine first action to inform mood tell
+            string previewAction = decisionTree.DecideAction(
+                playerTerritories,
+                rivalTerritories,
+                currentTurn,
+                rivalMoney,
+                rivalBusinesses.Count,
+                aggressionEnabled,
+                growth.HasEmptyEmployeeSlots(rivalBusinesses));
 
-            // Step 4: Execute actions
+            // Step 4: Mood tell -- determine and broadcast mood BEFORE actions
+            dialogue.DetermineMood(
+                playerTerritories,
+                rivalTerritories,
+                rivalMoney,
+                data.businessCostThreshold,
+                previewAction);
+
+            // Step 5: Check player strategy and react (fires once per shift)
+            dialogue.CheckPlayerStrategy();
+
+            // Step 6: Execute actions
             int actions = data.actionsPerTurn;
             for (int a = 0; a < actions; a++)
             {
-                string decision = decisionTree.DecideAction(
-                    playerTerritories,
-                    rivalTerritories,
-                    currentTurn,
-                    rivalMoney,
-                    rivalBusinesses.Count,
-                    aggressionEnabled,
-                    growth.HasEmptyEmployeeSlots(rivalBusinesses));
+                string decision;
+                if (a == 0)
+                {
+                    // Use the pre-determined action for the first action
+                    decision = previewAction;
+                }
+                else
+                {
+                    decision = decisionTree.DecideAction(
+                        playerTerritories,
+                        rivalTerritories,
+                        currentTurn,
+                        rivalMoney,
+                        rivalBusinesses.Count,
+                        aggressionEnabled,
+                        growth.HasEmptyEmployeeSlots(rivalBusinesses));
+                }
 
                 ExecuteAction(decision);
             }
 
-            // Step 5: Recalculate totals
+            // Step 7: Recalculate totals
             rivalCustomers = economy.CalculateRivalCustomers(rivalBusinesses);
             rivalIncome = economy.CalculateRivalIncome(rivalBusinesses);
 
-            // Step 6: Deliver a taunt
+            // Step 8: Deliver a context-aware taunt
             string taunt = dialogue.GetTaunt(playerTerritories, rivalTerritories);
             if (!string.IsNullOrEmpty(taunt))
             {
@@ -300,6 +328,20 @@ namespace EmpireOfCards.Gameplay
         public string GetTaunt(int playerTerritories, int rivalTerritories)
         {
             return dialogue.GetTaunt(playerTerritories, rivalTerritories);
+        }
+
+        /// <summary>
+        /// Called by ComboSystem (via EventBus) when the player triggers a combo.
+        /// Delivers a one-time combo reaction taunt from the rival.
+        /// </summary>
+        public void OnPlayerComboTriggered()
+        {
+            if (dialogue == null) return;
+            string reaction = dialogue.GetComboReactionTaunt();
+            if (!string.IsNullOrEmpty(reaction))
+            {
+                EventBus.RivalTaunted(reaction);
+            }
         }
 
         /// <summary>

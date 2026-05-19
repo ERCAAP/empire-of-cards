@@ -84,24 +84,24 @@ namespace EmpireOfCards.Bootstrap.Data
             deck.presetName = "Starter Deck";
             deck.startingMoney = 500;
 
-            CardData b01 = CardHelper.FindCard("B01_Bufe");
-            CardData b02 = CardHelper.FindCard("B02_Kahveci");
-            CardData c01 = CardHelper.FindCard("C01_Stajyer");
-            CardData c02 = CardHelper.FindCard("C02_CaylakPazarlamaci");
+            CardData b01 = CardHelper.FindCard("B01_Diner");
+            CardData b02 = CardHelper.FindCard("B02_CoffeeShop");
+            CardData c01 = CardHelper.FindCard("C01_Intern");
+            CardData c02 = CardHelper.FindCard("C02_JuniorMarketer");
             CardData c03 = CardHelper.FindCard("C03_Barista");
-            CardData a01 = CardHelper.FindCard("A01_ElIlani");
-            CardData a02 = CardHelper.FindCard("A02_KucukYatirim");
-            CardData u01 = CardHelper.FindCard("U01_OfisMalzemeleri");
+            CardData a01 = CardHelper.FindCard("A01_Flyer");
+            CardData a02 = CardHelper.FindCard("A02_SmallInvestment");
+            CardData u01 = CardHelper.FindCard("U01_OfficeSupplies");
 
             // 14 cards: diverse starter with combo potential
-            // 2x Business (Bufe + Kahveci = early combo potential with Barista)
+            // 2x Business (Diner + Coffee Shop = early combo potential with Barista)
             // 3x Employee (1 Intern + 1 Jr Marketer + 1 Barista = variety + Latte Art combo piece)
             // 4x Action (2 Flyer + 2 Small Investment = choices between customers vs money)
             // 2x Upgrade (Office Supplies = immediate value)
             deck.cards = new DeckEntry[]
             {
-                new DeckEntry { card = b01, count = 1 },   // 1x Bufe (venture gives another)
-                new DeckEntry { card = b02, count = 1 },   // 1x Kahveci (combo potential!)
+                new DeckEntry { card = b01, count = 1 },   // 1x Diner (venture gives another)
+                new DeckEntry { card = b02, count = 1 },   // 1x Coffee Shop (combo potential!)
                 new DeckEntry { card = c01, count = 1 },   // 1x Intern (cheap starter)
                 new DeckEntry { card = c02, count = 1 },   // 1x Jr Marketer (income boost)
                 new DeckEntry { card = c03, count = 1 },   // 1x Barista (Latte Art combo!)
@@ -163,8 +163,8 @@ namespace EmpireOfCards.Bootstrap.Data
             };
 
             // Venture Mirror (GDD Section 1.7) — indexed by VentureType ordinal
-            // [0] Bufe, [1] TechStartup, [2] ReklamAjansi, [3] KaranlikPazar
-            rival.ventureMatchedNames     = new[] { "Rival Bufe", "Rival Tech Startup", "Rival Reklam Ajansi", "MegaCorp HQ" };
+            // [0] Diner, [1] TechStartup, [2] AdAgency, [3] BlackMarket
+            rival.ventureMatchedNames     = new[] { "Rival Diner", "Rival Tech Startup", "Rival Ad Agency", "MegaCorp HQ" };
             rival.ventureMatchedIncome    = new[] { 50, 0, 60, 80 };
             rival.ventureMatchedCustomers = new[] { 3, 0, 3, 5 };
 

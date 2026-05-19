@@ -7,12 +7,18 @@ namespace EmpireOfCards.UI
     /// <summary>
     /// Rival action summary popup. Fade in, display action and taunt, fade out.
     /// All animation driven by Update() polling -- no coroutines.
+    ///
+    /// Supports three display modes:
+    /// 1. Action + Taunt: standard rival turn summary
+    /// 2. Mood Icon: brief mood "tell" shown before rival acts
+    /// 3. Strategy Comment: one-time reaction to player's strategy
     /// </summary>
     public class RivalPopup : MonoBehaviour
     {
         [Header("References")]
         [SerializeField] private TMP_Text actionText;
         [SerializeField] private TMP_Text tauntText;
+        [SerializeField] private TMP_Text moodIconText;
         [SerializeField] private Image rivalPortrait;
         [SerializeField] private CanvasGroup canvasGroup;
 
@@ -21,11 +27,15 @@ namespace EmpireOfCards.UI
         [SerializeField] private float displayDuration = 2.5f;
         [SerializeField] private float fadeOutDuration = 0.4f;
 
+        [Header("Mood Timing")]
+        [SerializeField] private float moodDisplayDuration = 1.0f;
+
         // State machine
         private enum State { Idle, FadeIn, Hold, FadeOut }
 
         private State state = State.Idle;
         private float stateTimer;
+        private float activeDisplayDuration;
 
         // ------------------------------------------------------------------
         // Lifecycle
@@ -35,6 +45,9 @@ namespace EmpireOfCards.UI
         {
             if (canvasGroup != null)
                 canvasGroup.alpha = 0f;
+
+            if (moodIconText != null)
+                moodIconText.gameObject.SetActive(false);
         }
 
         private void Update()
@@ -68,12 +81,28 @@ namespace EmpireOfCards.UI
         }
 
         /// <summary>
+        /// Assigns the mood icon text reference at runtime.
+        /// Called by HUDBuilder after creating the mood icon element.
+        /// </summary>
+        public void SetMoodIconReference(TMP_Text moodIcon)
+        {
+            moodIconText = moodIcon;
+        }
+
+        /// <summary>
         /// Displays the rival popup with an action description and optional taunt.
         /// </summary>
         public void Show(string action, string taunt)
         {
+            // Hide mood icon when showing action/taunt
+            if (moodIconText != null)
+                moodIconText.gameObject.SetActive(false);
+
             if (actionText != null)
+            {
                 actionText.text = action;
+                actionText.gameObject.SetActive(!string.IsNullOrEmpty(action));
+            }
 
             if (tauntText != null)
             {
@@ -81,6 +110,57 @@ namespace EmpireOfCards.UI
                 tauntText.gameObject.SetActive(!string.IsNullOrEmpty(taunt));
             }
 
+            activeDisplayDuration = displayDuration;
+            state = State.FadeIn;
+            stateTimer = 0f;
+        }
+
+        /// <summary>
+        /// Displays a brief mood icon "tell" before the rival acts.
+        /// Shows for moodDisplayDuration (1 second) then fades out.
+        /// </summary>
+        public void ShowMoodIcon(string moodIcon)
+        {
+            if (string.IsNullOrEmpty(moodIcon)) return;
+
+            // Hide action/taunt texts during mood display
+            if (actionText != null)
+                actionText.gameObject.SetActive(false);
+            if (tauntText != null)
+                tauntText.gameObject.SetActive(false);
+
+            if (moodIconText != null)
+            {
+                moodIconText.text = moodIcon;
+                moodIconText.gameObject.SetActive(true);
+            }
+
+            activeDisplayDuration = moodDisplayDuration;
+            state = State.FadeIn;
+            stateTimer = 0f;
+        }
+
+        /// <summary>
+        /// Displays a strategy reaction comment from the rival.
+        /// Uses the taunt text slot with standard timing.
+        /// </summary>
+        public void ShowStrategyComment(string comment)
+        {
+            if (string.IsNullOrEmpty(comment)) return;
+
+            if (moodIconText != null)
+                moodIconText.gameObject.SetActive(false);
+
+            if (actionText != null)
+                actionText.gameObject.SetActive(false);
+
+            if (tauntText != null)
+            {
+                tauntText.text = comment;
+                tauntText.gameObject.SetActive(true);
+            }
+
+            activeDisplayDuration = displayDuration;
             state = State.FadeIn;
             stateTimer = 0f;
         }
@@ -108,7 +188,7 @@ namespace EmpireOfCards.UI
 
         private void UpdateHold()
         {
-            if (stateTimer >= displayDuration)
+            if (stateTimer >= activeDisplayDuration)
             {
                 state = State.FadeOut;
                 stateTimer = 0f;
@@ -126,6 +206,10 @@ namespace EmpireOfCards.UI
             {
                 if (canvasGroup != null)
                     canvasGroup.alpha = 0f;
+
+                // Clean up mood icon after fade
+                if (moodIconText != null)
+                    moodIconText.gameObject.SetActive(false);
 
                 state = State.Idle;
             }

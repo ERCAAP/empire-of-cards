@@ -71,6 +71,7 @@ namespace EmpireOfCards.Gameplay
         /// 1. Calculate income   2. Calculate salaries   3. Count accountants
         /// 4. Calculate tax      5. Net = income - salaries - tax
         /// 6. Apply to GameManager   7. Tick investor debt   8. Track customers
+        /// Also builds an IncomeBreakdown and fires the cascade event.
         /// </summary>
         public void ProcessEndOfTurn()
         {
@@ -86,21 +87,39 @@ namespace EmpireOfCards.Gameplay
             IReadOnlyList<ActiveBusiness> businesses = boardManager.PlayerBusinesses;
             CardData activeEvent = boardManager.ActiveEvent;
 
-            // Step 1: Income
-            grossIncome = incomeCalculator.CalculateTurnIncome(
-                businesses, activeEvent, debtTracker.DebtPercent, debtTracker.TurnsRemaining);
+            // --- Build breakdown for cascade animation ---
+            var breakdown = new IncomeBreakdown();
+
+            // Step 1: Income (detailed -- populates per-business steps)
+            grossIncome = incomeCalculator.CalculateTurnIncomeDetailed(
+                businesses, activeEvent, debtTracker.DebtPercent, debtTracker.TurnsRemaining,
+                breakdown.steps);
 
             // Apply AbilitySystem income multiplier (e.g., Chef "Special Menu", Consultant scaling)
             if (abilitySystem != null && abilitySystem.IncomeMultiplier != 1f)
             {
+                int beforeAbility = grossIncome;
                 grossIncome = Mathf.RoundToInt(grossIncome * abilitySystem.IncomeMultiplier);
                 Debug.Log($"[EconomyManager] AbilitySystem income multiplier applied: x{abilitySystem.IncomeMultiplier} -> gross={grossIncome}");
+
+                int abilityDelta = grossIncome - beforeAbility;
+                if (abilityDelta != 0)
+                {
+                    breakdown.steps.Add(new IncomeStep(
+                        $"Ability x{abilitySystem.IncomeMultiplier:F1}",
+                        abilityDelta,
+                        isMultiplier: true));
+                }
             }
 
             EventBus.IncomeReceived(grossIncome);
 
             // Step 2: Salaries
             totalSalaries = CalculateSalaries(businesses);
+            if (totalSalaries > 0)
+            {
+                breakdown.steps.Add(new IncomeStep("Salaries", -totalSalaries, isNegative: true));
+            }
 
             // Step 3-4: Tax (skip if AbilitySystem grants tax-free this turn)
             int accountantCount = taxCalculator.CountAccountants(businesses);
@@ -108,10 +127,16 @@ namespace EmpireOfCards.Gameplay
             {
                 taxAmount = 0;
                 Debug.Log("[EconomyManager] AbilitySystem: tax-free this turn");
+                // Show tax-free as a positive cascade step
+                breakdown.steps.Add(new IncomeStep("Tax Free!", 0, isMultiplier: true));
             }
             else
             {
                 taxAmount = taxCalculator.CalculateTax(grossIncome, accountantCount);
+                if (taxAmount > 0)
+                {
+                    breakdown.steps.Add(new IncomeStep("Tax", -taxAmount, isNegative: true));
+                }
             }
 
             // Step 5: Net
@@ -124,8 +149,22 @@ namespace EmpireOfCards.Gameplay
                 int penaltyTurns = currentTurn - Constants.SOFT_CAP_TURN;
                 float penaltyRate = penaltyTurns * Constants.SOFT_CAP_PENALTY;
                 penaltyRate = Mathf.Min(penaltyRate, 0.5f); // Cap at 50% max penalty
+                int beforePenalty = netIncome;
                 netIncome = Mathf.RoundToInt(netIncome * (1f - penaltyRate));
+
+                int penaltyDelta = netIncome - beforePenalty;
+                if (penaltyDelta != 0)
+                {
+                    breakdown.steps.Add(new IncomeStep(
+                        $"Late Penalty -{Mathf.RoundToInt(penaltyRate * 100f)}%",
+                        penaltyDelta,
+                        isNegative: true));
+                }
             }
+
+            // Finalize breakdown and fire cascade event
+            breakdown.netIncome = netIncome;
+            EventBus.IncomeBreakdownReported(breakdown);
 
             // Step 6: Apply
             if (netIncome > 0)

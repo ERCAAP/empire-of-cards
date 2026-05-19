@@ -17,9 +17,24 @@ namespace EmpireOfCards.Audio
     }
 
     /// <summary>
+    /// Board ambient states, ordered by activity level.
+    /// Used to drive ambient audio layers that respond to board fullness.
+    /// </summary>
+    public enum AmbientState
+    {
+        Empty,      // 0-1 businesses: quiet, ticking clock
+        Growing,    // 2 businesses: light activity hum
+        Busy,       // 3+ businesses: bustling marketplace
+        Thriving    // 3+ businesses + combos: energetic layer
+    }
+
+    /// <summary>
     /// Singleton audio manager. Subscribes to EventBus events to play
     /// sounds automatically. Music crossfades between calm (early game)
     /// and intense (turn 10+) using Update() polling -- no coroutines.
+    ///
+    /// Ambient audio layers respond to board fullness:
+    ///   EMPTY -> GROWING -> BUSY -> THRIVING
     ///
     /// Expected Sound IDs:
     ///   card_place, card_draw, coin_ching, coin_cascade,
@@ -51,6 +66,13 @@ namespace EmpireOfCards.Audio
         [SerializeField] private float crossfadeDuration = 1.5f;
         [SerializeField] private int intenseMusicTurnThreshold = 10;
 
+        [Header("Ambient Layers (wire clips later)")]
+        [SerializeField] private AudioClip ambientEmpty;
+        [SerializeField] private AudioClip ambientGrowing;
+        [SerializeField] private AudioClip ambientBusy;
+        [SerializeField] private AudioClip ambientThriving;
+        [SerializeField] private float ambientFadeDuration = 1f;
+
         // Crossfade state (Update-driven, no coroutine)
         private bool isCrossfading;
         private float crossfadeTimer;
@@ -61,6 +83,11 @@ namespace EmpireOfCards.Audio
 
         // Track which source is currently active
         private AudioSource activeSource;
+
+        // Ambient state tracking
+        private AmbientState _currentAmbientState = AmbientState.Empty;
+        private int _trackedBusinessCount;
+        private int _trackedComboCount;
 
         /// <summary>
         /// Assigns all dependencies without reflection.
@@ -101,6 +128,11 @@ namespace EmpireOfCards.Audio
             EventBus.OnFBIRaid += OnFBIRaid;
             EventBus.OnTurnStarted += OnTurnStarted;
             EventBus.OnBusinessClosed += OnBusinessClosed;
+
+            // Ambient state tracking
+            EventBus.OnBusinessPlaced += OnBusinessPlacedAmbient;
+            EventBus.OnComboTriggered += OnComboTriggeredAmbient;
+            EventBus.OnComboDeactivated += OnComboDeactivatedAmbient;
         }
 
         private void OnDisable()
@@ -112,6 +144,11 @@ namespace EmpireOfCards.Audio
             EventBus.OnFBIRaid -= OnFBIRaid;
             EventBus.OnTurnStarted -= OnTurnStarted;
             EventBus.OnBusinessClosed -= OnBusinessClosed;
+
+            // Ambient state tracking
+            EventBus.OnBusinessPlaced -= OnBusinessPlacedAmbient;
+            EventBus.OnComboTriggered -= OnComboTriggeredAmbient;
+            EventBus.OnComboDeactivated -= OnComboDeactivatedAmbient;
         }
 
         private void Update()
@@ -188,6 +225,32 @@ namespace EmpireOfCards.Audio
         private void OnBusinessClosed(int businessIndex)
         {
             PlaySFX("negative_buzz");
+
+            // A closed business reduces the count
+            _trackedBusinessCount = Mathf.Max(0, _trackedBusinessCount - 1);
+            RefreshAmbientState();
+        }
+
+        // ------------------------------------------------------------------
+        // Ambient state callbacks
+        // ------------------------------------------------------------------
+
+        private void OnBusinessPlacedAmbient(CardData card, int slotIndex)
+        {
+            _trackedBusinessCount++;
+            RefreshAmbientState();
+        }
+
+        private void OnComboTriggeredAmbient(ComboData combo)
+        {
+            _trackedComboCount++;
+            RefreshAmbientState();
+        }
+
+        private void OnComboDeactivatedAmbient(ComboData combo)
+        {
+            _trackedComboCount = Mathf.Max(0, _trackedComboCount - 1);
+            RefreshAmbientState();
         }
 
         // ------------------------------------------------------------------
@@ -313,6 +376,82 @@ namespace EmpireOfCards.Audio
 
             if (sfxSource != null)
                 sfxSource.volume = sfxVolume * masterVolume;
+        }
+
+        // ------------------------------------------------------------------
+        // Ambient Board Audio
+        // ------------------------------------------------------------------
+
+        /// <summary>
+        /// Evaluates the current board state and transitions the ambient layer
+        /// if the state has changed. Called automatically from event callbacks.
+        /// Can also be called externally to force a re-evaluation.
+        /// </summary>
+        public void UpdateAmbientState(int businessCount, int comboCount)
+        {
+            AmbientState newState;
+
+            if (businessCount >= 3 && comboCount > 0)
+                newState = AmbientState.Thriving;
+            else if (businessCount >= 3)
+                newState = AmbientState.Busy;
+            else if (businessCount >= 2)
+                newState = AmbientState.Growing;
+            else
+                newState = AmbientState.Empty;
+
+            if (newState == _currentAmbientState)
+                return;
+
+            AmbientState previous = _currentAmbientState;
+            _currentAmbientState = newState;
+
+            Debug.Log($"[AudioManager] Ambient state: {newState} ({businessCount} businesses, {comboCount} combos)");
+
+            // TODO: Wire actual audio clips here. When clips are assigned,
+            // crossfade between ambient layers using ambientFadeDuration.
+            // For now, the state machine is ready and logging transitions.
+            OnAmbientStateChanged(previous, newState);
+        }
+
+        /// <summary>
+        /// Returns the current ambient state. Useful for UI or debugging.
+        /// </summary>
+        public AmbientState CurrentAmbientState => _currentAmbientState;
+
+        /// <summary>
+        /// Internal refresh using tracked counters from event callbacks.
+        /// </summary>
+        private void RefreshAmbientState()
+        {
+            UpdateAmbientState(_trackedBusinessCount, _trackedComboCount);
+        }
+
+        /// <summary>
+        /// Placeholder for ambient audio transitions. When AudioClips are
+        /// assigned to the ambient layer fields, this method will handle
+        /// fading out the old layer and fading in the new one.
+        /// </summary>
+        private void OnAmbientStateChanged(AmbientState from, AmbientState to)
+        {
+            AudioClip targetClip = to switch
+            {
+                AmbientState.Empty    => ambientEmpty,
+                AmbientState.Growing  => ambientGrowing,
+                AmbientState.Busy     => ambientBusy,
+                AmbientState.Thriving => ambientThriving,
+                _                     => null
+            };
+
+            if (targetClip == null)
+            {
+                Debug.Log($"[AudioManager] No ambient clip assigned for state {to} -- skipping playback.");
+                return;
+            }
+
+            // Future: Use a dedicated ambient AudioSource pair and fade
+            // between them over ambientFadeDuration, similar to CrossfadeMusic.
+            Debug.Log($"[AudioManager] Would crossfade ambient: {from} -> {to} over {ambientFadeDuration}s");
         }
     }
 }

@@ -36,6 +36,34 @@ namespace EmpireOfCards.Gameplay.Economy
             float debtPercent,
             int debtTurnsRemaining)
         {
+            return CalculateTurnIncomeCore(businesses, activeEvent, debtPercent, debtTurnsRemaining, null);
+        }
+
+        /// <summary>
+        /// Same calculation as CalculateTurnIncome but also populates an
+        /// IncomeStep list for the cascade animation. Pass null to skip recording.
+        /// </summary>
+        public int CalculateTurnIncomeDetailed(
+            IReadOnlyList<ActiveBusiness> businesses,
+            CardData activeEvent,
+            float debtPercent,
+            int debtTurnsRemaining,
+            List<IncomeStep> outSteps)
+        {
+            return CalculateTurnIncomeCore(businesses, activeEvent, debtPercent, debtTurnsRemaining, outSteps);
+        }
+
+        /// <summary>
+        /// Core income calculation shared by both the simple and detailed paths.
+        /// When outSteps is non-null, each income component is recorded as an IncomeStep.
+        /// </summary>
+        private int CalculateTurnIncomeCore(
+            IReadOnlyList<ActiveBusiness> businesses,
+            CardData activeEvent,
+            float debtPercent,
+            int debtTurnsRemaining,
+            List<IncomeStep> outSteps)
+        {
             int total = 0;
             int comboIncomeBonus = GetComboIncomeBonus();
             float comboIncomeMultiplier = GetComboIncomeMultiplier();
@@ -108,7 +136,7 @@ namespace EmpireOfCards.Gameplay.Economy
                         businessIncome = Mathf.RoundToInt(businessIncome * (1f + emp.incomeMultiplier));
                     }
 
-                    // Illegal income: Dolandirici +120/turn
+                    // Illegal income: Fraudster +120/turn
                     if (emp.illegalIncomePerTurn > 0)
                     {
                         businessIncome += emp.illegalIncomePerTurn;
@@ -159,6 +187,12 @@ namespace EmpireOfCards.Gameplay.Economy
                     highestBusinessIncome = businessIncome;
 
                 total += businessIncome;
+
+                // --- Record cascade step for this business ---
+                if (outSteps != null && businessIncome != 0)
+                {
+                    outSteps.Add(new IncomeStep(card.cardName, businessIncome));
+                }
             }
 
             // --- Consulting Firm (B11): best business earns 40% more ---
@@ -167,15 +201,34 @@ namespace EmpireOfCards.Gameplay.Economy
                 int consultingBonus = Mathf.RoundToInt(
                     highestBusinessIncome * (Constants.CONSULTING_FIRM_MULTIPLIER - 1f));
                 total += consultingBonus;
+
+                if (outSteps != null && consultingBonus != 0)
+                {
+                    outSteps.Add(new IncomeStep("Consulting Bonus", consultingBonus));
+                }
             }
 
             // --- Add combo income bonuses ---
             total += comboIncomeBonus;
 
+            if (outSteps != null && comboIncomeBonus != 0)
+            {
+                outSteps.Add(new IncomeStep("Combo Bonus", comboIncomeBonus));
+            }
+
             // --- Apply combo income multiplier ---
             if (comboIncomeMultiplier > 1f)
             {
+                int beforeMultiplier = total;
                 total = Mathf.RoundToInt(total * comboIncomeMultiplier);
+
+                if (outSteps != null)
+                {
+                    outSteps.Add(new IncomeStep(
+                        $"Combo x{comboIncomeMultiplier:F1}",
+                        total - beforeMultiplier,
+                        isMultiplier: true));
+                }
             }
 
             // --- Investor debt: subtract percentage ---
@@ -183,6 +236,11 @@ namespace EmpireOfCards.Gameplay.Economy
             {
                 int debtPayment = Mathf.RoundToInt(total * debtPercent);
                 total -= debtPayment;
+
+                if (outSteps != null && debtPayment != 0)
+                {
+                    outSteps.Add(new IncomeStep("Debt Payment", -debtPayment, isNegative: true));
+                }
             }
 
             return total;

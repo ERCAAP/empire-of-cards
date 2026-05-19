@@ -106,10 +106,10 @@ namespace EmpireOfCards.Gameplay
             _biasActive = true;
             _biasTag = venture switch
             {
-                VentureType.Bufe => CardTag.Food,
+                VentureType.Diner => CardTag.Food,
                 VentureType.TechStartup => CardTag.Tech,
-                VentureType.ReklamAjansi => CardTag.Marketing,
-                VentureType.KaranlikPazar => CardTag.Illegal,
+                VentureType.AdAgency => CardTag.Marketing,
+                VentureType.BlackMarket => CardTag.Illegal,
                 _ => CardTag.Basic
             };
         }

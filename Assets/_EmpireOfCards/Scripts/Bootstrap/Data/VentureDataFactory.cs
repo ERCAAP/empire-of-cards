@@ -17,13 +17,13 @@ namespace EmpireOfCards.Bootstrap.Data
 
             var ventures = new VentureData[4];
 
-            // Bufe (Diner) - food starter
+            // Diner - food starter
             ventures[0] = CreateVenture(
-                VentureType.Bufe,
-                "Bufe",
+                VentureType.Diner,
+                "Diner",
                 "Start with a humble diner. Solid food foundation.",
-                FindCard(lookup, "B01_Bufe"),
-                FindCard(lookup, "C04_Sef"),
+                FindCard(lookup, "B01_Diner"),
+                FindCard(lookup, "C04_Chef"),
                 0
             );
 
@@ -33,28 +33,28 @@ namespace EmpireOfCards.Bootstrap.Data
                 "Tech Startup",
                 "Start with a tech startup. Slow start, big payoff.",
                 FindCard(lookup, "B04_TechStartup"),
-                FindCard(lookup, "C07_Hacker"),
+                FindCard(lookup, "C07_Hacker"),  // already English
                 0
             );
 
-            // Reklam Ajansi (Ad Agency) - marketing starter
+            // Ad Agency - marketing starter
             ventures[2] = CreateVenture(
-                VentureType.ReklamAjansi,
-                "Reklam Ajansi",
+                VentureType.AdAgency,
+                "Ad Agency",
                 "Start with an ad agency. Boost all your businesses.",
-                FindCard(lookup, "B08_ReklamAjansi"),
-                FindCard(lookup, "C05_MarketingGurusu"),
+                FindCard(lookup, "B08_AdAgency"),
+                FindCard(lookup, "C05_MarketingGuru"),
                 0
             );
 
-            // Karanlik Pazar (Black Market) - no business, extra money
+            // Black Market - no business, extra money
             ventures[3] = CreateVenture(
-                VentureType.KaranlikPazar,
-                "Karanlik Pazar",
+                VentureType.BlackMarket,
+                "Black Market",
                 "No starting business. Extra cash and a shady contact.",
                 null,
-                FindCard(lookup, "C09_Dolandirici"),
-                Constants.KARANLIK_PAZAR_BONUS_MONEY
+                FindCard(lookup, "C09_Fraudster"),
+                Constants.BLACK_MARKET_BONUS_MONEY
             );
 
             return ventures;
