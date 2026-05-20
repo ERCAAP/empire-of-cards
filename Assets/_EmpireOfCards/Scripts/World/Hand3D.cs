@@ -73,14 +73,16 @@ namespace EmpireOfCards.World
         {
             for (int i = _cards.Count - 1; i >= 0; i--)
             {
-                if (_cards[i] != null && _cards[i].CardData == card)
-                {
-                    // Only destroy if the card is still in hand (not placed on board)
-                    if (_cards[i].IsInHand)
-                        Destroy(_cards[i].gameObject);
-                    _cards.RemoveAt(i);
-                    break;
-                }
+                if (_cards[i] == null) { _cards.RemoveAt(i); continue; }
+                if (_cards[i].CardData != card) continue;
+
+                // ONLY touch cards that are still in-hand.
+                // Board-placed cards (IsInHand=false) must NEVER be destroyed or removed here.
+                if (!_cards[i].IsInHand) continue;
+
+                Destroy(_cards[i].gameObject);
+                _cards.RemoveAt(i);
+                break;
             }
             LayoutHand();
         }
