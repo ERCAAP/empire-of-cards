@@ -131,11 +131,12 @@ namespace EmpireOfCards.Bootstrap
             }
 
             cam.orthographic = false;
-            cam.fieldOfView = 45f;
+            cam.fieldOfView = 50f;
             cam.nearClipPlane = 0.3f;
             cam.farClipPlane = 50f;
-            cam.transform.position = new Vector3(0f, 8f, -8f);
-            cam.transform.rotation = Quaternion.Euler(40f, 0f, 0f);
+            // Position and rotation tuned for compact board (14x10) — entire board + hand visible
+            cam.transform.position = new Vector3(0f, 14f, -6f);
+            cam.transform.rotation = Quaternion.Euler(55f, 0f, 0f);
             cam.backgroundColor = new Color(0.15f, 0.12f, 0.1f);
             cam.clearFlags = CameraClearFlags.SolidColor;
 
@@ -166,10 +167,11 @@ namespace EmpireOfCards.Bootstrap
         {
             var handAnchor = new GameObject("HandAnchor");
             handAnchor.transform.SetParent(mainCamera.transform);
-            // World position: at bottom edge of camera view, just in front of the board.
-            // SetParent(keepWorldPosition=false) then overwrite with world pos.
-            handAnchor.transform.position = new Vector3(0f, 0.5f, -7f);
-            handAnchor.transform.rotation = Quaternion.Euler(0f, 0f, 0f);
+            // World position: at bottom edge of camera view, just below the board
+            // Z = -3.5 keeps hand cards visible at bottom of screen without going off-edge
+            handAnchor.transform.position = new Vector3(0f, 0.3f, -3.5f);
+            // -15° tilt so cards face slightly toward the camera (readable from above)
+            handAnchor.transform.rotation = Quaternion.Euler(-15f, 0f, 0f);
 
             var handGo = new GameObject("Hand3D");
             handGo.transform.SetParent(handAnchor.transform);
