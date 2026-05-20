@@ -227,8 +227,43 @@ namespace EmpireOfCards.Core
     public enum CompanyTier
     {
         Trader,         // Tier 1: Default start
-        Entrepreneur,   // Tier 2: 2+ businesses + 1+ combo
-        Corporation,    // Tier 3: 3 businesses + 2+ combos + 4+ territories
-        Conglomerate    // Tier 4: 3 businesses + 3+ combos + 5+ territories
+        Entrepreneur,   // Tier 2: 20+ customers + 1+ combo
+        Corporation,    // Tier 3: 45+ customers + 2+ combos + 75% operation occupancy
+        Conglomerate    // Tier 4: 60+ customers + 3+ combos
+    }
+
+    // Salary payment choice (GDD Section 5.5)
+    public enum SalaryChoice
+    {
+        PayOnTime,      // Full payment, no penalty
+        Delay,          // Skip payment, moral penalty + quit chance
+        PartialPay,     // Partial payment, minor moral penalty
+        Advance         // Pay extra, moral bonus
+    }
+
+    // Insurance type for employees (GDD Section 5.6)
+    public enum InsuranceType
+    {
+        FullSGK,        // Legal, costs 37% extra
+        Uninsured,      // High risk, no cost
+        DailyWage       // Medium risk, no benefits
+    }
+
+    // Credit types available from bank (GDD Section 5.7)
+    public enum CreditType
+    {
+        SmallBusiness,      // Low amount, low interest
+        Medium,             // Medium amount, medium interest
+        LargeInvestment,    // High amount, high interest
+        Emergency           // Quick cash, highest interest
+    }
+
+    // Location tiers affecting passive customers and rent (GDD Section 10.1)
+    public enum LocationType
+    {
+        RemoteCorner,       // Cheap rent, no passive customers
+        SideStreet,         // Low rent, few passive customers
+        MainStreet,         // Medium rent, good foot traffic
+        ShoppingMall        // High rent, best foot traffic
     }
 }
