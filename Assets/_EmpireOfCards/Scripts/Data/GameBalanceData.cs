@@ -55,6 +55,19 @@ namespace EmpireOfCards.Data
         [Header("--- Employee ---")]
         public int employeeLeaveTurnThreshold = 8;
 
+        [Header("--- Salary ---")]
+        public float salaryDelayQuitChance = 0.15f;
+
+        [Header("--- Credit ---")]
+        public int maxActiveCredits = 3;
+
+        [Header("--- Inflation ---")]
+        public int inflationInterval = 4;
+
+        [Header("--- Tax Period ---")]
+        public int taxPeriodInterval = 5;
+        public float taxPeriodRate = 0.20f;
+
         public int GetMarketPool(int currentTurn)
         {
             int pool = baseMarketCustomers;

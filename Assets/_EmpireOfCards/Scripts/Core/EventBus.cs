@@ -117,6 +117,49 @@ namespace EmpireOfCards.Core
         public static event Action<CompanyTier> OnCompanyTierChanged;      // new tier
         #endregion
 
+        #region Salary System Events
+        public static event Action<int> OnSalaryChoiceRequired;            // totalSalaries
+        public static event Action<int, int> OnSalaryPaid;                 // choice, amount
+        #endregion
+
+        #region Credit System Events
+        public static event Action<int, int> OnCreditTaken;                // creditType, amount
+        public static event Action<int> OnCreditRepaid;                    // amount
+        public static event Action<int> OnDebtUpdated;                     // totalDebt
+        #endregion
+
+        #region Inflation Events
+        public static event Action<float> OnInflationApplied;              // costIncreasePercent
+        #endregion
+
+        #region Stock Events
+        public static event Action<float, float> OnSpoilageApplied;       // lostAmount, lostPercent
+        #endregion
+
+        #region Staff State Events
+        public static event Action<CardData, int> OnStaffMoralChanged;     // card, newMoral
+        public static event Action<CardData, int> OnStaffLevelUp;          // card, newLevel
+        public static event Action<CardData> OnStaffQuit;                  // card (istifa)
+        public static event Action<CardData, int> OnStaffPoachAttempt;     // card, rivalOffer
+        #endregion
+
+        #region Customer Loyalty Events
+        public static event Action<int> OnOrganicCustomersGained;          // count
+        public static event Action<float> OnLoyaltyChanged;                // newScore
+        #endregion
+
+        #region Location Events
+        public static event Action<int, int> OnLocationSet;                // passiveCustomers, rent
+        #endregion
+
+        #region Chain Reaction Events
+        public static event Action<string> OnChainTriggered;               // chainName
+        #endregion
+
+        #region Deterministic Events
+        public static event Action<string> OnDeterministicEventTriggered;  // eventName
+        #endregion
+
         // ======================================================================
         //  INVOKE HELPERS
         // ======================================================================
@@ -224,6 +267,49 @@ namespace EmpireOfCards.Core
         public static void CompanyTierChanged(CompanyTier tier) => OnCompanyTierChanged?.Invoke(tier);
         #endregion
 
+        #region Salary System Invoke Helpers
+        public static void SalaryChoiceRequired(int totalSalaries) => OnSalaryChoiceRequired?.Invoke(totalSalaries);
+        public static void SalaryPaid(int choice, int amount) => OnSalaryPaid?.Invoke(choice, amount);
+        #endregion
+
+        #region Credit System Invoke Helpers
+        public static void CreditTaken(int creditType, int amount) => OnCreditTaken?.Invoke(creditType, amount);
+        public static void CreditRepaid(int amount) => OnCreditRepaid?.Invoke(amount);
+        public static void DebtUpdated(int totalDebt) => OnDebtUpdated?.Invoke(totalDebt);
+        #endregion
+
+        #region Inflation Invoke Helpers
+        public static void InflationApplied(float costIncreasePercent) => OnInflationApplied?.Invoke(costIncreasePercent);
+        #endregion
+
+        #region Stock Invoke Helpers
+        public static void SpoilageApplied(float lostAmount, float lostPercent) => OnSpoilageApplied?.Invoke(lostAmount, lostPercent);
+        #endregion
+
+        #region Staff State Invoke Helpers
+        public static void StaffMoralChanged(CardData card, int newMoral) => OnStaffMoralChanged?.Invoke(card, newMoral);
+        public static void StaffLevelUp(CardData card, int newLevel) => OnStaffLevelUp?.Invoke(card, newLevel);
+        public static void StaffQuit(CardData card) => OnStaffQuit?.Invoke(card);
+        public static void StaffPoachAttempt(CardData card, int rivalOffer) => OnStaffPoachAttempt?.Invoke(card, rivalOffer);
+        #endregion
+
+        #region Customer Loyalty Invoke Helpers
+        public static void OrganicCustomersGained(int count) => OnOrganicCustomersGained?.Invoke(count);
+        public static void LoyaltyChanged(float newScore) => OnLoyaltyChanged?.Invoke(newScore);
+        #endregion
+
+        #region Location Invoke Helpers
+        public static void LocationSet(int passiveCustomers, int rent) => OnLocationSet?.Invoke(passiveCustomers, rent);
+        #endregion
+
+        #region Chain Reaction Invoke Helpers
+        public static void ChainTriggered(string chainName) => OnChainTriggered?.Invoke(chainName);
+        #endregion
+
+        #region Deterministic Event Invoke Helpers
+        public static void DeterministicEventTriggered(string eventName) => OnDeterministicEventTriggered?.Invoke(eventName);
+        #endregion
+
         // ======================================================================
         //  CLEANUP
         // ======================================================================
@@ -318,6 +404,40 @@ namespace EmpireOfCards.Core
 
             // Company Tier
             OnCompanyTierChanged = null;
+
+            // Salary System
+            OnSalaryChoiceRequired = null;
+            OnSalaryPaid = null;
+
+            // Credit System
+            OnCreditTaken = null;
+            OnCreditRepaid = null;
+            OnDebtUpdated = null;
+
+            // Inflation
+            OnInflationApplied = null;
+
+            // Stock
+            OnSpoilageApplied = null;
+
+            // Staff State
+            OnStaffMoralChanged = null;
+            OnStaffLevelUp = null;
+            OnStaffQuit = null;
+            OnStaffPoachAttempt = null;
+
+            // Customer Loyalty
+            OnOrganicCustomersGained = null;
+            OnLoyaltyChanged = null;
+
+            // Location
+            OnLocationSet = null;
+
+            // Chain Reaction
+            OnChainTriggered = null;
+
+            // Deterministic Events
+            OnDeterministicEventTriggered = null;
         }
     }
 }

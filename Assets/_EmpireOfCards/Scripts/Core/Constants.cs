@@ -174,5 +174,108 @@ namespace EmpireOfCards.Core
         public const float CONSULTING_FIRM_MULTIPLIER = 1.4f;     // B11: best business earns 40% more
         public const int POPUP_SHOP_LIFETIME_TURNS = 4;           // B12: self-destructs after 4 turns
         #endregion
+
+        #region Salary System (GDD 5.5)
+        public const int SALARY_DELAY_MORAL_PENALTY = 2;
+        public const int SALARY_PARTIAL_MORAL_PENALTY = 1;
+        public const int SALARY_ADVANCE_MORAL_BONUS = 2;
+        public const float SALARY_DELAY_QUIT_CHANCE = 0.15f;
+        #endregion
+
+        #region Insurance (GDD 5.6)
+        public const float INSURANCE_SGK_MULTIPLIER = 0.37f;
+        public const int INSURANCE_UNINSURED_RISK_PER_TURN = 15;
+        public const int INSURANCE_DAILY_RISK_PER_TURN = 5;
+        #endregion
+
+        #region Credit (GDD 5.7)
+        public const int CREDIT_SMALL_AMOUNT = 200;
+        public const float CREDIT_SMALL_INTEREST = 0.05f;
+        public const int CREDIT_MEDIUM_AMOUNT = 500;
+        public const float CREDIT_MEDIUM_INTEREST = 0.08f;
+        public const int CREDIT_LARGE_AMOUNT = 1000;
+        public const float CREDIT_LARGE_INTEREST = 0.12f;
+        public const int CREDIT_EMERGENCY_AMOUNT = 100;
+        public const float CREDIT_EMERGENCY_INTEREST = 0.15f;
+        #endregion
+
+        #region Inflation (GDD 5.9)
+        public const int INFLATION_INTERVAL = 4;
+        public const float INFLATION_COST_MIN = 0.10f;
+        public const float INFLATION_COST_MAX = 0.25f;
+        #endregion
+
+        #region Stock (GDD 9.1)
+        public const int SPOILAGE_INTERVAL = 3;
+        public const float SPOILAGE_MIN = 0.10f;
+        public const float SPOILAGE_MAX = 0.20f;
+        #endregion
+
+        #region Staff State (GDD 6.1)
+        public const int STAFF_DEFAULT_MORAL = 7;
+        public const int STAFF_DEFAULT_LOYALTY = 5;
+        public const int STAFF_XP_PER_TURN = 5;
+        public const int STAFF_XP_PER_LEVEL = 25;
+        public const int STAFF_MAX_LEVEL = 4;
+        public const float STAFF_LOW_MORAL_ERROR_RATE = 0.30f;
+        public const float STAFF_HIGH_FATIGUE_PENALTY = 0.30f;
+        #endregion
+
+        #region Location (GDD 10.1)
+        public const int LOCATION_REMOTE_CUSTOMERS = 0;
+        public const int LOCATION_REMOTE_RENT = 20;
+        public const int LOCATION_SIDE_CUSTOMERS = 2;
+        public const int LOCATION_SIDE_RENT = 50;
+        public const int LOCATION_MAIN_CUSTOMERS = 5;
+        public const int LOCATION_MAIN_RENT = 100;
+        public const int LOCATION_MALL_CUSTOMERS = 8;
+        public const int LOCATION_MALL_RENT = 180;
+        #endregion
+
+        #region Loyalty (GDD 7.3)
+        public const float LOYALTY_GAIN_PER_GOOD_TURN = 5f;
+        public const float LOYALTY_LOSS_PER_BAD_TURN = 10f;
+        public const int LOYALTY_WORD_OF_MOUTH_THRESHOLD = 5;
+        public const float PLATFORM_RATING_RECOVERY_PER_GOOD_TURN = 0.1f;
+        #endregion
+
+        #region Tax Period (GDD 5.8)
+        public const int TAX_PERIOD_INTERVAL = 5;
+        public const float TAX_PERIOD_RATE = 0.20f;
+        public const int TAX_UNPAID_AUDIT_THRESHOLD = 2;
+        #endregion
+
+        #region Venture Seasonal Multipliers (GDD 14.2)
+        // FastFood
+        public const float SEASON_FF_SPRING = 1.0f;
+        public const float SEASON_FF_SUMMER = 1.0f;
+        public const float SEASON_FF_AUTUMN = 1.10f;
+        public const float SEASON_FF_WINTER = 1.15f;
+        public const float SEASON_FF_RAMADAN = 1.0f;
+        // Cafe
+        public const float SEASON_CAFE_SPRING = 1.0f;
+        public const float SEASON_CAFE_SUMMER = 0.85f;
+        public const float SEASON_CAFE_AUTUMN = 1.20f;
+        public const float SEASON_CAFE_WINTER = 1.25f;
+        public const float SEASON_CAFE_RAMADAN = 1.0f;
+        // TechApp
+        public const float SEASON_TECH_SPRING = 1.0f;
+        public const float SEASON_TECH_SUMMER = 1.0f;
+        public const float SEASON_TECH_AUTUMN = 1.0f;
+        public const float SEASON_TECH_WINTER = 1.0f;
+        public const float SEASON_TECH_RAMADAN = 1.0f;
+        // ClothingStore
+        public const float SEASON_CLOTH_SPRING = 1.0f;
+        public const float SEASON_CLOTH_SUMMER = 0.90f;
+        public const float SEASON_CLOTH_AUTUMN = 1.25f;
+        public const float SEASON_CLOTH_WINTER = 1.20f;
+        public const float SEASON_CLOTH_RAMADAN = 1.15f;
+        // GroceryStore
+        public const float SEASON_GROC_SPRING = 1.0f;
+        public const float SEASON_GROC_SUMMER = 1.0f;
+        public const float SEASON_GROC_AUTUMN = 1.10f;
+        public const float SEASON_GROC_WINTER = 1.10f;
+        public const float SEASON_GROC_RAMADAN = 1.35f;
+        #endregion
     }
 }
