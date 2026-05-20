@@ -1,9 +1,9 @@
 # GAME DESIGN DOCUMENT
 # "Empire of Cards"
 
-> Versiyon: 2.2 | Tarih: 2026-05-20
-> Engine: Unity (C#) | Platform: PC (Steam)
-> Ekip: Solo Developer | Fiyat: $9.99-$12.99
+> Versiyon: 3.0 | Tarih: 2026-05-20
+> Engine: Unity 6 (C#) | Platform: PC (Steam)
+> Ekip: Solo Developer | Fiyat: $9.99–$12.99
 
 ---
 
@@ -11,1843 +11,1068 @@
 
 ## 1.1 Tek Cümle
 
-Kartlarla iş kurarsın, çalışan alırsın, rakibinle aynı müşteri havuzu için savaşırsın.
+Küçük bir işletmeyle başlar, aynı semtte aynı sektörde rakibinle kapışır, marketi kim domine ederse kazanır.
 
 ## 1.2 Oyuncunun Yaptığı Şey
 
-Masanın başında oturuyorsun. Önünde boş slotlar var. Elinde kartlar var.
+Masanın başında oturuyorsun. Slotlar var. Elinde kartlar var. Kararlar veriyorsun.
 
 Her tur:
-1. Bir event gelir — dünya değişir
-2. Kart çekersin
-3. 3 hakkın var — kartları masaya koyarsın
-4. Masa çalışır — para gelir, müşteri gelir, combo patlar
+1. Kartlar gelir — girişim türüne özel
+2. Slotlara yerleştirirsin
+3. Sistem çalışır — para gelir, müşteri gelir, kriz patlar
+4. Ekonomi hesaplanır
 5. Rakip oynar
 
-**Amaç:** Masadaki 10 bölgeden 6'sını ele geçir. Bu senin market hakimiyetin.
+**Amaç:** Semtteki müşteri havuzunun %60'ını ele geçir. 25 tur dolmadan.
 
 ## 1.3 Neden Eğlenceli?
 
-| An | Hissi |
+| An | His |
 |---|---|
-| Kart koydun, anında müşteri token'ları masana kaydı | "Büyüyorum!" |
-| İki kart birleşti, COMBO patladı | "Oha bunu keşfettim!" |
-| Rakip müşterilerini çaldı | "Seni gidi..." |
-| Kriz geldi, işletmen kapandı | "Hayır! Plan yapmalıyım!" |
-| Son turda tam %60'a ulaştın | "EVEEET!" |
+| Slot doldurdun, müşteri aktı | "Büyüyorum!" |
+| Zincir reaksiyon patlattın | "Oha, bunu hesaplamamıştım!" |
+| Rakip çalışanını çaldı | "Seni gidi..." |
+| Maaş geciktirince işletme çöktü | "Kendi kendimi batırdım." |
+| 25. turda %60'ı aldın | "EVEEET!" |
+
+## 1.4 Tasarım Felsefesi
+
+Bu oyun şunu sormaktan kaçınmaz:
+
+> "Yanlış zamanda doğru kart bile işletmeyi batırabilir mi?"
+
+**Evet.** Fazla masa, müşteri yokken açılırsa zarar. Influencer kampanyası, mutfak kapasitesi yokken yapılırsa kötü yorum. Maaş geciktirilirse iyi çalışan gider.
+
+Her karar başka sistemi etkiler. Oyuncu sadece "güçlü kart" seçmez; **işletmenin durumunu okur ve ona göre karar verir.**
 
 ---
 
-# BÖLÜM 1.5: İLK GİRİŞİM SEÇİMİ (First Venture)
+# BÖLÜM 2: GİRİŞİM SEÇİMİ
 
-## 1.5.1 Konsept
+## 2.1 Konsept
 
-Oyun başladığında oyuncuya "İlk girişimini seç" ekranı gösterilir. Bu bir class/archetype kilidi **DEĞİLDİR.** Sadece başlangıç yönü verir: 1 işletme tahtaya yerleşir + destene 1 bonus kart eklenir. Run'ın geri kalanında oyuncu istediği stratejiyi izleyebilir.
+Oyun başladığında oyuncuya "İlk Girişimini Seç" ekranı gösterilir.
 
-**Neden bu sistem?** Oyuncu boş masaya bakınca "nereden başlayacağım?" hissi yaşıyor. İlk Girişim bu sorunu çözer — ilk turdan itibaren masada bir şey var, elde bir yön var.
+**Kritik Kural:** Rakip de oyuncuyla **aynı tür işletmeyle** başlar. Fast food seçtiysen rakip de fast food açar. Aynı semtte, aynı sektörde, aynı müşteri havuzu için savaşırsınız.
 
-## 1.5.2 Girişim Seçenekleri (4 adet)
+Bu kural şunu sağlar:
+- Rakip aynı avantaj/dezavantajlarla başlar
+- Kimin daha iyi yönettiği kazanır
+- Sektör dinamikleri her iki taraf için de geçerlidir
 
-### 🍔 1. BÜFE (Diner)
+## 2.2 Girişim Seçenekleri
 
-Büfe tahtaya yerleşik gelir. Destene +1 Şef eklenir. Food combo'lara doğru yönlendirir ama kilitlemez.
+| Girişim | Başlangıç Durumu | Zorluk |
+|---|---|---|
+| Fast Food Zinciri | 3 masa, 2 çalışan, düşük Google puanı | Orta |
+| Cafe | Temel espresso makinesi, 1 barista | Orta |
+| Tech Mobil Uygulama | Sıfır kullanıcı, 2 tur delay gelir | Zor |
+| Giyim Mağazası | Küçük stok, düşük görünürlük | Orta-Zor |
+| Market / Bakkal | Temel raf, 1 personel, dar marj | Kolay-Orta |
 
-| Özellik | Değer |
-|---|---|
-| Board | B01 Büfe otomatik Slot 1'e yerleşir |
-| Deste | Standart 14 kart + 1 Şef (C04) = 15 kart |
-| Başlangıç Parası | 💰500 |
-| Yönlendirme | Food combo'lar (Organik Sinerji, Fast Food İmparatorluğu) |
+> Her girişim türünün kart havuzu, event listesi ve özel mekanikleri o girişime ait ayrı MD dosyasında tanımlanmıştır.
+> `Assets/steam-card-game-gdd/businesses/` klasörüne bak.
 
-### 💻 2. TECH STARTUP
+## 2.3 Başlangıç Kaynakları
 
-Tech Startup tahtaya yerleşik gelir (delay sayacı 1'den başlar = 2 tur bekleme). Destene +1 Hacker eklenir.
+Her girişimde oyuncu:
+- Küçük işletme (başlangıç seviyesi)
+- Sınırlı nakit
+- Az müşteri
+- Düşük kalite / düşük puan
+- Boş slotlar
 
-| Özellik | Değer |
-|---|---|
-| Board | B04 Tech Startup otomatik Slot 1'e yerleşir |
-| Deste | Standart 14 kart + 1 Hacker (C07) = 15 kart |
-| Başlangıç Parası | 💰500 |
-| Yönlendirme | Tech combo'lar (AI Devrimi), agresif oyun |
+ile başlar.
 
-### 📢 3. REKLAM AJANSI
+## 2.4 Tutorial
 
-Reklam Ajansı tahtaya yerleşik gelir. Destene +1 Marketing Gurusu eklenir.
-
-| Özellik | Değer |
-|---|---|
-| Board | B08 Reklam Ajansı otomatik Slot 1'e yerleşir |
-| Deste | Standart 14 kart + 1 Marketing Gurusu (C05) = 15 kart |
-| Başlangıç Parası | 💰500 |
-| Yönlendirme | Marketing combo'lar (Reklam Bombardımanı, Viral Fırtına) |
-
-### 🕶️ 4. KARANLIK PAZAR
-
-Hiçbir business yerleşmez. Ama +200 ekstra para ve destene +1 Dolandırıcı eklenir. Riskli ama hızlı para.
-
-| Özellik | Değer |
-|---|---|
-| Board | Boş (oyuncu kendi seçer) |
-| Deste | Standart 14 kart + 1 Dolandırıcı (C09) = 15 kart |
-| Başlangıç Parası | 💰700 |
-| Yönlendirme | İllegal strateji, hızlı para, yüksek risk |
-
-## 1.5.3 Tasarım Kuralları
-
-- **Pasif bonus yok.** Girişim seçimi sadece başlangıç kartları verir, run boyunca pasif etki uygulamaz.
-- **Class kilidi yok.** Büfe seçen oyuncu Tech Startup da açabilir, Hacker da alabilir.
-- **Shop yanliligi (ilk 5 tur):** Ilk 5 turda 3 dukkan kartindan en az 1'i oyuncunun girisim sektorune uygun tag tasir (bkz. Bolum 1.7.3). Tur 6'dan itibaren tam 40 kart havuzundan saf rastgele.
-- **Seçim sadece başlangıç yönü verir, run'ı kilitlemez.** Oyuncu istediği anda farklı stratejiye geçebilir.
-- **Tutorial run'ında Büfe otomatik seçilir.** Yeni oyuncu seçim ekranını görmez, doğrudan Büfe ile başlar. İlk run tamamlandıktan sonra seçim ekranı açılır.
+İlk run'da tutorial açılır. Girişim otomatik seçilir (Fast Food). Tutorial tamamlandıktan sonra girişim seçim ekranı açılır.
 
 ---
 
-# BÖLÜM 1.6: ŞİRKET SEVİYESİ (Company Tier)
+# BÖLÜM 3: ŞİRKET SEVİYESİ (Company Tier)
 
-## 1.6.1 Konsept
+## 3.1 Konsept
 
-Oyuncunun board state'ine göre şirket seviyesi otomatik belirlenir. Yeni kart tipi gerektirmez. Sadece board state kontrolü + görsel/ses feedback sistemi. Oyuncuya "büyüyorum" hissini somutlaştırır — soyut bir skor yerine, şirketinin ismi ve görünümü değişir.
+Oyuncunun işletme durumuna göre şirket seviyesi otomatik belirlenir. Yeni kart tipi gerektirmez — sadece board state kontrolü.
 
-## 1.6.2 Tier Tablosu (4 Seviye)
+## 3.2 Tier Tablosu
 
 | Tier | İsim | Koşul | Görsel Feedback |
 |------|------|-------|-----------------|
 | 1 | ESNAF | Oyun başı (varsayılan) | Küçük logo, sade board |
-| 2 | GİRİŞİMCİ | 2+ aktif business + 1+ combo tetiklenmiş | "TEBRİKLER: GİRİŞİMCİ oldun!" popup, logo büyür |
-| 3 | ŞİRKET | 3 aktif business + 2+ combo + 4+ territory | Board rengi değişir, rival ciddi olmaya başlar, müzik yoğunlaşır |
-| 4 | HOLDİNG | 3 aktif business + 3+ combo + 5+ territory | Taç efekti, dominant his, board kenarları altın yanar |
+| 2 | GİRİŞİMCİ | İyi operasyon + 1+ combo | Logo büyür, popup |
+| 3 | ŞİRKET | Güçlü market pozisyonu | Board rengi değişir, müzik yoğunlaşır |
+| 4 | HOLDİNG | Dominasyon yakın | Taç efekti, altın border |
 
-## 1.6.3 Tier Kuralları
+## 3.3 Tier Kuralları
 
-- **Kontrol zamanı:** Tier her tur sonunda Resolve Phase'de kontrol edilir (combo check'ten sonra, gelir hesaplamasından önce).
-- **Tier asla düşmez.** Bir kere Girişimci oldun mu geri Esnaf olamazsın. İşletme kapansa bile tier korunur.
-- **Tier atlama anında:** Popup + ses efekti + kısa animasyon oynar. Oyun 1-2 saniye durur, oyuncu anı yaşar.
-- **Skor bonusu:** Tier, run sonu skor hesaplamasına bonus verir:
-
-| Tier | Skor Bonusu |
-|------|-------------|
-| Tier 1 — ESNAF | +0 |
-| Tier 2 — GİRİŞİMCİ | +200 |
-| Tier 3 — ŞİRKET | +500 |
-| Tier 4 — HOLDİNG | +1000 |
-
-## 1.6.4 Unity Entegrasyonu
-
-```
-Resolve Phase sırası (güncellenmiş):
-  Adım 4a: İşletmeler üretir
-  Adım 4b: Müşteriler kayar
-  Adım 4c: Combo kontrolü
-  Adım 4c.5: TIER KONTROLÜ ← YENİ
-  Adım 4d: Gelir hesaplanır
-  Adım 4e: Bozulma kontrolü
-```
-
-Tier kontrolü için `CompanyTierManager.cs` gerekir. Bu manager her tur sonunda board state'i okur (aktif business sayısı, tetiklenmiş combo sayısı, territory sayısı) ve mevcut tier'ı güncellemesi gerekip gerekmediğini kontrol eder.
+- **Tier asla düşmez.** Bir kere Girişimci oldun mu Esnaf'a dönemezsin.
+- **Tier atlamada:** Popup + ses + kısa animasyon. Oyun 1–2 saniye durur.
+- **Slot genişlemesi:** Her tier atlamada yeni slotlar açılır (bkz. Bölüm 4.5).
+- **Skor bonusu:** Run sonu tier bonus verir.
 
 ---
 
-# BÖLÜM 1.7: RAKİP AYNA SİSTEMİ (Rival Mirror)
+# BÖLÜM 4: OYUN TAHTASI VE SLOT SİSTEMİ
 
-## 1.7.1 Konsept
+## 4.1 Masa Yapısı
 
-Oyun basinda oyuncunun sectigi girisim tipine gore rakip de **ayni turde** is kurarak baslar. Bu "ayna" etkisi, oyuncunun ilk turlardan itibaren dogrudan bir rakiple karsilasmasini saglar -- ayni sektorde iki rakip firmanin cekismesi hissi yaratir.
-
-**Neden bu sistem?** Oyuncu Bufe secip rakip Tech Startup ile baslayinca sektorel cekisme hissi zayifliyor. Ayni sektorden baslamak "bu mahallede iki bufe mi olur?" gerilimini ilk turdan verir.
-
-## 1.7.2 Ayna Tablosu
-
-| Oyuncu Secimi | Rakip Baslangic Isleri | Rakip Gelir | Rakip Musteri | Not |
-|---|---|---|---|---|
-| Bufe | Rival Bufe | 50/tur | 3 | Birebir ayni statlar |
-| Tech Startup | Rival Tech Startup | 0 (ilk 3 tur), sonra 150 | 0 (ilk 3 tur), sonra 4 | Ayni delay mekanigi |
-| Reklam Ajansi | Rival Reklam Ajansi | 60/tur | 3 + tum isletmelere +2 | Ayni destek etkisi |
-| Karanlik Pazar | MegaCorp HQ (varsayilan) | 80/tur | 5 | Oyuncunun isletmesi yok, rakip varsayilana doner |
-
-## 1.7.3 Shop Yanliligi (Shop Bias)
-
-Ilk 5 tur boyunca dukkan, oyuncunun girisim sektorune uygun en az 1 kart gosterir:
-
-| Girisim | Zorunlu Tag (3 karttan 1'i) |
-|---|---|
-| Bufe | `food` |
-| Tech Startup | `tech` |
-| Reklam Ajansi | `marketing` |
-| Karanlik Pazar | `illegal` |
-
-Tur 6'dan itibaren dukkan tamamen rastgeledir (yanlilik kalkar).
-
-## 1.7.4 Dinamik Oyun Suresi
-
-Sabit tur limiti kaldirildi. Oyun organik olarak biter:
-
-| Kosul | Sonuc |
-|---|---|
-| Oyuncu 6 bolge alirsa | **KAZANDIN** -- run biter |
-| Rakip 7 bolge alirsa | **KAYBETTIN** -- rakip domine etti |
-| Tur 25 sonrasi | Yumusak cap: her iki taraf da tur basina -%5 gelir cezasi alir (baskiya zorlar) |
-| Tur 30 | Sert cap: kim daha cok bolgeye sahipse kazanir (esitlikte rakip kazanir) |
-
-**Neden?** Sabit 20 tur bazen cok kisa (epik build'ler tamamlanamiyordu), bazen cok uzun (erken domination sonrasi bos turlar). Dinamik sistem hizli oyunlara (tur 12) ve epik maratonlara (tur 28) izin verir. Yumusak cap oyunu bitmeye zorlar, sert cap garantili bir son verir.
-
-## 1.7.5 Isletme Bakimi (Business Maintenance)
-
-Isletmeler surekli ilgi ister. Cok uzun sure ihmal edilen isletmeler verim kaybeder.
-
-**Ihmal Sayaci:** Her isletme icin ayri tutulan bir sayac. Eger bir turda o isletmeye calisan eklenmez VEYA upgrade yapilmazsa sayac +1 artar. Herhangi bir calisan veya upgrade eklendiginde sayac sifirlanir.
-
-| Ihmal Turu | Ardisik Tur | Etki | Gorsel |
-|---|---|---|---|
-| Hafif Ihmal | 4 tur | Gelir -%20 | Isletme karti hafif kararir |
-| Agir Ihmal | 6 tur | Gelir -%40 | Isletme karti belirgin sekilde kararir, uyari ikonu |
-
-**Tasarim Amaci:** Oyuncuyu "kur ve unut" stratejisinden uzaklastirmak. Isletmelere duzenli yatirim yapmak onemli. Bu ayni zamanda calisan ve upgrade kartlarina ek deger katiyor -- sadece stat icin degil, ihmal sayacini sifirlamak icin de kullanilirlar.
-
----
-
-# BÖLÜM 2: MASA DÜZENİ
-
-## 2.1 Masada Ne Var?
+Masa 3 ana bölgeye ayrılır:
 
 ```
-┌──────────────────────────────────────────────────────┐
-│                                                      │
-│  RAKİP TARAFI                                        │
-│  [Rakip İşletme 1]  [Rakip İşletme 2]  [Boş]       │
-│   └─Çalışan          └─Çalışan                      │
-│                                                      │
-│  ┌─────────── BÖLGE HARİTASI ──────────────┐        │
-│  │ [1][2][3][4][5]  [6][7][8][9][10]       │        │
-│  │  ████████░░░░░    ▓▓▓▓▓▓▓░░░░░         │        │
-│  │  SEN: 4 bölge     RAKİP: 3 bölge       │        │
-│  │  Boş: 3 bölge                           │        │
-│  └─────────────────────────────────────────┘        │
-│                                                      │
-│  📰 AKTİF EVENT: "Kahve Çılgınlığı" (1 tur kaldı)  │
-│                                                      │
-│  SENİN TARAFIN                                       │
-│  [İşletme 1]     [İşletme 2]     [ + Yeni Slot ]    │
-│   └─Çalışan 1     └─Çalışan 1                       │
-│   └─Çalışan 2     └─___boş                          │
-│                                                      │
-│  💰 620    ⚖️ FBI: %12    🔄 Tur 8                   │
-│  Aksiyon: ●●● (3 kaldı)                             │
-│                                                      │
-│  ┌────────── ELİNDEKİ KARTLAR ──────────┐           │
-│  │ [Kart] [Kart] [Kart] [Kart] [Kart]  │           │
-│  └──────────────────────────────────────┘           │
-│                                                      │
-│  [DESTE: 22]   [SAT]   [DÜKKAN]   [TUR BİTİR]     │
-└──────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────┐
+│         RAKİP İŞLETME ALANI             │
+│   [Operation] [Staff] [Marketing]       │
+├─────────────────────────────────────────┤
+│           SEMT / MARKET ALANI           │
+│  Müşteri havuzu | Trafik | Trendler     │
+│  Reklam görünürlüğü | Aktif eventler   │
+├─────────────────────────────────────────┤
+│         OYUNCU İŞLETME ALANI            │
+│   [Operation] [Staff] [Marketing]       │
+│   [Supplier]  [Temp Effects]            │
+└─────────────────────────────────────────┘
 ```
 
-## 2.2 Her Alanın Açıklaması
+**Oyuncu İşletme Alanı:** Alt bölge. Slotlar burada.
+**Semt / Market Alanı:** Orta bölge. Müşteri hareketi, trafik, trendler, aktif eventler burada görünür.
+**Rakip İşletme Alanı:** Üst bölge. Rakibin slotları sınırlı bilgiyle görünür (dedektif hissi).
 
-### Bölge Haritası (Ortadaki 10 kutu)
+## 4.2 Kart Yerleştirme Felsefesi
 
-Bu oyunun kazanma mekaniği. Soyut "%60 market share" yerine **görsel alan kontrolü.**
+Kartlar oynanıp çöpe **atılmaz.** Slotlara yerleştirilir ve işletmenin kalıcı parçası olur.
 
-```
-[■][■][■][■][░][░][░][▓][▓][▓]
- SEN: 4      BOŞ: 3   RAKİP: 3
-```
+Bu sistem şunu hissettirmelidir:
+> "Masada gerçek bir işletme kuruyorum. Her kart bir karar, her slot bir yatırım."
 
-- 10 bölge var. Her bölge = %10 market share.
-- Senin bölgelerin (mavi), rakibin bölgeleri (kırmızı), boş bölgeler (gri).
-- **6 bölge ele geçirirsen = KAZANDIN.**
-- **Rakip 7 bölge ele geçirirse = KAYBETTİN.**
-- Bölgeler müşteri sayına göre otomatik dağılır.
+Kartlar görsel olarak işletme dünyasına bağlanır:
+- **Tedarikçi kartları:** Mutfak/depo alanına yerleşir
+- **Marketing kartları:** Semt alanını etkiler (görsel ok animasyonu)
+- **Operation kartları:** Fiziksel mekânı büyütür
+- **Temp kartları:** Aktif kriz/event olarak görünür — çözülünce kalkar
 
-**Neden bu sistem?** Yüzde sayısı soyut. Ama 10 kutunun 6'sını kaplamak GÖRSEL. Oyuncu "1 bölge daha!" derken gerilim hisseder.
+## 4.3 Slot Türleri (Başlangıç)
 
-### Senin Tarafın (Alttaki slotlar)
+### OPERATION SLOTS — 4 adet
+İşletmenin fiziksel altyapısı ve kapasitesi.
 
-Buraya işletme kartlarını koyarsın.
+Buraya yerleşen kartlar:
+- Masa, Mutfak Upgrade, Paket Servis İstasyonu, Kahve Makinesi, Fırın, Self-Service Tezgah, Depo
 
-```
-Başlangıç: 3 slot
-[Slot 1]  [Slot 2]  [Slot 3]
+**Ne kontrol eder:** Müşteri kapasitesi, servis hızı, üretim gücü.
 
-Upgrade ile: 4-5 slot
-[Slot 1]  [Slot 2]  [Slot 3]  [Slot 4]  [Slot 5]
-```
+**Kritik denge:**
+- Az operation → müşteri gelemez, kapasite yetersiz
+- Fazla operation → müşteri yoksa boş kapasite = gereksiz maliyet + kira artışı
 
-**Neden 3 slot?** Az slot = her kart koyma kararı önemli. 10 slot olsa her şeyi koyardın, karar olmazdı.
+### STAFF SLOTS — 5 adet
+Aktif çalışanlar.
 
-Her işletmenin altında **çalışan yuvaları** var:
+Buraya yerleşen kartlar:
+- Aşçı, Kasiyer, Temizlikçi, Kurye, Müdür, Barista, Stajyer, Güvenlik
 
-```
-[Kahveci ☕]
- └─ [Barista]     ← Çalışan 1
- └─ [___boş___]   ← Çalışan 2 (daha koymadın)
-```
+**Ne kontrol eder:** Verimlilik, servis hızı, moral, operasyon stabilitesi.
 
-### Rakip Tarafı (Üstteki slotlar)
+**Kritik denge:**
+- Az personel → müşteri kuyruğu → kötü yorum → puan düşer
+- Fazla personel → gereksiz maaş yükü → kâr erir
+- Düşük moral → hata artar → kalite düşer → müşteri kaçar
 
-Rakip AI'ın işletmeleri. Oyuncu dokunmaz ama görür. Rakibin ne yaptığını takip edersin.
+### MARKETING SLOTS — 3 adet
+Aktif reklam kampanyaları.
 
-### El Kartları (En altta)
+Buraya yerleşen kartlar:
+- Broşür Kampanyası, Influencer Anlaşması, Google Reklamı, TikTok Kampanyası, Billboard, Sosyal Medya Yönetimi
 
-Her tur 5 kart çekersin. Bunlardan 3 tanesini oynayabilirsin (3 aksiyon hakkı).
+**Ne kontrol eder:** Müşteri edinimi, görünürlük, marka bilinirliği.
 
-### Dükkan
+**Kritik uyarı:**
+> Operasyon hazır değilken fazla marketing yapılırsa müşteri patlar → servis çöker → kötü yorum → puan düşer → uzun vadede zarar.
 
-Her turda 3 rastgele kart satılır. Para ile satın alırsın → destene girer.
+### SUPPLIER SLOTS — 2 adet
+Aktif tedarikçi anlaşmaları.
 
----
+Buraya yerleşen kartlar:
+- Premium Kasap, Ucuz Hammadde, Organik Tedarikçi, İçecek Markası Anlaşması, Taze Sebzeci
 
-# BÖLÜM 3: KART TİPLERİ
+**Ne kontrol eder:** Kalite skoru, maliyet, müşteri memnuniyeti, fire riski.
 
-5 tip kart var. Her birinin masadaki yeri ve işlevi farklı.
+**Kritik denge:**
+- 2 slot kısıtlaması → oyuncu kalite mi fiyat mı seçmeli?
+- Premium + Premium = kalite max ama maliyet ağır
+- Ucuz + Ucuz = maliyet düşük ama kalite çöker
 
-## 3.1 İşletme Kartları (Mavi)
+### TEMP EFFECT SLOTS — 3 adet
+Geçici durumlar, aktif krizler, anlık fırsatlar.
 
-**Nereye gider:** Senin tarafındaki boş slota.
-**Ne yapar:** Her tur otomatik para kazanır + müşteri çeker.
-**Kalıcı mı:** Evet. Koyduğun yerde kalır (kapanana kadar).
+Buraya gelen kartlar/eventler:
+- Sağlık Denetimi, Viral Trend, Personel Grevi, İndirim Haftası, Gıda Zehirlenmesi, Google Cezası, Rakip Saldırısı
 
-```
-Kart koyma anı:
-  Boş slot → [Kahveci ☕ koydun] → Anında 5 müşteri token'ı masaya çıkar
-                                    (fiziksel feedback!)
-```
+**Ne kontrol eder:** Anlık baskı ve kaos. Event çözülünce slot boşalır.
 
-**Evrim sistemi:** İşletmeler yeterli müşteri çekince seviye atlar.
+**Kural:** Temp slotlar doluysa yeni event geldiğinde en eski event düşer (veya en ağırı kalır — tasarım kararı).
 
-```
-Büfe (Lv.1)  →  Dükkan (Lv.2)  →  Mağaza (Lv.3)
-💰50/tur        💰80/tur           💰120/tur
-3 müşteri       5 müşteri          8 müşteri
-1 çalışan       2 çalışan          2 çalışan
+## 4.4 Başlangıç Slot Özeti
 
-Koşul: 15 tur boyunca toplam 40 müşteri çekince → seviye atlar
-Efekt: Kart görseliz değişir, stat artar, "LEVEL UP!" text patlar
-```
-
-**MVP İşletmeler (8 adet):**
-
-| # | İsim | Maliyet | Gelir/tur | Müşteri/tur | Çalışan Slot | Özel |
-|---|---|---|---|---|---|---|
-| B01 | Büfe | Bedava | 💰50 | 3 | 1 | Başlangıç kartı. Evrim: Büfe→Restoran→Zincir |
-| B02 | Kahveci | 💰150 | 💰80 | 5 | 2 | Trend aktifken gelir x1.5 |
-| B03 | Burger Zinciri | 💰250 | 💰100 | 6 | 3 | En çok çalışan slotu |
-| B04 | Tech Startup | 💰200 | 💰0→150 | 0→4 | 2 | İlk 3 tur gelir yok, sonra patlama |
-| B05 | Gece Kulübü | 💰350 | 💰180 | 10 | 2 | Sadece trend varken çalışır |
-| B06 | Organik Çiftlik | 💰120 | 💰40 | 2 | 1 | Tüm food işletmelerine +💰20 bonus |
-| B07 | Kripto Borsası | 💰300 | 💰0-250 | 2 | 1 | Her tur zar at: rastgele gelir |
-| B08 | Reklam Ajansı | 💰200 | 💰60 | 3 | 2 | Tüm işletmelere +2 müşteri |
-
-## 3.2 Çalışan Kartları (Yeşil)
-
-**Nereye gider:** Bir işletmenin çalışan yuvasına.
-**Ne yapar:** İşletmenin gücünü artırır. Her birinin passif + aktif yeteneği var.
-**Kalıcı mı:** Evet (ayrılana veya kovulana kadar).
-
-**YENİ: Aktif Yetenek Sistemi**
-
-Her çalışanın 2 yeteneği var:
-
-```
-BARISTA
-├── Passif: +3 müşteri/tur (kahvecide +6)
-└── Aktif: [1 aksiyon harca] "Latte Festivali" → Bu tur müşteri x2
-
-Yani çalışanlar sadece "oturup stat veren" kartlar değil.
-Oyuncu bazen "bu tur Barista'nın aktif yeteneğini mi kullanayım,
-yoksa yeni kart mı oynayayım?" diye karar verir.
-```
-
-**MVP Çalışanlar (10 adet):**
-
-| # | İsim | Maaş/tur | Passif | Aktif (1 aksiyon) | Özel |
-|---|---|---|---|---|---|
-| C01 | Stajyer | 💰15 | +1 müşteri | "Koştur": +3 müşteri bu tur | Zayıf ama ucuz |
-| C02 | Çaylak Pazarlamacı | 💰20 | Gelir +%10 | "Kampanya": +5 müşteri bu tur | Başlangıç kartı |
-| C03 | Barista | 💰25 | +3 müşteri (coffee: +6) | "Latte Festivali": müşteri x2 bu tur | Kahveci combo parçası |
-| C04 | Şef | 💰30 | +3 müşteri (food: gelir+💰30) | "Özel Menü": 1 tur gelir x1.5 | Food combo parçası |
-| C05 | Marketing Gurusu | 💰45 | Gelir +%25 | "Viral Kampanya": tüm işletmelere +3 müşteri | Combo parçası |
-| C06 | Influencer | 💰50 | +5 müşteri (trend: +12) | "Story At": rakipten 5 müşteri çal | Trend bağımlı |
-| C07 | Hacker | 💰60 | Rakipten -4 müşteri | "Veri Sız": rakibin 1 işletmesi 1 tur gelir yok | İllegal, FBI +%10/tur |
-| C08 | Muhasebeci | 💰30 | Vergi -%50 | "Vergi Planı": bu tur vergi %0 (legal) | Sıkıcı ama sağlam |
-| C09 | Dolandırıcı | 💰40 | +💰120/tur (illegal) | "Ponzi": +💰300 ama sonraki tur -💰150 | FBI +%12/tur |
-| C10 | Sadık Müdür | 💰45 | Transfer koruması, +💰20 | "Motivasyon": tüm çalışanlar +1 müşteri bu tur | Savunmacı |
-
-## 3.3 Action Kartları (Kırmızı)
-
-**Nereye gider:** Hiçbir yere. Oynanır, efekt olur, çöpe gider.
-**Ne yapar:** Anlık güçlü etki.
-**Kalıcı mı:** Hayır. Tek kullanımlık.
-
-| # | İsim | Maliyet | Etki |
-|---|---|---|---|
-| A01 | El İlanı | 💰0 | +3 müşteri bu tur (başlangıç kartı) |
-| A02 | Küçük Yatırım | 💰0 | Anında +💰150 (başlangıç kartı) |
-| A03 | Viral Pazarlama | 💰150 | Bu tur TÜM müşteri x2 |
-| A04 | Düşmanca Devralma | 💰400 | Rakibin en zayıf işletmesini kapat |
-| A05 | Sahte Yorumlar | 💰80 | +8 müşteri. FBI +%12 |
-| A06 | Fiyat Kırma | Gelir %50 | Rakipten 8 müşteri çal |
-| A07 | Sabotaj | 💰250 | Rakip 1 tur üretim yapamaz. FBI +%15 |
-| A08 | Yatırımcı Sunumu | 💰0 | +💰600 anında. Sonraki 3 tur gelir %15'i yatırımcıya |
-| A09 | Acil İşe Alım | 💰100 | Desteden rastgele 1 çalışan çek, hemen oyna |
-| A10 | Tasfiye | 1 işletme | İşletmeyi sat, değerinin 2x'i para al |
-
-## 3.4 Upgrade Kartları (Mor)
-
-**Nereye gider:** İşletmenin yanına veya masaya genel.
-**Ne yapar:** Kalıcı iyileştirme.
-**Kalıcı mı:** Evet.
-
-| # | İsim | Maliyet | Etki |
-|---|---|---|---|
-| U01 | Ofis Malzemeleri | 💰0 | 1 işletme gelir +%10 (başlangıç kartı) |
-| U02 | Otomasyon | 💰300 | 1 işletme gelir +%30. Ama 1 çalışan slotu kapanır |
-| U03 | Teslimat Ağı | 💰250 | Tüm işletmelere +2 müşteri/tur |
-| U04 | Reklam Panosu | 💰120 | +3 müşteri/tur (genel) |
-| U05 | Güvenlik Sistemi | 💰280 | FBI riski -%25 |
-| U06 | Yapay Zeka Asistanı | 💰400 | +1 aksiyon hakkı (3→4) |
-
-## 3.5 Event Kartları (Sarı)
-
-**Nereye gider:** Masanın ortasına. Oyuncu oynamaz — otomatik gelir.
-**Ne yapar:** Dünyayı değiştirir. Hem seni hem rakibi etkiler.
-**Kalıcı mı:** 1-2 tur aktif, sonra kalkar.
-
-| # | İsim | Süre | Etki |
-|---|---|---|---|
-| E01 | Kahve Çılgınlığı | 2 tur | Food/coffee işletmeleri +%50 müşteri |
-| E02 | Ekonomik Kriz | 2 tur | TÜM gelirler -%30. İşletme seviyesi düşebilir! |
-| E03 | Viral Trend | 1 tur | Marketing kartları 2x etkili |
-| E04 | Veri Sızıntısı | 1 tur | Tech işletmeleri -5 müşteri (güvenlik varsa bağışık) |
-| E05 | Yatırımcı Sezonu | 1 tur | Finance kartlar 2x etkili |
-| E06 | İptal Kültürü | 1 tur | FBI riski >%30 olan: tüm müşteri -%40 |
-
----
-
-# BÖLÜM 4: BİR TUR NASIL İŞLER
-
-## 4.1 Özet
-
-```
-Her tur 5 adım. Toplam ~1.5 dakika.
-
-ADIM 1: EVENT          → Dünya değişir (sen izlersin)
-ADIM 2: KART ÇEK       → 5 kart alırsın
-ADIM 3: OYNA           → 3 aksiyon harcarsın (ANA KARAR ANI)
-ADIM 4: MASA ÇALIŞIR   → Sistem hesaplar, efektler oynar (sen izlersin)
-ADIM 5: RAKİP OYNAR    → Düşman hamle yapar (sen izlersin)
-```
-
-## 4.2 Adım Adım Detay
-
-### ADIM 1: EVENT (Otomatik — 3 saniye)
-
-Her 3 turda 1 event gelir (tur 3, 6, 9, 12, 15).
-
-```
-Masanın ortasında kart ters duruyordur. Açılır:
-
-  ╔══════════════════════╗
-  ║  📰 KAHVE ÇILGINLIĞI ║
-  ║                      ║
-  ║  Food işletmeleri     ║
-  ║  +%50 müşteri!       ║
-  ║                      ║
-  ║  Süre: 2 tur         ║
-  ╚══════════════════════╝
-
-Ekran efekti: Kart döner, parlak ışık, gazete açılma sesi.
-```
-
-Oyuncu event'i okur ve BU TURA göre strateji kurar:
-- "Kahve trendi geldi, Influencer'ı kahveciye koysam süper olur!"
-- "Kriz geldi, yeni işletme açmak yerine para biriktireyim."
-
-### ADIM 2: KART ÇEK (5 saniye)
-
-Destenden 5 kart çekilir. Masanın altında fan şeklinde dizilir.
-
-```
-ELİN:
-[Burger Zinciri] [Influencer] [El İlanı] [Sahte Yorum] [Otomasyon]
-     mavi            yeşil      kırmızı     kırmızı       mor
-```
-
-**1 redraw hakkın var:** Bir kartı atıp yerine yenisini çekebilirsin.
-
-Karar: "Sahte Yorum bana lazım değil bu tur, değiştireyim."
-
-### ADIM 3: OYNA (30-90 saniye — Ana karar anı)
-
-**3 aksiyon hakkın var.** Her kart oynama = 1 aksiyon. Çalışan aktif yeteneği = 1 aksiyon.
-
-Örnek tur:
-
-```
-Aksiyon 1: Burger Zinciri'ni 3. slota koydum (💰250 ödedim)
-           → Anında: Kart slota snap olur, 6 müşteri token'ı masaya çıkar
-           → Ses: "thud" + "pop pop pop" (müşteriler)
-
-Aksiyon 2: Influencer'ı Kahveci'nin altına koydum
-           → Anında: Influencer kartı yerine oturur
-           → Kahve Çılgınlığı aktif + Influencer = müşteri +12
-           → Tokens masaya akar
-           → "TREND BOOST!" text belirir
-
-Aksiyon 3: Barista'nın aktif yeteneğini kullandım: "Latte Festivali"
-           → Bu tur Kahveci müşterisi x2
-           → Ekran sallanır, kahve efekti
-
-Tur Bitir butonuna bas.
-```
-
-**Oyuncu ayrıca şunları da yapabilir (aksiyon HARCAMAZ):**
-- Kart satmak (istemediği kartı 💰 karşılığı çöpe at)
-- Kart yakmak (💰0 ama deste küçülür = iyi kartları sık çekersin)
-- Dükkanı kontrol etmek
-
-### ADIM 4: MASA ÇALIŞIR (Otomatik — 5-8 saniye)
-
-**Bu an oyunun KALBI. Oyuncu hiçbir şey yapmaz. İzler ve tatmin olur.**
-
-Unity'de bu faz adım adım animasyonla oynar:
-
-```
-───── Adım 4a: İŞLETMELER ÜRETİR ─────
-  Büfe      → ☕☕☕ (3 ürün animasyonu)
-  Kahveci   → ☕☕☕☕☕☕☕☕ (8 ürün — Barista + Influencer + trend!)
-  Burger    → 🍔🍔🍔🍔🍔🍔 (6 ürün)
-
-───── Adım 4b: MÜŞTERİLER KAYAR ─────
-  Bölge haritasındaki token'lar güncellenir:
-  Boş bölgelerden senin tarafına token kayar
-  [■][■][■][■][■][░][░][▓][▓][▓]
-  SEN: 4 → 5!  Animasyon: 5. kutu maviye döner
-
-───── Adım 4c: COMBO KONTROLÜ ─────
-  Barista + Kahveci + Kahve Çılgınlığı = ✅ "LATTE SANATI!"
-  → Ekran sallanır
-  → "COMBO! LATTE SANATI +40💰 +4 müşteri" text patlar
-  → Altın parıltı efekti
-  → Özel ses
-
-───── Adım 4d: GELİR HESAPLANIR ─────
-  💰 +50  Büfe
-  💰 +160 Kahveci (80 + trend×1.5 + combo)
-  💰 +100 Burger
-  💰 -110 Maaşlar (Stajyer+Barista+Influencer+Çaylak)
-  💰 -46  Vergi (%15)
-  ─────────────
-  💰 +154 NET
-  
-  Para counter animasyonla sayar: 620 → 774
-  Ses: "ka-ching ka-ching ka-ching"
-
-───── Adım 4e: BOZULMA KONTROLÜ ─────
-  FBI riski %12 → Zar atılır → %12 < zar(47) → Kurtuldun!
-  Çalışan draması → Bu tur yok
-  İşletme kapanma → Bu tur yok
-```
-
-**BOZULMA MEKANİĞİ — Neden önemli:**
-
-Sadece büyüme varsa oyun monotonlaşır. Masada şeyler **bozulmalı**:
-
-| Bozulma | Tetik | Ne olur | Görsel |
-|---|---|---|---|
-| İşletme kapanması | Kriz event'i sırasında gelir <💰20 olan | 2 tur kapalı (kart ters döner) | Kart griye döner, "KAPALI" damgası |
-| Çalışan ayrılma | 8 turdan fazla çalışan + maaş artışı vermezsen | Kart masadan kalkar | Çalışan yürüyerek çıkar animasyonu |
-| FBI baskını | İllegal risk > zar | Para cezası + illegal çalışan kovulur | Kırmızı flash, siren, rozet animasyonu |
-| Rakip sabotajı | Rakip agresif moddayken | 1 işletme 1 tur çalışmaz | Duman efekti |
-| Müşteri kaybı | Rakip senden bölge alınca | Token'lar senin tarafından karşıya kayar | Token kayma animasyonu |
-
-### ADIM 5: RAKİP OYNAR (Otomatik — 5 saniye)
-
-```
-  🏢 MEGACORP hamle yapıyor...
-  
-  → "Teknoloji Mağazası" açtı
-  → "Pazarlamacı" işe aldı
-  → Senin 2 müşterini çekti
-  
-  Bölge haritası güncellendi:
-  [■][■][■][■][■][░][▓][▓][▓][▓]
-  SEN: 5    RAKİP: 4    Boş: 1
-  
-  💬 "Yaklaşıyorum..." — MegaCorp
-```
-
-Rakip eylemleri ŞEFFAF. Oyuncu ne olduğunu görür, gelecek tura göre plan yapar.
-
----
-
-# BÖLÜM 5: SLOT SİSTEMİ
-
-## 5.1 İşletme Slotları
-
-**Neden sınırlı?** Sınırsız slot = karar yok. 3 slot = "hangisini koyayım?" kararı.
-
-```
-BAŞLANGIÇ: 3 slot
-[Slot 1]  [Slot 2]  [Slot 3]
-
-Her slotun altında çalışan yuvaları var:
-[Slot 1        ]
- └─ [Çalışan 1]
- └─ [Çalışan 2]  ← İşletmeye göre 1-3 arası
-
-Slot açma yolları:
-- "Extra Slot" upgrade kartı (💰800) → +1 slot
-- Ascension 0'da max 5 slot
-```
-
-## 5.2 Çalışan Yuvaları
-
-Her işletmenin kaç çalışan alacağı **o işletmeye bağlı:**
-
-| İşletme | Çalışan Slotu | Neden |
+| Slot Türü | Başlangıç | Maksimum |
 |---|---|---|
-| Büfe | 1 | Küçük işletme |
-| Kahveci | 2 | Orta |
-| Burger Zinciri | 3 | Büyük — çok sinerji potansiyeli ama çok maaş |
-| Tech Startup | 2 | Orta |
-| Gece Kulübü | 2 | Orta |
-| Organik Çiftlik | 1 | Küçük support |
-| Kripto Borsası | 1 | Tek adam operasyonu |
-| Reklam Ajansı | 2 | Orta |
+| Operation | 4 | 8 |
+| Staff | 5 | 10 |
+| Marketing | 3 | 5 |
+| Supplier | 2 | 4 |
+| Temp Effect | 3 | 3 (sabit) |
+| **TOPLAM** | **17** | **30** |
 
-**Çalışanı doğru işletmeye koymak önemli:**
-- Barista → Kahveci'ye koyarsan: +6 müşteri (2x güçlü)
-- Barista → Burger'e koyarsan: +3 müşteri (normal)
+## 4.5 Slot Genişleme Sistemi
 
-Bu karar oyunun temel stratejisi.
+İşletme büyüdükçe yeni slotlar açılır:
 
-## 5.3 Masanın Büyümesi (Tur Tur)
-
-```
-TUR 1:  [Büfe]    [___]    [___]           ← 1 işletme, 1 çalışan
-         └─Stajyer
-
-TUR 5:  [Büfe]    [Kahveci] [___]          ← 2 işletme, 3 çalışan
-         └─Stajyer  └─Barista
-         └─Paz.cı   └─___
-
-TUR 10: [Büfe]    [Kahveci] [Burger]       ← 3 işletme, 5 çalışan, 2 upgrade
-         └─Stajyer  └─Barista └─Şef
-         └─Paz.cı   └─Influer └─Mark.Guru
-                                └─___
-        [Otomasyon] [Teslimat Ağı]         ← Upgrade'ler masada
-
-TUR 15: [Restoran] [Kahve Z.] [Burger Z.] [Reklam A.] ← 4 işletme (2'si evrim geçirmiş)
-         └─Stajyer  └─Barista   └─Şef       └─Mark.Guru
-         └─Paz.cı   └─Influer   └─Müdür     └─___
-                     └─Muhase.   └─Doland.
-        [Otomasyon] [Teslimat] [Güvenlik] [AI Asist.]
-
-MASA DOLU = "İmparatorluk kurdum" hissi
-```
-
----
-
-# BÖLÜM 6: BÖLGE HARİTASI (Kazanma Mekaniği)
-
-## 6.1 Nasıl Çalışır
-
-10 bölge. Her bölge = bir müşteri grubu.
-
-```
-Her turun sonunda:
-  Senin toplam müşteri = işletme + çalışan + combo + upgrade toplamı
-  Rakibin toplam müşteri = rakip hesaplaması
-  
-  10 bölge şöyle dağıtılır:
-  - Senin oranın kadar bölge sana
-  - Rakibin oranın kadar bölge rakibe
-  - Geri kalan boş
-  
-  Örnek:
-  Sen: 45 müşteri, Rakip: 30 müşteri, Toplam market: 100
-  Sen: %45 → 4-5 bölge
-  Rakip: %30 → 3 bölge
-  Boş: 2-3 bölge
-```
-
-## 6.2 Bölge El Değiştirmesi
-
-Bölgeler her tur yeniden hesaplanır. Ama geçiş **animasyonla** olur:
-
-```
-Önceki tur: [■][■][■][■][░][░][░][▓][▓][▓]
-Bu tur:     [■][■][■][■][■][░][░][░][▓][▓]
-                          ↑              ↑
-                    Boş→Sana        Rakipten→Boşa
-
-Animasyon: Token mavi renge döner (senin tarafına geçiş)
-Ses: "ding" + çıtırtı
-```
-
-## 6.3 Kazanma / Kaybetme
-
-| Durum | Sonuç |
+| Tier | Açılan Slotlar |
 |---|---|
-| 6+ bolge senin | **KAZANDIN** -- Run biter |
-| 7+ bolge rakibin | **KAYBETTIN** -- Rakip domine etti |
-| Paran 0'a duserse | **IFLAS** -- Run biter |
-| Tur 25+ | Yumusak cap: -%5 gelir cezasi/tur (iki tarafa) |
-| Tur 30, 6 bolge yok | Sert cap: en cok bolgeye sahip olan kazanir |
+| Tier 1 → Tier 2 (Girişimci) | Marketing +1 |
+| Tier 2 → Tier 3 (Şirket) | Staff +2, Operation +2 |
+| Tier 3 → Tier 4 (Holding) | Supplier +1, Marketing +1 |
+| İkinci Şube Açıldığında | Operation +2 (yeni şube) |
 
-**Dinamik bitis:** %60'a (6 bolge) ulastigin AN run biter. Sabit tur limiti yok. Erken bitirirsen bonus skor. Tur 25'ten sonra baski artar, tur 30'da oyun kesin biter.
+## 4.6 Slot Baskısı ve Strateji
 
----
+**Slot kısıtlaması oyunun stratejik derinliğini buradan alır.**
 
-# BÖLÜM 7: COMBO SİSTEMİ
+Oyuncu her tur şu soruları sorar:
+- "Marketing slotum dolu — Influencer mı çıkarsam, Google Reklamı mı bıraksam?"
+- "Staff slotuma başka çalışan almak için kimi çıkarmam lazım?"
+- "Temp slotum dolu, yeni kriz geliyor — hangisini çözmeliyim önce?"
 
-## 7.1 Combo Nedir
+## 4.7 Build Arketipleri
 
-2-3 kart aynı anda masadayken otomatik tetiklenen sinerji.
+Slot kısıtlamaları farklı oyun stilleri doğurur:
 
-**Combo ANINDA tetiklenir.** Adım 4'ü (sistem çalışır) beklemez. Kart koyduğun an koşul sağlanıyorsa → patlama.
+### 1. Agresif Marketing Build
+Marketing 3/3 dolu. Hızlı müşteri artışı. Operation slotları yetersiz kalırsa servis çöker.
+- **Risk:** Operasyon krizi → kötü yorum spirali
+- **Ödül:** Hızlı market share kazanımı
 
-## 7.2 10 Combo
+### 2. Premium Kalite Build
+Güçlü tedarikçiler + iyi personel. Az reklam. Müşteri sadakati yüksek.
+- **Risk:** Yavaş büyüme, rakip önce dominasyon alabilir
+- **Ödül:** Stabil gelir, düşük kriz riski
 
-| # | İsim | Gerekli Kartlar | Bonus | Zorluk |
-|---|---|---|---|---|
-| 1 | Latte Sanatı | Kahveci + Barista | Kahveci gelir +💰40, +4 müşteri | Kolay |
-| 2 | Organik Sinerji | Organik Çiftlik + herhangi food işletme | Tüm food'lara +💰30 | Kolay |
-| 3 | Güvenli Suç | Güvenlik Sistemi + illegal çalışan | FBI risk artışı %50 azalır | Kolay |
-| 4 | Viral Fırtına | Influencer + Viral Trend event'i | Influencer'ın işletmesi müşteri x3 | Orta |
-| 5 | Fast Food İmparatorluğu | Burger + Şef + Teslimat Ağı | Burger gelir x2, serbest müşterilerin %30'u sana | Orta |
-| 6 | Yeraltı İmparatorluğu | Dolandırıcı + Hacker | +💰200/tur ekstra. FBI +%8 ekstra | Orta |
-| 7 | Reklam Bombardımanı | Reklam Ajansı + Mark. Guru + Reklam Panosu | Tüm işletmelere +8 müşteri | Zor |
-| 8 | Kriz Avcısı | Para >💰1000 + Ekonomik Kriz event | Dükkan %50 indirim, rakipten 1 çalışan transfer | Orta |
-| 9 | AI Devrimi | Tech Startup(aktif) + Otomasyon + AI Asistanı | Tech gelir x3, +1 ekstra aksiyon | Zor |
-| 10 | Monopol | 6+ bölge senin + 4 işletme aktif | Tüm gelir +%20, rakip tur başı -3 müşteri | Otomatik |
+### 3. Ucuz Genişleme Build
+Düşük maaş, ucuz hammadde, hızlı operation büyümesi.
+- **Risk:** Kalite düşüklüğünden puan çöküşü, personel istifaları
+- **Ödül:** Erken kapasite avantajı
 
-## 7.3 Combo Feedback
-
-Combo tetiklendiğinde (anında):
-1. **Ekran sallanır** (screen shake, 0.3 saniye)
-2. **Büyük text belirir** ("LATTE SANATI!" golden text, yukarı kayarak kaybolur)
-3. **Özel ses çalar** (combo_trigger.wav)
-4. **Kart çevresinde parıltı** (glow efekti 2 saniye)
-5. **Bonus uygulanır** (para counter hızla sayar, müşteri token'ları akar)
+### 4. Dengeli Stabil Build
+Tüm slotlarda orta seviye yatırım. Düşük risk, yavaş dominasyon.
+- **Risk:** Agresif rakibe yavaş kalır
+- **Ödül:** Krizlere dayanıklılık
 
 ---
 
-# BÖLÜM 8: RAKİP AI
+# BÖLÜM 5: EKONOMİ SİSTEMİ
 
-## 8.1 Rakip Ne Yapar
-
-Rakip de aynı kurallarla oynuyor (hile yok). Her tur 2 hamle yapar.
-
-**Karar ağacı (basit, rule-based):**
+## 5.1 Temel Formül
 
 ```
-HER TUR:
-  1. Senin bölge sayın > 5 ise → AGRESIF: sabotaj veya müşteri çalma
-  2. Rakip para > işletme maliyeti VE 3'ten az işletme → YENİ İŞLETME
-  3. Boş çalışan slotu var → ÇALIŞAN AL
-  4. Event rakibe uygun → EVENT BONUSU KULLAN
-  5. Hiçbiri değilse → NORMAL BÜYÜME (+💰50, +2 müşteri)
+Net Kâr = Gelir - Giderler
+
+Gelir = müşteri_sayısı × ortalama_harcama × kalite_katsayısı
+Giderler = kira + maaşlar + hammadde + reklam + bakım + vergi + kredi_faizi
 ```
 
-## 8.2 Rakip Kişiliği
+## 5.2 Nakit Akışı
 
-MVP'de 1 rakip: **MegaCorp** (Normal zorluk)
+**Nakit akışı kârdan önce gelir.** Kârlı ama nakitsiz işletme iflas eder.
 
-```
-MegaCorp:
-- Strateji: Dengeli büyüme, orta agresiflik
-- Kişilik: Kurumsal, soğuk
-- Taunt'lar:
-  → Büyürken: "Pazar payımız artıyor."
-  → Sen büyürken: "İlginç bir hamle..."
-  → Agresifken: "Bu sektörde ikimize yer yok."
-  → Kaybederken: "Bu böyle bitmez."
-```
+Örnek senaryo:
+- Aylık gelir: 100K TL
+- Aylık gider: 90K TL (kârlı görünüyor)
+- Ama: Yemeksepeti ödemesi 30 gün sonra, maaş bu hafta → nakit yok → iflas
 
-## 8.3 Rakip Büyüme Takvimi
+**Oyun mekaniği:** Her tur sonunda nakit bakiye kontrol edilir. Negatife düşerse "Nakit Kriz" event'i tetiklenir. 3 tur üst üste negatif = iflas.
 
-| Tur | Rakip Durumu |
-|---|---|
-| 1 | 1 isletme (girisim aynasi -- oyuncuyla ayni tip), 1 calisan. Bolge: 2 |
-| 5 | 2 isletme, 2-3 calisan. Bolge: 3 |
-| 8 | 2-3 isletme, 3-4 calisan. Bolge: 3-4 |
-| 12 | 3 isletme, 4-5 calisan, agresif. Bolge: 4-5 |
-| 15 | 3-4 isletme, 5-6 calisan. Bolge: 4-6 |
-| 20 | 4 isletme, 6-7 calisan. Bolge: 5-6 |
-| 25+ | Yumusak cap etkili -- rakip de -%5 gelir/tur. Bolge: 5-7 |
+## 5.3 Gelir Kaynakları
 
----
-
-# BÖLÜM 9: EKONOMİ
-
-## 9.1 Para Akışı
-
-```
-HER TUR:
-  + İşletme gelirleri (otomatik)
-  + Combo bonusları
-  + İllegal gelirler (Dolandırıcı vs.)
-  - Çalışan maaşları (otomatik)
-  - Vergi (brüt gelir × %15, muhasebeci ile %7.5)
-  = NET → Paraya eklenir/çıkarılır
-
-Para 0'a düşerse = İFLAS = oyun biter
-```
-
-## 9.2 Denge Hedefleri
-
-| Tur | Beklenen Para | Beklenen Bolge | His |
-|---|---|---|---|
-| 1-5 | 400-600 | 1-2 | Para siki, her kurus onemli. Shop yanliligi yardimci |
-| 6-12 | 600-1200 | 2-4 | Ilk combo, buyume, ihmal sayacina dikkat |
-| 13-20 | 1000-2500 | 4-6 | Motor calisiyor, rakip baskisi, bolge kavgasi |
-| 21-24 | 2000-3500 | 5-6 | Final kavgasi, kriz riski, cogu oyun burada biter |
-| 25-30 | Azalan (-%5/tur) | 5-7 | Yumusak cap baskisi, her iki taraf zayifliyor |
-
-## 9.3 FBI Sistemi
-
-```
-İllegal kart kullanınca → FBI risk sayacı artar
-Her tur sonu → kontrol:
-  random(0-100) < FBI risk → BASKIN!
-  
-BASKIN:
-  → 💰300 ceza
-  → En pahalı illegal çalışan kovulur
-  → Risk sıfırlanır
-  
-Güvenlik Sistemi: risk artışını %50 azaltır
-```
-
----
-
-# BÖLÜM 10: RUN YAPISI
-
-## 10.1 Dinamik Tur Yapisi, 4 Asama
-
-```
-ASAMA 1: KURULUS (Tur 1-5)
-+-- Ilk isletme + calisanlar
-+-- Para sikintisi
-+-- Basit kararlar
-+-- Oyuncu mekanigi ogrenir
-+-- Ilk combo kesfi (tur 4-5)
-+-- Shop yanliligi aktif (girisim sektorune uygun kart)
-
-ASAMA 2: BUYUME (Tur 6-15)
-+-- 2-3 isletme aktif
-+-- Combo'lar gucleniyor
-+-- Rakip agresiflesiyor
-+-- Eventler stratejiyi degistiriyor
-+-- Bolge kavgasi kizisiyor
-+-- Ihmal sayaclarina dikkat (4+ tur = gelir dususu)
-
-ASAMA 3: GECIS (Tur 16-24)
-+-- Ya domine et ya hayatta kal
-+-- Buyuk combo'lar / riskli hamleler
-+-- Krizler ve bozulmalar
-+-- 6. bolgeye ulasirsan run biter (erken bitis bonusu)
-
-ASAMA 4: BASKI (Tur 25-30)
-+-- Yumusak cap: Her tur -%5 gelir cezasi (iki tarafa da)
-+-- Oyun bitise zorlanir
-+-- Tur 30 = SERT CAP: En cok bolgeye sahip olan kazanir
-```
-
-## 10.2 Dinamik Bitis
-
-Run sabit turda bitmez. Organik olarak sona erer:
-- 6 bolge aldigin anda -> "MARKET HAKIMIYETI!" -> Run biter + bonus
-- Tur 8'de 6 bolge aldiysan = "Speed Run" basarimi
-- Tur 25 sonrasi: yumusak cap -- her iki taraf tur basina -%5 gelir cezasi alir
-- Tur 30: sert cap -- en cok bolgeye sahip olan kazanir (esitlikte rakip kazanir)
-
-## 10.3 Skor
-
-| Metrik | Puan |
-|---|---|
-| Final bölge sayısı | × 500 |
-| Toplam kazanılan para | × 1 |
-| Aktif combo sayısı | × 200 |
-| Aktif işletme sayısı | × 100 |
-| Erken bitiş bonusu | Kalan tur × 300 |
-| FBI'dan kaçma | Her kaçış × 50 |
-| Kazandıysan | +1000 |
-
----
-
-# BÖLÜM 11: META PROGRESSION
-
-Run'lar arası kalıcı ilerleme.
-
-```
-Her run → XP kazanırsın (skor bazlı)
-
-XP → Yeni kartlar açılır:
-  50 XP  → Uncommon kartlar dükkan havuzuna girer
-  200 XP → Rare kartlar
-  500 XP → Yeni rakip açılır (Shadow Inc.)
-  1000 XP → Epic kartlar
-  2000 XP → Yeni rakip (The Cartel)
-  5000 XP → Legendary kartlar
-
-Ascension sistemi (run kazandıkça):
-  Ascension 1 → Rakip daha agresif
-  Ascension 2 → Başlangıç parası 💰400 (💰500 yerine)
-  Ascension 3 → Kriz eventleri daha sık
-```
-
----
-
-# BÖLÜM 12: UNITY SAHNE TASARIMI
-
-## 12.1 Sahne Listesi
-
-```
-Scenes/
-├── Boot.unity          ← Splash screen, yükleme
-├── MainMenu.unity      ← Ana menü
-├── Game.unity          ← Ana oyun sahnesi (TEK SAHNE)
-└── Score.unity         ← Run sonu skor ekranı (overlay olarak da olabilir)
-```
-
-## 12.2 Game.unity — Hierarchy
-
-```
-Game (Scene Root)
-│
-├── ─── MANAGERS ───
-│   ├── GameManager          [GameManager.cs]
-│   │                         Tur yönetimi, state machine, oyun akışı
-│   ├── TurnManager          [TurnManager.cs]
-│   │                         5 faz döngüsü, faz geçişleri
-│   ├── EconomyManager       [EconomyManager.cs]
-│   │                         Para, gelir, gider, vergi hesaplama
-│   ├── ComboSystem          [ComboSystem.cs]
-│   │                         Aktif kartları tara, combo tetikle
-│   ├── EventSystem          [EventSystem.cs]
-│   │                         Event destesi, çekme, uygulama
-│   ├── RivalAI              [RivalAI.cs]
-│   │                         Karar ağacı, hamle, büyüme
-│   ├── DeckManager          [DeckManager.cs]
-│   │                         Deste, çekme, atma, karıştırma
-│   ├── ShopManager          [ShopManager.cs]
-│   │                         Dükkan kartları, satın alma
-│   ├── SaveManager          [SaveManager.cs]
-│   │                         JSON save/load, meta progression
-│   └── AudioManager         [AudioManager.cs]
-│                              Müzik, SFX, volume
-│
-├── ─── KAMERA ───
-│   └── Main Camera          [CameraController.cs]
-│                              Ortographic, screen shake
-│
-├── ─── MASA (BOARD) ───
-│   ├── Background           [SpriteRenderer]
-│   │                         Ahşap/kumaş masa dokusu
-│   │
-│   ├── TerritoryMap         [TerritoryMap.cs]
-│   │   ├── Slot_01          [TerritorySlot.cs] — her biri bir bölge
-│   │   ├── Slot_02
-│   │   ├── ...
-│   │   └── Slot_10
-│   │   │                     10 bölge kutusu, renk değişimi (mavi/kırmızı/gri)
-│   │
-│   ├── EventArea            [EventDisplay.cs]
-│   │   └── EventCard        Aktif event kartı gösterimi
-│   │
-│   ├── PlayerArea           [PlayerArea.cs]
-│   │   ├── BusinessSlot_01  [BusinessSlot.cs]
-│   │   │   ├── BusinessCard [CardUI.cs] — işletme kartı görseli
-│   │   │   ├── EmpSlot_01   [EmployeeSlot.cs] — çalışan yuvası
-│   │   │   └── EmpSlot_02
-│   │   ├── BusinessSlot_02
-│   │   │   ├── BusinessCard
-│   │   │   ├── EmpSlot_01
-│   │   │   └── EmpSlot_02
-│   │   ├── BusinessSlot_03
-│   │   ├── BusinessSlot_04  (başta gizli, upgrade ile açılır)
-│   │   └── BusinessSlot_05  (başta gizli)
-│   │
-│   ├── RivalArea            [RivalArea.cs]
-│   │   ├── RivalSlot_01     [RivalDisplay.cs]
-│   │   ├── RivalSlot_02
-│   │   └── RivalSlot_03
-│   │   │                     Rakip işletme + çalışan gösterimi (read-only)
-│   │
-│   ├── UpgradeArea          [UpgradeArea.cs]
-│   │   └── UpgradeSlot_01-04 Aktif upgrade kartları
-│   │
-│   └── DiscardPile          [DiscardPile.cs]
-│       └── SellZone         Kart satma/yakma alanı
-│
-├── ─── EL (HAND) ───
-│   └── HandArea             [HandManager.cs]
-│       ├── CardSlot_01      [CardUI.cs + CardDrag.cs]
-│       ├── CardSlot_02      DOTween ile fan düzeni
-│       ├── CardSlot_03      Hover: kart büyür, detay gösterir
-│       ├── CardSlot_04      Drag: kart sürüklenir, valid slot'lar yanar
-│       └── CardSlot_05      Drop: kart snap olur + efekt patlar
-│
-├── ─── UI (Canvas) ───
-│   └── GameCanvas           [Canvas — Screen Space Overlay]
-│       ├── TopBar            [TopBarUI.cs]
-│       │   ├── MoneyDisplay  💰 sayacı (TextMeshPro + DOTween counter)
-│       │   ├── TurnCounter   "Tur 8/15"
-│       │   └── FBIRiskBar    Tehlike barı (yeşil→kırmızı)
-│       │
-│       ├── ActionBar         [ActionBarUI.cs]
-│       │   ├── ActionDot_1   ● (dolu/boş)
-│       │   ├── ActionDot_2   ●
-│       │   ├── ActionDot_3   ●
-│       │   └── ActionDot_4   (upgrade ile açılır)
-│       │
-│       ├── EndTurnButton     [Button — "TUR BİTİR"]
-│       ├── ShopButton        [Button — "DÜKKAN"]
-│       ├── DeckButton        [Button — "DESTE: 22"]
-│       │
-│       ├── ShopPanel         [ShopPanel.cs — overlay, başta gizli]
-│       │   ├── ShopCard_1
-│       │   ├── ShopCard_2
-│       │   ├── ShopCard_3
-│       │   └── CloseButton
-│       │
-│       ├── ComboPopup        [ComboPopup.cs — combo text animasyonu]
-│       ├── EventPopup        [EventPopup.cs — event kart açılış animasyonu]
-│       ├── RivalPopup        [RivalPopup.cs — rakip hamle gösterimi]
-│       │
-│       └── ScoreOverlay      [ScoreScreen.cs — run sonu, başta gizli]
-│           ├── ScoreBreakdown
-│           ├── FinalGrade
-│           └── PlayAgainButton
-│
-└── ─── EFEKTLER ───
-    └── VFXPool              [EffectPool.cs — object pooling]
-        ├── CoinRainPrefab   [ParticleSystem] — para yağmuru
-        ├── ComboGlowPrefab  [SpriteRenderer + DOTween] — kart parıltısı
-        ├── TokenMovePrefab  [SpriteRenderer + DOTween] — müşteri token hareketi
-        └── ScreenFlashPrefab [Image + DOTween] — kırmızı/altın flash
-```
-
-## 12.3 ScriptableObject Yapısı
-
-### CardData.cs
-```csharp
-[CreateAssetMenu(fileName = "NewCard", menuName = "EoC/Card Data")]
-public class CardData : ScriptableObject
-{
-    [Header("Temel")]
-    public string cardId;           // "B02_kahveci"
-    public string cardName;         // "Kahveci"
-    public CardType type;           // Business, Employee, Action, Upgrade, Event
-    public Rarity rarity;           // Common, Uncommon, Rare
-    public int buyCost;             // Dükkan fiyatı
-    public string description;
-    public Sprite icon;
-    public Sprite cardFrame;        // Tip rengine göre
-
-    [Header("İşletme")]
-    public int incomePerTurn;
-    public int customersPerTurn;
-    public int employeeSlots;
-    public string[] tags;           // "food", "coffee", "trendy"
-
-    [Header("Çalışan")]
-    public int salaryPerTurn;
-    public string passiveEffect;
-    public string activeAbilityName;
-    public string activeAbilityDesc;
-    public int fbiRiskPerTurn;      // 0 = legal
-
-    [Header("Action")]
-    public string actionEffect;
-    public int actionCost;
-
-    [Header("Upgrade")]
-    public string upgradeEffect;
-    public bool isGlobal;           // true = tüm masayı etkiler
-
-    [Header("Event")]
-    public int duration;            // Kaç tur aktif
-    public string eventEffect;
-}
-```
-
-### ComboData.cs
-```csharp
-[CreateAssetMenu(fileName = "NewCombo", menuName = "EoC/Combo Data")]
-public class ComboData : ScriptableObject
-{
-    public string comboId;
-    public string comboName;        // "Latte Sanatı"
-    public string[] requiredTags;   // {"coffee", "barista_active"}
-    public string[] requiredCardIds;// Spesifik kart gerekiyorsa
-    public bool requiresEvent;      // Event bağımlı mı
-    public string requiredEventId;
-
-    [Header("Bonus")]
-    public int bonusIncome;
-    public int bonusCustomers;
-    public float incomeMultiplier;  // 1.0 = normal, 2.0 = x2
-
-    [Header("Feedback")]
-    public string displayText;      // "LATTE SANATI!"
-    public Color glowColor;
-    public AudioClip comboSound;
-}
-```
-
-## 12.4 State Machine (Tur Akışı)
-
-```csharp
-public enum TurnPhase
-{
-    EVENT_PHASE,      // Event çek ve göster
-    DRAW_PHASE,       // 5 kart çek
-    PLAY_PHASE,       // Oyuncu kart oynar (3 aksiyon)
-    RESOLVE_PHASE,    // Sistem hesaplar, animasyonlar oynar
-    RIVAL_PHASE,      // Rakip AI hamle yapar
-    TURN_END          // Tur sonu kontrolleri, sonraki tura geçiş
-}
-
-// TurnManager her phase'i sırayla çalıştırır.
-// Her phase bir Coroutine veya async Task.
-// Phase geçişlerinde kısa bekleme (animasyon süresi).
-```
-
-## 12.5 Kart Sürükle-Bırak (CardDrag.cs)
-
-```
-OYUNCU KARTI SÜRÜKLEMEYE BAŞLADIĞINDA:
-  1. Kart büyür (DOTween scale 1.0 → 1.2)
-  2. Geçerli hedefler YANAR (yeşil glow):
-     - İşletme kartıysa → boş business slot'lar yanar
-     - Çalışan kartıysa → uygun işletmelerin çalışan yuvaları yanar
-     - Upgrade kartıysa → işletmeler + genel alan yanar
-     - Action kartıysa → masanın ortası yanar
-
-OYUNCU KARTI GEÇERLİ HEDEFE BIRAKTIĞINDA:
-  1. Kart hedefe SNAP olur (DOTween pozisyon, 0.2s)
-  2. "thud" sesi çalar
-  3. Aksiyon sayacı 1 azalır (●●● → ●●○)
-  4. ANLIK feedback:
-     - İşletme: müşteri token'ları çıkar
-     - Çalışan: işletme kısa parlama efekti
-     - Combo tetiklendiyse: COMBO efekti patlar
-  5. Para güncellenir (maliyet varsa)
-
-OYUNCU KARTI GEÇERSİZ YERE BIRAKTIĞINDA:
-  1. Kart eline geri döner (DOTween, 0.3s)
-  2. "buzz" sesi
-```
-
----
-
-# BÖLÜM 13: GÖRSEL & SES
-
-## 13.1 Stil
-
-**Flat 2D + depth.** Satirik business karikatür.
-
-- Kartlar temiz, okunabilir, renkli kenarlar
-- Masa ahşap doku, sıcak tonlar
-- Token'lar fiziksel jeton hissi (hafif gölge)
-- Efektler parlak, abartılı (juice > gerçekçilik)
-
-## 13.2 Minimum Ses Listesi (Prototip)
-
-| Ses | Kullanım |
-|---|---|
-| card_place | Kart konunca |
-| card_draw | Kart çekince |
-| coin_ching | Para kazanınca |
-| coin_cascade | Büyük para (combo) |
-| combo_trigger | Combo patlarken |
-| negative_buzz | Kötü olay |
-| button_click | UI tıklama |
-| turn_bell | Yeni tur |
-
-## 13.3 Müzik (2 parça, crossfade)
-
-1. **Sakin** — Erken turlar, dükkan, menü. Lofi jazz.
-2. **Yoğun** — Geç turlar, rakip baskısı, kriz. Tempolu, bass.
-
----
-
-# BÖLÜM 14: GELİŞTİRME PLANI
-
-## Revize Takvim (32 Hafta)
-
-```
-HAFTA 1-4: PROTOTİP
-  ✦ Kart sürükle-bırak (Unity)
-  ✦ 3 slot, 5 test kartı
-  ✦ Basit ekonomi (para artsın)
-  ✦ 1 tur döngüsü çalışsın
-  ✦ Bölge haritası (10 kutu)
-  ✦ Juice: screen shake + coin rain + combo text
-  → TEST: "Kart koymak eğlenceli mi?"
-
-HAFTA 5-10: CORE LOOP
-  ✦ 5 faz tur sistemi
-  ✦ 20 kart (yarısı)
-  ✦ 5 combo + feedback
-  ✦ 1 rakip AI
-  ✦ Event sistemi
-  ✦ Dükkan
-  ✦ 5 harici playtester bul
-  → TEST: "Bir run eğlenceli mi?"
-
-HAFTA 11-16: MVP
-  ✦ 40 kart tamamı
-  ✦ 10 combo
-  ✦ İşletme evrim sistemi
-  ✦ Çalışan aktif yetenek
-  ✦ Bozulma mekaniği (kapanma, ayrılma, FBI)
-  ✦ Ses efektleri (8 SFX)
-  ✦ 2 müzik parçası
-  ✦ Skor ekranı
-  ✦ STEAM SAYFASI AÇILIR (hafta 14)
-  → TEST: Demo build
-
-HAFTA 17-22: POLISH + DEMO
-  ✦ Balance pass (playtest verileriyle)
-  ✦ Next Fest demo
-  ✦ Trailer
-  ✦ Streamer outreach
-  ✦ Meta progression (unlock sistemi)
-  ✦ 3 Ascension seviyesi
-
-HAFTA 23-28: EARLY ACCESS
-  ✦ EA lansmanı (40 kart)
-  ✦ Topluluk geri bildirimi
-  ✦ Balance düzeltmeleri
-  ✦ Bug fix
-
-HAFTA 29-32: İLK GÜNCELLEME
-  ✦ +20 kart
-  ✦ +5 combo
-  ✦ 2. rakip tipi
-```
-
----
-
-# BÖLÜM 15: KURALLAR ÖZETİ (Tek Sayfa)
-
-Tüm oyunu tek sayfada özetleyen referans:
-
-```
-═══════════════════════════════════════════
-         EMPIRE OF CARDS — KURALLAR
-═══════════════════════════════════════════
-
-AMAÇ: 10 bölgeden 6'sını ele geçir.
-
-BAŞLANGIÇ: 💰500, 14 kart deste, 3 slot.
-
-HER TUR (5 adım):
-  1. EVENT    → Her 3 turda 1 event açılır
-  2. ÇEK      → 5 kart çek, 1 redraw
-  3. OYNA     → 3 aksiyon: kart koy veya yetenek kullan
-  4. SİSTEM   → Gelir, müşteri, combo, FBI kontrolü
-  5. RAKİP    → AI 2 hamle yapar
-
-KART TİPLERİ:
-  Mavi   = İşletme  → Slota koy, kalıcı, gelir üretir
-  Yeşil  = Çalışan  → İşletmeye koy, passif + aktif yetenek
-  Kırmızı = Action  → Tek kullanım, güçlü etki
-  Mor    = Upgrade  → Kalıcı iyileştirme
-  Sarı   = Event    → Otomatik, dünyayı değiştirir
-
-PARA:
-  + İşletme gelirleri
-  + Combo bonusları
-  - Çalışan maaşları (otomatik)
-  - Vergi %15 (muhasebeci: %7.5)
-  Para = 0 → İFLAS
-
-BOLGE (market share):
-  Musterilerin cok -> bolge cok
-  6 bolge = KAZANDIN
-  Rakip 7 bolge = KAYBETTIN
-  Tur 25+: -%5 gelir/tur (yumusak cap)
-  Tur 30: en cok bolgeye sahip olan kazanir (sert cap)
-
-COMBO:
-  2-3 kart aynı anda aktif → otomatik tetiklenir
-  Bonus gelir/müşteri + görsel efekt
-
-FBI:
-  İllegal kart = risk artar
-  Her tur sonu zar atılır
-  Yakalanırsan: 💰300 ceza + çalışan kovulur
-
-DÜKKAN:
-  Her tur 3 kart satılır
-  Para ile satın al → destene girer
-
-═══════════════════════════════════════════
-```
-
----
-
-> Bu dokuman v2.2'dir. Tum tartisma, premortem, ve tasarim revizyonlarini icerir.
-> v2.1 eklemeleri: Rakip Ayna Sistemi, Shop Yanliligi, Isletme Bakimi, Dinamik Oyun Suresi
-> v2.2 eklemeleri: Appendix A -- Sektor Deneyim Senaryolari, Etik Ikilem Sistemi, Sonuc Zinciri
-> Engine: Unity (C#) | Son guncelleme: 2026-05-20
-
----
-
-# APPENDIX A: SEKTOR DENEYIM SENARYOLARI (Business Experience Scenarios)
-
-> Bu appendix, her is tipi icin GERCEKCI hikaye akislari, etik ikilemler, kestirme yollar ve sonuclari tasarlar. Oyuncu sadece kart koymaz -- gercek is kararlari verir.
-
----
-
-## A.1 TASARIM FELSEFESI
-
-Empire of Cards bir "is kurma simulasyonu" degil, bir **is DENEYIMI simulasyonu**dur. Oyuncu sunu hissetmeli:
-
-1. **Kestirme yollar CAZIP gorunmeli** -- anlik kazanc buyuk, risk belirsiz
-2. **Risk GECKMELI olmali** -- FBI belki gelir... belki gelmez
-3. **Kucuk adimlar buyuk sorunlara donusmeli** -- "bir kerelik" psikolojisi
-4. **Durust yol YAVAS ama GUVENLI olmali** -- sabir oduller
-5. **Geri donus MUMKUN ama PAHALI olmali** -- iflas = oyun sonu degil
-
----
-
-## A.2 ETIK IKILEM SISTEMI (Ethical Dilemma System)
-
-### A.2.1 Temel Mekanik
-
-Her riskli action/upgrade karti oynandiginda, ekranda **Ikilem Popup** cikar:
-
-```
-  +================================+
-  |   KARAR ZAMANI                 |
-  |                                |
-  |   "Sahte Yorumlar" oynamak    |
-  |   istiyorsun.                  |
-  |                                |
-  |   KAZANC: +8 musteri HEMEN    |
-  |   RISK: FBI +%12              |
-  |   (Mevcut FBI: %8 -> %20)     |
-  |                                |
-  |   [ONAYLA]     [VAZGEC]       |
-  +================================+
-```
-
-**Tasarim Kurali:** Kazanc SOMUT ve ANLIK gosterilir ("+8 musteri HEMEN"). Risk SOYUT ve BELIRSIZ gosterilir ("FBI +%12" -- bu ne demek? Yakalanir miyim?). Bu asimetri gercek is hayatindaki yolsuzluk psikolojisini yansitir.
-
-### A.2.2 "Sadece Bir Kerelik" Mekaniği (Escalation Tracker)
-
-Oyun her illegal/risky aksiyonu sessizce sayar. Artan sayi sunu tetikler:
-
-| Illegal Aksiyon Sayisi | Etki |
-|---|---|
-| 1-2 | Normal FBI risk artisi |
-| 3-4 | FBI risk artisi x1.5 (suc profili olusuyor) |
-| 5-6 | FBI risk artisi x2.0 + "Supheli Sirket" etiketi (rival taunt degisir) |
-| 7+ | FBI risk artisi x2.5 + event havuzuna "Buyuk Juri Sorusturmasi" eklenir |
-
-Oyuncu bunu GORMEZ. Sadece hisseder: "Neden FBI riskim bu kadar hizli artiyor?"
-
-### A.2.3 Cazibe Tasarimi (Temptation Design)
-
-Her riskli kartin "cazip ani" vardir -- ozellikle su durumlarda popup icinde EKSTRA motivasyon gosterilir:
-
-| Durum | Ekstra Cazibe |
-|---|---|
-| Paran < 200 | "Iflasin 1 tur uzaginda. Bu seni kurtarabilir." |
-| Rakip 5+ bolge | "Rakip domine ediyor. Normal yoldan yetisemezsin." |
-| Son 5 tur (25+) | "Son sanslar... kural kitabini yak." |
-| Combo icin 1 kart eksik | "Bu karti oynarsan COMBO tetiklenir!" |
-
----
-
-## A.3 SONUC ZINCIRI (Consequence Chain)
-
-5 katli sonuc sistemi. Her kat oncekinden agir ama GERI DONUS mekanigi var.
-
-### Seviye 1: UYARI (Warning)
-
-| Ozellik | Deger |
-|---|---|
-| Tetik | FBI riski %15-25 arasinda yakalanma |
-| Ceza | 150 para cezasi |
-| Gorsel | Sari flash, uyari sesi, "UYARI: Supheli faaliyet tespit edildi" |
-| Geri Donus | Otomatik -- cezayi ode, devam et |
-
-### Seviye 2: GECICI KAPANMA (Temporary Shutdown)
-
-| Ozellik | Deger |
-|---|---|
-| Tetik | FBI riski %25-40 arasinda yakalanma VEYA 2. kez Level 1 |
-| Ceza | 300 para + 1 isletme 2 tur kapali + illegal calisan kovulur |
-| Gorsel | Kirmizi flash, siren, isletme kartina "KAPALI" damgasi |
-| Geri Donus | 2 tur bekle VEYA "Avukat" calisanini kullan (aninda ac) |
-
-### Seviye 3: SKANDAL (Major Scandal)
-
-| Ozellik | Deger |
-|---|---|
-| Tetik | FBI riski %40-60 arasinda VEYA sektor-ozel skandal event'i |
-| Ceza | 600 para + TUM isletmeler 1 tur gelir -%50 + 10 musteri kaybi |
-| Gorsel | Ekran sallanir, gazete manset efekti: "SKANDAL: [Sirket Adi] Yolsuzluk!" |
-| Geri Donus | "Halka Ozur" action karti (200 para, 3 musteri geri kazanir) VEYA "PR Krizi Yonetimi" upgrade (500 para, skandal etkisini yarilatiyor) |
-
-### Seviye 4: FBI BASKINI (FBI Raid)
-
-| Ozellik | Deger |
-|---|---|
-| Tetik | FBI riski %60+ VEYA 3. kez yakalanma |
-| Ceza | 1000 para + TUM illegal calisanlar kovulur + 1 tur TUM isletmeler durur + FBI riski sifirlanir |
-| Gorsel | Tam ekran kirmizi flash, siren sesi, FBI rozet animasyonu, "FBI BASKINI!" text |
-| Geri Donus | "Tanik Koruma" action karti (tutar 400 -- FBI riskini sifirlar ve 5 tur boyunca artisini yarilatiyor) |
-
-### Seviye 5: TAM KAPANMA (Complete Shutdown)
-
-| Ozellik | Deger |
-|---|---|
-| Tetik | FBI riski %80+ VEYA iflas + yakalanma VEYA "Buyuk Juri" event'i |
-| Ceza | TUM isletmeler kapanir, para %70 el konulur, TUM calisanlar gider |
-| Gorsel | Ekran kararir, zincir sesi, "OYUN BITTI... mi?" text, sonra comeback ekrani |
-| Geri Donus | "Yeni Baslangiç" mekanigi: 1 isletme sec (en dusuk tier), 200 para ile yeniden basla. Tier KORUNUR. "Pheonix" skoru icin bonus puan |
-
----
-
-## A.4 SEKTOR SENARYOLARI
-
----
-
-### A.4.1 MOBIL UYGULAMA / TECH STARTUP
-
-**Hikaye Akisi:**
-```
-Tur 1-3:   Basit uygulama yap, kullanici topla (delay mekanigi -- 3 tur bekle)
-Tur 4-8:   Buyume -- kullanici sayisi artiyor, gelir basliyor
-Tur 9-14:  Karar ani -- durust buyume mi, kestirme mi?
-Tur 15+:   Ya saglam SaaS sirket ya da skandala gomulmus startup
-```
-
-**DURUST YOL:**
-
-| Kart | Tip | Maliyet | Etki |
-|---|---|---|---|
-| App Developer | Calisan (C11) | Maas 35/tur | Tech isletmelerde +4 musteri, passif: bug fix (isletme kapanma riski -%30) |
-| UX Designer | Calisan (C12) | Maas 40/tur | Tech isletmelerde gelir +%20, aktif: "Kullanici Arastirmasi" -- sonraki turda musteri x1.5 |
-| SaaS Donusumu | Upgrade (U07) | 350 | Tech isletme geliri sabit +80/tur olur (rastgelelik kalkar), +2 calisan slotu |
-| Bulut Altyapisi | Upgrade (U08) | 300 | Tech isletmelerde musteri cap'i %50 artar |
-
-**Durust Combo:** "Temiz Kod" -- App Developer + UX Designer + Tech Startup(aktif) = Gelir +%40, musteri kaybi yok, isletme ASLA kapanmaz (bug-free)
-
-**KESTIRME YOL:**
-
-| Kart | Tip | Maliyet | Etki | Risk |
-|---|---|---|---|---|
-| Growth Hacker | Calisan (C13) | Maas 50/tur | +8 musteri/tur (agresif taktikler) | FBI +%6/tur |
-| Dark Pattern | Action (A11) | 100 | +12 musteri bu tur (kullanicilari kandirma) | FBI +%10, sonraki tur -4 musteri (churn) |
-| Sahte Indirimler | Action (A12) | 60 | +200 para aninda (fake sale metrics) | FBI +%8 |
-| Veri Madenciligi | Upgrade (U09) | 200 | +100 para/tur (kullanici verileri sat) | FBI +%5/tur, "Veri Sizintisi" event olasiligini x2 yapar |
-
-**Kestirme Combo:** "Buyume Hack'i" -- Growth Hacker + Dark Pattern = +20 musteri bu tur AMA FBI +%18
-
-**SEKTORE OZEL EVENT'LER:**
-
-| Event | Sure | Etki |
+| Kaynak | Gecikme | Not |
 |---|---|---|
-| E07: App Store Bani | 2 tur | Tech isletmeler 2 tur gelir SIFIR (uygulama kaldirildi). Growth Hacker varsa TETIKLENIR, yoksa normal havuzda |
-| E08: Veri Sizintisi | 1 tur | Tech isletmeler -8 musteri, 300 para ceza. Bulut Altyapisi varsa hasar yariya iner |
-| E09: Yatirimci Ilgisi | 1 tur | Tech isletmeler gelir x2 bu tur (funding round!) |
+| Doğrudan satış (fiziksel) | Aynı tur | En hızlı |
+| Delivery platform (Yemeksepeti vb.) | 1–2 tur sonra | Komisyon %25–35 |
+| Online satış (Trendyol vb.) | 1 tur sonra | Komisyon %15–25 |
+| App Store iOS | 3 tur sonra | Apple %30 keser, 45 gün |
+| Google Play Android | 2 tur sonra | Google %15–30, ayın 15'i |
+| Abonelik/SaaS | Her tur sabit | Churn riski var |
+| Kurumsal sözleşme | Sabit/tur | Uzun vade |
 
-**GERI DONUS KARTLARI:**
+## 5.4 Gider Kalemleri
 
-| Kart | Tip | Maliyet | Etki |
-|---|---|---|---|
-| Pivot to SaaS | Action (A13) | 200 | Tech isletmenin TUM illegal bonuslarini kaldir, yerine sabit +60 gelir/tur koy. FBI risk artisi sifirla. |
-| Etik AI Manifestosu | Upgrade (U10) | 250 | Tech isletmelerde FBI risk artisi SIFIR olur. Musteri kaybi -%50. |
+### Sabit Giderler (her tur düşülür)
+- Kira: işletme büyüdükçe artar
+- Temel personel maaşları
+- Sigorta (ödenmezse yasal risk artar)
+- Lisans/ruhsat yenileme (her X turda)
 
----
+### Değişken Giderler
+- Hammadde/tedarik: ciro ile orantılı
+- Reklam: aktif marketing kartlarına göre
+- Bakım ve onarım: operation slotlarının yaşına göre
+- Platform komisyonları: online satıştan otomatik kesilir
 
-### A.4.2 YEMEK / RESTORAN ZINCIRI
+### Gizli Giderler (oyuncu başta görmez)
+- Fire (food waste): taze ürün işletmelerinde
+- Personel devir maliyeti
+- Stok değer kaybı (giyimde sezon geçişi)
+- Kredi faizi
+- Ceza ödemeleri (yasal risk olayları)
 
-**Hikaye Akisi:**
-```
-Tur 1-3:   Kucuk bufe, durust malzemeler, az gelir
-Tur 4-8:   Zincire genisle, tedarik kararlari
-Tur 9-14:  Ucuz malzeme mi, kaliteli mi? Organik mi, sahte organik mi?
-Tur 15+:   Ya guvenilir zincir ya da saglik skandaliyla kapali
-```
+## 5.5 Maaş Sistemi
 
-**DURUST YOL:**
+Her tur personel maaşları ödenir. Oyuncu seçenekleri:
 
-| Kart | Tip | Maliyet | Etki |
-|---|---|---|---|
-| Sef (mevcut C04) | Calisan | Maas 30 | +3 musteri (food: gelir +30), aktif: Ozel Menu |
-| Gida Guvenligi Muduru | Calisan (C14) | Maas 35/tur | Food isletmelerde: saglik denetimi event'lerine BAGISIK, +2 musteri (guven) |
-| Organik Ciftlik (mevcut B06) | Isletme | 120 | Tum food'lara +20 bonus |
-| Farm-to-Table | Upgrade (U11) | 280 | 1 food isletme gelir +%35, musteri +3, "Organik" tag'i kazanir |
-
-**Durust Combo:** "Organik Sinerji" (mevcut #2) + "Gurme Mutfak" -- Sef + Gida Guvenligi Muduru + Farm-to-Table = Food gelir x1.8, musteri kaybi SIFIR, saglik event'lerine tam bagisiklik
-
-**KESTIRME YOL:**
-
-| Kart | Tip | Maliyet | Etki | Risk |
-|---|---|---|---|---|
-| Ucuz Et Tedarikcisi | Upgrade (U12) | 80 | Food isletme maliyeti -%40, gelir +%15 | FBI +%4/tur, "Saglik Denetimi" event olasiligi x3 |
-| Kose Kesme | Action (A14) | 50 | Bu tur food gelir x1.5 (ucuz malzeme, buyuk porsiyon) | FBI +%6, %20 sans: sonraki tur "Gida Zehirlenmesi" event'i |
-| Sahte Organik Etiketi | Action (A15) | 100 | Food isletmeye "Organik" tag'i ekle (sahte) -- Organik combo bonuslari AL ama illegal | FBI +%10, yakalanirsa TUM organik bonuslari geri alinir + 400 ceza |
-| Son Kullanim Hilesi | Upgrade (U13) | 60 | Food isletme giderleri -%50 (suresi gecmis malzeme) | FBI +%3/tur, her tur %10 sans: musteri zehirlenmesi (-6 musteri, 200 ceza) |
-
-**Kestirme Combo:** "Kitle Uretimi" -- Ucuz Et + Son Kullanim Hilesi + Burger Zinciri = Gelir x2 AMA her tur %25 sans buyuk saglik skandali
-
-**SEKTORE OZEL EVENT'LER:**
-
-| Event | Sure | Etki |
+| Seçim | Kısa Vade | Uzun Vade |
 |---|---|---|
-| E10: Saglik Denetimi | 1 tur | TUM food isletmeleri denetlenir. Illegal upgrade varsa: isletme 3 tur KAPALI + 400 ceza. Gida Guvenligi Muduru varsa: GECERSIN |
-| E11: Gida Zehirlenmesi Salgini | 2 tur | Ucuz Et veya Son Kullanim varsa: -15 musteri, isletme kapali. Yoksa: -3 musteri (genel etki) |
-| E12: Gurme Trend'i | 2 tur | Organik tag'li food isletmeler gelir x2, musteri x1.5 |
+| Zamanında öde | Nakit eksilir | Moral yüksek, verimli |
+| Geciktir | Nakit korunur | Moral -2, istifa riski artar |
+| Eksik öde | Nakit kısmen korunur | Moral -1, sadakat düşer |
+| Avans ver | Nakit eksilir fazla | Moral +2, sadakat +1 |
 
-**GERI DONUS KARTLARI:**
+**Maaş geciktirme zinciri:**
+Maaş gecikir → moral düşer → hata artar → kalite düşer → müşteri memnuniyeti azalır → kötü yorum → puan düşer → müşteri kaçar → gelir düşer → maaş daha da gecikir.
 
-| Kart | Tip | Maliyet | Etki |
-|---|---|---|---|
-| Halka Ozur Yemegi | Action (A16) | 150 | Skandal sonrasi: 5 musteri geri kazan, food isletme hemen ac |
-| Tedarik Zinciri Reformu | Upgrade (U14) | 300 | TUM illegal food upgrade'lerini kaldir. Yerine: food gelir +%20 (temiz). FBI riski -20 puan |
+## 5.6 Personel Sigorta Sistemi
 
----
-
-### A.4.3 MODA / GIYIM MARKASI
-
-**Hikaye Akisi:**
-```
-Tur 1-3:   Kucuk butik, yerel tasarimlar
-Tur 4-8:   Seri uretime gec, isci maliyeti karari
-Tur 9-14:  Ucuz iscilik mi, tasarim hirsizligi mi, vergi kacirma mi?
-Tur 15+:   Ya saygin marka ya da boykot edilen skandal markasi
-```
-
-**DURUST YOL:**
-
-| Kart | Tip | Maliyet | Etki |
-|---|---|---|---|
-| Moda Tasarimcisi | Calisan (C15) | Maas 45/tur | Luxury/Fashion isletmelerde +5 musteri, gelir +%15. Trend aktifken x2 |
-| Surdurulebilir Uretim | Upgrade (U15) | 350 | Fashion isletme: isci skandali event'lerine BAGISIK, musteri +4 (etik tuketici) |
-| Marka Elcisi | Calisan (C16) | Maas 55/tur | TUM isletmelere +3 musteri (marka bilinirli), aktif: "Marka Lansmani" -- bu tur musteri x2 |
-
-**Durust Combo:** "Etik Moda" -- Moda Tasarimcisi + Surdurulebilir Uretim + Luxury Boutique = Gelir x1.6, skandal event'lerine tam bagisiklik, her tur +2 ekstra musteri (sadik kitle)
-
-**KESTIRME YOL:**
-
-| Kart | Tip | Maliyet | Etki | Risk |
-|---|---|---|---|---|
-| Sweatshop Mudurlugu | Upgrade (U16) | 100 | Fashion/Luxury isletme calisan maaslari -%60, gelir +%20 | FBI +%7/tur, "Isci Skandali" event olasiligi x3 |
-| Tasarim Hirsizligi | Action (A17) | 80 | +10 musteri bu tur (sahte tasarimci marka kopyasi) | FBI +%12, %30 sans: "Telif Davasi" -- 500 ceza |
-| Vergi Cenneti | Upgrade (U17) | 200 | Vergi SIFIR olur (offshore hesap) | FBI +%5/tur, "Vergi Denetimi" event olasiligi x2 |
-| Hizli Moda | Upgrade (U18) | 150 | Fashion isletme gelir +%40, musteri +6 (ucuz trend kopyalari) | Her 3 turda -2 musteri (marka erozyonu), FBI +%3/tur |
-
-**Kestirme Combo:** "Ucuz Imparatorluk" -- Sweatshop + Hizli Moda = Gelir x2.5 AMA FBI +%15/tur ve her 2 turda "Boykot Riski" kontrolu (%20 sans: -8 musteri)
-
-**SEKTORE OZEL EVENT'LER:**
-
-| Event | Sure | Etki |
+| Model | Maliyet | Yasal Risk |
 |---|---|---|
-| E13: Isci Skandali | 2 tur | Sweatshop varsa: -12 musteri, isletme 2 tur kapali, sosyal medya firtinasi. Yoksa: -2 musteri |
-| E14: Vergi Denetimi | 1 tur | Vergi Cenneti varsa: 800 ceza + upgrade kaldirilir. Yoksa: normal vergi |
-| E15: Moda Haftasi | 2 tur | Fashion/Luxury isletmeler gelir x2, musteri x1.5. Trend tag'li isletmeler ekstra +5 musteri |
+| Sigortalı + SGK | +%37 maaş üzerine | Sıfır |
+| Sigortasız | Maliyet yok | Yüksek (30K–60K TL/kişi ceza) |
+| Günlük Yevmiye | Esnek | Orta (SGK yükümlülüğü tartışmalı) |
 
-**GERI DONUS KARTLARI:**
+## 5.7 Kredi / Borç Sistemi
 
-| Kart | Tip | Maliyet | Etki |
+Oyuncu nakit sıkıntısında kredi çekebilir:
+
+| Kredi Türü | Miktar | Faiz/tur | Koşul |
 |---|---|---|---|
-| Marka Yenilenmesi | Action (A18) | 300 | Boykot/skandal sonrasi: TUM moda musteri kaybini sifirla, +5 musteri |
-| Adil Ticaret Sertifikasi | Upgrade (U19) | 400 | TUM illegal moda upgrade'lerini kaldir. Fashion gelir +%25, musteri +5 (etik marka imaji) |
+| Küçük İşletme Kredisi | 200 | %5 | Tier 1'den itibaren |
+| Orta Kredi | 500 | %8 | Tier 2 ve üstü |
+| Büyük Yatırım Kredisi | 1000 | %12 | Tier 3 ve üstü |
+| Acil Likidite | 100 | %15 | Her zaman, 2 tur vade |
+
+**Kredi notu:** Çok borçlanırsan bir sonraki kredi daha pahalı. Ödemeleri geciktirirsen faiz artar.
+
+**Strateji notu:** Kredi = yatırım fırsatı veya hayatta kalma aracı. Yanlış kullanılırsa faiz işletmeyi eritir.
+
+## 5.8 Vergi Sistemi
+
+Her 5 turda vergi dönemi gelir:
+
+- Vergi = net kâr × %20 (basitleştirilmiş KV oranı)
+- Hazırlıklıysan ödersin, geçersin
+- Nakit yoksa vergi borcu oluşur → faiz işler → 2 tur ödenmezse denetim
+
+**Risk kartı:** "Vergiden Kaç" kartı oynandıysa vergi yükümlülüğü düşer ama denetim riski artar.
+
+## 5.9 Enflasyon / Piyasa Baskısı
+
+Her 3–4 turda enflasyon eventi gelir:
+- Hammadde maliyetleri +%10–25
+- Kira yenileme (ev sahibi zam yapar — kabul et veya taşın)
+- Personel maaş beklentisi artar
+
+**Zincir:** Enflasyon → maliyet artar → fiyat artıramazsan marj düşer → kâr erir.
 
 ---
 
-### A.4.4 KRIPTO / FINTECH
+# BÖLÜM 6: PERSONEL SİSTEMİ
 
-**Hikaye Akisi:**
-```
-Tur 1-3:   Token lansman veya borsa kur (yuksek volatilite)
-Tur 4-8:   Hacim artir, topluluk kur
-Tur 9-14:  Pump and dump mi, organik buyume mi?
-Tur 15+:   Ya regulasyona uyumlu fintech ya da donmus hesaplar
-```
+## 6.1 Çalışan Değerleri
 
-**DURUST YOL:**
+Her çalışanın 4 değeri var:
 
-| Kart | Tip | Maliyet | Etki |
-|---|---|---|---|
-| Blockchain Developer | Calisan (C17) | Maas 50/tur | Crypto isletmelerde volatiliteyi azaltir (min gelir +50), +3 musteri |
-| Regulasyon Uyumu | Upgrade (U20) | 400 | Crypto isletme: "Regulatory Crackdown" event'ine BAGISIK, gelir sabit +120/tur (rastgelelik kalkar) |
-| DeFi Altyapisi | Upgrade (U21) | 350 | Crypto isletmeye +3 calisan slotu, gelir +%30 |
-
-**Durust Combo:** "Guvenilir Borsa" -- Blockchain Developer + Regulasyon Uyumu + Crypto Exchange = Gelir sabit 180/tur (rastgelelik YOK), musteri +6, regulator event'lerine tam bagisik
-
-**KESTIRME YOL:**
-
-| Kart | Tip | Maliyet | Etki | Risk |
-|---|---|---|---|---|
-| Crypto Bro | Calisan (C18) | Maas 30/tur | +6 musteri (influencer marketing), Crypto gelir +%30 | FBI +%5/tur, "Rug Pull" suphesi |
-| Pump and Dump | Action (A19) | 0 | +400 para ANINDA (fiyat manipulasyonu) | FBI +%15, sonraki 2 tur Crypto gelir SIFIR (crash) |
-| Sahte Hacim | Upgrade (U22) | 100 | Crypto musteri x2 (borsada wash trading) | FBI +%8/tur |
-| Rug Pull | Action (A20) | 0 | +800 para ANINDA ama Crypto isletme KALICI KAPANIR | FBI +%25, TUM crypto bonuslari kaybolur |
-
-**Kestirme Combo:** "Ponzi Zinciri" -- Crypto Bro + Sahte Hacim + Dolandirici(C09) = +300 para/tur AMA FBI +%20/tur ve her tur %15 sans "Market Crash"
-
-**SEKTORE OZEL EVENT'LER:**
-
-| Event | Sure | Etki |
+| Değer | Etki | Ne Değiştirir |
 |---|---|---|
-| E16: Regulatory Crackdown | 2 tur | TUM crypto isletmeler dondurulur (gelir SIFIR). Regulasyon Uyumu varsa: BAGISIK |
-| E17: Market Crash | 1 tur | Crypto isletme gelir SIFIR + -6 musteri. Sahte Hacim varsa: ek -10 musteri |
-| E18: Bull Run | 2 tur | Crypto isletmeler gelir x3, musteri x2. Altın cag! |
+| Moral | Düşerse hata oranı artar | Maaş, muamele, iş yükü |
+| Yorgunluk | Artarsa performans düşer | Fazla mesai, çalışma saati |
+| Sadakat | Düşerse rakip çekebilir | Moral, maaş, takdir |
+| Deneyim (XP) | Artarsa verimlilik artar | Zaman + iş yükü |
 
-**GERI DONUS KARTLARI:**
+## 6.2 Moral Zinciri
 
-| Kart | Tip | Maliyet | Etki |
-|---|---|---|---|
-| DeFi Pivot | Action (A21) | 250 | Kapanmis Crypto isletmeyi yeniden ac, TUM illegal bonuslari temizle, sabit +100 gelir/tur |
-| Topluluk Guven Onarimi | Upgrade (U23) | 300 | Pump/crash sonrasi: 8 musteri geri kazan, FBI risk -15 puan |
-
----
-
-### A.4.5 GAYRIMENKUL / INSAAT
-
-**Hikaye Akisi:**
 ```
-Tur 1-3:   Ucuz arsa al, renovasyon yap
-Tur 4-8:   Daire insaat, ev cevirme
-Tur 9-14:  Ucuz malzeme mi, rusvet mi, izinsiz insaat mi?
-Tur 15+:   Ya saygindeveloper ya da mahkum
-```
-
-**DURUST YOL:**
-
-| Kart | Tip | Maliyet | Etki |
-|---|---|---|---|
-| Mimar | Calisan (C19) | Maas 45/tur | Construction isletmelerde gelir +%25, musteri +3, "Bina Cokme" riskini SIFIRLAR |
-| Yesil Bina Sertifikasi | Upgrade (U24) | 350 | Construction isletme gelir +%20, musteri +4 (cevreci imaj), "Deprem Testi" event'ine GECERSIN |
-
-**Durust Combo:** "Kaliteli Insaat" -- Mimar + Yesil Bina Sertifikasi = Gelir +%50, HICBIR insaat event'i seni etkilemez
-
-**KESTIRME YOL:**
-
-| Kart | Tip | Maliyet | Etki | Risk |
-|---|---|---|---|---|
-| Serefsiz Muteahhit | Calisan (C20) | Maas 20/tur | Construction gelir +%40 (ucuz is) | FBI +%6/tur, her tur %8 sans "Bina Cokme" |
-| Malzeme Kismasi | Action (A22) | 50 | Bu tur Construction gelir x2 (ucuz beton, ince demir) | FBI +%8, "Bina Denetimi" event olasiligi x3 |
-| Imar Rusveti | Action (A23) | 150 | Yeni isletme slotu AC (izinsiz insaat) | FBI +%15, %20 sans: "Imar Iptali" -- slot geri kapanir + 500 ceza |
-| Izinsiz Kat | Upgrade (U25) | 100 | Construction gelir +%50 (ekstra kat, ekstra daire) | FBI +%5/tur, "Deprem Testi" event'inde OTOMATIK KAPANIR |
-
-**SEKTORE OZEL EVENT'LER:**
-
-| Event | Sure | Etki |
-|---|---|---|
-| E19: Bina Denetimi | 1 tur | Illegal upgrade varsa: isletme 3 tur KAPALI + 500 ceza. Mimar varsa: GECERSIN |
-| E20: Bina Cokme | 1 tur | Serefsiz Muteahhit veya Malzeme Kismasi varsa: isletme KALICI KAPANIR + 800 ceza + -10 musteri. Yoksa: etki yok |
-| E21: Emlak Patlamasi | 2 tur | Construction isletmeler gelir x2, musteri x1.5 |
-
-**GERI DONUS KARTLARI:**
-
-| Kart | Tip | Maliyet | Etki |
-|---|---|---|---|
-| Bina Guclendirme | Action (A24) | 400 | Kapanmis Construction isletmeyi ac, TUM illegal upgrade'leri kaldir, gelir +%15 (guvenli) |
-| Belediye Anlasma | Upgrade (U26) | 350 | Construction: imar sorunlarina bagisik, FBI risk -10 puan |
-
----
-
-### A.4.6 REKLAM / PAZARLAMA AJANSI
-
-**Hikaye Akisi:**
-```
-Tur 1-3:   Kucuk ajans, durust kampanyalar
-Tur 4-8:   Buyuk musteriler kazan, vaatler buyut
-Tur 9-14:  Sahte metrikler mi, gercek sonuclar mi?
-Tur 15+:   Ya saygin ajans ya da dava edilen dolandirici
+Maaş gecikir / iş yükü fazla / muamele kötü
+↓
+Moral düşer
+↓
+Hata oranı artar
+↓
+Servis yavaşlar / kalite düşer
+↓
+Müşteri memnuniyeti azalır
+↓
+Kötü yorum / puan düşer
+↓
+Müşteri kaçar
 ```
 
-**DURUST YOL:**
+## 6.3 Fazla Mesai
 
-| Kart | Tip | Maliyet | Etki |
-|---|---|---|---|
-| Kreatif Direktor | Calisan (C21) | Maas 45/tur | Marketing isletmelerde gelir +%25, aktif: "Yaratici Kampanya" -- TUM isletmelere +4 musteri bu tur |
-| Veri Analisti | Calisan (C22) | Maas 35/tur | Marketing isletmelerde musteri hedefleme: her tur +3 musteri (garanti, randomsiz) |
+"Fazla Mesai" kartı oynandığında:
+- Bu tur kapasite +%50
+- Yorgunluk +2
+- 3 tur üst üste fazla mesai → "Personel Grevi" riski
 
-**Durust Combo:** "Durust Reklam" -- Kreatif Direktor + Veri Analisti + Reklam Ajansi = TUM isletmelere +6 musteri/tur (garanti), gelir +%30
+## 6.4 Çalışan Gelişimi (XP)
 
-**KESTIRME YOL:**
+Her tur çalışan deneyim puanı biriktirir:
+- Seviye 1 → 2: Hata oranı -%20
+- Seviye 2 → 3: Verimlilik +%15, müşteri memnuniyeti +1
+- Seviye 3 → 4: Özel yetenek açılır (şef → "Lezzet Ustası", barista → "Latte Art")
 
-| Kart | Tip | Maliyet | Etki | Risk |
-|---|---|---|---|---|
-| Click Bot Ciftligi | Upgrade (U27) | 150 | Marketing musteri x2 (sahte trafik) | FBI +%6/tur, "Platform Bani" event olasiligi x3 |
-| Viral Dolandiricilik | Action (A25) | 80 | +15 musteri bu tur (sahte viral kampanya) | FBI +%10, sonraki tur -8 musteri (gercek ortaya cikinca) |
-| Calinti Kreative | Action (A26) | 60 | Marketing gelir x1.5 bu tur (baskasinin isini kopyala) | FBI +%8, %25 sans: "Telif Davasi" 400 ceza |
-| Sisirmis Metrikler | Upgrade (U28) | 120 | Marketing isletme gelir +%40 (musteriye sahte rapor) | FBI +%5/tur, her 4 turda %20 sans: musteri sirketi terk eder (-5 musteri, -100 gelir) |
+Deneyimli çalışan = değerli. Rakip bu çalışanı çalmaya çalışır.
 
-**SEKTORE OZEL EVENT'LER:**
+## 6.5 Rakip Çalışan Çalma (Headhunting)
 
-| Event | Sure | Etki |
-|---|---|---|
-| E22: Platform Bani | 2 tur | Click Bot varsa: Marketing isletme 2 tur KAPALI + bot upgrade kaldirilir. Yoksa: etki yok |
-| E23: Musteri Davasi | 1 tur | Sisirmis Metrikler varsa: 600 ceza + upgrade kaldirilir. Yoksa: -100 para (kucuk anlasamazlik) |
-| E24: Reklam Festivali | 1 tur | Marketing isletmeler gelir x2, TUM isletmelere +5 ekstra musteri |
-
-**GERI DONUS KARTLARI:**
-
-| Kart | Tip | Maliyet | Etki |
-|---|---|---|---|
-| Ajans Rebrand | Action (A27) | 250 | TUM illegal marketing upgrade'lerini kaldir, +5 musteri, FBI risk -10 |
-| Seffaflik Raporu | Upgrade (U29) | 200 | Marketing: sahte metrik riski SIFIR, musteri kaybi -%50, FBI risk artisi -%50 |
+Rakip, oyuncunun düşük sadakatli çalışanlarını hedef alır:
+- Teklif: mevcut maaşın 1.5–2x
+- Oyuncu 1 tur içinde karşı teklif yapabilir
+- Yapmazsa çalışan gider (slot boşalır)
+- Deneyimli çalışan giderse: kalite aniden düşer, eski seviye için yenisini eğitmek gerekir
 
 ---
 
-## A.5 CROSECTOR COMBOLAR (Cross-Sector Combos)
+# BÖLÜM 7: MÜŞTERİ SİSTEMİ
 
-Birden fazla sektore yatirim yapan oyunculari odullendiren ozel combolar:
+## 7.1 Market Havuzu
 
-| # | Isim | Gerekli | Bonus | Zorluk |
-|---|---|---|---|---|
-| 11 | Dikey Entegrasyon | Food isletme + Construction isletme + Mimar | Her ikisine gelir +%30, musteri +4 | Orta |
-| 12 | Dijital Donusum | Herhangi isletme + Tech Startup(aktif) + App Developer | Secilen isletme musteri +8, gelir +%20 | Orta |
-| 13 | Marka Imparatorlugu | Fashion isletme + Ad Agency + Marka Elcisi | TUM isletmelere +5 musteri, Fashion gelir x2 | Zor |
-| 14 | Kripto Odeme | Crypto Exchange(aktif) + herhangi 2 isletme | 2 isletmenin geliri +%15, Crypto +4 musteri | Orta |
-| 15 | Tam Legal Holding | 4 isletme aktif + SIFIR FBI riski + Tier 3+ | TUM gelir +%25, her tur +3 musteri, "Clean Business" skoru +500 | Cok Zor |
-| 16 | Karanlik Imparatorluk | 3+ illegal upgrade/calisan aktif + FBI riski %50+ | TUM gelir +%50 AMA her tur FBI kontrolu x2 | Intihar Misyonu |
+Semtte **sınırlı müşteri** vardır. Oyuncu ve rakip aynı havuz için savaşır.
 
----
+```
+Toplam Semt Müşteri Havuzu = 100 (sabit başlangıç)
+Oyuncu payı + Rakip payı = 100
+```
 
-## A.6 SEKTOR-OZEL CALISANLAR OZET TABLOSU
+Müşteri dağılımı her tur şu faktörlere göre hesaplanır:
 
-Mevcut calisanlara (C01-C10) ek olarak sektor uzmanlarinin tam listesi:
-
-| ID | Isim | Maas | Sektor | Passif | Aktif | Risk |
-|---|---|---|---|---|---|---|
-| C11 | App Developer | 35 | Tech | +4 musteri, bug fix -%30 kapanma | "Deploy": Tech gelir x1.3 bu tur | Yok |
-| C12 | UX Designer | 40 | Tech | Gelir +%20 | "Kullanici Arastirmasi": sonraki tur musteri x1.5 | Yok |
-| C13 | Growth Hacker | 50 | Tech | +8 musteri (agresif) | "Hack the System": +15 musteri bu tur | FBI +%6/tur |
-| C14 | Gida Guvenligi Muduru | 35 | Food | Saglik event bagisikligi, +2 musteri | "Denetim Hazirlik": 3 tur saglik event'lerine tam koruma | Yok |
-| C15 | Moda Tasarimcisi | 45 | Fashion | +5 musteri, gelir +%15 | "Koleksiyon Lansmani": musteri x2 bu tur (trend varsa x3) | Yok |
-| C16 | Marka Elcisi | 55 | Fashion | TUM isletmelere +3 musteri | "Marka Lansmani": bu tur musteri x2 | Yok |
-| C17 | Blockchain Dev | 50 | Crypto | Volatilite azalt (min +50) , +3 musteri | "Smart Contract": Crypto gelir sabit 150 bu tur | Yok |
-| C18 | Crypto Bro | 30 | Crypto | +6 musteri, gelir +%30 | "Shill Campaign": +12 musteri bu tur | FBI +%5/tur |
-| C19 | Mimar | 45 | Construction | Gelir +%25, +3 musteri, cokme riski SIFIR | "Blueprint": sonraki insaat karti %50 indirimli | Yok |
-| C20 | Serefsiz Muteahhit | 20 | Construction | Gelir +%40 | "Hizli Insaat": Construction gelir x2 bu tur | FBI +%6/tur |
-| C21 | Kreatif Direktor | 45 | Marketing | Gelir +%25 | "Yaratici Kampanya": TUM +4 musteri | Yok |
-| C22 | Veri Analisti | 35 | Marketing | +3 musteri (garanti) | "Hedefli Reklam": secilen isletmeye +8 musteri | Yok |
-
----
-
-## A.7 GERI DONUS MEKANIGI (Comeback System)
-
-### A.7.1 "Phoenix" Skor Bonusu
-
-Tam kapanma (Seviye 5) sonrasi geri donup oyunu KAZANAN oyuncu ekstra skor alir:
-
-| Durum | Bonus Puan |
+| Faktör | Ağırlık |
 |---|---|
-| Seviye 5 sonrasi geri don + oyunu kazan | +2000 |
-| Seviye 4 sonrasi geri don + oyunu kazan | +1000 |
-| Seviye 3 sonrasi geri don + oyunu kazan | +500 |
-| Hic yakalanmadan kazan (Clean Run) | +800 |
+| Kalite skoru | %30 |
+| Fiyat rekabeti | %20 |
+| Platform puanı (Google/App Store) | %20 |
+| Reklam görünürlüğü | %15 |
+| Servis hızı | %10 |
+| Müşteri sadakati | %5 |
 
-### A.7.2 "Yeni Baslangiç" Mekanigi
+## 7.2 Müşteri Segmentleri
 
-Seviye 5 (Tam Kapanma) sonrasi oyun BITMEZ. Bunun yerine:
+| Segment | Özelliği | Nasıl Çekilir |
+|---|---|---|
+| Fiyat Hassas | Ucuzu seçer, sadakatsiz | Fiyat düşür, indirim yap |
+| Kalite Arayan | Pahalıyı öder, sadık kalır | Kalite skoru yüksek tut |
+| Trend Takipçisi | Viral olursa gelir, geçince gider | Marketing + trend eventleri |
+| Sadık Müşteri | Alışkanlıkla gelir | Sürekli iyi deneyim |
+| Yeni Müşteri | Reklam veya tavsiyeyle gelir | Marketing + word of mouth |
 
-```
-1. Ekran kararir. "Her sey bitti..." text'i belirir.
-2. 2 saniye bekleme.
-3. "...mi acaba?" text'i belirir.
-4. "YENI BASLANGIC" ekrani:
-   - 1 isletme sec (mevcut isletmelerinden en dusuk tier)
-   - 200 para ile basla
-   - TUM illegal kart/upgrade/calisan GIDER
-   - Tier KORUNUR (motivasyon)
-   - FBI riski SIFIRLANIR
-   - Escalation tracker SIFIRLANIR
-5. Oyun devam eder. Rakip avantajli ama oyuncu temiz sayfa ile baslar.
-```
+## 7.3 Müşteri Sadakati
 
-### A.7.3 Genel Geri Donus Kartlari (Sektorler arasi)
+Her pozitif deneyim sadakati artırır. Sadık müşteri:
+- Her tur %70 ihtimalle geri gelir (reklam olmadan)
+- Word of mouth zinciri: her 5 sadık müşteri 1 yeni müşteri getirir
+- Fiyata daha az hassas (kalite düşse bile hemen gitmez)
 
-| Kart | Tip | Maliyet | Etki |
-|---|---|---|---|
-| Avukat | Calisan (C23) | Maas 60/tur | FBI riski -%10/tur (passif), aktif: "Savunma": bir sonraki FBI kontrolunu OTOMATIK GECIR |
-| Halka Ozur | Action (A28) | 200 | Skandal sonrasi: 5 musteri geri kazan, 1 kapali isletmeyi hemen ac |
-| PR Krizi Yonetimi | Upgrade (U30) | 500 | TUM skandal cezalari -%50, musteri kayiplari -%50 |
-| Lobicilik | Upgrade (U31) | 600 | FBI risk cap'i %50 olur (asla %50'yi gecmez), vergi -%25 |
-| Tanik Koruma | Action (A29) | 400 | FBI riskini SIFIRLA + 5 tur boyunca FBI risk artisi -%50 |
+**Sadakat nasıl kırılır:**
+- Kalite ani düşüş
+- Uzun servis bekleme
+- Rakibin güçlü influencer kampanyası
+- Fiyat farkı çok büyüyünce
 
----
+## 7.4 Word of Mouth (Ağızdan Ağıza)
 
-## A.8 UYGULAMA NOTLARI (Implementation Notes)
-
-### A.8.1 Yeni Tag'ler
-
-Mevcut tag sistemi (CardTag enum) genisletilmeli:
-
-```
-Mevcut:   Food, Coffee, Tech, Crypto, Marketing, Luxury, ...
-Yeni:     Fashion, Construction, Illegal, Organic, Sustainable, 
-          Fraudulent, Regulated, CleanBusiness
-```
-
-### A.8.2 Escalation Tracker
-
-GameManager veya EconomyManager'a yeni field:
-
-```
-int illegalActionCount;     // Toplam illegal aksiyon sayisi
-float fbiRiskMultiplier;    // illegalActionCount'a gore 1.0 - 2.5 arasi
-```
-
-### A.8.3 Sektor Event Havuzu
-
-EventSystem'e sektor-bazli event filtering:
-
-```
-- Temel event havuzu: E01-E06 (mevcut, her zaman aktif)
-- Sektor event'leri: Oyuncunun AKTIF isletme tag'lerine gore havuza eklenir
-  Ornek: Food isletme varsa -> E10, E11, E12 havuza girer
-  Ornek: Illegal upgrade varsa -> o sektore ozel negatif event olasiligi artar
-```
-
-### A.8.4 Ikilem Popup
-
-UIManager'a yeni popup tipi. Mevcut ComboPopup/EventPopup/RivalPopup yapisini takip eder:
-
-```
-DilemmaPopup.cs
-  - Show(CardData riskyCard, float currentFbiRisk, float riskIncrease, string reward)
-  - OnConfirm -> karti oyna
-  - OnCancel -> kart eline doner (aksiyon HARCANMAZ)
-```
-
-### A.8.5 Consequence Chain Manager
-
-Yeni manager veya EconomyManager'a extension. FBI baskin sonucunu belirler:
-
-```
-int consecutiveCatches;     // Art arda yakalanma sayisi
-ConsequenceLevel GetLevel() // consecutiveCatches + fbiRisk'e gore Level 1-5 dondurur
-```
+Sessiz ama en güçlü müşteri kazanım mekanizması:
+- 5 sadık müşteri → her tur 1 yeni müşteri organik
+- Google puanı 4.5+ → organik yeni müşteri
+- Viral event → büyük spike ama kısa süreli
 
 ---
 
-## A.9 DENGE HEDEFLERI (Balance Targets)
+# BÖLÜM 8: PUAN SİSTEMİ (Google / App Store Rating)
 
-| Yol | Erken Oyun (Tur 1-8) | Orta Oyun (Tur 9-18) | Gec Oyun (Tur 19+) |
-|---|---|---|---|
-| Durust | Yavas buyume, 400-700 para, 2 bolge | Sabit buyume, 800-1500 para, 3-4 bolge | Saglam motor, 1500-3000 para, 5-6 bolge |
-| Kestirme | Hizli buyume, 600-1200 para, 3 bolge | Yuksek risk, 1000-2500 para VEYA skandal, 3-5 bolge | Ya domine (6+ bolge) ya da cokus (FBI) |
-| Karisik | En esnek, 500-900 para, 2-3 bolge | Stratejik riskler, 900-2000 para, 3-5 bolge | Dengeyi bul, 1500-3000 para, 5-6 bolge |
+## 8.1 Genel Kural
 
-**Hedef:** Durust yol ile kazanma orani %55, kestirme yol ile %40, karisik %50. Kestirme yol DAHA HIZLI ama DAHA RISKLI -- beklenen deger benzer olmali ama varyans cok daha yuksek.
+Her işletme türünün bir **Platform Puanı** var (1.0–5.0):
+- Fast Food / Cafe / Market / Giyim → Google Business Rating
+- Tech App → App Store Rating (iOS veya Android)
+
+## 8.2 Puanın Müşteriye Etkisi
+
+| Puan | Müşteri Etkisi |
+|---|---|
+| 4.5–5.0 | Organik müşteri gelir (+%20) |
+| 4.0–4.4 | Normal, nötr |
+| 3.5–3.9 | Yeni müşteri -%30 |
+| 3.0–3.4 | Yeni müşteri -%60 |
+| 3.0 altı | Pratik ölüm — organik müşteri gelmez |
+
+## 8.3 Puan Değişimi
+
+| Olay | Puan Değişimi |
+|---|---|
+| Müşteriden yorum ist (organik) | +0.1–0.3 |
+| İyi servis turu (kalite yüksek) | +0.1 |
+| Kötü servis / kalite düşüklüğü | -0.2 |
+| Kriz eventi (zehirlenme, skandal) | -0.5–1.0 |
+| Sahte yorum satın al (başarılı) | +0.3 (geçici) |
+| Sahte yorum tespit (Google/Apple) | -0.5 + ban riski |
+| Influencer kampanyası | +0.2 |
+
+## 8.4 Puan Kurtarma
+
+Düşük puan kurtarılabilir ama zaman alır:
+- Her "iyi tur" (kalite yüksek + hızlı servis) +0.1
+- "PR Kampanyası" kartı: +0.3 anlık
+- "Müşteri Memnuniyeti Programı" upgrade: +0.1/tur
+- Minimum kurtarma süresi: 3–5 tur (kritik düşüşten)
 
 ---
 
-> Appendix A sonu. Bu senaryo tasarimlari MVP sonrasi ilk guncelleme (Hafta 29-32) icin oncelikli icerik olarak planlanmistir. Temel sistemler (Escalation Tracker, Consequence Chain, Dilemma Popup) MVP'de implement edilebilir, sektor kartlari kademeli olarak eklenir.
+# BÖLÜM 9: STOK YÖNETİMİ
+
+## 9.1 Hangi İşletmeler İçin Geçerli?
+
+- Fast Food, Cafe, Market/Bakkal → **taze ürün fire riski**
+- Giyim Mağazası → **sezon stok batığı riski**
+- Tech App → **stok yönetimi yok** (dijital ürün)
+
+## 9.2 Fire Mekaniği
+
+Taze ürün işletmelerinde:
+- Her 2–3 turda stokun %10–20'si bozulur (gelir kaybı)
+- "Stok Yönetim Sistemi" upgrade: fire -%50
+- Buzdolabı arızası eventi: tüm taze stok yok
+
+## 9.3 Sezon Stok Dengesi
+
+Giyim mağazasında:
+- Sezon başı: büyük stok alımı (nakit bağlanır)
+- Sezon sonu: satılmayan stok → indirim (marj düşer) veya bekle (nakit bağlı kalır)
+- Yanlış trend: stok tamamen batabilir
+
+**Stok kararı mekaniği:** Her sezon geçişinde oyuncuya seçenek sunulur:
+1. İndirim yap: gelir -%30 bu tur, stok temizlenir
+2. Bekle: müşteri -%20, nakit bağlı
+3. Depola: küçük maliyet, gelecek sezon dene
+
+## 9.4 Tedarik Güvenilirliği
+
+Tedarikçi slotuna yerleştirilen kart türüne göre:
+- Premium tedarikçi: güvenilir, pahalı, her tur tutarlı kalite
+- Ucuz tedarikçi: tutarsız, bazen "bu hafta malzeme kötüydü" eventi tetikler
+- Veresiye tedarik: nakit tasarrufu ama tedarikçi anlaşmazlığı riski
+
+---
+
+# BÖLÜM 10: LOKASYON VE TRAFİK
+
+## 10.1 Konum Seçimi (Oyun Başı)
+
+Oyuncu başlangıçta konum seçer:
+
+| Konum | Kira | Başlangıç Trafiği |
+|---|---|---|
+| Ücra köşe | Düşük | Çok düşük |
+| Yan sokak | Orta | Orta |
+| Ana cadde | Yüksek | Yüksek |
+| AVM / alışveriş merkezi | Çok yüksek + ciro payı | Çok yüksek |
+
+## 10.2 Trafik Mekaniği
+
+**Konum trafiği** her tur pasif müşteri sağlar:
+- Ana cadde: +5 pasif müşteri/tur
+- Yan sokak: +2 pasif müşteri/tur
+- Ücra köşe: +0 pasif (sadece aktif reklam işe yarar)
+
+**Traffic area bonus'ları:**
+- Işık lambası yanında: araç bekleme trafiği +3
+- Okul/üniversite yanında: öğle saati +5
+- Hastane yanında: sürekli trafik +3, düşük çek/müşteri
+- Site/apartman girişi: sabah/akşam saati +4
+
+## 10.3 Rakip Aynı Bölgeye Açılırsa
+
+Rakip oyuncu ile aynı trafik alanındaysa:
+- Pasif trafik ikiye bölünür
+- Görünürlük rekabeti başlar (marketing kartları daha kritik)
+- "Komşu Rekabeti" eventi tetiklenebilir
+
+---
+
+# BÖLÜM 11: ZİNCİR REAKSİYON SİSTEMİ
+
+## 11.1 Temel İlke
+
+**Her karar başka bir sistemi etkiler.** Oyunun temelidir.
+
+Oyuncu şunu hissetmeli:
+> "Kendi problemlerimi ben yaratıyorum."
+
+## 11.2 Zincir Türleri
+
+### Deterministik Zincirler (her zaman olur)
+Belli kart kombinasyonları belli zinciri tetikler.
+
+Örnek:
+```
+Ucuz Hammadde [Supplier slot'a yerleşti]
+→ Kalite skoru -2
+→ Google puanı -0.3/tur
+→ Yeni müşteri azalır
+→ Gelir düşer
+```
+
+### Olasılıklı Zincirler (%X ihtimalle)
+Oyuncunun kararları riski artırır ama garantili değil.
+
+Örnek:
+```
+Maaş 3 tur gecikti
+→ %50 ihtimalle istifa
+→ İstifa olursa slot boşalır
+→ Kapasite düşer
+```
+
+### Kümülatif Zincirler (zamanla birikir)
+Küçük kötü kararlar birikerek kriz yaratır.
+
+Örnek:
+```
+Her tur %10 fire var (gizli)
+→ 5 turda %50 stok eridi
+→ 6. turda gelir aniden düşer
+→ Oyuncu "neden düştü" diye şaşırır
+```
+
+## 11.3 Referans Domino Zinciri
+
+**"Büyüme Tuzağı"** — en yaygın yeni oyuncu hatası:
+```
+Fazla reklam yap (3/3 marketing slot dolu)
+↓ Müşteri patladı (+20)
+↓ Operation kapasitesi yetersiz (3/4 slot dolu)
+↓ Servis yavaşladı
+↓ Kalite düştü
+↓ Google puanı -0.4
+↓ Kötü yorumlar birikte
+↓ Müşteri kaçıyor (ama reklam hâlâ para yiyor)
+↓ Gelir düştü, maliyet aynı
+↓ Nakit kriz
+↓ Maaşlar gecikti
+↓ Çalışan istifa etti
+↓ ÇÖKÜŞ
+```
+
+---
+
+# BÖLÜM 12: EVENT SİSTEMİ
+
+## 12.1 Event Kaynakları
+
+| Kaynak | Açıklama |
+|---|---|
+| Deterministik | Oyuncunun geçmiş kararlarından doğar |
+| Rastgele | Dünya olayları, random tetikleyici |
+| Rakip kaynaklı | Rakibin hamlelerinden doğar |
+| Mevsimsel | Takvim bazlı, öngörülebilir |
+
+## 12.2 Event Tetikleyici Kuralları
+
+**Deterministik eventler** belli koşullar oluşunca kesinlikle gelir:
+- Ucuz hammadde 4+ tur kullanıldıysa → "Kalite Krizi" (gıda)
+- Maaş 3 tur geciktiyse → "Personel Grevi" riski
+- Google puanı 3.0'a düştüyse → "İtibar Krizi"
+- Vergi 2 tur ödenmedi → "Vergi Denetimi"
+- Sigortasız çalışan 3+ tur → "SGK Denetimi"
+
+**Rastgele eventler** her tur %X ihtimalle gelir. Oyuncunun durumuna göre ihtimal değişir:
+- İyi durumda: pozitif event ihtimali artar (Viral Trend, Food Festival)
+- Kötü durumda: negatif event ihtimali artar
+
+## 12.3 Event Kategorileri
+
+| Kategori | Örnekler |
+|---|---|
+| Kalite Krizi | Gıda zehirlenmesi, bozuk ürün, skandal |
+| Operasyon Krizi | Ekipman arızası, elektrik kesintisi |
+| Personel Krizi | Personel grevi, toplu istifa, kavga |
+| Tedarik Krizi | Tedarikçi sorunu, hammadde yokluğu |
+| Dijital Kriz | App Store red, veri sızıntısı, Google cezası |
+| Hukuki Kriz | Vergi denetimi, SGK denetimi, belediye kapama |
+| Pozitif Event | Viral video, food festival, trend dalga |
+| Rakip Kaynaklı | Rakip yatırım aldı, rakip kampanya başlattı |
+| Mevsimsel | Ramazan, bayram, okul sezonu, yaz yavaşlığı |
+
+## 12.4 Event Süresi
+
+Her event kaç tur süreceğini belirtir:
+- Anlık (1 tur): olay olur, biter
+- Kısa (2–3 tur): baskı devam eder, çözüm gerekebilir
+- Uzun (4+ tur): yapısal problem, aktif müdahale şart
+
+## 12.5 Event Çözüm Mekaniği
+
+Bazı eventler çözülebilir:
+- "Sağlık Denetimi" → "Hijyen Sertifikası" kartı oynandıysa 0 hasar
+- "Personel Grevi" → acil zam ver (nakit -50) veya 1 tur kaybet
+- "Tedarik Sorunu" → yedek tedarikçi slotu varsa geç, yoksa 2 tur hammadde yok
+
+---
+
+# BÖLÜM 13: HUKUKİ / DENETİM SİSTEMİ
+
+## 13.1 Yasal Risk Puanı
+
+Her işletmenin gizli bir **Yasal Risk Puanı** var (0–100):
+- 0–20: güvenli
+- 21–50: denetim ihtimali artar
+- 51–80: denetim yakın
+- 81–100: denetim garantili
+
+Risk puanı şunlarla artar:
+- Sigortasız çalışan: +15/tur
+- Vergiden kaçmak: +10/tur
+- SKT geçmiş ürün: +20
+- Ruhsatsız çalışmak: +25/tur
+- Sahte yorum: +5
+
+## 13.2 Denetim Türleri
+
+| Denetim | Tetikleyici | Başarısız Olursa |
+|---|---|---|
+| SGK Denetimi | Sigortasız çalışan 3+ tur | Ceza: 30K–60K TL/kişi |
+| Sağlık/Hijyen | Risk puanı 50+ | İşletme 1–2 tur kapalı |
+| Vergi | Vergi kaçırma 2+ tur | 3x vergi + faiz |
+| Gıda Güvenliği | UCuz hammadde + düşük kalite | Kapatma + haber |
+| Belediye | Ruhsat sorunu | Mühür = kapatma |
+
+## 13.3 Denetimden Geçme
+
+Denetim geldiğinde:
+- Yasal durum temizse: geçer, küçük bonus (müşteri güveni +1)
+- Yasal risk 50+: %50–80 yakalanma ihtimali
+- Yakalanırsa: ceza + event
+
+---
+
+# BÖLÜM 14: MEVSİMSELLİK
+
+## 14.1 Mevsim Takvimi (25 Tur)
+
+| Turlar | Sezon | Genel Etki |
+|---|---|---|
+| 1–5 | İlkbahar | Normal başlangıç |
+| 6–10 | Yaz | Konum bağımlı |
+| 11–15 | Sonbahar | Okul açılışı, yükseliş |
+| 16–20 | Kış | Sezona göre değişir |
+| 21–25 | Ramazan/Bayram zonu | Büyük spike |
+
+## 14.2 İşletmeye Göre Mevsimsel Etkiler
+
+| İşletme | Yaz | Kış | Ramazan | Okul Dönemi |
+|---|---|---|---|---|
+| Fast Food | Nötr | +%15 | Karışık | +%10 |
+| Cafe | -%15 | +%25 | Nötr | +%20 |
+| Tech App | Nötr | Nötr | Nötr | Nötr |
+| Giyim | -%10 (indirim) | +%20 | +%15 | +%25 |
+| Market | Nötr | +%10 | +%35 | +%10 |
+
+## 14.3 Mevsimsel Eventler
+
+- Ramazan (3 tur): yemek işletmelerinde öğle -%50, iftar +%30
+- Okul Açılışı (2 tur): giyim +%25, kafe +%20
+- Yılbaşı (2 tur): giyim +%30, market +%15
+- Yaz Tatili (3 tur): şehirdeyse -%10, tatil beldesinde +%40
+- Black Friday (1 tur): tüm işletmeler müşteri +%20
+
+---
+
+# BÖLÜM 15: RAKİP SİSTEMİ
+
+## 15.1 Rakip Kimdir?
+
+Rakip aynı işletme türüyle başlar. Aynı semtte, aynı müşteri havuzu için savaşır.
+
+Rakip oyuncudan farklı kararlar alabilir:
+- Pazara daha agresif girebilir (marketing önce)
+- Kalite önceliklendirici olabilir
+- Ucuz büyüme stratejisi deneyebilir
+
+## 15.2 Rakip Hamle Havuzu
+
+Her tur rakip aşağıdakilerden birini yapar:
+
+| Hamle | Etkisi |
+|---|---|
+| Fiyat Düşür | Fiyat hassas müşteri rakibe geçer |
+| Marketing Kampanyası | Oyuncudan müşteri çeker |
+| Kalite Artır | Kalite arayan müşteri kaymaya başlar |
+| Personel Çal | Oyuncunun düşük sadakatli çalışanına teklif |
+| Yatırım Bul | Rakip 3 tur süreyle büyük hamle yapabilir |
+| Yeni Şube Aç | Başka bölgede müşteri toplar |
+| Sabote Et | Rakip Google'a şikayet eder (düşük ihtimalli) |
+
+## 15.3 Rakip Zekası
+
+Rakip oyuncunun zayıf noktalarını okur:
+- Maaşlar gecikiyorsa: personel çalma hamlesi gelir
+- Google puanı düşükse: agresif marketing başlar
+- Nakit krizi varsa: rakip genişleme moduna geçer
+- Oyuncu güçlüyse: rakip savunmaya çekilir, kalite artırır
+
+## 15.4 Rakip Büyüme Takvimi
+
+Rakip oyuncunun performansına göre büyür veya küçülür. Oyuncu baskı uygularsa rakip yavaşlar. Oyuncu kriz yaşarsa rakip hızlanır.
+
+---
+
+# BÖLÜM 16: TUR YAPISI
+
+## 16.1 6 Faz
+
+### FAZ 1 — KART ÇEKME
+
+Oyuncuya girişim türüne özel kartlar gelir.
+- Standart: 5 kart çek, 3 tanesini tut
+- Marketing slotu doluysa marketing kartı oynayamazsın (slot stratejisi)
+- Girişim türüne göre kart havuzu değişir
+
+### FAZ 2 — PLANLAMA
+
+Oyuncunun **3 action point**'i var.
+
+Her kart oynamak veya aksiyon almak 1 action:
+- Kart oyna (slota yerleştir veya kullan): 1 action
+- Slottaki kartı çıkar: 1 action
+- Maaş öde / geciktir kararı: 0 action (zorunlu karar)
+- Kredi çek: 1 action
+
+### FAZ 3 — SİMÜLASYON
+
+Tüm kararlar çalışır:
+- Müşteri hareketi hesaplanır (formül uygulanır)
+- Reklam etkisi oluşur
+- Tedarikçi kalitesi uygulanır
+- Çalışan performansı hesaplanır
+
+### FAZ 4 — OPERASYON
+
+İç sistemler çalışır:
+- Servis hızı = kapasite / müşteri sayısı
+- Kalite = hammadde + şef seviyesi + moral
+- Fire hesaplanır (gıda işletmeleri)
+- Stok güncellenir
+
+### FAZ 5 — EKONOMİ
+
+Gelir–gider hesaplanır:
+- Gelir = müşteri × harcama × kalite katsayısı
+- Giderler tek tek düşülür
+- Platform komisyonları kesilir
+- Maaşlar ödenir (veya geciktirme kararı)
+- Nakit bakiyesi güncellenir
+- Vergi dönemi kontrolü
+- İflas kontrolü
+
+### FAZ 6 — EVENT + RAKİP
+
+1. Event çekilir (deterministik kontrol önce, sonra random)
+2. Event uygulanır
+3. Rakip hamle yapar
+4. Rakip hamlesi efektleri uygulanır
+5. Tur sayacı +1
+6. Kazanma/kaybetme koşulları kontrol edilir
+
+---
+
+# BÖLÜM 17: İKİNCİ ŞUBE / FRANCHISE
+
+## 17.1 Açılış Koşulları
+
+Oyuncu şu koşulları sağlayınca ikinci şube açabilir:
+- Company Tier 3 (Şirket) veya üstü
+- Nakit rezervi yeterli (minimum 300 nakit)
+- İlk şube karlı (son 3 tur net pozitif)
+
+## 17.2 İkinci Şube Etkisi
+
+- Yeni operation slot grubu açılır (+4 operation)
+- Yeni müşteri havuzuna erişim (farklı semt)
+- Maliyet: kira + personel 2x
+
+**Risk:** Yönetim dikkatinin bölünmesi. İlk şube ihmal edilirse çöker.
+
+## 17.3 Franchise Seçeneği
+
+Tier 4'te (Holding) franchise kurma seçeneği açılır:
+- Rakibe franchise verme (uzun vadeli gelir, rakibi büyütme riski)
+- Üçüncü şube açma (maksimum genişleme)
+
+---
+
+# BÖLÜM 18: KAZANMA / KAYBETME
+
+## 18.1 Kazanma Koşulları
+
+| Koşul | Açıklama |
+|---|---|
+| Market Dominance | Müşteri havuzunun %60'ına ulaş |
+| Rakibi İflas Ettir | Rakip nakit biterse oyun biter |
+| 25. Tur Sonu | Daha güçlü marka (müşteri oranı + tier) kazanır |
+
+## 18.2 Kaybetme Koşulları
+
+| Koşul | Açıklama |
+|---|---|
+| İflas | Nakit 3 tur üst üste negatif |
+| Operasyon Çöküşü | Tüm staff slotları boşaldı, işletme durdu |
+| Rakip %60 | Rakip dominance aldı |
+| Belediye Kapama | Yasal risk sonucu işletme kapatıldı |
+
+## 18.3 Erken Bitiş Bonusu
+
+25. turdan önce kazanılırsa kalan tur sayısı × bonus katsayısı puanı artırır.
+
+## 18.4 Run Sonu Skor
+
+| Faktör | Katkı |
+|---|---|
+| Son müşteri payı | %40 |
+| Company Tier | %20 |
+| Nakit rezervi | %15 |
+| Puan (Google/App Store) | %15 |
+| Tur sayısı (erken bitiş bonus) | %10 |
+
+---
+
+# BÖLÜM 19: KART SİSTEMİ (GENEL KURALLAR)
+
+## 19.1 Kart Kategorileri
+
+| Kategori | Açıklama |
+|---|---|
+| Operation | Fiziksel altyapı slota yerleşir |
+| Staff | Çalışan slota yerleşir |
+| Marketing | Reklam kampanyası slota yerleşir |
+| Supplier | Tedarikçi slota yerleşir |
+| Action | Tek seferlik kullanılır, slota girmez |
+| Upgrade | Kalıcı etki, mevcut slot özelliğini geliştirir |
+| Risk | Yüksek getiri, yüksek risk |
+| Event | Genellikle temp slota düşer |
+
+## 19.2 Kart Havuzu Yapısı
+
+- **%80:** Seçilen girişim türüne özel kartlar
+- **%20:** Genel kartlar (tüm işletme türlerine uygulanabilir)
+
+## 19.3 Genel Kartlar (Tüm Girişimlerde Gelebilir)
+
+**Ekonomi:**
+- Banka Kredisi Çek (Action): nakit +200, faiz %8/tur
+- Vergi Planlaması (Action): bu dönem vergi -%20
+- Maliyet Optimizasyonu (Upgrade): tüm giderler -%10
+
+**Personel:**
+- Takım Motivasyonu (Action): tüm çalışanlar moral +2 bu tur
+- Personel Eğitimi (Action): rastgele 1 çalışan XP +2
+- İş Güvenliği Sistemi (Upgrade): yasal risk -10
+
+**Strateji:**
+- Piyasa Araştırması (Action): rakibin mevcut hamlesini gör
+- Kriz Yönetimi (Upgrade): negatif event etkisi -%25
+- İkinci Şube Hazırlığı (Upgrade): şube açma maliyeti -%20
+
+## 19.4 Kart Denge Kuralları
+
+- **Her kart her zaman iyi değildir.** Kartın değeri işletmenin durumuna göre değişir.
+- Boş slota bakılır: slot yoksa kart oynanamaz
+- Sinerji > tek kart gücü: doğru kombinasyon her kartta kazanır
+- Risk kartları: yüksek getiri ama deterministik olumsuz zincir tetikleyebilir
+
+---
+
+# BÖLÜM 20: META PROGRESSION VE SKOR
+
+## 20.1 Run Sonu
+
+Her run sonunda:
+- Skor hesaplanır (Bkz. 18.4)
+- Kilit başarımlar kontrol edilir
+- Meta XP verilir
+
+## 20.2 Meta XP ve Kilit Açma
+
+| XP Miktarı | Açılan İçerik |
+|---|---|
+| 100 | Yeni event kartı |
+| 250 | Yeni girişim türü |
+| 500 | Zorluk modu açılır |
+| 1000 | Senaryo modu |
+
+## 20.3 Zorluk Seviyeleri
+
+| Seviye | Fark |
+|---|---|
+| Kolay | Rakip pasif, eventler hafif |
+| Normal | Varsayılan |
+| Zor | Rakip agresif, enflasyon hızlı |
+| Acımasız | Nakit kriz riski 2x, rakip her zayıflığı kullanır |
+
+---
+
+# BÖLÜM 21: TEKNİK MİMARİ NOTU
+
+GDD, kod mimarisini belirlemez. Aşağıdakiler referans niteliğindedir:
+
+- **Namespace:** `EmpireOfCards.{Domain}` (Core, Gameplay, UI, Data, Bootstrap, World)
+- **Mimari:** Bootstrap → WiringService → GameManager → StateMachine + TurnManager
+- **Event sistemi:** Statik EventBus, ClearAll() scene unload'da
+- **Kart verisi:** ScriptableObject (runtime'da kopyalanır, asıl veri değiştirilmez)
+- **Slot sistemi:** SlotZone3D bileşenleri Board3D üzerinde
+
+---
+
+# BÖLÜM 22: MVP KAPSAMI
+
+## 22.1 MVP (İlk Oynanabilir)
+
+- [ ] 1 girişim türü (Fast Food)
+- [ ] 17 başlangıç slot
+- [ ] 30 kart (Fast Food havuzu)
+- [ ] Temel ekonomi sistemi
+- [ ] Temel personel sistemi (moral + maaş)
+- [ ] Google puan sistemi
+- [ ] Rakip (basit AI, 5 hamle)
+- [ ] 6 faz tur yapısı
+- [ ] 3 kazanma/kaybetme koşulu
+
+## 22.2 Alpha
+
+- [ ] Tüm 5 girişim türü
+- [ ] Slot genişleme sistemi (tier bazlı)
+- [ ] Tam event havuzu (30+ event)
+- [ ] Kredi/borç sistemi
+- [ ] Mevsimsellik
+- [ ] Rakip AI (zayıf nokta okuma)
+
+## 22.3 Beta
+
+- [ ] İkinci şube sistemi
+- [ ] Meta progression
+- [ ] Zorluk seviyeleri
+- [ ] Balans tuning (tüm girişimler)
+- [ ] Ses + müzik sistemi
+- [ ] UI polish
+
+---
+
+> **Önemli:** Her işletme türünün kart listesi, özel mekanikleri, event listesi ve zincir reaksiyon örnekleri için:
+> `Assets/steam-card-game-gdd/businesses/` klasörüne bak.
+> GDD yalnızca tüm işletmeler için geçerli CORE SİSTEMLERİ içerir.
