@@ -257,5 +257,62 @@ namespace EmpireOfCards.Core
         public const float TAX_DEBT_INTEREST_RATE = 0.10f;
         public const int TAX_DEBT_AUDIT_THRESHOLD = 2;
         #endregion
+
+        #region Salary System (GDD Section 5.5)
+        public const int SALARY_DELAY_MORALE = -3;
+        public const float SALARY_DELAY_RESIGN_RISK = 0.15f;
+        public const float SALARY_PARTIAL_PAY_RATE = 0.50f;
+        public const int SALARY_PARTIAL_MORALE = -1;
+        public const int SALARY_PARTIAL_LOYALTY = -1;
+        public const float SALARY_ADVANCE_PAY_RATE = 1.25f;
+        public const int SALARY_ADVANCE_MORALE = 2;
+        public const int SALARY_ADVANCE_LOYALTY = 1;
+        #endregion
+
+        #region Insurance System (GDD Section 5.6)
+        public const float INSURANCE_SGK_MULTIPLIER = 0.37f;
+        public const int INSURANCE_UNINSURED_RISK = 5;
+        public const int INSURANCE_DAILY_RISK = 2;
+        #endregion
+
+        #region Credit System (GDD Section 5.7)
+        public const int CREDIT_SMALL_AMOUNT = 300;
+        public const float CREDIT_SMALL_INTEREST = 0.05f;
+        public const int CREDIT_SMALL_DURATION = 5;
+        public const int CREDIT_MEDIUM_AMOUNT = 600;
+        public const float CREDIT_MEDIUM_INTEREST = 0.08f;
+        public const int CREDIT_MEDIUM_DURATION = 8;
+        public const int CREDIT_LARGE_AMOUNT = 1200;
+        public const float CREDIT_LARGE_INTEREST = 0.12f;
+        public const int CREDIT_LARGE_DURATION = 12;
+        public const int CREDIT_EMERGENCY_AMOUNT = 200;
+        public const float CREDIT_EMERGENCY_INTEREST = 0.20f;
+        public const int CREDIT_EMERGENCY_DURATION = 3;
+        #endregion
+
+        #region Inflation System (GDD Section 5.9)
+        public const int INFLATION_INTERVAL = 5;
+        public const float INFLATION_COST_INCREASE_MIN = 0.05f;
+        public const float INFLATION_COST_INCREASE_MAX = 0.15f;
+        public const float INFLATION_SALARY_INCREASE = 0.03f;
+        #endregion
+
+        #region Stock System (GDD Section 9.1-9.4)
+        public const int STOCK_SPOILAGE_INTERVAL = 3;
+        public const float STOCK_SPOILAGE_MIN = 0.10f;
+        public const float STOCK_SPOILAGE_MAX = 0.20f;
+        public const float STOCK_CLOTHING_SEASON_LOSS = 0.25f;
+        #endregion
+
+        #region Location System (GDD Section 10.1-10.3)
+        public const int LOCATION_TRAFFIC_REMOTE = 0;
+        public const int LOCATION_RENT_REMOTE = 20;
+        public const int LOCATION_TRAFFIC_SIDE = 2;
+        public const int LOCATION_RENT_SIDE = 50;
+        public const int LOCATION_TRAFFIC_MAIN = 5;
+        public const int LOCATION_RENT_MAIN = 100;
+        public const int LOCATION_TRAFFIC_MALL = 8;
+        public const int LOCATION_RENT_MALL = 180;
+        #endregion
     }
 }

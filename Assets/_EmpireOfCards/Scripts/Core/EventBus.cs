@@ -262,10 +262,10 @@ namespace EmpireOfCards.Core
         #endregion
 
         #region Tax Period Invoke Helpers (GDD 5.8)
-        public static event Action<int> OnTaxPeriodProcessed;
-        public static event Action OnTaxAuditTriggered;
-        public static void TaxPeriodProcessed(int amount) => OnTaxPeriodProcessed?.Invoke(amount);
-        public static void TaxAuditTriggered() => OnTaxAuditTriggered?.Invoke();
+        public static event Action<int, int> OnTaxPeriodProcessed;
+        public static event Action<int> OnTaxAuditTriggered;
+        public static void TaxPeriodProcessed(int taxOwed, int amountPaid) => OnTaxPeriodProcessed?.Invoke(taxOwed, amountPaid);
+        public static void TaxAuditTriggered(int unpaidDebt) => OnTaxAuditTriggered?.Invoke(unpaidDebt);
         #endregion
 
         #region Customer Loyalty Invoke Helpers (GDD 7.3)
