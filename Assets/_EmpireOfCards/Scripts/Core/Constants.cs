@@ -214,12 +214,48 @@ namespace EmpireOfCards.Core
         #endregion
 
         #region Chain Reaction System (GDD Section 11, 12.2)
-        public const int CHAIN_CHEAP_SUPPLIER_THRESHOLD = 4;          // 4+ turns cheap supplier -> QualityCrisis
-        public const int CHAIN_SALARY_DELAY_THRESHOLD = 3;            // 3+ turns salary delay -> StaffStrike
-        public const int CHAIN_TAX_UNPAID_THRESHOLD = 2;              // 2+ turns tax unpaid -> TaxAudit
-        public const int CHAIN_UNINSURED_STAFF_THRESHOLD = 3;         // 3+ turns uninsured -> SGKAudit
-        public const float CHAIN_PLATFORM_RATING_CRISIS = 3.0f;       // Rating <= 3.0 -> ReputationCrisis
-        public const float CHAIN_GROWTH_TRAP_OPERATION_RATIO = 0.50f;  // Operation < 50% full = insufficient
+        public const int CHAIN_CHEAP_SUPPLIER_THRESHOLD = 4;
+        public const int CHAIN_SALARY_DELAY_THRESHOLD = 3;
+        public const int CHAIN_TAX_UNPAID_THRESHOLD = 2;
+        public const int CHAIN_UNINSURED_STAFF_THRESHOLD = 3;
+        public const float CHAIN_PLATFORM_RATING_CRISIS = 3.0f;
+        public const float CHAIN_GROWTH_TRAP_OPERATION_RATIO = 0.50f;
+        #endregion
+
+        #region Headhunting (GDD Section 6.5)
+        public const float HEADHUNT_COUNTER_OFFER_MULTIPLIER = 1.5f;
+        public const float HEADHUNT_REJECT_BONUS_MULTIPLIER = 2.0f;
+        public const int HEADHUNT_REJECT_LOYALTY_BONUS = 2;
+        #endregion
+
+        #region Customer Loyalty (GDD Section 7.3)
+        public const float LOYALTY_PER_GOOD_TURN = 5f;
+        public const float LOYALTY_DECAY_PER_BAD_TURN = 10f;
+        public const int LOYALTY_CUSTOMERS_PER_GROUP = 5;
+        public const float LOYALTY_MAX = 100f;
+        public const float LOYALTY_MIN = 0f;
+        #endregion
+
+        #region Location (GDD Section 10.1)
+        public const int LOCATION_REMOTE_CUSTOMERS = 0;
+        public const int LOCATION_REMOTE_RENT = 20;
+        public const int LOCATION_SIDE_CUSTOMERS = 2;
+        public const int LOCATION_SIDE_RENT = 50;
+        public const int LOCATION_MAIN_CUSTOMERS = 5;
+        public const int LOCATION_MAIN_RENT = 100;
+        public const int LOCATION_MALL_CUSTOMERS = 8;
+        public const int LOCATION_MALL_RENT = 180;
+        #endregion
+
+        #region Rating Recovery (GDD Section 8.4)
+        public const float PLATFORM_RATING_RECOVERY_PER_GOOD_TURN = 0.1f;
+        #endregion
+
+        #region Tax Period (GDD Section 5.8)
+        public const int TAX_PERIOD_INTERVAL = 5;
+        public const float TAX_PERIOD_RATE = 0.20f;
+        public const float TAX_DEBT_INTEREST_RATE = 0.10f;
+        public const int TAX_DEBT_AUDIT_THRESHOLD = 2;
         #endregion
     }
 }

@@ -250,6 +250,41 @@ namespace EmpireOfCards.Core
         public static void DeterministicEventTriggered(string eventId) => OnDeterministicEventTriggered?.Invoke(eventId);
         #endregion
 
+        #region Headhunting Invoke Helpers (GDD 6.5)
+        public static event Action<CardData, int> OnStaffPoachAttempted;
+        public static event Action<CardData> OnStaffPoachAccepted;
+        public static event Action<CardData, int> OnStaffPoachCountered;
+        public static event Action<CardData, int> OnStaffPoachRejected;
+        public static void StaffPoachAttempted(CardData card, int offer) => OnStaffPoachAttempted?.Invoke(card, offer);
+        public static void StaffPoachAccepted(CardData card) => OnStaffPoachAccepted?.Invoke(card);
+        public static void StaffPoachCountered(CardData card, int cost) => OnStaffPoachCountered?.Invoke(card, cost);
+        public static void StaffPoachRejected(CardData card, int cost) => OnStaffPoachRejected?.Invoke(card, cost);
+        #endregion
+
+        #region Tax Period Invoke Helpers (GDD 5.8)
+        public static event Action<int> OnTaxPeriodProcessed;
+        public static event Action OnTaxAuditTriggered;
+        public static void TaxPeriodProcessed(int amount) => OnTaxPeriodProcessed?.Invoke(amount);
+        public static void TaxAuditTriggered() => OnTaxAuditTriggered?.Invoke();
+        #endregion
+
+        #region Customer Loyalty Invoke Helpers (GDD 7.3)
+        public static event Action<float> OnLoyaltyScoreChanged;
+        public static event Action<int> OnOrganicCustomersGained;
+        public static void LoyaltyScoreChanged(float score) => OnLoyaltyScoreChanged?.Invoke(score);
+        public static void OrganicCustomersGained(int count) => OnOrganicCustomersGained?.Invoke(count);
+        #endregion
+
+        #region Location Invoke Helpers (GDD 10.1)
+        public static event Action<int, int> OnLocationChanged;
+        public static void LocationChanged(int passiveCustomers, int rent) => OnLocationChanged?.Invoke(passiveCustomers, rent);
+        #endregion
+
+        #region Rating Recovery Invoke Helpers (GDD 8.4)
+        public static event Action<float> OnRatingRecoveryApplied;
+        public static void RatingRecoveryApplied(float delta) => OnRatingRecoveryApplied?.Invoke(delta);
+        #endregion
+
         // ======================================================================
         //  CLEANUP
         // ======================================================================
@@ -355,6 +390,26 @@ namespace EmpireOfCards.Core
             // Chain Reaction
             OnChainReactionTriggered = null;
             OnDeterministicEventTriggered = null;
+
+            // Headhunting
+            OnStaffPoachAttempted = null;
+            OnStaffPoachAccepted = null;
+            OnStaffPoachCountered = null;
+            OnStaffPoachRejected = null;
+
+            // Tax Period
+            OnTaxPeriodProcessed = null;
+            OnTaxAuditTriggered = null;
+
+            // Customer Loyalty
+            OnLoyaltyScoreChanged = null;
+            OnOrganicCustomersGained = null;
+
+            // Location
+            OnLocationChanged = null;
+
+            // Rating Recovery
+            OnRatingRecoveryApplied = null;
         }
     }
 }
