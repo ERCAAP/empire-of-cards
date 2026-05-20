@@ -18,13 +18,13 @@ namespace EmpireOfCards.Core.GameStates
 
             // Calculate and log final score
             int finalMoney = gm.PlayerMoney;
-            int playerTerr = gm.PlayerTerritories;
-            int rivalTerr = gm.RivalTerritories;
+            int playerBlocks = gm.PlayerMarketBlocks;
+            int rivalBlocks = gm.RivalMarketBlocks;
             int turn = gm.CurrentTurn;
             int maxTurn = gm.MaxTurns;
 
             Debug.Log($"[GameOverState] Final — Money: {finalMoney}, " +
-                      $"Territories: {playerTerr}/{rivalTerr}, " +
+                      $"Market Blocks: {playerBlocks}/{rivalBlocks}, " +
                       $"Turn: {turn}/{maxTurn}");
 
             // Show game over / score screen UI

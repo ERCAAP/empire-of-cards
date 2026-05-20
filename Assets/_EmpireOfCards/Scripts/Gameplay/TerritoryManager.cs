@@ -6,32 +6,38 @@ using EmpireOfCards.Data;
 namespace EmpireOfCards.Gameplay
 {
     /// <summary>
-    /// Manages the 10 territory zones (GDD Section 6).
-    /// Territories are proportional to customer share.
-    /// Player 6+ = WIN, Rival 7+ = LOSE.
-    /// Supports smooth ownership changes (territories don't flip all at once).
+    /// Legacy: adapts customer share to visual territory blocks.
+    /// GDD v3.0 replaced the 10-territory conquest system with a 100-customer
+    /// market pool. This class now maps player/rival customer share into 10
+    /// visual blocks for the Board3D market zone display. Win/lose conditions
+    /// are checked via customer share in GameManager.EndCurrentTurn(), not here.
     /// </summary>
     public class TerritoryManager : MonoBehaviour
     {
         // --- Configuration ---
-        [Header("Territory Settings")]
-        [SerializeField] private int totalTerritories = 10;
-        [SerializeField] private int maxFlipPerTurn = 2; // Smooth transitions: max territories that can change per turn
+        [Header("Market Share Blocks")]
+        [SerializeField] private int totalTerritories = 10; // Legacy: 10 visual blocks representing 100 customers
+        [SerializeField] private int maxFlipPerTurn = 2; // Smooth transitions: max blocks that can change per turn
 
         // --- Runtime State ---
-        [Header("Territory Ownership (Read Only)")]
-        [Tooltip("0 = neutral, 1 = player, 2 = rival")]
-        [SerializeField] private int[] territoryOwnership;
+        [Header("Market Share Blocks (Read Only)")]
+        [Tooltip("0 = unclaimed, 1 = player, 2 = rival")]
+        [SerializeField] private int[] territoryOwnership; // Legacy name kept for serialization
 
         [Header("Cached Counts")]
-        [SerializeField] private int playerTerritoryCount;
-        [SerializeField] private int rivalTerritoryCount;
+        [SerializeField] private int playerTerritoryCount; // Number of market share blocks owned by player
+        [SerializeField] private int rivalTerritoryCount;  // Number of market share blocks owned by rival
 
         // --- Properties ---
+        public int TotalBlocks => totalTerritories;
+        public int PlayerBlockCount => playerTerritoryCount;
+        public int RivalBlockCount => rivalTerritoryCount;
+        public int UnclaimedBlockCount => totalTerritories - playerTerritoryCount - rivalTerritoryCount;
+
+        // Legacy: kept for backward-compat with external callers
         public int TotalTerritories => totalTerritories;
         public int PlayerTerritoryCount => playerTerritoryCount;
         public int RivalTerritoryCount => rivalTerritoryCount;
-        public int NeutralTerritoryCount => totalTerritories - playerTerritoryCount - rivalTerritoryCount;
 
         // ----------------------------------------------------------------
         // Initialization
@@ -43,7 +49,7 @@ namespace EmpireOfCards.Gameplay
         }
 
         /// <summary>
-        /// Resets all territories to neutral.
+        /// Resets all market share blocks to unclaimed.
         /// </summary>
         public void Reset()
         {
@@ -52,24 +58,23 @@ namespace EmpireOfCards.Gameplay
             rivalTerritoryCount = 0;
 
             GameManager gm = GameManager.Instance;
-            if (gm != null) gm.SetTerritories(0, 0);
+            if (gm != null) gm.SetMarketBlocks(0, 0);
 
-            EventBus.TerritoryUpdated(0, 0);
+            EventBus.MarketBlocksUpdated(0, 0);
         }
 
         // ----------------------------------------------------------------
-        // Main Calculation (GDD Section 6)
+        // Main Calculation (adapts customer share to visual blocks)
         // ----------------------------------------------------------------
 
         /// <summary>
-        /// Recalculates territory ownership based on customer ratios.
-        /// Territories are proportional: playerCustomers/totalMarket * 10 territories.
+        /// Recalculates market share block ownership based on customer ratios.
+        /// 10 blocks proportional to: playerCustomers/totalMarket * 10.
         ///
-        /// Smooth ownership changes: old territories don't flip instantly.
-        /// Each turn, at most `maxFlipPerTurn` territories can change hands.
-        /// This prevents jarring swings and adds strategic tension.
+        /// Smooth changes: at most `maxFlipPerTurn` blocks flip per turn.
+        /// Win/lose is checked via customer share in GameManager, not here.
         /// </summary>
-        public void CalculateTerritories(int playerCustomers, int rivalCustomers, int totalMarket)
+        public void CalculateMarketBlocks(int playerCustomers, int rivalCustomers, int totalMarket)
         {
             if (totalMarket <= 0)
             {
@@ -115,12 +120,12 @@ namespace EmpireOfCards.Gameplay
 
             // Sync with GameManager
             GameManager gm = GameManager.Instance;
-            if (gm != null) gm.SetTerritories(playerTerritoryCount, rivalTerritoryCount);
+            if (gm != null) gm.SetMarketBlocks(playerTerritoryCount, rivalTerritoryCount);
 
-            EventBus.TerritoryUpdated(playerTerritoryCount, rivalTerritoryCount);
+            EventBus.MarketBlocksUpdated(playerTerritoryCount, rivalTerritoryCount);
 
-            // Win/lose is now checked via customer share in GameManager.EndCurrentTurn().
-            // Territory visuals remain for market share display purposes.
+            // Win/lose is checked via customer share in GameManager.EndCurrentTurn().
+            // These blocks are visual-only: market share display on Board3D.
         }
 
         // ----------------------------------------------------------------
@@ -128,7 +133,7 @@ namespace EmpireOfCards.Gameplay
         // ----------------------------------------------------------------
 
         /// <summary>
-        /// Moves current count towards target by at most maxFlipPerTurn.
+        /// Moves current block count towards target by at most maxFlipPerTurn.
         /// </summary>
         private int ApplySmoothTransition(int current, int target)
         {
@@ -141,8 +146,8 @@ namespace EmpireOfCards.Gameplay
         }
 
         /// <summary>
-        /// Rebuilds the territory ownership array from the final counts.
-        /// Player territories fill from index 0, rival from the end, neutral in between.
+        /// Rebuilds the block ownership array from the final counts.
+        /// Player blocks fill from index 0, rival from the end, unclaimed in between.
         /// </summary>
         private void UpdateOwnershipArray(int playerCount, int rivalCount)
         {
@@ -162,7 +167,7 @@ namespace EmpireOfCards.Gameplay
         // ----------------------------------------------------------------
 
         /// <summary>
-        /// Returns the number of territories owned by the player.
+        /// Returns the number of market share blocks owned by the player.
         /// </summary>
         public int GetPlayerTerritories()
         {
@@ -170,7 +175,7 @@ namespace EmpireOfCards.Gameplay
         }
 
         /// <summary>
-        /// Returns the number of territories owned by the rival.
+        /// Returns the number of market share blocks owned by the rival.
         /// </summary>
         public int GetRivalTerritories()
         {
@@ -178,7 +183,7 @@ namespace EmpireOfCards.Gameplay
         }
 
         /// <summary>
-        /// Returns the number of unclaimed territories.
+        /// Returns the number of unclaimed market share blocks.
         /// </summary>
         public int GetNeutralTerritories()
         {
@@ -186,7 +191,7 @@ namespace EmpireOfCards.Gameplay
         }
 
         /// <summary>
-        /// Returns the market share as a percentage (0-100).
+        /// Returns the customer market share as a percentage (0-100).
         /// </summary>
         public float GetMarketSharePercent(int customers, int totalMarket)
         {
@@ -195,8 +200,8 @@ namespace EmpireOfCards.Gameplay
         }
 
         /// <summary>
-        /// Returns the ownership value at a specific territory index.
-        /// 0 = neutral, 1 = player, 2 = rival.
+        /// Returns the ownership value at a specific block index.
+        /// 0 = unclaimed, 1 = player, 2 = rival.
         /// </summary>
         public int GetOwnerAtIndex(int index)
         {
@@ -207,19 +212,23 @@ namespace EmpireOfCards.Gameplay
         }
 
         /// <summary>
-        /// Checks if the player meets the win condition (6+ territories).
+        /// Returns true if the player owns 60%+ of visual market blocks.
+        /// NOTE: Actual win condition uses customer share in GameManager.EndCurrentTurn().
+        /// This is visual-only and should not drive game logic.
         /// </summary>
-        public bool CheckPlayerWin()
+        public bool IsPlayerDominant()
         {
-            return playerTerritoryCount >= Constants.WIN_TERRITORIES;
+            return playerTerritoryCount >= (totalTerritories * 6 / 10);
         }
 
         /// <summary>
-        /// Checks if the rival meets the win condition (7+ territories = player loses).
+        /// Returns true if the rival owns 60%+ of visual market blocks.
+        /// NOTE: Actual lose condition uses customer share in GameManager.EndCurrentTurn().
+        /// This is visual-only and should not drive game logic.
         /// </summary>
-        public bool CheckRivalWin()
+        public bool IsRivalDominant()
         {
-            return rivalTerritoryCount >= Constants.LOSE_TERRITORIES;
+            return rivalTerritoryCount >= (totalTerritories * 6 / 10);
         }
     }
 }

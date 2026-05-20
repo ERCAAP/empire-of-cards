@@ -22,6 +22,9 @@ namespace EmpireOfCards.Core.TurnPhases
             var dm = gm != null ? gm.DeckManager : null;
             if (dm != null)
             {
+                // Safe: board-placed cards were already removed from hand via
+                // DeckManager.RemoveFromHand() in WiringService.Wire3DInteraction,
+                // so DiscardHand() only touches unplayed cards still in the hand list.
                 dm.DiscardHand();
                 dm.ResetRedraws();
 

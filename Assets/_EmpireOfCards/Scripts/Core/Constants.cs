@@ -115,10 +115,8 @@ namespace EmpireOfCards.Core
         public const int FBI_RAID_PENALTY = 300;
         #endregion
 
-        #region Territory Map (GDD Section 6)
-        public const int TERRITORY_COUNT = 10;
-        public const int WIN_TERRITORIES = 6;        // 60% market share
-        public const int LOSE_TERRITORIES = 7;       // Rival takes 7 territories
+        #region Market Share Visual Blocks (GDD v3.0)
+        public const int MARKET_VISUAL_BLOCKS = 10;
         #endregion
 
         #region Shop & Events (GDD Section 2.2 / 4.1)
@@ -136,7 +134,7 @@ namespace EmpireOfCards.Core
         #endregion
 
         #region Scoring (GDD Section 10.3)
-        public const int SCORE_TERRITORY = 500;
+        public const int SCORE_CUSTOMER_SHARE = 500;
         public const int SCORE_MONEY = 1;
         public const int SCORE_COMBO = 200;
         public const int SCORE_BUSINESS = 100;

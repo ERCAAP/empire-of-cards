@@ -84,7 +84,7 @@ namespace EmpireOfCards.UI
             EventBus.OnRivalTaunt += HandleRivalTaunt;
             EventBus.OnGameOver += HandleGameOver;
             EventBus.OnMoneyChanged += HandleMoneyChanged;
-            EventBus.OnTerritoryChanged += HandleTerritoryChanged;
+            EventBus.OnMarketBlocksChanged += HandleTerritoryChanged;
             EventBus.OnFBIRiskChanged += HandleFBIRiskChanged;
             EventBus.OnTurnStarted += HandleTurnStarted;
             EventBus.OnBusinessNeglected += HandleBusinessNeglected;
@@ -102,7 +102,7 @@ namespace EmpireOfCards.UI
             EventBus.OnRivalTaunt -= HandleRivalTaunt;
             EventBus.OnGameOver -= HandleGameOver;
             EventBus.OnMoneyChanged -= HandleMoneyChanged;
-            EventBus.OnTerritoryChanged -= HandleTerritoryChanged;
+            EventBus.OnMarketBlocksChanged -= HandleTerritoryChanged;
             EventBus.OnFBIRiskChanged -= HandleFBIRiskChanged;
             EventBus.OnTurnStarted -= HandleTurnStarted;
             EventBus.OnBusinessNeglected -= HandleBusinessNeglected;

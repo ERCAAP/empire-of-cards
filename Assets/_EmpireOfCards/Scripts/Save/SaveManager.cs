@@ -235,7 +235,7 @@ namespace EmpireOfCards.Save
         {
             int score = 0;
 
-            score += gm.PlayerTerritories * Constants.SCORE_TERRITORY;
+            score += gm.PlayerCustomers * Constants.SCORE_CUSTOMER_SHARE;
             score += gm.PlayerMoney * Constants.SCORE_MONEY;
 
             // Active combos score (GDD Section 10.3)

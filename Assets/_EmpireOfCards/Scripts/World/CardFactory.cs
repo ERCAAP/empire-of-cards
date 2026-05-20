@@ -27,6 +27,14 @@ namespace EmpireOfCards.World
         // Card text styling
         private static readonly Color GoldColor = new Color(1f, 0.85f, 0.2f);
 
+        // Venture-type tint colors applied as a subtle overlay on the card body
+        private static readonly Color FastFoodTint = new Color(0.85f, 0.35f, 0.15f);
+        private static readonly Color CafeTint = new Color(0.55f, 0.35f, 0.2f);
+        private static readonly Color TechAppTint = new Color(0.2f, 0.45f, 0.85f);
+        private static readonly Color ClothingStoreTint = new Color(0.8f, 0.35f, 0.6f);
+        private static readonly Color GroceryStoreTint = new Color(0.25f, 0.65f, 0.3f);
+        private static readonly Color GeneralTint = new Color(0.5f, 0.5f, 0.5f);
+
         public Card3D CreateCard(CardData data)
         {
             // Root - UNIFORM scale (1,1,1) so children aren't distorted
@@ -114,7 +122,36 @@ namespace EmpireOfCards.World
             var card3D = go.AddComponent<Card3D>();
             card3D.Initialize(data, meshRenderer, nameText, costText, descText, statsText, glow);
 
+            // Apply venture-type tint as a subtle color blend on the card body
+            ApplyVentureTint(meshRenderer, data);
+
             return card3D;
+        }
+
+        private static void ApplyVentureTint(MeshRenderer renderer, CardData data)
+        {
+            if (renderer == null || data == null) return;
+
+            // Only tint cards that belong to a specific venture (not general cards)
+            if (data.isGeneralCard) return;
+
+            Color ventureTint = GetVentureTint(data.ventureType);
+            // Blend: 70% original card-type color + 30% venture tint
+            Color baseColor = renderer.material.color;
+            renderer.material.color = Color.Lerp(baseColor, ventureTint, 0.3f);
+        }
+
+        private static Color GetVentureTint(VentureType venture)
+        {
+            return venture switch
+            {
+                VentureType.FastFood      => FastFoodTint,
+                VentureType.Cafe          => CafeTint,
+                VentureType.TechApp       => TechAppTint,
+                VentureType.ClothingStore => ClothingStoreTint,
+                VentureType.GroceryStore  => GroceryStoreTint,
+                _                         => GeneralTint
+            };
         }
 
         private TMP_Text CreateText(Transform parent, string name,

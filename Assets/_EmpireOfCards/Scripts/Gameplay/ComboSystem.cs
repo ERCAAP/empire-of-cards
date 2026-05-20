@@ -55,7 +55,7 @@ namespace EmpireOfCards.Gameplay
         /// Evaluates every combo in the database against the current board state.
         /// Call this once each turn during the Resolve phase.
         /// </summary>
-        public void CheckCombos(int playerMoney, int playerTerritories, int activeBusinessCount, float marketShare)
+        public void CheckCombos(int playerMoney, int playerBlocks, int activeBusinessCount, float marketShare)
         {
             if (allCombos == null || allCombos.Length == 0) return;
             if (boardManager == null)
@@ -80,7 +80,7 @@ namespace EmpireOfCards.Gameplay
 
                 bool met = evaluator.EvaluateCombo(
                     combo, activeCardIds, activeTags, activeEventId,
-                    playerMoney, playerTerritories, activeBusinessCount, marketShare
+                    playerMoney, playerBlocks, activeBusinessCount, marketShare
                 );
 
                 if (met)

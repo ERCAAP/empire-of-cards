@@ -52,8 +52,8 @@ namespace EmpireOfCards.Core
         public static event Action<int, int> OnBusinessNeglected;          // businessIndex, neglectTurns
         #endregion
 
-        #region Territory Events
-        public static event Action<int, int> OnTerritoryChanged;           // playerCount, rivalCount
+        #region Market Block Events
+        public static event Action<int, int> OnMarketBlocksChanged;        // playerBlocks, rivalBlocks
         #endregion
 
         #region Board Slot Events
@@ -159,8 +159,8 @@ namespace EmpireOfCards.Core
         public static void BusinessNeglected(int idx, int turns) => OnBusinessNeglected?.Invoke(idx, turns);
         #endregion
 
-        #region Territory Invoke Helpers
-        public static void TerritoryUpdated(int p, int r) => OnTerritoryChanged?.Invoke(p, r);
+        #region Market Block Invoke Helpers
+        public static void MarketBlocksUpdated(int p, int r) => OnMarketBlocksChanged?.Invoke(p, r);
         #endregion
 
         #region Board Slot Invoke Helpers
@@ -266,8 +266,8 @@ namespace EmpireOfCards.Core
             OnBusinessEvolved = null;
             OnBusinessNeglected = null;
 
-            // Territory
-            OnTerritoryChanged = null;
+            // Market Blocks
+            OnMarketBlocksChanged = null;
 
             // Board Slots
             OnBusinessSlotsChanged = null;

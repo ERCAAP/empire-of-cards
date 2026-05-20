@@ -66,7 +66,7 @@ namespace EmpireOfCards.Gameplay.Combo
             HashSet<CardTag> activeTags,
             string activeEventId,
             int playerMoney,
-            int playerTerritories,
+            int playerBlocks,
             int activeBusinessCount,
             float marketShare)
         {
@@ -113,7 +113,7 @@ namespace EmpireOfCards.Gameplay.Combo
                 return false;
 
             // --- Minimum territory ---
-            if (combo.requiresMinTerritory && playerTerritories < combo.minTerritoryRequired)
+            if (combo.requiresMinTerritory && playerBlocks < combo.minTerritoryRequired)
                 return false;
 
             // --- Minimum active businesses ---

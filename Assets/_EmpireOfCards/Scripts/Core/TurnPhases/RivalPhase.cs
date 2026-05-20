@@ -22,7 +22,7 @@ namespace EmpireOfCards.Core.TurnPhases
             var rival = gm != null ? gm.RivalAI : null;
             if (rival != null)
             {
-                rival.TakeTurn(gm.PlayerTerritories, gm.RivalTerritories, _turnManager.CurrentTurnNumber);
+                rival.TakeTurn(gm.PlayerMarketBlocks, gm.RivalMarketBlocks, _turnManager.CurrentTurnNumber);
             }
             // Always mark as acted so the phase can complete even if RivalAI is null
             _rivalActed = true;

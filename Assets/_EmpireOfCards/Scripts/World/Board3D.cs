@@ -368,7 +368,7 @@ namespace EmpireOfCards.World
             EventBus.OnEmployeePlaced += HandleSlotRefresh;
             EventBus.OnUpgradePlaced += HandleSlotRefresh;
             EventBus.OnEmployeeLeft += HandleEmployeeLeft;
-            EventBus.OnTerritoryChanged += HandleTerritoryChanged;
+            EventBus.OnMarketBlocksChanged += HandleTerritoryChanged;
             EventBus.OnBusinessSlotsChanged += UpdateVisibleSlots;
         }
 
@@ -379,7 +379,7 @@ namespace EmpireOfCards.World
             EventBus.OnEmployeePlaced -= HandleSlotRefresh;
             EventBus.OnUpgradePlaced -= HandleSlotRefresh;
             EventBus.OnEmployeeLeft -= HandleEmployeeLeft;
-            EventBus.OnTerritoryChanged -= HandleTerritoryChanged;
+            EventBus.OnMarketBlocksChanged -= HandleTerritoryChanged;
             EventBus.OnBusinessSlotsChanged -= UpdateVisibleSlots;
         }
 

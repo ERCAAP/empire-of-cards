@@ -21,53 +21,53 @@ namespace EmpireOfCards.Bootstrap.Data
 
             // General
             gb.startingMoney = 500;
-            gb.maxTurns = 30;
-            gb.startingActions = 3;
-            gb.maxActions = 5;
-            gb.startingBusinessSlots = 3;
-            gb.maxBusinessSlots = 5;
-            gb.handSize = 5;
-            gb.redrawsPerTurn = 1;
-            gb.shopCardsPerTurn = 3;
-            gb.eventInterval = 3;
+            gb.maxTurns = Constants.MAX_TURNS;            // 25
+            gb.startingActions = Constants.STARTING_ACTIONS;
+            gb.maxActions = Constants.MAX_ACTIONS;
+            gb.startingBusinessSlots = Constants.STARTING_OPERATION_SLOTS; // 4
+            gb.maxBusinessSlots = Constants.MAX_OPERATION_SLOTS;           // 8
+            gb.handSize = Constants.HAND_SIZE;
+            gb.redrawsPerTurn = Constants.REDRAWS_PER_TURN;
+            gb.shopCardsPerTurn = Constants.SHOP_CARDS_PER_TURN;
+            gb.eventInterval = Constants.EVENT_INTERVAL;
 
             // Economy
-            gb.taxRate = 0.15f;
-            gb.reducedTaxRate = 0.075f;
-            gb.minTaxRate = 0.03f;
-            gb.sellRate = 0.4f;
+            gb.taxRate = Constants.TAX_RATE;
+            gb.reducedTaxRate = Constants.REDUCED_TAX_RATE;
+            gb.minTaxRate = Constants.MIN_TAX_RATE;
+            gb.sellRate = Constants.SELL_RATE;
 
             // FBI
-            gb.fbiRaidPenalty = 300;
+            gb.fbiRaidPenalty = Constants.FBI_RAID_PENALTY;
             gb.fbiStartingRisk = 0f;
 
-            // Territory
-            gb.totalTerritories = 10;
-            gb.winTerritories = 6;
-            gb.loseTerritories = 7;
+            // Customer Market
+            gb.totalMarketCustomers = Constants.TOTAL_MARKET_CUSTOMERS; // 100
+            gb.winCustomerShare = Constants.WIN_CUSTOMER_SHARE;         // 60
+            gb.loseCustomerShare = Constants.WIN_CUSTOMER_SHARE;        // 60
 
             // Market Pool
-            gb.baseMarketCustomers = 60;
-            gb.earlyGrowthPerTurn = 5;
-            gb.midGrowthPerTurn = 6;
-            gb.lateGrowthPerTurn = 8;
-            gb.endGrowthPerTurn = 10;
+            gb.baseMarketCustomers = Constants.BASE_MARKET_CUSTOMERS;
+            gb.earlyGrowthPerTurn = Constants.EARLY_GROWTH_PER_TURN;
+            gb.midGrowthPerTurn = Constants.MID_GROWTH_PER_TURN;
+            gb.lateGrowthPerTurn = Constants.LATE_GROWTH_PER_TURN;
+            gb.endGrowthPerTurn = Constants.END_GROWTH_PER_TURN;
 
             // Score
-            gb.territoryScoreMultiplier = 500;
-            gb.moneyScoreMultiplier = 1;
-            gb.comboScoreMultiplier = 200;
-            gb.businessScoreMultiplier = 100;
-            gb.earlyFinishBonusPerTurn = 300;
-            gb.fbiEvasionBonus = 50;
-            gb.winBonus = 1000;
+            gb.customerShareScoreMultiplier = Constants.SCORE_CUSTOMER_SHARE;
+            gb.moneyScoreMultiplier = Constants.SCORE_MONEY;
+            gb.comboScoreMultiplier = Constants.SCORE_COMBO;
+            gb.businessScoreMultiplier = Constants.SCORE_BUSINESS;
+            gb.earlyFinishBonusPerTurn = Constants.SCORE_EARLY_FINISH;
+            gb.fbiEvasionBonus = Constants.SCORE_FBI_EVASION;
+            gb.winBonus = Constants.SCORE_WIN_BONUS;
 
             // Business Evolution
-            gb.evolutionCustomerThreshold = 40;
-            gb.evolutionTurnRequirement = 15;
+            gb.evolutionCustomerThreshold = Constants.EVOLUTION_CUSTOMER_THRESHOLD;
+            gb.evolutionTurnRequirement = Constants.EVOLUTION_TURN_REQUIREMENT;
 
             // Employee
-            gb.employeeLeaveTurnThreshold = 8;
+            gb.employeeLeaveTurnThreshold = Constants.EMPLOYEE_LEAVE_TURN_THRESHOLD;
 
             return gb;
         }

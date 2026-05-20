@@ -20,6 +20,7 @@ namespace EmpireOfCards.Gameplay
         [Header("References")]
         [SerializeField] private BoardManager boardManager;
         [SerializeField] private ComboSystem comboSystem;
+        private SlotManager slotManager;
 
         // --- Runtime State ---
         [Header("Turn Summary (Read Only)")]
@@ -62,12 +63,14 @@ namespace EmpireOfCards.Gameplay
         /// Assigns all dependencies without reflection.
         /// Called by WiringService during bootstrap.
         /// </summary>
-        public void Init(GameBalanceData balance, BoardManager board, ComboSystem combo, AbilitySystem ability = null)
+        public void Init(GameBalanceData balance, BoardManager board, ComboSystem combo,
+                         AbilitySystem ability = null, SlotManager slots = null)
         {
             this.balanceData = balance;
             this.boardManager = board;
             this.comboSystem = combo;
             this.abilitySystem = ability;
+            this.slotManager = slots;
 
             incomeCalculator = new IncomeCalculator(comboSystem);
             taxCalculator = new TaxCalculator(balanceData);
@@ -302,6 +305,70 @@ namespace EmpireOfCards.Gameplay
                     return true;
             }
             return false;
+        }
+
+        // ----------------------------------------------------------------
+        // Slot-based Market Share (GDD v3.0 Section 7)
+        // ----------------------------------------------------------------
+
+        /// <summary>
+        /// Aggregates qualityScore, priceScore, and serviceSpeedScore from all
+        /// occupied Operation slots via SlotManager. Falls back to BoardManager
+        /// businesses if SlotManager is not wired.
+        /// Returns (totalQuality, totalPrice, totalSpeed, occupiedCount).
+        /// </summary>
+        public (float quality, float price, float speed, int count) GetOperationSlotScores()
+        {
+            float totalQuality = 0f;
+            float totalPrice = 0f;
+            float totalSpeed = 0f;
+            int count = 0;
+
+            if (slotManager != null)
+            {
+                var ops = slotManager.OperationSlots;
+                for (int i = 0; i < ops.Count; i++)
+                {
+                    CardData card = ops[i];
+                    if (card == null) continue;
+                    totalQuality += card.qualityScore;
+                    totalPrice += card.priceScore;
+                    totalSpeed += card.serviceSpeedScore;
+                    count++;
+                }
+            }
+            else if (boardManager != null)
+            {
+                var businesses = boardManager.PlayerBusinesses;
+                for (int i = 0; i < businesses.Count; i++)
+                {
+                    if (businesses[i].isClosed || businesses[i].businessCard == null) continue;
+                    CardData card = businesses[i].businessCard;
+                    totalQuality += card.qualityScore;
+                    totalPrice += card.priceScore;
+                    totalSpeed += card.serviceSpeedScore;
+                    count++;
+                }
+            }
+
+            return (totalQuality, totalPrice, totalSpeed, count);
+        }
+
+        /// <summary>
+        /// Calculates the player's fractional market share (0.0-1.0) using
+        /// SlotManager v2 scores and the MarketPool weight formula.
+        /// </summary>
+        public float CalculatePlayerMarketShare(float marketingScore, float loyaltyScore)
+        {
+            var (quality, price, speed, count) = GetOperationSlotScores();
+            if (count == 0) return 0f;
+
+            float avgQuality = quality / count;
+            float avgPrice = price / count;
+            float avgSpeed = speed / count;
+
+            return marketPool.CalculatePlayerMarketShare(
+                avgQuality, avgPrice, platformRating, marketingScore, avgSpeed, loyaltyScore);
         }
 
         // ----------------------------------------------------------------

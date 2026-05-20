@@ -104,7 +104,7 @@ namespace EmpireOfCards.Core.TurnPhases
                     }
                     break;
 
-                // 4b: Calculate total customers and territory distribution
+                // 4b: Calculate total customers and market share block distribution
                 case ResolveStep.CustomerFlow:
                     if (gm.BoardManager != null)
                         gm.SetPlayerCustomers(gm.BoardManager.CalculatePlayerCustomers());
@@ -112,12 +112,13 @@ namespace EmpireOfCards.Core.TurnPhases
                     if (gm.RivalAI != null)
                         gm.SetRivalCustomers(gm.RivalAI.RivalCustomers);
 
+                    // Update visual market share blocks (TerritoryManager is a visual adapter)
                     if (gm.TerritoryManager != null)
                     {
                         int marketPool = gm.BalanceData != null
                             ? gm.BalanceData.GetMarketPool(gm.CurrentTurn)
                             : Constants.BASE_MARKET_CUSTOMERS;
-                        gm.TerritoryManager.CalculateTerritories(
+                        gm.TerritoryManager.CalculateMarketBlocks(
                             gm.PlayerCustomers, gm.RivalCustomers, marketPool);
                     }
                     break;
@@ -187,7 +188,7 @@ namespace EmpireOfCards.Core.TurnPhases
 
                         gm.ComboSystem.CheckCombos(
                             gm.PlayerMoney,
-                            gm.PlayerTerritories,
+                            gm.PlayerMarketBlocks,
                             activeBizCount,
                             marketShare);
                     }

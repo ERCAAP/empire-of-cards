@@ -192,8 +192,8 @@ namespace EmpireOfCards.Gameplay
         /// Fires EventBus.RivalMoodChanged with the mood icon.
         /// </summary>
         public void DetermineMood(
-            int playerTerritories,
-            int rivalTerritories,
+            int playerBlocks,
+            int rivalBlocks,
             int rivalMoney,
             int businessCostThreshold,
             string nextAction)
@@ -209,7 +209,7 @@ namespace EmpireOfCards.Gameplay
             {
                 currentMood = RivalMood.Greedy;
             }
-            else if (rivalTerritories < playerTerritories - 1)
+            else if (rivalBlocks < playerBlocks - 1)
             {
                 currentMood = RivalMood.Aggressive;
             }
@@ -226,12 +226,12 @@ namespace EmpireOfCards.Gameplay
         /// Legacy mood update for backward compatibility.
         /// Now delegates to DetermineMood with defaults.
         /// </summary>
-        public void UpdateMood(int playerTerritories, int rivalTerritories)
+        public void UpdateMood(int playerBlocks, int rivalBlocks)
         {
             // Simplified path when we don't have full context
-            if (playerTerritories > rivalTerritories + 1)
+            if (playerBlocks > rivalBlocks + 1)
                 currentMood = RivalMood.Aggressive;
-            else if (rivalTerritories > playerTerritories + 1)
+            else if (rivalBlocks > playerBlocks + 1)
                 currentMood = RivalMood.Calm;
             else
                 currentMood = RivalMood.Calm;
@@ -250,7 +250,7 @@ namespace EmpireOfCards.Gameplay
         /// Returns null if all lines in the best category have been used
         /// (silence is also powerful).
         /// </summary>
-        public string GetTaunt(int playerTerritories, int rivalTerritories)
+        public string GetTaunt(int playerBlocks, int rivalBlocks)
         {
             if (data == null) return null;
 
@@ -259,7 +259,7 @@ namespace EmpireOfCards.Gameplay
             float fbiRisk = gm != null ? gm.FBIRisk : 0f;
 
             DialogueCategory bestCategory = PickBestCategory(
-                playerTerritories, rivalTerritories, currentTurn, fbiRisk);
+                playerBlocks, rivalBlocks, currentTurn, fbiRisk);
 
             return PickUnusedLine(bestCategory);
         }
@@ -278,8 +278,8 @@ namespace EmpireOfCards.Gameplay
         /// Categories are checked in priority order.
         /// </summary>
         private DialogueCategory PickBestCategory(
-            int playerTerritories,
-            int rivalTerritories,
+            int playerBlocks,
+            int rivalBlocks,
             int currentTurn,
             float fbiRisk)
         {
@@ -292,21 +292,21 @@ namespace EmpireOfCards.Gameplay
                 return DialogueCategory.FBIRiskHigh;
 
             // Rival desperate (rival has 2+ fewer territories)
-            int gap = playerTerritories - rivalTerritories;
+            int gap = playerBlocks - rivalBlocks;
             if (gap >= 2)
                 return DialogueCategory.RivalDesperate;
 
             // Close game (within 1 territory)
-            if (Mathf.Abs(playerTerritories - rivalTerritories) <= 1 &&
-                (playerTerritories + rivalTerritories) > 0)
+            if (Mathf.Abs(playerBlocks - rivalBlocks) <= 1 &&
+                (playerBlocks + rivalBlocks) > 0)
                 return DialogueCategory.CloseGame;
 
             // Rival leading
-            if (rivalTerritories > playerTerritories)
+            if (rivalBlocks > playerBlocks)
                 return DialogueCategory.RivalLeading;
 
             // Player leading
-            if (playerTerritories > rivalTerritories)
+            if (playerBlocks > rivalBlocks)
                 return DialogueCategory.PlayerLeading;
 
             // Early game (turn 1-5)

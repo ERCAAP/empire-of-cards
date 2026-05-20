@@ -19,8 +19,8 @@ namespace EmpireOfCards.Gameplay
         /// Evaluates rival state and picks the best move.
         /// </summary>
         public RivalMove DecideMove(
-            int playerTerritories,
-            int rivalTerritories,
+            int playerBlocks,
+            int rivalBlocks,
             int currentTurn,
             int rivalMoney,
             List<RivalBusiness> rivalBusinesses,
@@ -30,13 +30,13 @@ namespace EmpireOfCards.Gameplay
 
             int businessCount = rivalBusinesses.Count;
             bool hasFunds = rivalMoney >= data.businessCostThreshold;
-            bool rivalBehind = rivalTerritories < playerTerritories;
+            bool rivalBehind = rivalBlocks < playerBlocks;
             float avgQuality = CalculateAverageQuality(rivalBusinesses);
             float avgPrice = CalculateAveragePrice(rivalBusinesses);
             int avgLegalRisk = CalculateAverageLegalRisk(rivalBusinesses);
 
             // High aggression: player is way ahead and aggression enabled
-            if (aggressionEnabled && playerTerritories > 5)
+            if (aggressionEnabled && playerBlocks > 5)
             {
                 // High legal risk -> avoid Sabotage
                 if (avgLegalRisk < 50)
@@ -83,8 +83,8 @@ namespace EmpireOfCards.Gameplay
         /// Legacy decision method. Returns a string action for backward compatibility.
         /// </summary>
         public string DecideAction(
-            int playerTerritories,
-            int rivalTerritories,
+            int playerBlocks,
+            int rivalBlocks,
             int currentTurn,
             int rivalMoney,
             int businessCount,
@@ -93,7 +93,7 @@ namespace EmpireOfCards.Gameplay
         {
             if (data == null) return "normal_growth";
 
-            if (playerTerritories > 5 && aggressionEnabled)
+            if (playerBlocks > 5 && aggressionEnabled)
                 return "aggressive";
 
             float patentWallMultiplier = 1f;
@@ -120,7 +120,7 @@ namespace EmpireOfCards.Gameplay
 
             if (currentTurn >= 12 && aggressionEnabled)
             {
-                if (rivalTerritories < playerTerritories)
+                if (rivalBlocks < playerBlocks)
                     return "event_bonus";
             }
 

@@ -549,9 +549,9 @@ namespace EmpireOfCards.Editor
             gb.fbiStartingRisk        = 0f;
 
             // Territory / Customer Share
-            gb.totalTerritories       = 100;
-            gb.winTerritories         = 60;
-            gb.loseTerritories        = 60;
+            gb.totalMarketCustomers   = 100;
+            gb.winCustomerShare       = 60;
+            gb.loseCustomerShare      = 60;
 
             // Market Pool
             gb.baseMarketCustomers    = 60;
@@ -561,7 +561,7 @@ namespace EmpireOfCards.Editor
             gb.endGrowthPerTurn       = 10;
 
             // Score
-            gb.territoryScoreMultiplier   = 500;
+            gb.customerShareScoreMultiplier = 500;
             gb.moneyScoreMultiplier       = 1;
             gb.comboScoreMultiplier       = 200;
             gb.businessScoreMultiplier    = 100;

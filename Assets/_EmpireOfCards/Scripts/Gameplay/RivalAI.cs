@@ -172,33 +172,13 @@ namespace EmpireOfCards.Gameplay
                     firstBiz.platformRating = 2.5f;
                     break;
 
-                // --- Legacy ventures (save compatibility) ---
-                case VentureType.Diner:
-                    firstBiz.name = "Rival Diner";
-                    firstBiz.income = 50;
-                    firstBiz.customers = 3;
-                    firstBiz.qualityScore = 5f;
-                    firstBiz.priceScore = 6f;
-                    firstBiz.platformRating = 2.5f;
-                    break;
-                case VentureType.TechStartup:
-                    firstBiz.name = "Rival Tech Startup";
-                    firstBiz.income = 0;
-                    firstBiz.customers = 0;
-                    firstBiz.qualityScore = 3f;
-                    firstBiz.priceScore = 5f;
-                    firstBiz.platformRating = 2.0f;
-                    break;
-                case VentureType.AdAgency:
-                    firstBiz.name = "Rival Ad Agency";
-                    firstBiz.income = 60;
-                    firstBiz.customers = 3;
-                    firstBiz.qualityScore = 6f;
-                    firstBiz.priceScore = 5f;
-                    firstBiz.platformRating = 3.0f;
-                    break;
-                case VentureType.BlackMarket:
-                    // Player chose no business, rival keeps default
+                // Legacy ventures (Diner, TechStartup, AdAgency, BlackMarket) now
+                // fall through to default. These enum values are kept in VentureType
+                // for save-file compatibility only; new games never select them.
+                default:
+                    firstBiz.name = $"Rival {playerVenture}";
+                    firstBiz.income = data.startingIncome;
+                    firstBiz.customers = data.startingCustomers;
                     firstBiz.qualityScore = 5f;
                     firstBiz.priceScore = 5f;
                     firstBiz.platformRating = 2.5f;
@@ -226,7 +206,7 @@ namespace EmpireOfCards.Gameplay
         /// <summary>
         /// Main AI turn entry point. Called during the Rival Phase.
         /// </summary>
-        public void TakeTurn(int playerTerritories, int rivalTerritories, int currentTurn)
+        public void TakeTurn(int playerBlocks, int rivalBlocks, int currentTurn)
         {
             if (data == null) return;
 
@@ -242,8 +222,8 @@ namespace EmpireOfCards.Gameplay
 
             // Step 4: Pre-determine first action to inform mood tell
             RivalMove previewMove = decisionTree.DecideMove(
-                playerTerritories,
-                rivalTerritories,
+                playerBlocks,
+                rivalBlocks,
                 currentTurn,
                 rivalMoney,
                 rivalBusinesses,
@@ -251,8 +231,8 @@ namespace EmpireOfCards.Gameplay
 
             // Step 5: Mood tell -- determine and broadcast mood BEFORE actions
             dialogue.DetermineMood(
-                playerTerritories,
-                rivalTerritories,
+                playerBlocks,
+                rivalBlocks,
                 rivalMoney,
                 data.businessCostThreshold,
                 previewMove.ToString());
@@ -271,8 +251,8 @@ namespace EmpireOfCards.Gameplay
                 else
                 {
                     move = decisionTree.DecideMove(
-                        playerTerritories,
-                        rivalTerritories,
+                        playerBlocks,
+                        rivalBlocks,
                         currentTurn,
                         rivalMoney,
                         rivalBusinesses,
@@ -287,7 +267,7 @@ namespace EmpireOfCards.Gameplay
             rivalIncome = economy.CalculateRivalIncome(rivalBusinesses);
 
             // Step 9: Deliver a context-aware taunt
-            string taunt = dialogue.GetTaunt(playerTerritories, rivalTerritories);
+            string taunt = dialogue.GetTaunt(playerBlocks, rivalBlocks);
             if (!string.IsNullOrEmpty(taunt))
             {
                 EventBus.RivalTaunted(taunt);
@@ -488,9 +468,9 @@ namespace EmpireOfCards.Gameplay
             return economy.CalculateDisabledProductionLoss(rivalBusinesses);
         }
 
-        public string GetTaunt(int playerTerritories, int rivalTerritories)
+        public string GetTaunt(int playerBlocks, int rivalBlocks)
         {
-            return dialogue.GetTaunt(playerTerritories, rivalTerritories);
+            return dialogue.GetTaunt(playerBlocks, rivalBlocks);
         }
 
         /// <summary>

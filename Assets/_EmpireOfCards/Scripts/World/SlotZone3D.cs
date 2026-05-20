@@ -18,6 +18,7 @@ namespace EmpireOfCards.World
         private Card3D _placedCard;
         private bool _isPulsing;
         private Color _pulseColor;
+        private GameObject _buildingVisual;
 
         public DropZoneType ZoneType => zoneType;
         public int SlotIndex => slotIndex;
@@ -136,12 +137,73 @@ namespace EmpireOfCards.World
                 _                           => 0.8f   // OperationSlot / BusinessSlot
             };
             card.SetBoardScale(scale);
+
+            // Spawn a visual building placeholder based on slot type
+            SpawnBuildingVisual(card);
         }
 
         public void RemoveCard()
         {
             _isOccupied = false;
             _placedCard = null;
+
+            if (_buildingVisual != null)
+            {
+                Destroy(_buildingVisual);
+                _buildingVisual = null;
+            }
+        }
+
+        /// <summary>
+        /// Spawns a placeholder cube on the slot to represent a placed card.
+        /// Color and size are based on the card type (GDD card type colors).
+        /// </summary>
+        private void SpawnBuildingVisual(Card3D card)
+        {
+            if (_buildingVisual != null)
+            {
+                Destroy(_buildingVisual);
+                _buildingVisual = null;
+            }
+
+            if (card == null || card.CardData == null) return;
+
+            var building = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            building.name = $"Building_{card.CardData.cardId}";
+            building.transform.SetParent(transform);
+            building.transform.localPosition = new Vector3(0f, 0.3f, 0f);
+
+            // Size and color by card type
+            switch (card.CardData.cardType)
+            {
+                case CardType.Business: // Operation card -> blue
+                    building.transform.localScale = new Vector3(2f, 0.5f, 1.5f);
+                    building.GetComponent<MeshRenderer>().material.color = new Color(0.25f, 0.45f, 0.85f);
+                    break;
+                case CardType.Employee: // Staff card -> green
+                    building.transform.localScale = new Vector3(1.5f, 0.5f, 1f);
+                    building.GetComponent<MeshRenderer>().material.color = new Color(0.25f, 0.7f, 0.35f);
+                    break;
+                case CardType.Action: // Marketing card -> purple
+                    building.transform.localScale = new Vector3(1.5f, 0.5f, 1f);
+                    building.GetComponent<MeshRenderer>().material.color = new Color(0.6f, 0.25f, 0.7f);
+                    break;
+                case CardType.Upgrade: // Supplier card -> brown
+                    building.transform.localScale = new Vector3(1.5f, 0.5f, 1f);
+                    building.GetComponent<MeshRenderer>().material.color = new Color(0.55f, 0.4f, 0.2f);
+                    break;
+                case CardType.Event: // Event card -> orange
+                    building.transform.localScale = new Vector3(1.5f, 0.5f, 1f);
+                    building.GetComponent<MeshRenderer>().material.color = new Color(0.9f, 0.5f, 0.15f);
+                    break;
+                default:
+                    building.transform.localScale = new Vector3(1f, 0.5f, 1f);
+                    building.GetComponent<MeshRenderer>().material.color = new Color(0.5f, 0.5f, 0.5f);
+                    break;
+            }
+
+            Destroy(building.GetComponent<Collider>());
+            _buildingVisual = building;
         }
 
         public void SetHighlight(bool on, bool valid = true)

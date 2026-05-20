@@ -27,10 +27,10 @@ namespace EmpireOfCards.Data
         public int fbiRaidPenalty = 300;
         public float fbiStartingRisk = 0f;
 
-        [Header("--- Territory ---")]
-        public int totalTerritories = 10;
-        public int winTerritories = 6;
-        public int loseTerritories = 7;
+        [Header("--- Customer Market ---")]
+        public int totalMarketCustomers = 100;
+        public int winCustomerShare = 60;
+        public int loseCustomerShare = 60;
 
         [Header("--- Market Pool (Balance Table) ---")]
         public int baseMarketCustomers = 60;
@@ -40,7 +40,7 @@ namespace EmpireOfCards.Data
         public int endGrowthPerTurn = 10;
 
         [Header("--- Score (GDD 10.3) ---")]
-        public int territoryScoreMultiplier = 500;
+        public int customerShareScoreMultiplier = 500;
         public int moneyScoreMultiplier = 1;
         public int comboScoreMultiplier = 200;
         public int businessScoreMultiplier = 100;

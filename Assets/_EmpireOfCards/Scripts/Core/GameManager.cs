@@ -26,11 +26,11 @@ namespace EmpireOfCards.Core
         [Header("=== Player Resources (extracted) ===")]
         [SerializeField] private PlayerResources resources = new PlayerResources();
 
-        [Header("=== Territory & Customers ===")]
+        [Header("=== Customer Share & Market Blocks ===")]
         [SerializeField] private int playerCustomers;
         [SerializeField] private int rivalCustomers;
-        [SerializeField] private int playerTerritories;
-        [SerializeField] private int rivalTerritories;
+        [SerializeField] private int playerMarketBlocks;
+        [SerializeField] private int rivalMarketBlocks;
         [SerializeField] private float fbiRisk;
 
         [Header("=== Balance Data ===")]
@@ -69,8 +69,8 @@ namespace EmpireOfCards.Core
         public float FBIRisk => fbiRisk;
         public int PlayerCustomers => playerCustomers;
         public int RivalCustomers => rivalCustomers;
-        public int PlayerTerritories => playerTerritories;
-        public int RivalTerritories => rivalTerritories;
+        public int PlayerMarketBlocks => playerMarketBlocks;
+        public int RivalMarketBlocks => rivalMarketBlocks;
 
         // --- Backward-compat: callers can migrate to Resources.X at their own pace ---
         public int PlayerMoney => resources.Money;
@@ -187,12 +187,12 @@ namespace EmpireOfCards.Core
             // Reset extracted resource state
             resources.Reset(balanceData);
 
-            // Reset territory/customer/fbi state
+            // Reset customer/market/fbi state
             fbiRisk = 0f;
             playerCustomers = 0;
             rivalCustomers = 0;
-            playerTerritories = 0;
-            rivalTerritories = 0;
+            playerMarketBlocks = 0;
+            rivalMarketBlocks = 0;
 
             // Initialize subsystems
             if (deckManager != null && startingDeck != null)
@@ -244,7 +244,7 @@ namespace EmpireOfCards.Core
 
             // Fire initial events so UI updates
             EventBus.MoneyUpdated(resources.Money);
-            EventBus.TerritoryUpdated(0, 0);
+            EventBus.MarketBlocksUpdated(0, 0);
             EventBus.FBIRiskUpdated(0f);
 
             SetGameState(GameState.Playing);
@@ -318,7 +318,7 @@ namespace EmpireOfCards.Core
             EventBus.BusinessSlotsChanged(resources.BusinessSlots);
         }
 
-        // === Territory & Customer Updates ===
+        // === Customer Share & Market Block Updates ===
 
         public void SetPlayerCustomers(int count)
         {
@@ -330,12 +330,12 @@ namespace EmpireOfCards.Core
             rivalCustomers = Mathf.Max(0, count);
         }
 
-        public void SetTerritories(int player, int rival)
+        public void SetMarketBlocks(int player, int rival)
         {
-            int total = balanceData != null ? balanceData.totalTerritories : Constants.TERRITORY_COUNT;
-            playerTerritories = Mathf.Clamp(player, 0, total);
-            rivalTerritories = Mathf.Clamp(rival, 0, total);
-            EventBus.TerritoryUpdated(playerTerritories, rivalTerritories);
+            int total = Constants.MARKET_VISUAL_BLOCKS;
+            playerMarketBlocks = Mathf.Clamp(player, 0, total);
+            rivalMarketBlocks = Mathf.Clamp(rival, 0, total);
+            EventBus.MarketBlocksUpdated(playerMarketBlocks, rivalMarketBlocks);
         }
 
         // === FBI Risk ===
