@@ -78,11 +78,6 @@ namespace EmpireOfCards.UI
                 if (btn != null)
                     btn.onClick.AddListener(() => SelectVenture(idx));
 
-                if (ventureNameTexts != null && i < ventureNameTexts.Length)
-                    ventureNameTexts[i].text = ventures[i].ventureName;
-
-                if (ventureDescTexts != null && i < ventureDescTexts.Length)
-                    ventureDescTexts[i].text = ventures[i].description;
             }
 
             if (startButton != null)
@@ -90,12 +85,25 @@ namespace EmpireOfCards.UI
                 startButton.onClick.AddListener(ConfirmSelection);
                 startButton.interactable = false;
             }
+
+            RefreshTexts();
+        }
+
+        private void OnEnable()
+        {
+            LocalizationManager.OnLanguageChanged += RefreshTexts;
+        }
+
+        private void OnDisable()
+        {
+            LocalizationManager.OnLanguageChanged -= RefreshTexts;
         }
 
         public void Show()
         {
             gameObject.SetActive(true);
             _selectedIndex = -1;
+            RefreshTexts();
             UpdateVisuals();
 
             if (startButton != null)
@@ -142,6 +150,64 @@ namespace EmpireOfCards.UI
                     ventureCards[i].localScale = Vector3.one;
                 }
             }
+        }
+
+        private void RefreshTexts()
+        {
+            if (_ventures == null)
+                return;
+
+            for (int i = 0; i < _ventures.Length; i++)
+            {
+                if (ventureNameTexts != null && i < ventureNameTexts.Length && ventureNameTexts[i] != null)
+                    ventureNameTexts[i].text = GetVentureName(_ventures[i]);
+
+                if (ventureDescTexts != null && i < ventureDescTexts.Length && ventureDescTexts[i] != null)
+                    ventureDescTexts[i].text = GetVentureDescription(_ventures[i]);
+            }
+        }
+
+        private static string GetVentureName(VentureData venture)
+        {
+            if (venture == null)
+                return string.Empty;
+
+            string key = $"venture.{GetKeySuffix(venture.ventureType)}.name";
+            return LocalizationManager.GetWithFallback(key, venture.ventureName);
+        }
+
+        private static string GetVentureDescription(VentureData venture)
+        {
+            if (venture == null)
+                return string.Empty;
+
+            string descKey = $"venture.{GetKeySuffix(venture.ventureType)}.desc";
+            string playstyleKey = $"venture.{GetKeySuffix(venture.ventureType)}.playstyle";
+            string rule = LocalizationManager.GetWithFallback("venture.same_sector_rule", "Rival starts in the same sector.");
+
+            string desc = LocalizationManager.GetWithFallback(descKey, venture.description);
+            string playstyle = LocalizationManager.GetWithFallback(playstyleKey, venture.playstyleSummary);
+
+            if (!string.IsNullOrWhiteSpace(playstyle))
+                desc += $"\n{playstyle}";
+
+            if (!string.IsNullOrWhiteSpace(rule))
+                desc += $"\n{rule}";
+
+            return desc;
+        }
+
+        private static string GetKeySuffix(VentureType ventureType)
+        {
+            return ventureType switch
+            {
+                VentureType.FastFood => "fast_food",
+                VentureType.Cafe => "cafe",
+                VentureType.TechApp => "tech_app",
+                VentureType.ClothingStore => "clothing_store",
+                VentureType.GroceryStore => "grocery_store",
+                _ => "fast_food"
+            };
         }
     }
 }

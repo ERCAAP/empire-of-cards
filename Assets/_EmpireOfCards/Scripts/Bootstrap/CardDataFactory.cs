@@ -1,5 +1,6 @@
 using UnityEngine;
 using System.Collections.Generic;
+using EmpireOfCards.Core;
 using EmpireOfCards.Data;
 using EmpireOfCards.Bootstrap.Data;
 
@@ -15,26 +16,27 @@ namespace EmpireOfCards.Bootstrap
         {
             CardHelper.BeginSession();
 
-            // Cards
-            var biz = BusinessCardDefs.Create();
-            var emp = EmployeeCardDefs.Create();
-            var act = ActionCardDefs.Create();
-            var upg = UpgradeCardDefs.Create();
-            var evt = EventCardDefs.Create();
-            var gen = GeneralCardDefs.Create();
-
-            var allCards = Combine(biz, emp, act, upg, evt, gen);
+            var allCards = V4ContentFactory.CreateCards();
+            var boardProfiles = V4ContentFactory.CreateBoardProfiles();
+            var deckProfiles = V4ContentFactory.CreateDeckProfiles();
+            var economyProfiles = V4ContentFactory.CreateEconomyProfiles();
 
             // Combos, balance, deck, rival, shop
-            var combos  = ComboDefs.Create(allCards);
+            var combos  = new ComboData[0];
             var balance = BalanceDefs.CreateBalance();
             var deck    = BalanceDefs.CreateDeck(allCards);
             var rival   = BalanceDefs.CreateRival();
-            var shop    = BalanceDefs.CreateShopPool(allCards, deck);
+            var shop = new List<CardData>();
+            foreach (var card in allCards)
+            {
+                if (card == null) continue;
+                if (card.cardFamily == CardFamily.Crisis) continue;
+                shop.Add(card);
+            }
 
             var meta = BalanceDefs.CreateMetaProgression();
 
-            var ventures = VentureDataFactory.CreateAllVentures(allCards);
+            var ventures = V4ContentFactory.CreateVentures(allCards, boardProfiles, deckProfiles, economyProfiles);
 
             var lookup = CardHelper.EndSession();
 
@@ -45,10 +47,13 @@ namespace EmpireOfCards.Bootstrap
                 balanceData = balance,
                 startingDeck = deck,
                 rivalData   = rival,
-                shopPool    = shop,
+                shopPool    = shop.ToArray(),
                 cardLookup  = lookup,
                 metaProgressionData = meta,
-                ventures    = ventures
+                ventures    = ventures,
+                boardProfiles = boardProfiles,
+                deckProfiles = deckProfiles,
+                economyProfiles = economyProfiles
             };
 
             Debug.Log($"[CardDataFactory] Data created: {bundle.allCards.Length} cards, " +
@@ -89,5 +94,8 @@ namespace EmpireOfCards.Bootstrap
         public Dictionary<string, CardData> cardLookup;
         public MetaProgressionData metaProgressionData;
         public VentureData[] ventures;
+        public VentureBoardProfile[] boardProfiles;
+        public VentureDeckProfile[] deckProfiles;
+        public VentureEconomyProfile[] economyProfiles;
     }
 }

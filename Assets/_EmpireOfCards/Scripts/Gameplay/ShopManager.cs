@@ -186,7 +186,6 @@ namespace EmpireOfCards.Gameplay
             int cardsToPick = Mathf.Min(effectiveShopSize, available.Count);
 
             // Venture bias: guarantee 1 biased card for the first N turns
-            bool biasApplied = false;
             if (_biasActive && GameManager.Instance != null
                 && GameManager.Instance.CurrentTurn <= Constants.SHOP_BIAS_TURNS)
             {
@@ -209,7 +208,6 @@ namespace EmpireOfCards.Gameplay
                     currentShopCards.Add(available[pick]);
                     available.RemoveAt(pick);
                     cardsToPick--;
-                    biasApplied = true;
                 }
             }
 

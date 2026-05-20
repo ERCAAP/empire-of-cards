@@ -209,8 +209,9 @@ namespace EmpireOfCards.UI
         {
             if (neglectWarningText == null) return;
 
-            string severity = neglectTurns >= 6 ? "KR\u0130T\u0130K" : "UYARI";
-            neglectWarningText.text = $"\u26A0 {severity}: \u0130\u015Fletme {businessIndex + 1} bak\u0131m bekliyor! (Gelir -{(neglectTurns >= 6 ? 40 : 20)}%)";
+            int penalty = neglectTurns >= 6 ? 40 : 20;
+            string key = neglectTurns >= 6 ? "neglect.critical" : "neglect.warning";
+            neglectWarningText.text = LocalizationManager.Get(key, businessIndex + 1, penalty);
             _neglectWarningTimer = 3f; // Show for 3 seconds
         }
 

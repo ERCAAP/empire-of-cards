@@ -115,7 +115,10 @@ namespace EmpireOfCards.Core
             _activeEvent = eventCard;
             _activeEventTurnsRemaining = eventCard != null ? eventCard.eventDuration : 0;
             if (eventCard != null)
+            {
+                GameManager.Instance?.BoardManager?.SetActiveEvent(eventCard);
                 EventBus.EventActivated(eventCard);
+            }
         }
 
         /// <summary>
@@ -137,8 +140,24 @@ namespace EmpireOfCards.Core
             if (_eventDeck == null || _eventDeck.Count == 0)
                 return null;
 
-            int index = UnityEngine.Random.Range(0, _eventDeck.Count);
-            return _eventDeck[index];
+            var gm = GameManager.Instance;
+            VentureType activeVenture = gm != null && gm.ActiveEconomyProfile != null
+                ? gm.ActiveEconomyProfile.ventureType
+                : VentureType.FastFood;
+
+            List<CardData> filtered = new List<CardData>();
+            foreach (var card in _eventDeck)
+            {
+                if (card == null) continue;
+                if (card.isGeneralCard || card.ventureType == activeVenture)
+                    filtered.Add(card);
+            }
+
+            if (filtered.Count == 0)
+                filtered = _eventDeck;
+
+            int index = UnityEngine.Random.Range(0, filtered.Count);
+            return filtered[index];
         }
 
         // === Phase Transitions (State Machine) ===

@@ -12,5 +12,9 @@ namespace EmpireOfCards.Data
         public CardData bonusDeckCard;           // extra card added to deck
         public int bonusMoney;                   // extra starting money (0 for most, 200 for KaranlikPazar)
         public Sprite ventureIcon;
+        public VentureBoardProfile boardProfile;
+        public VentureDeckProfile deckProfile;
+        public VentureEconomyProfile economyProfile;
+        [TextArea] public string playstyleSummary;
     }
 }

@@ -1,1078 +1,762 @@
 # GAME DESIGN DOCUMENT
 # "Empire of Cards"
 
-> Versiyon: 3.0 | Tarih: 2026-05-20
+> Versiyon: 4.0 | Tarih: 2026-05-20
 > Engine: Unity 6 (C#) | Platform: PC (Steam)
-> Ekip: Solo Developer | Fiyat: $9.99–$12.99
+> Tür: Venture-first business card strategy
 
 ---
 
-# BÖLÜM 1: OYUN NEDİR?
+# 1. Yüksek Konsept
 
-## 1.1 Tek Cümle
+## 1.1 Oyuncu Vaadi
 
-Küçük bir işletmeyle başlar, aynı semtte aynı sektörde rakibinle kapışır, marketi kim domine ederse kazanır.
+Oyuncu oyunun başında bir girişim seçer ve aynı sektörde başlayan rakibine karşı aynı semtte, aynı müşteri havuzu içinde büyüme savaşı verir. Kart oynar ama his olarak kart oyunu değil, işletme yönetimi yaşar.
 
-## 1.2 Oyuncunun Yaptığı Şey
+Bu oyunun fantezisi:
 
-Masanın başında oturuyorsun. Slotlar var. Elinde kartlar var. Kararlar veriyorsun.
+> "Küçük bir masadan başladım, doğru yatırımlar ve doğru risklerle semti ele geçirdim."
 
-Her tur:
-1. Kartlar gelir — girişim türüne özel
-2. Slotlara yerleştirirsin
-3. Sistem çalışır — para gelir, müşteri gelir, kriz patlar
-4. Ekonomi hesaplanır
-5. Rakip oynar
+## 1.2 Oyunun Cümlesi
 
-**Amaç:** Semtteki müşteri havuzunun %60'ını ele geçir. 25 tur dolmadan.
+Küçük bir işletmeyle başla, sektörüne özel kart havuzuyla büyü, müşteri memnuniyeti ile itibarını koru, rakibinle aynı pazarı paylaş ve market share savaşını kazan.
 
-## 1.3 Neden Eğlenceli?
+## 1.3 Tasarım İlkeleri
 
-| An | His |
-|---|---|
-| Slot doldurdun, müşteri aktı | "Büyüyorum!" |
-| Zincir reaksiyon patlattın | "Oha, bunu hesaplamamıştım!" |
-| Rakip çalışanını çaldı | "Seni gidi..." |
-| Maaş geciktirince işletme çöktü | "Kendi kendimi batırdım." |
-| 25. turda %60'ı aldın | "EVEEET!" |
+1. Kartlar karar temsil eder, büyü değil.
+2. Sektör seçimi sadece kozmetik değildir; kart havuzunu, krizleri, büyüme yolunu ve rakip baskısını değiştirir.
+3. Ortak omurga korunur; her venture kendi alt-slot diliyle farklılaşır.
+4. Oyun ağır simülasyon değil, okunabilir kart-strateji hibritidir.
+5. Başarılı hamleler zincir reaksiyon üretmeli, kötü planlama da yavaş çöküş yaratmalıdır.
 
-## 1.4 Tasarım Felsefesi
+## 1.4 Oyuncunun Her Tur Yaptığı Şey
 
-Bu oyun şunu sormaktan kaçınmaz:
-
-> "Yanlış zamanda doğru kart bile işletmeyi batırabilir mi?"
-
-**Evet.** Fazla masa, müşteri yokken açılırsa zarar. Influencer kampanyası, mutfak kapasitesi yokken yapılırsa kötü yorum. Maaş geciktirilirse iyi çalışan gider.
-
-Her karar başka sistemi etkiler. Oyuncu sadece "güçlü kart" seçmez; **işletmenin durumunu okur ve ona göre karar verir.**
+1. Venture ve mevcut board durumuna uygun kartlar çeker.
+2. Kartları slotlara yerleştirir veya anlık karar kartları oynar.
+3. Sistem demand, capacity, quality, rating ve market share üzerinden çözülür.
+4. Kriz varsa reaksiyon verir.
+5. Rakibin aynı sektörde nasıl büyüdüğünü görür ve cevap üretir.
 
 ---
 
-# BÖLÜM 2: GİRİŞİM SEÇİMİ
+# 2. Venture Seçimi ve Rakip Kuralı
 
-## 2.1 Konsept
+## 2.1 Açılış Kuralı
 
-Oyun başladığında oyuncuya "İlk Girişimini Seç" ekranı gösterilir.
+Run başında oyuncu 1 venture seçer:
 
-**Kritik Kural:** Rakip de oyuncuyla **aynı tür işletmeyle** başlar. Fast food seçtiysen rakip de fast food açar. Aynı semtte, aynı sektörde, aynı müşteri havuzu için savaşırsınız.
+- Fast Food
+- Cafe
+- Tech App
+- Giyim Magazasi
+- Market / Bakkal
 
-Bu kural şunu sağlar:
-- Rakip aynı avantaj/dezavantajlarla başlar
-- Kimin daha iyi yönettiği kazanır
-- Sektör dinamikleri her iki taraf için de geçerlidir
+Rakip otomatik olarak aynı venture ile başlar.
 
-## 2.2 Girişim Seçenekleri
+Bu kararın sonuçları:
 
-| Girişim | Başlangıç Durumu | Zorluk |
-|---|---|---|
-| Fast Food Zinciri | 3 masa, 2 çalışan, düşük Google puanı | Orta |
-| Cafe | Temel espresso makinesi, 1 barista | Orta |
-| Tech Mobil Uygulama | Sıfır kullanıcı, 2 tur delay gelir | Zor |
-| Giyim Mağazası | Küçük stok, düşük görünürlük | Orta-Zor |
-| Market / Bakkal | Temel raf, 1 personel, dar marj | Kolay-Orta |
+- Aynı müşteri havuzu için savaşılır.
+- Aynı sektör krizleri iki tarafa da uygulanır.
+- Kimin daha iyi kurduğu, daha doğru büyüdüğü ve daha temiz toparladığı görünür hale gelir.
 
-> Her girişim türünün kart havuzu, event listesi ve özel mekanikleri o girişime ait ayrı MD dosyasında tanımlanmıştır.
-> `Assets/steam-card-game-gdd/businesses/` klasörüne bak.
+## 2.2 Venture Seçiminin Etkilediği Sistemler
 
-## 2.3 Başlangıç Kaynakları
+Seçilen venture şunları belirler:
 
-Her girişimde oyuncu:
-- Küçük işletme (başlangıç seviyesi)
-- Sınırlı nakit
-- Az müşteri
-- Düşük kalite / düşük puan
-- Boş slotlar
+- Starter deck
+- Venture kart havuzu
+- Alt-slot isimleri
+- Türetilmiş metrikler
+- Kriz havuzu
+- Rakip davranış öncelikleri
+- Görsel masa dili
 
-ile başlar.
+## 2.3 Venture Dosyaları
 
-## 2.4 Tutorial
+Her venture'ın detaylı kuralları ayrı dosyadadır:
 
-İlk run'da tutorial açılır. Girişim otomatik seçilir (Fast Food). Tutorial tamamlandıktan sonra girişim seçim ekranı açılır.
-
----
-
-# BÖLÜM 3: ŞİRKET SEVİYESİ (Company Tier)
-
-## 3.1 Konsept
-
-Oyuncunun işletme durumuna göre şirket seviyesi otomatik belirlenir. Yeni kart tipi gerektirmez — sadece board state kontrolü.
-
-## 3.2 Tier Tablosu
-
-| Tier | İsim | Koşul | Görsel Feedback |
-|------|------|-------|-----------------|
-| 1 | ESNAF | Oyun başı (varsayılan) | Küçük logo, sade board |
-| 2 | GİRİŞİMCİ | İyi operasyon + 1+ combo | Logo büyür, popup |
-| 3 | ŞİRKET | Güçlü market pozisyonu | Board rengi değişir, müzik yoğunlaşır |
-| 4 | HOLDİNG | Dominasyon yakın | Taç efekti, altın border |
-
-## 3.3 Tier Kuralları
-
-- **Tier asla düşmez.** Bir kere Girişimci oldun mu Esnaf'a dönemezsin.
-- **Tier atlamada:** Popup + ses + kısa animasyon. Oyun 1–2 saniye durur.
-- **Slot genişlemesi:** Her tier atlamada yeni slotlar açılır (bkz. Bölüm 4.5).
-- **Skor bonusu:** Run sonu tier bonus verir.
+- `Assets/steam-card-game-gdd/businesses/fast_food.md`
+- `Assets/steam-card-game-gdd/businesses/cafe.md`
+- `Assets/steam-card-game-gdd/businesses/tech_app.md`
+- `Assets/steam-card-game-gdd/businesses/giyim_magazasi.md`
+- `Assets/steam-card-game-gdd/businesses/market_bakkal.md`
 
 ---
 
-# BÖLÜM 4: OYUN TAHTASI VE SLOT SİSTEMİ
+# 3. Masa Düzeni
 
-## 4.1 Masa Yapısı
+## 3.1 Üç Ana Bölge
 
 Masa 3 ana bölgeye ayrılır:
 
+1. Player Zone
+2. District / Market Zone
+3. Rival Zone
+
+```text
+┌──────────────────────────────────────────────┐
+│ RIVAL ZONE                                   │
+│ Rakibin slotları, kampanyaları, baskısı      │
+├──────────────────────────────────────────────┤
+│ DISTRICT / MARKET ZONE                       │
+│ Müşteri akışı, trafik, trendler, olaylar     │
+│ Görünürlük, organik talep, market paylaşımı  │
+├──────────────────────────────────────────────┤
+│ PLAYER ZONE                                  │
+│ Senin işletmen, slotların, çalışanların       │
+│ aktif kampanyaların ve krizlerin             │
+└──────────────────────────────────────────────┘
 ```
-┌─────────────────────────────────────────┐
-│         RAKİP İŞLETME ALANI             │
-│   [Operation] [Staff] [Marketing]       │
-├─────────────────────────────────────────┤
-│           SEMT / MARKET ALANI           │
-│  Müşteri havuzu | Trafik | Trendler     │
-│  Reklam görünürlüğü | Aktif eventler   │
-├─────────────────────────────────────────┤
-│         OYUNCU İŞLETME ALANI            │
-│   [Operation] [Staff] [Marketing]       │
-│   [Supplier]  [Temp Effects]            │
-└─────────────────────────────────────────┘
-```
 
-**Oyuncu İşletme Alanı:** Alt bölge. Slotlar burada.
-**Semt / Market Alanı:** Orta bölge. Müşteri hareketi, trafik, trendler, aktif eventler burada görünür.
-**Rakip İşletme Alanı:** Üst bölge. Rakibin slotları sınırlı bilgiyle görünür (dedektif hissi).
+## 3.2 Player Zone Amacı
 
-## 4.2 Kart Yerleştirme Felsefesi
+Player Zone oyuncuya "bu benim işletmem" hissini vermelidir. Kartlar sadece sayaç değil, işletmenin gerçek parçaları gibi görünmelidir.
 
-Kartlar oynanıp çöpe **atılmaz.** Slotlara yerleştirilir ve işletmenin kalıcı parçası olur.
+Örnek bağlar:
 
-Bu sistem şunu hissettirmelidir:
-> "Masada gerçek bir işletme kuruyorum. Her kart bir karar, her slot bir yatırım."
+- Operation kartları fiziksel işletmeye oturur.
+- Staff kartları operasyonun üstüne bağlanır.
+- Marketing kartları District Zone'a görsel etki yollar.
+- Supplier kartları üretim veya stok tarafına bağlanır.
+- Temp Effect kartları işletmeyi bozulan veya baskı altındaki durumda gösterir.
 
-Kartlar görsel olarak işletme dünyasına bağlanır:
-- **Tedarikçi kartları:** Mutfak/depo alanına yerleşir
-- **Marketing kartları:** Semt alanını etkiler (görsel ok animasyonu)
-- **Operation kartları:** Fiziksel mekânı büyütür
-- **Temp kartları:** Aktif kriz/event olarak görünür — çözülünce kalkar
+## 3.3 District / Market Zone Amacı
 
-## 4.3 Slot Türleri (Başlangıç)
+Bu bölge oyunun rekabet kalbidir. Şunları temsil eder:
 
-### OPERATION SLOTS — 4 adet
-İşletmenin fiziksel altyapısı ve kapasitesi.
+- Trafik
+- Organik talep
+- Görünürlük
+- Yerel etkinlikler
+- Sezon etkisi
+- Rakip baskısı
+- Müşteri yön değiştirmesi
 
-Buraya yerleşen kartlar:
-- Masa, Mutfak Upgrade, Paket Servis İstasyonu, Kahve Makinesi, Fırın, Self-Service Tezgah, Depo
+Oyuncu burada şunu okumalı:
 
-**Ne kontrol eder:** Müşteri kapasitesi, servis hızı, üretim gücü.
+> "Pazar bana mı akıyor, rakibe mi kayıyor?"
 
-**Kritik denge:**
-- Az operation → müşteri gelemez, kapasite yetersiz
-- Fazla operation → müşteri yoksa boş kapasite = gereksiz maliyet + kira artışı
+## 3.4 Rival Zone Amacı
 
-### STAFF SLOTS — 5 adet
-Aktif çalışanlar.
+Rakip oyuncuyla aynı venture içinde büyür. Oyuncu rakibin:
 
-Buraya yerleşen kartlar:
-- Aşçı, Kasiyer, Temizlikçi, Kurye, Müdür, Barista, Stajyer, Güvenlik
+- hangi alt-slotları doldurduğunu,
+- kalite mi fiyat mı oynadığını,
+- agresif marketing mi premium kalite mi seçtiğini,
+- hangi krizden zarar gördüğünü
 
-**Ne kontrol eder:** Verimlilik, servis hızı, moral, operasyon stabilitesi.
-
-**Kritik denge:**
-- Az personel → müşteri kuyruğu → kötü yorum → puan düşer
-- Fazla personel → gereksiz maaş yükü → kâr erir
-- Düşük moral → hata artar → kalite düşer → müşteri kaçar
-
-### MARKETING SLOTS — 3 adet
-Aktif reklam kampanyaları.
-
-Buraya yerleşen kartlar:
-- Broşür Kampanyası, Influencer Anlaşması, Google Reklamı, TikTok Kampanyası, Billboard, Sosyal Medya Yönetimi
-
-**Ne kontrol eder:** Müşteri edinimi, görünürlük, marka bilinirliği.
-
-**Kritik uyarı:**
-> Operasyon hazır değilken fazla marketing yapılırsa müşteri patlar → servis çöker → kötü yorum → puan düşer → uzun vadede zarar.
-
-### SUPPLIER SLOTS — 2 adet
-Aktif tedarikçi anlaşmaları.
-
-Buraya yerleşen kartlar:
-- Premium Kasap, Ucuz Hammadde, Organik Tedarikçi, İçecek Markası Anlaşması, Taze Sebzeci
-
-**Ne kontrol eder:** Kalite skoru, maliyet, müşteri memnuniyeti, fire riski.
-
-**Kritik denge:**
-- 2 slot kısıtlaması → oyuncu kalite mi fiyat mı seçmeli?
-- Premium + Premium = kalite max ama maliyet ağır
-- Ucuz + Ucuz = maliyet düşük ama kalite çöker
-
-### TEMP EFFECT SLOTS — 3 adet
-Geçici durumlar, aktif krizler, anlık fırsatlar.
-
-Buraya gelen kartlar/eventler:
-- Sağlık Denetimi, Viral Trend, Personel Grevi, İndirim Haftası, Gıda Zehirlenmesi, Google Cezası, Rakip Saldırısı
-
-**Ne kontrol eder:** Anlık baskı ve kaos. Event çözülünce slot boşalır.
-
-**Kural:** Temp slotlar doluysa yeni event geldiğinde en eski event düşer (veya en ağırı kalır — tasarım kararı).
-
-## 4.4 Başlangıç Slot Özeti
-
-| Slot Türü | Başlangıç | Maksimum |
-|---|---|---|
-| Operation | 4 | 8 |
-| Staff | 5 | 10 |
-| Marketing | 3 | 5 |
-| Supplier | 2 | 4 |
-| Temp Effect | 3 | 3 (sabit) |
-| **TOPLAM** | **17** | **30** |
-
-## 4.5 Slot Genişleme Sistemi
-
-İşletme büyüdükçe yeni slotlar açılır:
-
-| Tier | Açılan Slotlar |
-|---|---|
-| Tier 1 → Tier 2 (Girişimci) | Marketing +1 |
-| Tier 2 → Tier 3 (Şirket) | Staff +2, Operation +2 |
-| Tier 3 → Tier 4 (Holding) | Supplier +1, Marketing +1 |
-| İkinci Şube Açıldığında | Operation +2 (yeni şube) |
-
-## 4.6 Slot Baskısı ve Strateji
-
-**Slot kısıtlaması oyunun stratejik derinliğini buradan alır.**
-
-Oyuncu her tur şu soruları sorar:
-- "Marketing slotum dolu — Influencer mı çıkarsam, Google Reklamı mı bıraksam?"
-- "Staff slotuma başka çalışan almak için kimi çıkarmam lazım?"
-- "Temp slotum dolu, yeni kriz geliyor — hangisini çözmeliyim önce?"
-
-## 4.7 Build Arketipleri
-
-Slot kısıtlamaları farklı oyun stilleri doğurur:
-
-### 1. Agresif Marketing Build
-Marketing 3/3 dolu. Hızlı müşteri artışı. Operation slotları yetersiz kalırsa servis çöker.
-- **Risk:** Operasyon krizi → kötü yorum spirali
-- **Ödül:** Hızlı market share kazanımı
-
-### 2. Premium Kalite Build
-Güçlü tedarikçiler + iyi personel. Az reklam. Müşteri sadakati yüksek.
-- **Risk:** Yavaş büyüme, rakip önce dominasyon alabilir
-- **Ödül:** Stabil gelir, düşük kriz riski
-
-### 3. Ucuz Genişleme Build
-Düşük maaş, ucuz hammadde, hızlı operation büyümesi.
-- **Risk:** Kalite düşüklüğünden puan çöküşü, personel istifaları
-- **Ödül:** Erken kapasite avantajı
-
-### 4. Dengeli Stabil Build
-Tüm slotlarda orta seviye yatırım. Düşük risk, yavaş dominasyon.
-- **Risk:** Agresif rakibe yavaş kalır
-- **Ödül:** Krizlere dayanıklılık
+okuyabilmelidir.
 
 ---
 
-# BÖLÜM 5: EKONOMİ SİSTEMİ
+# 4. Ortak Slot Omurgası
 
-## 5.1 Temel Formül
+## 4.1 Ana Slot Aileleri
 
-```
-Net Kâr = Gelir - Giderler
+Tüm venture'lar aynı 5 ana slot ailesini kullanır:
 
-Gelir = müşteri_sayısı × ortalama_harcama × kalite_katsayısı
-Giderler = kira + maaşlar + hammadde + reklam + bakım + vergi + kredi_faizi
-```
+1. `Operation`
+2. `Staff`
+3. `Marketing`
+4. `Supplier`
+5. `Temp Effect`
 
-## 5.2 Nakit Akışı
+Bu ortak omurga teknik ve tasarım uyumu için sabittir.
 
-**Nakit akışı kârdan önce gelir.** Kârlı ama nakitsiz işletme iflas eder.
+## 4.2 Başlangıç Slot Sayıları
 
-Örnek senaryo:
-- Aylık gelir: 100K TL
-- Aylık gider: 90K TL (kârlı görünüyor)
-- Ama: Yemeksepeti ödemesi 30 gün sonra, maaş bu hafta → nakit yok → iflas
+| Slot Türü | Başlangıç | Amaç |
+|---|---:|---|
+| Operation | 4 | Fiziksel veya çekirdek kapasite |
+| Staff | 5 | Operasyonu ayakta tutan ekip |
+| Marketing | 3 | Aynı anda yönetilen aktif büyüme baskısı |
+| Supplier | 2 | Kalite/maliyet kararları |
+| Temp Effect | 3 | Krizler, geçici trendler, geçici boost/penalty |
 
-**Oyun mekaniği:** Her tur sonunda nakit bakiye kontrol edilir. Negatife düşerse "Nakit Kriz" event'i tetiklenir. 3 tur üst üste negatif = iflas.
+Başlangıç toplamı: 17 slot
 
-## 5.3 Gelir Kaynakları
+## 4.3 Slot Felsefesi
 
-| Kaynak | Gecikme | Not |
-|---|---|---|
-| Doğrudan satış (fiziksel) | Aynı tur | En hızlı |
-| Delivery platform (Yemeksepeti vb.) | 1–2 tur sonra | Komisyon %25–35 |
-| Online satış (Trendyol vb.) | 1 tur sonra | Komisyon %15–25 |
-| App Store iOS | 3 tur sonra | Apple %30 keser, 45 gün |
-| Google Play Android | 2 tur sonra | Google %15–30, ayın 15'i |
-| Abonelik/SaaS | Her tur sabit | Churn riski var |
-| Kurumsal sözleşme | Sabit/tur | Uzun vade |
+Oyuncu her şeyi aynı anda yapamaz. Bu sınırlama stratejiyi doğurur.
 
-## 5.4 Gider Kalemleri
+Slot baskısının ürettiği kararlar:
 
-### Sabit Giderler (her tur düşülür)
-- Kira: işletme büyüdükçe artar
-- Temel personel maaşları
-- Sigorta (ödenmezse yasal risk artar)
-- Lisans/ruhsat yenileme (her X turda)
+- Yeni masa mı eklemeliyim, yoksa yeni aşçı mı almalıyım?
+- Premium tedarik mi seçeyim, düşük maliyet mi?
+- Google Ads mi açayım, influencer mı alayım, broşür mü bastırayım?
+- Krizi hemen çözeyim mi, büyümeyi zorlayıp riski göze mi alayım?
 
-### Değişken Giderler
-- Hammadde/tedarik: ciro ile orantılı
-- Reklam: aktif marketing kartlarına göre
-- Bakım ve onarım: operation slotlarının yaşına göre
-- Platform komisyonları: online satıştan otomatik kesilir
+## 4.4 Temp Effect Kuralı
 
-### Gizli Giderler (oyuncu başta görmez)
-- Fire (food waste): taze ürün işletmelerinde
-- Personel devir maliyeti
-- Stok değer kaybı (giyimde sezon geçişi)
-- Kredi faizi
-- Ceza ödemeleri (yasal risk olayları)
+Risk/illegal kartlar ve reaction kartları ayrı bir altıncı slot ailesi açmaz.
 
-## 5.5 Maaş Sistemi
+Onların çalışma mantığı:
 
-Her tur personel maaşları ödenir. Oyuncu seçenekleri:
+- bazıları tek atımlık karar olarak çözülür,
+- bazıları mevcut slotları etkiler,
+- bazıları `Temp Effect` slotuna düşerek birkaç tur baskı yaratır.
 
-| Seçim | Kısa Vade | Uzun Vade |
-|---|---|---|
-| Zamanında öde | Nakit eksilir | Moral yüksek, verimli |
-| Geciktir | Nakit korunur | Moral -2, istifa riski artar |
-| Eksik öde | Nakit kısmen korunur | Moral -1, sadakat düşer |
-| Avans ver | Nakit eksilir fazla | Moral +2, sadakat +1 |
+Bu sayede masa karmaşıklaşmaz ama risk hissi korunur.
 
-**Maaş geciktirme zinciri:**
-Maaş gecikir → moral düşer → hata artar → kalite düşer → müşteri memnuniyeti azalır → kötü yorum → puan düşer → müşteri kaçar → gelir düşer → maaş daha da gecikir.
+## 4.5 Slot Genişlemesi
 
-## 5.6 Personel Sigorta Sistemi
+Slot büyümesi venture kimliğine göre yorumlanır ama ana mantık aynıdır:
 
-| Model | Maliyet | Yasal Risk |
-|---|---|---|
-| Sigortalı + SGK | +%37 maaş üzerine | Sıfır |
-| Sigortasız | Maliyet yok | Yüksek (30K–60K TL/kişi ceza) |
-| Günlük Yevmiye | Esnek | Orta (SGK yükümlülüğü tartışmalı) |
+- Erken oyun: çekirdek işletme kurulur
+- Orta oyun: uzmanlaşma ve darboğaz açma
+- Geç oyun: şubeleşme, zincirleşme, ölçek
 
-## 5.7 Kredi / Borç Sistemi
+Örnek genel açılım:
 
-Oyuncu nakit sıkıntısında kredi çekebilir:
-
-| Kredi Türü | Miktar | Faiz/tur | Koşul |
-|---|---|---|---|
-| Küçük İşletme Kredisi | 200 | %5 | Tier 1'den itibaren |
-| Orta Kredi | 500 | %8 | Tier 2 ve üstü |
-| Büyük Yatırım Kredisi | 1000 | %12 | Tier 3 ve üstü |
-| Acil Likidite | 100 | %15 | Her zaman, 2 tur vade |
-
-**Kredi notu:** Çok borçlanırsan bir sonraki kredi daha pahalı. Ödemeleri geciktirirsen faiz artar.
-
-**Strateji notu:** Kredi = yatırım fırsatı veya hayatta kalma aracı. Yanlış kullanılırsa faiz işletmeyi eritir.
-
-## 5.8 Vergi Sistemi
-
-Her 5 turda vergi dönemi gelir:
-
-- Vergi = net kâr × %20 (basitleştirilmiş KV oranı)
-- Hazırlıklıysan ödersin, geçersin
-- Nakit yoksa vergi borcu oluşur → faiz işler → 2 tur ödenmezse denetim
-
-**Risk kartı:** "Vergiden Kaç" kartı oynandıysa vergi yükümlülüğü düşer ama denetim riski artar.
-
-## 5.9 Enflasyon / Piyasa Baskısı
-
-Her 3–4 turda enflasyon eventi gelir:
-- Hammadde maliyetleri +%10–25
-- Kira yenileme (ev sahibi zam yapar — kabul et veya taşın)
-- Personel maaş beklentisi artar
-
-**Zincir:** Enflasyon → maliyet artar → fiyat artıramazsan marj düşer → kâr erir.
+- İlk büyük eşik: `Marketing +1`
+- İkinci büyük eşik: `Operation +2`, `Staff +2`
+- Üçüncü büyük eşik: `Supplier +1`, `Marketing +1`
 
 ---
 
-# BÖLÜM 6: PERSONEL SİSTEMİ
+# 5. Venture'a Özel Alt-Slotlar
 
-## 6.1 Çalışan Değerleri
+## 5.1 Ortak Kural
 
-Her çalışanın 4 değeri var:
+Her venture aynı `SlotType` omurgasını kullanır ama alt-slot isimleri ve kuralları farklıdır.
 
-| Değer | Etki | Ne Değiştirir |
-|---|---|---|
-| Moral | Düşerse hata oranı artar | Maaş, muamele, iş yükü |
-| Yorgunluk | Artarsa performans düşer | Fazla mesai, çalışma saati |
-| Sadakat | Düşerse rakip çekebilir | Moral, maaş, takdir |
-| Deneyim (XP) | Artarsa verimlilik artar | Zaman + iş yükü |
+Bu fark tasarımın çekirdeğidir: oyuncu her sektörde farklı işletme dili konuştuğunu hissetmelidir.
 
-## 6.2 Moral Zinciri
+## 5.2 Fast Food Alt-Slotları
 
+- Operation: Mutfak, Servis, Oturma, Delivery
+- Staff: Asci, Kasiyer, Kurye, Temizlik, Sube Muduru
+- Marketing: Brosur, Google, Sosyal Medya, Yemek App Kampanyasi
+- Supplier: Kasap, Manav, Ekmek/Firinci, Icecek Anlasmasi
+
+## 5.3 Cafe Alt-Slotları
+
+- Operation: Bar, Oturma, Takeaway, Vitrin/Pastane
+- Staff: Barista, Kasiyer, Floor Staff, Temizlik, Vardiya Sorumlusu
+- Marketing: Instagram, Reels, Loyalty, Google Maps
+- Supplier: Kahve, Sut, Tatli/Pastane, Ambiyans Is Ortakligi
+
+## 5.4 Tech App Alt-Slotları
+
+- Operation: Urun, Backend, Growth Pipeline, Support/Platform Ops
+- Staff: Developer, Designer, Growth, Support, Product Manager
+- Marketing: ASO, Performance Ads, Influencer, Community
+- Supplier: Cloud, Tooling, Payment/Analytics, API Partner
+
+## 5.5 Giyim Alt-Slotları
+
+- Operation: Vitrin, Raf/Stok, Kasa, Online Siparis
+- Staff: Satis Danismani, Kasiyer, Terzi, Depo, Mağaza Muduru
+- Marketing: Instagram, Influencer, Indirim, Shopping Ads
+- Supplier: Toptanci, Atolye, Kargo, Fotograf/Cekim Partneri
+
+## 5.6 Market / Bakkal Alt-Slotları
+
+- Operation: Raf, Taze Urun, Kasa, Mahalle Servis / WhatsApp
+- Staff: Kasiyer, Reyon, Taze Urun Sorumlusu, Kurye, Vardiya
+- Marketing: WhatsApp, Mahalle Afişi, Sadakat, Gece Acik
+- Supplier: Hal, Distribütör, Mandıra/Fırın, Icecek Partneri
+
+---
+
+# 6. Kart Aileleri ve Kart Akışı
+
+## 6.1 Kart Aileleri
+
+Her venture kendi kart havuzunu aşağıdaki ailelerle kurar:
+
+1. Kalıcı kurulum kartları
+2. Aktif büyüme kartları
+3. Risk / illegal kartları
+4. Reaksiyon / çözüm kartları
+
+## 6.2 Kalıcı Kurulum Kartları
+
+Bunlar işletmenin omurgasını kurar:
+
+- dükkan
+- masa
+- espresso makinesi
+- backend upgrade
+- vitrin sistemi
+- buzdolabı
+
+Çoğu `Operation`, `Staff` veya `Supplier` slotuna bağlanır.
+
+## 6.3 Aktif Büyüme Kartları
+
+Bunlar demand ve visibility üretir:
+
+- broşür kampanyası
+- influencer
+- Google reklamı
+- ASO iyileştirmesi
+- indirim haftası
+- yemek platform anlaşması
+
+Çoğu `Marketing` slotunda kalır veya kısa süreli boost verir.
+
+## 6.4 Risk / Illegal Kartları
+
+Bunlar kısa vadeli güç sağlar ama orta vadede baskı üretir:
+
+- sahte yorum
+- sigortasız çalışan
+- vergi kaçırma
+- kalitesiz tedarik
+- fake specialty iddiası
+- store policy etrafından dolanma
+
+Bu kartlar `Legal Risk`, `Reputation`, `Staff Stability` veya `Temp Effect` baskısı oluşturur.
+
+## 6.5 Reaksiyon / Çözüm Kartları
+
+Bunlar kriz geldikten sonra toparlama araçlarıdır:
+
+- özür kampanyası
+- tedarikçi değişimi
+- acil işe alım
+- ustayı değiştirme
+- ücretsiz ikram
+- refund / hotfix / recall
+
+## 6.6 Venture'a Göre Kart Dağıtımı
+
+Kart akışı venture ve board state'e göre filtrelenir:
+
+- Erken oyun: kurulum ve temel hayatta kalma
+- Orta oyun: uzmanlaşma, ilk krizler, rakibe cevap
+- Geç oyun: zincir, franchise, ölçek veya platform dominasyonu
+
+## 6.7 Board-State Aware Çekme Mantığı
+
+Kart sistemi tamamen rastgele olmamalıdır. Aşağıdaki baskılar kart havuzunu etkiler:
+
+- Capacity demand'in gerisinde kaldıysa toparlayıcı operasyon/staff kartları
+- Rating düştüyse çözüm kartları
+- Legal Risk arttıysa denetim ve savunma kartları
+- Supplier zayıfsa kalite veya maliyet baskılı anlaşmalar
+
+---
+
+# 7. Ortak Stat Sistemi
+
+## 7.1 Ana Statlar
+
+Her venture şu ana statları kullanır:
+
+- `Cash`
+- `Demand`
+- `Capacity`
+- `Quality`
+- `Reputation/Rating`
+- `Staff Stability`
+- `Legal Risk`
+- `Market Share`
+
+## 7.2 Stat Anlamları
+
+### Cash
+
+Anlık büyüme hızı ve kriz çözme kapasitesidir.
+
+### Demand
+
+Gelen müşteri veya kullanıcı isteğidir. Marketing, word of mouth ve rating ile yükselir.
+
+### Capacity
+
+Talebi gerçekten karşılayabilme gücüdür. Operation ve Staff ile oluşur.
+
+### Quality
+
+Ürün ya da hizmet kalitesidir. Supplier, staff seviyesi ve altyapı ile belirlenir.
+
+### Reputation / Rating
+
+Müşterinin seni dışarıdan nasıl gördüğüdür. Google yıldızı, app store skoru, yorum algısı ve sosyal proof bunun yüzüdür.
+
+### Staff Stability
+
+Ekibin ne kadar sağlıklı çalıştığını gösterir. Fazla mesai, maaş baskısı ve yetersiz kadro bunu düşürür.
+
+### Legal Risk
+
+Kısa yol kullanmanın zamanla biriken cezasıdır.
+
+### Market Share
+
+Kazanmaya en yakın ana metriktir. Talep çekmek yetmez; o talebi sürdürülebilir şekilde elde tutmak gerekir.
+
+## 7.3 Türetilmiş Kurallar
+
+Ana zincir kuralı:
+
+```text
+Demand > Capacity
+→ servis/teslim gecikir
+→ memnuniyet düşer
+→ rating düşer
+→ organik demand düşer
+→ rakip market share çalar
 ```
-Maaş gecikir / iş yükü fazla / muamele kötü
-↓
-Moral düşer
-↓
-Hata oranı artar
-↓
-Servis yavaşlar / kalite düşer
-↓
-Müşteri memnuniyeti azalır
-↓
-Kötü yorum / puan düşer
-↓
-Müşteri kaçar
+
+Kalite zinciri:
+
+```text
+Supplier + Staff + Operation
+→ Quality
+→ memnuniyet
+→ review/rating
+→ organik büyüme
 ```
 
-## 6.3 Fazla Mesai
+Risk zinciri:
 
-"Fazla Mesai" kartı oynandığında:
-- Bu tur kapasite +%50
-- Yorgunluk +2
-- 3 tur üst üste fazla mesai → "Personel Grevi" riski
-
-## 6.4 Çalışan Gelişimi (XP)
-
-Her tur çalışan deneyim puanı biriktirir:
-- Seviye 1 → 2: Hata oranı -%20
-- Seviye 2 → 3: Verimlilik +%15, müşteri memnuniyeti +1
-- Seviye 3 → 4: Özel yetenek açılır (şef → "Lezzet Ustası", barista → "Latte Art")
-
-Deneyimli çalışan = değerli. Rakip bu çalışanı çalmaya çalışır.
-
-## 6.5 Rakip Çalışan Çalma (Headhunting)
-
-Rakip, oyuncunun düşük sadakatli çalışanlarını hedef alır:
-- Teklif: mevcut maaşın 1.5–2x
-- Oyuncu 1 tur içinde karşı teklif yapabilir
-- Yapmazsa çalışan gider (slot boşalır)
-- Deneyimli çalışan giderse: kalite aniden düşer, eski seviye için yenisini eğitmek gerekir
-
----
-
-# BÖLÜM 7: MÜŞTERİ SİSTEMİ
-
-## 7.1 Market Havuzu
-
-Semtte **sınırlı müşteri** vardır. Oyuncu ve rakip aynı havuz için savaşır.
-
-```
-Toplam Semt Müşteri Havuzu = 100 (sabit başlangıç)
-Oyuncu payı + Rakip payı = 100
+```text
+Illegal kısa yol
+→ Legal Risk
+→ denetim veya skandal
+→ Reputation kaybı / para cezası / temp effect
 ```
 
-Müşteri dağılımı her tur şu faktörlere göre hesaplanır:
+---
 
-| Faktör | Ağırlık |
-|---|---|
-| Kalite skoru | %30 |
-| Fiyat rekabeti | %20 |
-| Platform puanı (Google/App Store) | %20 |
-| Reklam görünürlüğü | %15 |
-| Servis hızı | %10 |
-| Müşteri sadakati | %5 |
+# 8. Venture'a Özel Türetilmiş Metrikler
 
-## 7.2 Müşteri Segmentleri
+## 8.1 Fast Food ve Cafe
 
-| Segment | Özelliği | Nasıl Çekilir |
-|---|---|---|
-| Fiyat Hassas | Ucuzu seçer, sadakatsiz | Fiyat düşür, indirim yap |
-| Kalite Arayan | Pahalıyı öder, sadık kalır | Kalite skoru yüksek tut |
-| Trend Takipçisi | Viral olursa gelir, geçince gider | Marketing + trend eventleri |
-| Sadık Müşteri | Alışkanlıkla gelir | Sürekli iyi deneyim |
-| Yeni Müşteri | Reklam veya tavsiyeyle gelir | Marketing + word of mouth |
+- Malzeme Kalitesi
+- Servis Hizi
+- Hijyen
+- Google Puani
 
-## 7.3 Müşteri Sadakati
+## 8.2 Tech App
 
-Her pozitif deneyim sadakati artırır. Sadık müşteri:
-- Her tur %70 ihtimalle geri gelir (reklam olmadan)
-- Word of mouth zinciri: her 5 sadık müşteri 1 yeni müşteri getirir
-- Fiyata daha az hassas (kalite düşse bile hemen gitmez)
+- App Stability
+- Store Rating
+- Churn
+- Infra Cost
 
-**Sadakat nasıl kırılır:**
-- Kalite ani düşüş
-- Uzun servis bekleme
-- Rakibin güçlü influencer kampanyası
-- Fiyat farkı çok büyüyünce
+## 8.3 Giyim Magazasi
 
-## 7.4 Word of Mouth (Ağızdan Ağıza)
+- Stok Sagligi
+- Sezon Uyumu
+- Iade Baskisi
+- Vitrin Cekiciligi
 
-Sessiz ama en güçlü müşteri kazanım mekanizması:
-- 5 sadık müşteri → her tur 1 yeni müşteri organik
-- Google puanı 4.5+ → organik yeni müşteri
-- Viral event → büyük spike ama kısa süreli
+## 8.4 Market / Bakkal
+
+- Fire
+- SKT Baskisi
+- Veresiye Riski
+- Mahalle Sadakati
+
+Bu metrikler ana statlardan türetilir; oyuncunun önüne ikinci bir karmaşık ekonomi sayfası olarak değil, karar sonuçlarını okunur hale getiren sektör lensi olarak çıkmalıdır.
 
 ---
 
-# BÖLÜM 8: PUAN SİSTEMİ (Google / App Store Rating)
+# 9. Tur Akışı
 
-## 8.1 Genel Kural
+## 9.1 Fazlar
 
-Her işletme türünün bir **Platform Puanı** var (1.0–5.0):
-- Fast Food / Cafe / Market / Giyim → Google Business Rating
-- Tech App → App Store Rating (iOS veya Android)
+Her tur aşağıdaki sırayla oynanır:
 
-## 8.2 Puanın Müşteriye Etkisi
+1. Draw
+2. Planning
+3. Play
+4. Resolve
+5. Crisis / Reaction
+6. Rival
+7. End of Turn Market Update
 
-| Puan | Müşteri Etkisi |
-|---|---|
-| 4.5–5.0 | Organik müşteri gelir (+%20) |
-| 4.0–4.4 | Normal, nötr |
-| 3.5–3.9 | Yeni müşteri -%30 |
-| 3.0–3.4 | Yeni müşteri -%60 |
-| 3.0 altı | Pratik ölüm — organik müşteri gelmez |
+## 9.2 Draw
 
-## 8.3 Puan Değişimi
+Oyuncu mevcut venture, board state ve oyun evresine göre kart çeker.
 
-| Olay | Puan Değişimi |
-|---|---|
-| Müşteriden yorum ist (organik) | +0.1–0.3 |
-| İyi servis turu (kalite yüksek) | +0.1 |
-| Kötü servis / kalite düşüklüğü | -0.2 |
-| Kriz eventi (zehirlenme, skandal) | -0.5–1.0 |
-| Sahte yorum satın al (başarılı) | +0.3 (geçici) |
-| Sahte yorum tespit (Google/Apple) | -0.5 + ban riski |
-| Influencer kampanyası | +0.2 |
+## 9.3 Planning
 
-## 8.4 Puan Kurtarma
+Oyuncu darboğazı okur:
 
-Düşük puan kurtarılabilir ama zaman alır:
-- Her "iyi tur" (kalite yüksek + hızlı servis) +0.1
-- "PR Kampanyası" kartı: +0.3 anlık
-- "Müşteri Memnuniyeti Programı" upgrade: +0.1/tur
-- Minimum kurtarma süresi: 3–5 tur (kritik düşüşten)
+- Demand mi eksik?
+- Capacity mi eksik?
+- Rating mi düşüyor?
+- Supplier tarafı mı zayıf?
+- Staff Stability mi kırılıyor?
 
----
+## 9.4 Play
 
-# BÖLÜM 9: STOK YÖNETİMİ
+Oyuncu sınırlı sayıda aksiyonla kartları oynar:
 
-## 9.1 Hangi İşletmeler İçin Geçerli?
+- Slota yerleştirir
+- Var olan slotu upgrade eder
+- Anlık kart çözer
+- Krize cevap verir
 
-- Fast Food, Cafe, Market/Bakkal → **taze ürün fire riski**
-- Giyim Mağazası → **sezon stok batığı riski**
-- Tech App → **stok yönetimi yok** (dijital ürün)
+## 9.5 Resolve
 
-## 9.2 Fire Mekaniği
+Sistem şu sırayla hesaplanır:
 
-Taze ürün işletmelerinde:
-- Her 2–3 turda stokun %10–20'si bozulur (gelir kaybı)
-- "Stok Yönetim Sistemi" upgrade: fire -%50
-- Buzdolabı arızası eventi: tüm taze stok yok
+1. Operation ve Staff kapasitesi
+2. Supplier etkileri
+3. Marketing görünürlüğü ve demand üretimi
+4. Quality ve service sonucu
+5. Rating / reputation güncellemesi
+6. Cash gelir/gider hesabı
+7. Market share kayması
 
-## 9.3 Sezon Stok Dengesi
+## 9.6 Crisis / Reaction
 
-Giyim mağazasında:
-- Sezon başı: büyük stok alımı (nakit bağlanır)
-- Sezon sonu: satılmayan stok → indirim (marj düşer) veya bekle (nakit bağlı kalır)
-- Yanlış trend: stok tamamen batabilir
+Kriz kartları iki kaynaktan gelir:
 
-**Stok kararı mekaniği:** Her sezon geçişinde oyuncuya seçenek sunulur:
-1. İndirim yap: gelir -%30 bu tur, stok temizlenir
-2. Bekle: müşteri -%20, nakit bağlı
-3. Depola: küçük maliyet, gelecek sezon dene
-
-## 9.4 Tedarik Güvenilirliği
-
-Tedarikçi slotuna yerleştirilen kart türüne göre:
-- Premium tedarikçi: güvenilir, pahalı, her tur tutarlı kalite
-- Ucuz tedarikçi: tutarsız, bazen "bu hafta malzeme kötüydü" eventi tetikler
-- Veresiye tedarik: nakit tasarrufu ama tedarikçi anlaşmazlığı riski
-
----
-
-# BÖLÜM 10: LOKASYON VE TRAFİK
-
-## 10.1 Konum Seçimi (Oyun Başı)
-
-Oyuncu başlangıçta konum seçer:
-
-| Konum | Kira | Başlangıç Trafiği |
-|---|---|---|
-| Ücra köşe | Düşük | Çok düşük |
-| Yan sokak | Orta | Orta |
-| Ana cadde | Yüksek | Yüksek |
-| AVM / alışveriş merkezi | Çok yüksek + ciro payı | Çok yüksek |
-
-## 10.2 Trafik Mekaniği
-
-**Konum trafiği** her tur pasif müşteri sağlar:
-- Ana cadde: +5 pasif müşteri/tur
-- Yan sokak: +2 pasif müşteri/tur
-- Ücra köşe: +0 pasif (sadece aktif reklam işe yarar)
-
-**Traffic area bonus'ları:**
-- Işık lambası yanında: araç bekleme trafiği +3
-- Okul/üniversite yanında: öğle saati +5
-- Hastane yanında: sürekli trafik +3, düşük çek/müşteri
-- Site/apartman girişi: sabah/akşam saati +4
-
-## 10.3 Rakip Aynı Bölgeye Açılırsa
-
-Rakip oyuncu ile aynı trafik alanındaysa:
-- Pasif trafik ikiye bölünür
-- Görünürlük rekabeti başlar (marketing kartları daha kritik)
-- "Komşu Rekabeti" eventi tetiklenebilir
-
----
-
-# BÖLÜM 11: ZİNCİR REAKSİYON SİSTEMİ
-
-## 11.1 Temel İlke
-
-**Her karar başka bir sistemi etkiler.** Oyunun temelidir.
-
-Oyuncu şunu hissetmeli:
-> "Kendi problemlerimi ben yaratıyorum."
-
-## 11.2 Zincir Türleri
-
-### Deterministik Zincirler (her zaman olur)
-Belli kart kombinasyonları belli zinciri tetikler.
+- venture bazlı global olaylar
+- oyuncunun kendi kararlarının tetiklediği olaylar
 
 Örnek:
-```
-Ucuz Hammadde [Supplier slot'a yerleşti]
-→ Kalite skoru -2
-→ Google puanı -0.3/tur
-→ Yeni müşteri azalır
-→ Gelir düşer
-```
 
-### Olasılıklı Zincirler (%X ihtimalle)
-Oyuncunun kararları riski artırır ama garantili değil.
+- düşük kalite + yüksek demand = kötü yorum patlaması
+- sigortasız çalışan + yüksek denetim baskısı = ceza
+- ucuz tedarik + sıcak hava = hijyen sorunu
 
-Örnek:
-```
-Maaş 3 tur gecikti
-→ %50 ihtimalle istifa
-→ İstifa olursa slot boşalır
-→ Kapasite düşer
-```
+## 9.7 Rival
 
-### Kümülatif Zincirler (zamanla birikir)
-Küçük kötü kararlar birikerek kriz yaratır.
+Rakip aynı venture üzerinden karar verir. Oyuncunun seçtiği stratejiye göre cevap üretir:
 
-Örnek:
-```
-Her tur %10 fire var (gizli)
-→ 5 turda %50 stok eridi
-→ 6. turda gelir aniden düşer
-→ Oyuncu "neden düştü" diye şaşırır
-```
+- fiyat savaşı
+- kalite yükseltme
+- marketing baskısı
+- staff poach
+- itibar saldırısı
 
-## 11.3 Referans Domino Zinciri
+---
 
-**"Büyüme Tuzağı"** — en yaygın yeni oyuncu hatası:
-```
-Fazla reklam yap (3/3 marketing slot dolu)
-↓ Müşteri patladı (+20)
-↓ Operation kapasitesi yetersiz (3/4 slot dolu)
-↓ Servis yavaşladı
-↓ Kalite düştü
-↓ Google puanı -0.4
-↓ Kötü yorumlar birikte
-↓ Müşteri kaçıyor (ama reklam hâlâ para yiyor)
-↓ Gelir düştü, maliyet aynı
-↓ Nakit kriz
-↓ Maaşlar gecikti
-↓ Çalışan istifa etti
-↓ ÇÖKÜŞ
+# 10. Ekonomi Döngüsü ve Kriz Çözümü
+
+## 10.1 Temel Ekonomi Döngüsü
+
+```text
+Kurulum
+→ talep yaratma
+→ talebi taşıyacak kapasite kurma
+→ kalite ve rating'i koruma
+→ market share büyütme
+→ yeni slot / yeni ölçek
 ```
 
----
+## 10.2 Oyunun Gerçek Gerginliği
 
-# BÖLÜM 12: EVENT SİSTEMİ
+Oyuncu genelde üç problemden biriyle uğraşır:
 
-## 12.1 Event Kaynakları
+1. Talep yokluğu
+2. Talebi taşıyamama
+3. Kısa yol yüzünden büyürken çürüme
 
-| Kaynak | Açıklama |
-|---|---|
-| Deterministik | Oyuncunun geçmiş kararlarından doğar |
-| Rastgele | Dünya olayları, random tetikleyici |
-| Rakip kaynaklı | Rakibin hamlelerinden doğar |
-| Mevsimsel | Takvim bazlı, öngörülebilir |
+## 10.3 Kriz Çözme Felsefesi
 
-## 12.2 Event Tetikleyici Kuralları
+Her kriz en az iki çözüm yolu vermelidir:
 
-**Deterministik eventler** belli koşullar oluşunca kesinlikle gelir:
-- Ucuz hammadde 4+ tur kullanıldıysa → "Kalite Krizi" (gıda)
-- Maaş 3 tur geciktiyse → "Personel Grevi" riski
-- Google puanı 3.0'a düştüyse → "İtibar Krizi"
-- Vergi 2 tur ödenmedi → "Vergi Denetimi"
-- Sigortasız çalışan 3+ tur → "SGK Denetimi"
+- ucuz ama riskli
+- pahalı ama temiz
 
-**Rastgele eventler** her tur %X ihtimalle gelir. Oyuncunun durumuna göre ihtimal değişir:
-- İyi durumda: pozitif event ihtimali artar (Viral Trend, Food Festival)
-- Kötü durumda: negatif event ihtimali artar
+Fast food örneği:
 
-## 12.3 Event Kategorileri
+- Google yorum satın al
+- daha kaliteli et ve yeni usta ile kalıcı çözüm kur
 
-| Kategori | Örnekler |
-|---|---|
-| Kalite Krizi | Gıda zehirlenmesi, bozuk ürün, skandal |
-| Operasyon Krizi | Ekipman arızası, elektrik kesintisi |
-| Personel Krizi | Personel grevi, toplu istifa, kavga |
-| Tedarik Krizi | Tedarikçi sorunu, hammadde yokluğu |
-| Dijital Kriz | App Store red, veri sızıntısı, Google cezası |
-| Hukuki Kriz | Vergi denetimi, SGK denetimi, belediye kapama |
-| Pozitif Event | Viral video, food festival, trend dalga |
-| Rakip Kaynaklı | Rakip yatırım aldı, rakip kampanya başlattı |
-| Mevsimsel | Ramazan, bayram, okul sezonu, yaz yavaşlığı |
+Tech örneği:
 
-## 12.4 Event Süresi
+- sahte review ve paid traffic ile şişir
+- hotfix, support yatırımı ve crash azaltımı yap
 
-Her event kaç tur süreceğini belirtir:
-- Anlık (1 tur): olay olur, biter
-- Kısa (2–3 tur): baskı devam eder, çözüm gerekebilir
-- Uzun (4+ tur): yapısal problem, aktif müdahale şart
+## 10.4 Toparlanma Hissi
 
-## 12.5 Event Çözüm Mekaniği
-
-Bazı eventler çözülebilir:
-- "Sağlık Denetimi" → "Hijyen Sertifikası" kartı oynandıysa 0 hasar
-- "Personel Grevi" → acil zam ver (nakit -50) veya 1 tur kaybet
-- "Tedarik Sorunu" → yedek tedarikçi slotu varsa geç, yoksa 2 tur hammadde yok
+Kriz kartları oyunu bitiren cezalar değil, oyuncuyu yön zorlayan dönemeçler olmalıdır. Oyuncu doğru toparlarsa daha güçlü dönebilmelidir.
 
 ---
 
-# BÖLÜM 13: HUKUKİ / DENETİM SİSTEMİ
+# 11. Fast Food Referans Akışı
 
-## 13.1 Yasal Risk Puanı
+Fast food venture v4 tasarımının referans örneğidir.
 
-Her işletmenin gizli bir **Yasal Risk Puanı** var (0–100):
-- 0–20: güvenli
-- 21–50: denetim ihtimali artar
-- 51–80: denetim yakın
-- 81–100: denetim garantili
+## 11.1 Erken Oyun Örneği
 
-Risk puanı şunlarla artar:
-- Sigortasız çalışan: +15/tur
-- Vergiden kaçmak: +10/tur
-- SKT geçmiş ürün: +20
-- Ruhsatsız çalışmak: +25/tur
-- Sahte yorum: +5
+Başlangıç:
 
-## 13.2 Denetim Türleri
+- küçük dükkan
+- sınırlı cash
+- düşük Google puanı
+- temel mutfak
 
-| Denetim | Tetikleyici | Başarısız Olursa |
-|---|---|---|
-| SGK Denetimi | Sigortasız çalışan 3+ tur | Ceza: 30K–60K TL/kişi |
-| Sağlık/Hijyen | Risk puanı 50+ | İşletme 1–2 tur kapalı |
-| Vergi | Vergi kaçırma 2+ tur | 3x vergi + faiz |
-| Gıda Güvenliği | UCuz hammadde + düşük kalite | Kapatma + haber |
-| Belediye | Ruhsat sorunu | Mühür = kapatma |
+İlk kararlar:
 
-## 13.3 Denetimden Geçme
+- dükkan satın al
+- masa ekle
+- usta işe al
+- kasap ve manav bul
+- Google işletme profili aç
 
-Denetim geldiğinde:
-- Yasal durum temizse: geçer, küçük bonus (müşteri güveni +1)
-- Yasal risk 50+: %50–80 yakalanma ihtimali
-- Yakalanırsa: ceza + event
+## 11.2 İlk Büyüme Kararları
 
----
+- broşür bastır
+- ışıklarda broşür dağıtacak eleman tut
+- yemek uygulamasıyla anlaş
+- paket servisi aç
+- sosyal medya reklamı ver
 
-# BÖLÜM 14: MEVSİMSELLİK
+## 11.3 Baskı Noktaları
 
-## 14.1 Mevsim Takvimi (25 Tur)
+- talep artar ama mutfak yetişmez
+- servis yavaşlar
+- yorumlar düşer
+- puan 4.4'ten 3.9'a iner
+- organik müşteri kesilir
 
-| Turlar | Sezon | Genel Etki |
-|---|---|---|
-| 1–5 | İlkbahar | Normal başlangıç |
-| 6–10 | Yaz | Konum bağımlı |
-| 11–15 | Sonbahar | Okul açılışı, yükseliş |
-| 16–20 | Kış | Sezona göre değişir |
-| 21–25 | Ramazan/Bayram zonu | Büyük spike |
+## 11.4 Kriz Sonrası Seçim Örnekleri
 
-## 14.2 İşletmeye Göre Mevsimsel Etkiler
+- sahte yorum satın al: hızlı düzeltme, ban riski
+- kaliteli et anlaşması yap: pahalı ama kalıcı kalite artışı
+- ustayı değiştir: staff yatırımı
+- ücretsiz tatlı veya özür kampanyası yap: itibar toparlama
 
-| İşletme | Yaz | Kış | Ramazan | Okul Dönemi |
-|---|---|---|---|---|
-| Fast Food | Nötr | +%15 | Karışık | +%10 |
-| Cafe | -%15 | +%25 | Nötr | +%20 |
-| Tech App | Nötr | Nötr | Nötr | Nötr |
-| Giyim | -%10 (indirim) | +%20 | +%15 | +%25 |
-| Market | Nötr | +%10 | +%35 | +%10 |
+## 11.5 Fast Food'un Kimliği
 
-## 14.3 Mevsimsel Eventler
-
-- Ramazan (3 tur): yemek işletmelerinde öğle -%50, iftar +%30
-- Okul Açılışı (2 tur): giyim +%25, kafe +%20
-- Yılbaşı (2 tur): giyim +%30, market +%15
-- Yaz Tatili (3 tur): şehirdeyse -%10, tatil beldesinde +%40
-- Black Friday (1 tur): tüm işletmeler müşteri +%20
+Fast food venture yüksek tempo ve kapasite yönetimi venture'ıdır. Yanlış marketing ile en hızlı patlayan, doğru denge ile de en hızlı büyüyen sektördür.
 
 ---
 
-# BÖLÜM 15: RAKİP SİSTEMİ
+# 12. Rakip Sistemi
 
-## 15.1 Rakip Kimdir?
+## 12.1 Aynı Venture Rakip Kuralı
 
-Rakip aynı işletme türüyle başlar. Aynı semtte, aynı müşteri havuzu için savaşır.
+Rakip oyuncuyla aynı venture'da olduğu için adil ama baskılı bir yarış kurulur.
 
-Rakip oyuncudan farklı kararlar alabilir:
-- Pazara daha agresif girebilir (marketing önce)
-- Kalite önceliklendirici olabilir
-- Ucuz büyüme stratejisi deneyebilir
+## 12.2 Rakip Davranış Aileleri
 
-## 15.2 Rakip Hamle Havuzu
+Rakip aşağıdaki stratejiler arasında döner:
 
-Her tur rakip aşağıdakilerden birini yapar:
+- Agresif marketing
+- Premium kalite
+- Ucuz genişleme
+- Defansif stabilizasyon
+- Riskli kısa yol
 
-| Hamle | Etkisi |
-|---|---|
-| Fiyat Düşür | Fiyat hassas müşteri rakibe geçer |
-| Marketing Kampanyası | Oyuncudan müşteri çeker |
-| Kalite Artır | Kalite arayan müşteri kaymaya başlar |
-| Personel Çal | Oyuncunun düşük sadakatli çalışanına teklif |
-| Yatırım Bul | Rakip 3 tur süreyle büyük hamle yapabilir |
-| Yeni Şube Aç | Başka bölgede müşteri toplar |
-| Sabote Et | Rakip Google'a şikayet eder (düşük ihtimalli) |
+## 12.3 Venture Bazlı Baskı Örnekleri
 
-## 15.3 Rakip Zekası
+- Fast food: fiyat kırma, yorum savaşı, kurye baskısı
+- Cafe: barista çalma, ambiyans savaşı, Google Maps üstünlüğü
+- Tech: CAC yarışı, store rating savaşı, feature velocity baskısı
+- Giyim: indirim savaşı, vitrin savaşı, influencer yarışı
+- Market: fiyat baskısı, gece açık kalma farkı, WhatsApp sadakati
 
-Rakip oyuncunun zayıf noktalarını okur:
-- Maaşlar gecikiyorsa: personel çalma hamlesi gelir
-- Google puanı düşükse: agresif marketing başlar
-- Nakit krizi varsa: rakip genişleme moduna geçer
-- Oyuncu güçlüyse: rakip savunmaya çekilir, kalite artırır
+## 12.4 Görünürlük Kuralı
 
-## 15.4 Rakip Büyüme Takvimi
-
-Rakip oyuncunun performansına göre büyür veya küçülür. Oyuncu baskı uygularsa rakip yavaşlar. Oyuncu kriz yaşarsa rakip hızlanır.
+Rakip tüm detaylarıyla açık olmayabilir; ama oyuncu onun hangi yönde büyüdüğünü okuyabilmelidir.
 
 ---
 
-# BÖLÜM 16: TUR YAPISI
+# 13. Kazanma Yapısı
 
-## 16.1 6 Faz
+## 13.1 Ana Hedef
 
-### FAZ 1 — KART ÇEKME
+Kazanma yapısı kısa run 1v1 aynı-sektör market domination olarak kalır.
 
-Oyuncuya girişim türüne özel kartlar gelir.
-- Standart: 5 kart çek, 3 tanesini tut
-- Marketing slotu doluysa marketing kartı oynayamazsın (slot stratejisi)
-- Girişim türüne göre kart havuzu değişir
+Varsayılan hedef:
 
-### FAZ 2 — PLANLAMA
+- 25 tur içinde market share üstünlüğü kurmak
+- belirli eşik: `%60 market share`
 
-Oyuncunun **3 action point**'i var.
+## 13.2 Alternatif Başarı Hissi
 
-Her kart oynamak veya aksiyon almak 1 action:
-- Kart oyna (slota yerleştir veya kullan): 1 action
-- Slottaki kartı çıkar: 1 action
-- Maaş öde / geciktir kararı: 0 action (zorunlu karar)
-- Kredi çek: 1 action
+Run bitse bile skor şu eksenlerde okunur:
 
-### FAZ 3 — SİMÜLASYON
+- market share
+- final cash
+- rating
+- çözülen kriz sayısı
+- ulaşılan ölçek seviyesi
 
-Tüm kararlar çalışır:
-- Müşteri hareketi hesaplanır (formül uygulanır)
-- Reklam etkisi oluşur
-- Tedarikçi kalitesi uygulanır
-- Çalışan performansı hesaplanır
+## 13.3 Kaybetme Şartları
 
-### FAZ 4 — OPERASYON
-
-İç sistemler çalışır:
-- Servis hızı = kapasite / müşteri sayısı
-- Kalite = hammadde + şef seviyesi + moral
-- Fire hesaplanır (gıda işletmeleri)
-- Stok güncellenir
-
-### FAZ 5 — EKONOMİ
-
-Gelir–gider hesaplanır:
-- Gelir = müşteri × harcama × kalite katsayısı
-- Giderler tek tek düşülür
-- Platform komisyonları kesilir
-- Maaşlar ödenir (veya geciktirme kararı)
-- Nakit bakiyesi güncellenir
-- Vergi dönemi kontrolü
-- İflas kontrolü
-
-### FAZ 6 — EVENT + RAKİP
-
-1. Event çekilir (deterministik kontrol önce, sonra random)
-2. Event uygulanır
-3. Rakip hamle yapar
-4. Rakip hamlesi efektleri uygulanır
-5. Tur sayacı +1
-6. Kazanma/kaybetme koşulları kontrol edilir
+- iflas
+- itibarın geri dönülemez çökmesi
+- ağır legal darbe
+- rakibin sektör içinde ezici dominasyonu
 
 ---
 
-# BÖLÜM 17: İKİNCİ ŞUBE / FRANCHISE
+# 14. İçerik Katmanları
 
-## 17.1 Açılış Koşulları
+## 14.1 Ana GDD
 
-Oyuncu şu koşulları sağlayınca ikinci şube açabilir:
-- Company Tier 3 (Şirket) veya üstü
-- Nakit rezervi yeterli (minimum 300 nakit)
-- İlk şube karlı (son 3 tur net pozitif)
+Bu dosya global kuralları anlatır.
 
-## 17.2 İkinci Şube Etkisi
+## 14.2 Venture Dokümanları
 
-- Yeni operation slot grubu açılır (+4 operation)
-- Yeni müşteri havuzuna erişim (farklı semt)
-- Maliyet: kira + personel 2x
+Her venture dosyası şunları içerir:
 
-**Risk:** Yönetim dikkatinin bölünmesi. İlk şube ihmal edilirse çöker.
+- venture kimliği
+- başlangıç board'u
+- alt-slot yapısı
+- kart aileleri
+- kriz havuzu
+- erken/orta/geç oyun stratejileri
 
-## 17.3 Franchise Seçeneği
+## 14.3 Teknik Eşleme
 
-Tier 4'te (Holding) franchise kurma seçeneği açılır:
-- Rakibe franchise verme (uzun vadeli gelir, rakibi büyütme riski)
-- Üçüncü şube açma (maksimum genişleme)
+Doküman kurallarının koda nasıl taşınacağı şu dosyada tutulur:
 
----
-
-# BÖLÜM 18: KAZANMA / KAYBETME
-
-## 18.1 Kazanma Koşulları
-
-| Koşul | Açıklama |
-|---|---|
-| Market Dominance | Müşteri havuzunun %60'ına ulaş |
-| Rakibi İflas Ettir | Rakip nakit biterse oyun biter |
-| 25. Tur Sonu | Daha güçlü marka (müşteri oranı + tier) kazanır |
-
-## 18.2 Kaybetme Koşulları
-
-| Koşul | Açıklama |
-|---|---|
-| İflas | Nakit 3 tur üst üste negatif |
-| Operasyon Çöküşü | Tüm staff slotları boşaldı, işletme durdu |
-| Rakip %60 | Rakip dominance aldı |
-| Belediye Kapama | Yasal risk sonucu işletme kapatıldı |
-
-## 18.3 Erken Bitiş Bonusu
-
-25. turdan önce kazanılırsa kalan tur sayısı × bonus katsayısı puanı artırır.
-
-## 18.4 Run Sonu Skor
-
-| Faktör | Katkı |
-|---|---|
-| Son müşteri payı | %40 |
-| Company Tier | %20 |
-| Nakit rezervi | %15 |
-| Puan (Google/App Store) | %15 |
-| Tur sayısı (erken bitiş bonus) | %10 |
+- `Assets/steam-card-game-gdd/TECHNICAL_MAPPING.md`
 
 ---
 
-# BÖLÜM 19: KART SİSTEMİ (GENEL KURALLAR)
+# 15. Kabul Kriterleri
 
-## 19.1 Kart Kategorileri
+## 15.1 Doküman Kriterleri
 
-| Kategori | Açıklama |
-|---|---|
-| Operation | Fiziksel altyapı slota yerleşir |
-| Staff | Çalışan slota yerleşir |
-| Marketing | Reklam kampanyası slota yerleşir |
-| Supplier | Tedarikçi slota yerleşir |
-| Action | Tek seferlik kullanılır, slota girmez |
-| Upgrade | Kalıcı etki, mevcut slot özelliğini geliştirir |
-| Risk | Yüksek getiri, yüksek risk |
-| Event | Genellikle temp slota düşer |
+- Ana GDD tek başına oyunun temel döngüsünü anlatır.
+- 5 venture dosyasının her biri başlangıç board'u, kart akışı, krizleri ve büyüme yolunu içerir.
+- Her venture için en az bir erken, bir orta ve bir geç oyun build örneği vardır.
 
-## 19.2 Kart Havuzu Yapısı
+## 15.2 Sistem Kriterleri
 
-- **%80:** Seçilen girişim türüne özel kartlar
-- **%20:** Genel kartlar (tüm işletme türlerine uygulanabilir)
+- Oyuncu venture seçince rakip aynı venture ile eşleşir.
+- Kart çekimi venture ve board state ile ilişkili çalışır.
+- Marketing operasyonu aşarsa rating baskısı doğar.
+- Supplier ve staff kararları quality ve memnuniyet zinciri üretir.
+- Rating artışı organik talep üretir.
+- Rating düşüşü kriz ve çözüm kartlarını tetikler.
 
-## 19.3 Genel Kartlar (Tüm Girişimlerde Gelebilir)
+## 15.3 Playtest Senaryoları
 
-**Ekonomi:**
-- Banka Kredisi Çek (Action): nakit +200, faiz %8/tur
-- Vergi Planlaması (Action): bu dönem vergi -%20
-- Maliyet Optimizasyonu (Upgrade): tüm giderler -%10
-
-**Personel:**
-- Takım Motivasyonu (Action): tüm çalışanlar moral +2 bu tur
-- Personel Eğitimi (Action): rastgele 1 çalışan XP +2
-- İş Güvenliği Sistemi (Upgrade): yasal risk -10
-
-**Strateji:**
-- Piyasa Araştırması (Action): rakibin mevcut hamlesini gör
-- Kriz Yönetimi (Upgrade): negatif event etkisi -%25
-- İkinci Şube Hazırlığı (Upgrade): şube açma maliyeti -%20
-
-## 19.4 Kart Denge Kuralları
-
-- **Her kart her zaman iyi değildir.** Kartın değeri işletmenin durumuna göre değişir.
-- Boş slota bakılır: slot yoksa kart oynanamaz
-- Sinerji > tek kart gücü: doğru kombinasyon her kartta kazanır
-- Risk kartları: yüksek getiri ama deterministik olumsuz zincir tetikleyebilir
+- Fast food: agresif marketing, zayıf mutfak, yorum çöküşü
+- Cafe: küçük ama premium kalite build'i
+- Tech: düşük erken gelir, yüksek geç ölçek
+- Giyim: yanlış sezon stok baskısı
+- Market: düşük marj, stabil trafik, veresiye riski
 
 ---
 
-# BÖLÜM 20: META PROGRESSION VE SKOR
+# 16. MVP Önceliği
 
-## 20.1 Run Sonu
+## 16.1 Tasarım Önceliği
 
-Her run sonunda:
-- Skor hesaplanır (Bkz. 18.4)
-- Kilit başarımlar kontrol edilir
-- Meta XP verilir
+MVP'de amaç tüm venture'ları aynı derinlikte bitirmek değil; aynı sistem diliyle oynanabilir hale getirmektir.
 
-## 20.2 Meta XP ve Kilit Açma
+Öncelik sırası:
 
-| XP Miktarı | Açılan İçerik |
-|---|---|
-| 100 | Yeni event kartı |
-| 250 | Yeni girişim türü |
-| 500 | Zorluk modu açılır |
-| 1000 | Senaryo modu |
+1. Venture seçimi
+2. Aynı venture rakip
+3. Ortak slot omurgası
+4. Venture bazlı kart havuzu
+5. Rating, quality, capacity zinciri
+6. Venture bazlı krizler
 
-## 20.3 Zorluk Seviyeleri
+## 16.2 Referans Venture
 
-| Seviye | Fark |
-|---|---|
-| Kolay | Rakip pasif, eventler hafif |
-| Normal | Varsayılan |
-| Zor | Rakip agresif, enflasyon hızlı |
-| Acımasız | Nakit kriz riski 2x, rakip her zayıflığı kullanır |
+Fast food, sistemin okunabilirliğini test etmek için referans venture'dır. Diğer venture'lar aynı şablonla ama kendi ekonomik kimliğiyle uygulanır.
 
 ---
 
-# BÖLÜM 21: TEKNİK MİMARİ NOTU
+# 17. Uygulama Notu
 
-GDD, kod mimarisini belirlemez. Aşağıdakiler referans niteliğindedir:
-
-- **Namespace:** `EmpireOfCards.{Domain}` (Core, Gameplay, UI, Data, Bootstrap, World)
-- **Mimari:** Bootstrap → WiringService → GameManager → StateMachine + TurnManager
-- **Event sistemi:** Statik EventBus, ClearAll() scene unload'da
-- **Kart verisi:** ScriptableObject (runtime'da kopyalanır, asıl veri değiştirilmez)
-- **Slot sistemi:** SlotZone3D bileşenleri Board3D üzerinde
-
----
-
-# BÖLÜM 22: MVP KAPSAMI
-
-## 22.1 MVP (İlk Oynanabilir)
-
-- [ ] 1 girişim türü (Fast Food)
-- [ ] 17 başlangıç slot
-- [ ] 30 kart (Fast Food havuzu)
-- [ ] Temel ekonomi sistemi
-- [ ] Temel personel sistemi (moral + maaş)
-- [ ] Google puan sistemi
-- [ ] Rakip (basit AI, 5 hamle)
-- [ ] 6 faz tur yapısı
-- [ ] 3 kazanma/kaybetme koşulu
-
-## 22.2 Alpha
-
-- [ ] Tüm 5 girişim türü
-- [ ] Slot genişleme sistemi (tier bazlı)
-- [ ] Tam event havuzu (30+ event)
-- [ ] Kredi/borç sistemi
-- [ ] Mevsimsellik
-- [ ] Rakip AI (zayıf nokta okuma)
-
-## 22.3 Beta
-
-- [ ] İkinci şube sistemi
-- [ ] Meta progression
-- [ ] Zorluk seviyeleri
-- [ ] Balans tuning (tüm girişimler)
-- [ ] Ses + müzik sistemi
-- [ ] UI polish
-
----
-
-> **Önemli:** Her işletme türünün kart listesi, özel mekanikleri, event listesi ve zincir reaksiyon örnekleri için:
-> `Assets/steam-card-game-gdd/businesses/` klasörüne bak.
-> GDD yalnızca tüm işletmeler için geçerli CORE SİSTEMLERİ içerir.
+Bu GDD sürümü kodu anlatan bir teknik taslak değil; tasarımın nihai omurgasıdır. Veri modeli, UI ve rival AI eşlemesi `TECHNICAL_MAPPING.md` içinde karar seviyesinde tanımlanır.

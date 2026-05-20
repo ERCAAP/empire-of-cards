@@ -214,9 +214,9 @@ namespace EmpireOfCards.UI
             if (turnText == null) return;
 
             if (current >= Constants.SOFT_CAP_TURN)
-                turnText.text = $"Turn {current} \u26a0\ufe0f"; // Warning: penalty active
+                turnText.text = LocalizationManager.Get("ui.turn_softcap", current);
             else
-                turnText.text = $"Turn {current}";
+                turnText.text = LocalizationManager.Get("ui.turn_current", current);
         }
 
         /// <summary>

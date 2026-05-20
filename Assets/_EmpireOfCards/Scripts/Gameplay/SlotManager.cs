@@ -52,6 +52,35 @@ namespace EmpireOfCards.Gameplay
             InitializeSlotList(_tempEffectSlots, _tempEffectMax);
         }
 
+        public void Configure(VentureBoardProfile profile)
+        {
+            if (profile == null)
+            {
+                Init();
+                return;
+            }
+
+            _operationMax = profile.startingOperationSlots;
+            _staffMax = profile.startingStaffSlots;
+            _marketingMax = profile.startingMarketingSlots;
+            _supplierMax = profile.startingSupplierSlots;
+
+            InitializeSlotList(_operationSlots, _operationMax);
+            InitializeSlotList(_staffSlots, _staffMax);
+            InitializeSlotList(_marketingSlots, _marketingMax);
+            InitializeSlotList(_supplierSlots, _supplierMax);
+            InitializeSlotList(_tempEffectSlots, _tempEffectMax);
+        }
+
+        public void ResetAll()
+        {
+            for (int i = 0; i < _operationSlots.Count; i++) _operationSlots[i] = null;
+            for (int i = 0; i < _staffSlots.Count; i++) _staffSlots[i] = null;
+            for (int i = 0; i < _marketingSlots.Count; i++) _marketingSlots[i] = null;
+            for (int i = 0; i < _supplierSlots.Count; i++) _supplierSlots[i] = null;
+            for (int i = 0; i < _tempEffectSlots.Count; i++) _tempEffectSlots[i] = null;
+        }
+
         private static void InitializeSlotList(List<CardData> list, int count)
         {
             list.Clear();

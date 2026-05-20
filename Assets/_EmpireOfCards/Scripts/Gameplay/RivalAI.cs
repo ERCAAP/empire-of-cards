@@ -6,9 +6,6 @@ using EmpireOfCards.Data;
 
 namespace EmpireOfCards.Gameplay
 {
-    /// <summary>
-    /// Represents one of the rival's active businesses.
-    /// </summary>
     [Serializable]
     public class RivalBusiness
     {
@@ -19,601 +16,244 @@ namespace EmpireOfCards.Gameplay
         public int maxEmployees = 3;
         public VentureType ventureType;
         public float qualityScore = 5f;
-        public float platformRating = 2.5f;
+        public float platformRating = 3f;
         public int legalRisk;
         public float priceScore = 5f;
     }
 
-    /// <summary>
-    /// AI opponent coordinator (GDD Section 8).
-    /// Owns RivalData and runtime state; delegates logic to sub-systems:
-    ///   - RivalDecisionTree  (action selection)
-    ///   - RivalEconomy       (income, customers, penalties)
-    ///   - RivalGrowth        (businesses, employees, milestones)
-    ///   - RivalDialogue      (taunts, mood, strategy reactions)
-    /// </summary>
     public class RivalAI : MonoBehaviour
     {
-        // --- Data ---
-        [Header("Rival Configuration")]
         [SerializeField] private RivalData data;
-
-        // --- Runtime State ---
-        [Header("Rival State (Read Only)")]
         [SerializeField] private int rivalMoney;
         [SerializeField] private int rivalIncome;
         [SerializeField] private int rivalCustomers;
         [SerializeField] private int totalRivalEmployees;
         [SerializeField] private List<RivalBusiness> rivalBusinesses = new List<RivalBusiness>();
-        [SerializeField] private bool aggressionEnabled;
+        [SerializeField] private VentureType activeVenture = VentureType.FastFood;
+        [SerializeField] private float rivalRating = 3f;
+        [SerializeField] private float rivalQuality = 5f;
+        [SerializeField] private float rivalPressure = 0f;
 
-        // --- Sub-systems (created in Initialize) ---
-        private RivalDecisionTree decisionTree;
-        private RivalEconomy economy;
-        private RivalGrowth growth;
-        private RivalDialogue dialogue;
-
-        // --- Cost Sabotage (Lobbyist ability) ---
-        [SerializeField] private float nextPurchaseCostMultiplier = 0f;
-
-        // --- Properties ---
         public int RivalMoney => rivalMoney;
         public int RivalCustomers => rivalCustomers;
         public int RivalIncome => rivalIncome;
         public IReadOnlyList<RivalBusiness> RivalBusinesses => rivalBusinesses;
-        public string CurrentMood => dialogue != null ? dialogue.CurrentMood : "neutral";
-        public string MoodIcon => dialogue != null ? dialogue.MoodIcon : "";
+        public string CurrentMood => "focused";
+        public string MoodIcon => "!";
         public RivalData Data => data;
 
-        /// <summary>
-        /// Assigns all dependencies without reflection.
-        /// Called by WiringService during bootstrap.
-        /// </summary>
         public void Init(RivalData rivalData)
         {
-            this.data = rivalData;
+            data = rivalData;
         }
 
-        // ----------------------------------------------------------------
-        // Initialization
-        // ----------------------------------------------------------------
-
-        /// <summary>
-        /// Initializes the rival with starting values from RivalData.
-        /// Creates sub-systems and the first business.
-        /// </summary>
         public void Initialize()
         {
-            if (data == null)
-            {
-                Debug.LogError("[RivalAI] RivalData is null. Cannot initialize.");
-                return;
-            }
-
-            rivalMoney = data.startingMoney;
-            rivalIncome = data.startingIncome;
-            rivalCustomers = data.startingCustomers;
-            totalRivalEmployees = 1;
-            aggressionEnabled = false;
-            rivalBusinesses.Clear();
-
-            // Create sub-systems
-            decisionTree = new RivalDecisionTree(data);
-            economy = new RivalEconomy(data);
-            growth = new RivalGrowth(data);
-            dialogue = new RivalDialogue(data);
-
-            // Start with one default business (GDD: Turn 1, 1 business, 80/turn, 1 employee)
-            rivalBusinesses.Add(new RivalBusiness
-            {
-                name = data.startingBusinessName,
-                income = data.startingIncome,
-                customers = data.startingCustomers,
-                employeeCount = 1,
-                maxEmployees = data.maxEmployeesPerBusiness
-            });
-
-            Debug.Log($"[RivalAI] Initialized: {data.rivalName}, money={rivalMoney}, businesses=1");
+            Initialize(VentureType.FastFood);
         }
 
-        /// <summary>
-        /// Initializes the rival so its first business mirrors the player's venture choice.
-        /// </summary>
         public void Initialize(VentureType playerVenture)
         {
-            Initialize(); // Base init (creates default first business)
+            activeVenture = playerVenture;
+            rivalMoney = data != null ? data.startingMoney : 450;
+            rivalIncome = 60;
+            rivalCustomers = 32;
+            totalRivalEmployees = 2;
+            rivalRating = 3.2f;
+            rivalQuality = 5f;
+            rivalPressure = 0f;
 
-            if (data == null || rivalBusinesses == null || rivalBusinesses.Count == 0) return;
-
-            var firstBiz = rivalBusinesses[0];
-            firstBiz.ventureType = playerVenture;
-
-            switch (playerVenture)
+            rivalBusinesses.Clear();
+            rivalBusinesses.Add(new RivalBusiness
             {
-                // --- New ventures ---
-                case VentureType.FastFood:
-                    firstBiz.name = "Rival Fast Food";
-                    firstBiz.income = 45;
-                    firstBiz.customers = 4;
-                    firstBiz.qualityScore = 4f;
-                    firstBiz.priceScore = 7f;
-                    firstBiz.platformRating = 2.5f;
-                    break;
-                case VentureType.Cafe:
-                    firstBiz.name = "Rival Cafe";
-                    firstBiz.income = 55;
-                    firstBiz.customers = 3;
-                    firstBiz.qualityScore = 6f;
-                    firstBiz.priceScore = 5f;
-                    firstBiz.platformRating = 3.0f;
-                    break;
-                case VentureType.TechApp:
-                    firstBiz.name = "Rival Tech App";
-                    firstBiz.income = 0;
-                    firstBiz.customers = 0;
-                    firstBiz.qualityScore = 3f;
-                    firstBiz.priceScore = 5f;
-                    firstBiz.platformRating = 2.0f;
-                    break;
-                case VentureType.ClothingStore:
-                    firstBiz.name = "Rival Clothing Store";
-                    firstBiz.income = 50;
-                    firstBiz.customers = 3;
-                    firstBiz.qualityScore = 5f;
-                    firstBiz.priceScore = 6f;
-                    firstBiz.platformRating = 2.5f;
-                    break;
-                case VentureType.GroceryStore:
-                    firstBiz.name = "Rival Grocery Store";
-                    firstBiz.income = 40;
-                    firstBiz.customers = 5;
-                    firstBiz.qualityScore = 5f;
-                    firstBiz.priceScore = 8f;
-                    firstBiz.platformRating = 2.5f;
-                    break;
-
-                // Legacy ventures (Diner, TechStartup, AdAgency, BlackMarket) now
-                // fall through to default. These enum values are kept in VentureType
-                // for save-file compatibility only; new games never select them.
-                default:
-                    firstBiz.name = $"Rival {playerVenture}";
-                    firstBiz.income = data.startingIncome;
-                    firstBiz.customers = data.startingCustomers;
-                    firstBiz.qualityScore = 5f;
-                    firstBiz.priceScore = 5f;
-                    firstBiz.platformRating = 2.5f;
-                    break;
-            }
-
-            // Sync totals with updated business stats
-            rivalIncome = economy.CalculateRivalIncome(rivalBusinesses);
-            rivalCustomers = economy.CalculateRivalCustomers(rivalBusinesses);
+                name = GetRivalName(playerVenture),
+                income = rivalIncome,
+                customers = rivalCustomers,
+                employeeCount = totalRivalEmployees,
+                ventureType = playerVenture,
+                qualityScore = rivalQuality,
+                platformRating = rivalRating,
+                priceScore = playerVenture == VentureType.GroceryStore ? 7f : 5f
+            });
         }
 
-        /// <summary>
-        /// Initializes with a specific RivalData asset (for mid-game rival switch).
-        /// </summary>
         public void Initialize(RivalData rivalData)
         {
             data = rivalData;
             Initialize();
         }
 
-        // ----------------------------------------------------------------
-        // Turn Execution
-        // ----------------------------------------------------------------
-
-        /// <summary>
-        /// Main AI turn entry point. Called during the Rival Phase.
-        /// </summary>
         public void TakeTurn(int playerBlocks, int rivalBlocks, int currentTurn)
         {
-            if (data == null) return;
-
-            // Step 1: Collect income
-            rivalIncome = economy.CollectIncome(rivalBusinesses, ref rivalMoney);
-
-            // Step 2: Milestone catch-up
-            if (growth.ApplyGrowthMilestones(currentTurn, rivalBusinesses, ref totalRivalEmployees))
-                aggressionEnabled = true;
-
-            // Step 3: Determine action count from Company Tier (GDD Section 1.7)
-            int actions = GetActionsForCurrentTier();
-
-            // Step 4: Pre-determine first action to inform mood tell
-            RivalMove previewMove = decisionTree.DecideMove(
-                playerBlocks,
-                rivalBlocks,
-                currentTurn,
-                rivalMoney,
-                rivalBusinesses,
-                aggressionEnabled);
-
-            // Step 5: Mood tell -- determine and broadcast mood BEFORE actions
-            dialogue.DetermineMood(
-                playerBlocks,
-                rivalBlocks,
-                rivalMoney,
-                data.businessCostThreshold,
-                previewMove.ToString());
-
-            // Step 6: Check player strategy and react (fires once per shift)
-            dialogue.CheckPlayerStrategy();
-
-            // Step 7: Execute actions
-            for (int a = 0; a < actions; a++)
-            {
-                RivalMove move;
-                if (a == 0)
-                {
-                    move = previewMove;
-                }
-                else
-                {
-                    move = decisionTree.DecideMove(
-                        playerBlocks,
-                        rivalBlocks,
-                        currentTurn,
-                        rivalMoney,
-                        rivalBusinesses,
-                        aggressionEnabled);
-                }
-
-                ExecuteRivalMove(move);
-            }
-
-            // Step 8: Recalculate totals
-            rivalCustomers = economy.CalculateRivalCustomers(rivalBusinesses);
-            rivalIncome = economy.CalculateRivalIncome(rivalBusinesses);
-
-            // Step 9: Deliver a context-aware taunt
-            string taunt = dialogue.GetTaunt(playerBlocks, rivalBlocks);
-            if (!string.IsNullOrEmpty(taunt))
-            {
-                EventBus.RivalTaunted(taunt);
-            }
-        }
-
-        private int GetActionsForCurrentTier()
-        {
             var gm = GameManager.Instance;
-            if (gm == null || gm.CompanyTierSystem == null) return data.actionsPerTurn;
+            if (gm == null) return;
 
-            return gm.CompanyTierSystem.CurrentTier switch
-            {
-                CompanyTier.Trader => 2,        // Tier 1
-                CompanyTier.Entrepreneur => 3,   // Tier 2
-                CompanyTier.Corporation => 4,    // Tier 3
-                CompanyTier.Conglomerate => 4,   // Tier 3+ (cap at 4)
-                _ => data.actionsPerTurn
-            };
-        }
+            float playerShare = gm.EconomyManager != null && gm.EconomyManager.Snapshot != null
+                ? gm.EconomyManager.Snapshot.marketShare
+                : gm.PlayerCustomers;
 
-        // ----------------------------------------------------------------
-        // Action Dispatch
-        // ----------------------------------------------------------------
+            RivalMove move = DecideMove(playerShare, currentTurn);
+            ApplyMove(move, playerShare);
 
-        private void ExecuteRivalMove(RivalMove move)
-        {
-            var gm = GameManager.Instance;
-
-            switch (move)
-            {
-                case RivalMove.PriceWar:
-                    foreach (var biz in rivalBusinesses)
-                        biz.priceScore = Mathf.Min(10f, biz.priceScore + 2f);
-                    EventBus.RivalActed("Rival launched a price war!");
-                    break;
-
-                case RivalMove.MarketingBlitz:
-                    foreach (var biz in rivalBusinesses)
-                        biz.platformRating = Mathf.Min(5f, biz.platformRating + 0.4f);
-                    EventBus.RivalActed("Rival ran a marketing blitz!");
-                    break;
-
-                case RivalMove.QualityImprove:
-                    foreach (var biz in rivalBusinesses)
-                        biz.qualityScore = Mathf.Min(10f, biz.qualityScore + 1.5f);
-                    EventBus.RivalActed("Rival improved product quality.");
-                    break;
-
-                case RivalMove.StaffPoach:
-                    if (gm != null && gm.BoardManager != null)
-                    {
-                        ExecuteStaffPoach(gm);
-                    }
-                    break;
-
-                case RivalMove.SeekInvestment:
-                    int investmentGain = Mathf.RoundToInt(rivalIncome * 0.3f);
-                    rivalMoney += investmentGain;
-                    EventBus.RivalActed($"Rival secured investment: +{investmentGain} money.");
-                    break;
-
-                case RivalMove.OpenBranch:
-                    if (rivalBusinesses.Count > 0)
-                    {
-                        var target = rivalBusinesses[0];
-                        foreach (var biz in rivalBusinesses)
-                        {
-                            if (biz.income > target.income) target = biz;
-                        }
-                        if (target.maxEmployees < 6)
-                        {
-                            target.maxEmployees++;
-                            // Apply Lobbyist cost-increase sabotage if active
-                            if (nextPurchaseCostMultiplier > 0f)
-                            {
-                                int baseCost = data.businessCostThreshold;
-                                int surcharge = Mathf.RoundToInt(baseCost * nextPurchaseCostMultiplier);
-                                rivalMoney -= surcharge;
-                                nextPurchaseCostMultiplier = 0f;
-                            }
-                            EventBus.RivalActed($"Rival opened a new branch for {target.name}.");
-                        }
-                    }
-                    break;
-
-                case RivalMove.Sabotage:
-                    if (gm != null && gm.BoardManager != null)
-                    {
-                        gm.BoardManager.SetProductionDisabledNextTurn(true);
-                        foreach (var biz in rivalBusinesses)
-                            biz.legalRisk = Mathf.Min(100, biz.legalRisk + 15);
-                        EventBus.RivalActed("Rival sabotaged your operations! Production disabled next turn.");
-                    }
-                    break;
-            }
-        }
-
-        // ----------------------------------------------------------------
-        // Headhunting (GDD Section 6.5)
-        // ----------------------------------------------------------------
-
-        // Tracks the pending poach target so response methods know which employee
-        private CardData _pendingPoachTarget;
-        private int _pendingPoachBizIndex;
-        private int _pendingPoachOffer;
-
-        private void ExecuteStaffPoach(GameManager gm)
-        {
-            var playerBusinesses = gm.BoardManager.PlayerBusinesses;
-            if (playerBusinesses == null) return;
-
-            // Find lowest-loyalty (longest-tenured) employee as target
-            CardData bestTarget = null;
-            int bestBizIndex = -1;
-            int longestTenure = -1;
-
-            for (int b = 0; b < playerBusinesses.Count; b++)
-            {
-                if (playerBusinesses[b].isClosed) continue;
-                for (int e = 0; e < playerBusinesses[b].employees.Count; e++)
-                {
-                    var emp = playerBusinesses[b].employees[e];
-                    if (emp == null) continue;
-                    if (emp.preventsTransfer) continue;
-
-                    int tenure = (e < playerBusinesses[b].employeeTenure.Count)
-                        ? playerBusinesses[b].employeeTenure[e] : 0;
-
-                    if (tenure > longestTenure || (tenure == longestTenure && emp.customerBonus > (bestTarget != null ? bestTarget.customerBonus : 0)))
-                    {
-                        bestTarget = emp;
-                        bestBizIndex = b;
-                        longestTenure = tenure;
-                    }
-                }
-            }
-
-            if (bestTarget == null)
-            {
-                EventBus.RivalActed("Rival tried to poach staff but found no viable target.");
-                return;
-            }
-
-            int rivalOffer = Mathf.RoundToInt(bestTarget.salaryPerTurn * 1.5f);
-            _pendingPoachTarget = bestTarget;
-            _pendingPoachBizIndex = bestBizIndex;
-            _pendingPoachOffer = rivalOffer;
-
-            EventBus.StaffPoachAttempted(bestTarget, rivalOffer);
-            EventBus.RivalActed($"Rival is trying to poach {bestTarget.cardName} with offer of {rivalOffer}!");
-        }
-
-        /// <summary>
-        /// Player accepts the poach: employee leaves, slot opens.
-        /// </summary>
-        public void RespondToPoach_Accept()
-        {
-            if (_pendingPoachTarget == null) return;
-
-            var gm = GameManager.Instance;
-            if (gm != null && gm.BoardManager != null)
-            {
-                gm.BoardManager.RemoveEmployeeByCard(_pendingPoachBizIndex, _pendingPoachTarget);
-            }
+            rivalCustomers = Mathf.Clamp(Mathf.RoundToInt(100f - playerShare + rivalPressure), 0, 100);
+            rivalIncome = Mathf.RoundToInt(45f + rivalQuality * 6f + rivalRating * 8f);
+            rivalMoney += Mathf.Max(10, rivalIncome / 4);
 
             if (rivalBusinesses.Count > 0)
-                rivalBusinesses[0].customers += _pendingPoachTarget.customerBonus;
-
-            EventBus.StaffPoachAccepted(_pendingPoachTarget);
-            EventBus.RivalActed($"{_pendingPoachTarget.cardName} left for the rival!");
-            Debug.Log($"[RivalAI] Poach accepted: {_pendingPoachTarget.cardName} left.");
-
-            ClearPendingPoach();
-        }
-
-        /// <summary>
-        /// Player counter-offers: pays salary x 1.5, employee stays.
-        /// </summary>
-        public void RespondToPoach_CounterOffer()
-        {
-            if (_pendingPoachTarget == null) return;
-
-            int counterCost = Mathf.RoundToInt(
-                _pendingPoachTarget.salaryPerTurn * Constants.HEADHUNT_COUNTER_OFFER_MULTIPLIER);
-
-            var gm = GameManager.Instance;
-            if (gm != null)
-                gm.SpendMoney(counterCost);
-
-            EventBus.StaffPoachCountered(_pendingPoachTarget, counterCost);
-            EventBus.RivalActed($"You kept {_pendingPoachTarget.cardName} with a counter-offer of {counterCost}.");
-            Debug.Log($"[RivalAI] Poach countered: {_pendingPoachTarget.cardName} stays, cost={counterCost}.");
-
-            ClearPendingPoach();
-        }
-
-        /// <summary>
-        /// Player rejects + pays bonus: pays salary x 2, employee stays with loyalty boost.
-        /// </summary>
-        public void RespondToPoach_RejectWithBonus()
-        {
-            if (_pendingPoachTarget == null) return;
-
-            int bonusCost = Mathf.RoundToInt(
-                _pendingPoachTarget.salaryPerTurn * Constants.HEADHUNT_REJECT_BONUS_MULTIPLIER);
-
-            var gm = GameManager.Instance;
-            if (gm != null)
-                gm.SpendMoney(bonusCost);
-
-            EventBus.StaffPoachRejected(_pendingPoachTarget, bonusCost);
-            EventBus.RivalActed($"You gave {_pendingPoachTarget.cardName} a loyalty bonus of {bonusCost}. Loyalty boosted!");
-            Debug.Log($"[RivalAI] Poach rejected with bonus: {_pendingPoachTarget.cardName} stays, cost={bonusCost}, loyalty +{Constants.HEADHUNT_REJECT_LOYALTY_BONUS}.");
-
-            ClearPendingPoach();
-        }
-
-        public bool HasPendingPoach => _pendingPoachTarget != null;
-        public CardData PendingPoachTarget => _pendingPoachTarget;
-        public int PendingPoachOffer => _pendingPoachOffer;
-
-        private void ClearPendingPoach()
-        {
-            _pendingPoachTarget = null;
-            _pendingPoachBizIndex = -1;
-            _pendingPoachOffer = 0;
-        }
-
-        // Legacy action dispatch -- kept for backward compatibility with old save/replay data
-        private void ExecuteAction(string action)
-        {
-            switch (action)
             {
-                case "aggressive":
-                    var result = growth.AggressiveAction(rivalBusinesses, ref rivalMoney);
-                    var gm = GameManager.Instance;
-                    if (gm != null)
-                    {
-                        if (result.stolenCustomers > 0)
-                        {
-                            gm.SetPlayerCustomers(
-                                Mathf.Max(0, gm.PlayerCustomers - result.stolenCustomers));
-                        }
-                        if (result.isSabotage)
-                        {
-                            gm.BoardManager.SetProductionDisabledNextTurn(true);
-                        }
-                    }
-                    break;
-                case "open_business":
-                    if (nextPurchaseCostMultiplier > 0f)
-                    {
-                        int baseCost = data.businessCostThreshold;
-                        int surcharge = Mathf.RoundToInt(baseCost * nextPurchaseCostMultiplier);
-                        rivalMoney -= surcharge;
-                        nextPurchaseCostMultiplier = 0f;
-                    }
-                    growth.OpenBusiness(rivalBusinesses, ref rivalMoney);
-                    break;
-                case "hire_employee":
-                    growth.HireEmployee(rivalBusinesses, ref rivalMoney, ref totalRivalEmployees);
-                    break;
-                case "event_bonus":
-                    growth.EventBonusAction(rivalBusinesses);
-                    break;
-                default:
-                    growth.NormalGrowth(rivalBusinesses, ref rivalMoney);
-                    break;
+                var lead = rivalBusinesses[0];
+                lead.customers = rivalCustomers;
+                lead.income = rivalIncome;
+                lead.platformRating = rivalRating;
+                lead.qualityScore = rivalQuality;
             }
+
+            EventBus.RivalActed(GetMoveDescription(move));
+            EventBus.RivalMoodChanged(move.ToString());
         }
 
-        // ----------------------------------------------------------------
-        // Public API (called by other systems)
-        // ----------------------------------------------------------------
+        public void RespondToPoach_Accept() { }
+        public void RespondToPoach_CounterOffer() { }
+        public void RespondToPoach_RejectWithBonus() { }
 
         public void CalculateRivalCustomers()
         {
-            rivalCustomers = economy.CalculateRivalCustomers(rivalBusinesses);
+            rivalCustomers = Mathf.Clamp(rivalCustomers, 0, 100);
         }
 
         public void CalculateRivalIncome()
         {
-            rivalIncome = economy.CalculateRivalIncome(rivalBusinesses);
+            rivalIncome = Mathf.RoundToInt(45f + rivalQuality * 6f + rivalRating * 8f);
         }
 
         public void ApplyCustomerPenalty(int penalty)
         {
-            economy.ApplyCustomerPenalty(rivalBusinesses, penalty);
-            rivalCustomers = economy.CalculateRivalCustomers(rivalBusinesses);
+            rivalCustomers = Mathf.Max(0, rivalCustomers - penalty);
         }
 
-        /// <summary>
-        /// Marks the rival's next business purchase as more expensive.
-        /// Called by AbilitySystem when the Lobbyist "Red Tape" ability fires.
-        /// The multiplier stacks additively (e.g., 0.25 = +25% cost).
-        /// </summary>
         public void ApplyNextPurchaseCostIncrease(float multiplier)
         {
-            nextPurchaseCostMultiplier += multiplier;
-            Debug.Log($"[RivalAI] Next business purchase cost increased by +{multiplier * 100}% (total +{nextPurchaseCostMultiplier * 100}%)");
+            rivalPressure += multiplier * 2f;
         }
 
         public void CloseWeakestBusiness(int turns)
         {
-            growth.CloseWeakestBusiness(rivalBusinesses, ref totalRivalEmployees);
+            rivalCustomers = Mathf.Max(0, rivalCustomers - 8);
+            rivalPressure -= 2f;
         }
 
         public int DisableProductionOneTurn()
         {
-            return economy.CalculateDisabledProductionLoss(rivalBusinesses);
+            var gm = GameManager.Instance;
+            if (gm != null && gm.BoardManager != null)
+                gm.BoardManager.SetProductionDisabledNextTurn(true);
+            return 1;
         }
 
         public string GetTaunt(int playerBlocks, int rivalBlocks)
         {
-            return dialogue.GetTaunt(playerBlocks, rivalBlocks);
+            return GetMoveDescription(DecideMove(playerBlocks * 10f, GameManager.Instance != null ? GameManager.Instance.CurrentTurn : 1));
         }
 
-        /// <summary>
-        /// Called by ComboSystem (via EventBus) when the player triggers a combo.
-        /// Delivers a one-time combo reaction taunt from the rival.
-        /// </summary>
         public void OnPlayerComboTriggered()
         {
-            if (dialogue == null) return;
-            string reaction = dialogue.GetComboReactionTaunt();
-            if (!string.IsNullOrEmpty(reaction))
-            {
-                EventBus.RivalTaunted(reaction);
-            }
+            rivalPressure += 1.5f;
         }
 
-        /// <summary>
-        /// Resets the rival for a new run.
-        /// </summary>
         public void Reset()
         {
+            rivalBusinesses.Clear();
             rivalMoney = 0;
             rivalIncome = 0;
             rivalCustomers = 0;
             totalRivalEmployees = 0;
-            aggressionEnabled = false;
-            nextPurchaseCostMultiplier = 0f;
-            rivalBusinesses.Clear();
-            dialogue?.Reset();
-            ClearPendingPoach();
+            rivalPressure = 0f;
+        }
+
+        private RivalMove DecideMove(float playerShare, int currentTurn)
+        {
+            if (playerShare >= 58f)
+                return RivalMove.MarketingBlitz;
+            if (playerShare >= 50f)
+                return activeVenture == VentureType.FastFood || activeVenture == VentureType.GroceryStore
+                    ? RivalMove.PriceWar
+                    : RivalMove.MarketingBlitz;
+            if (currentTurn >= 15)
+                return RivalMove.OpenBranch;
+            if (activeVenture == VentureType.TechApp && rivalRating < 3.6f)
+                return RivalMove.QualityImprove;
+            if (activeVenture == VentureType.Cafe && currentTurn % 4 == 0)
+                return RivalMove.StaffPoach;
+            return RivalMove.QualityImprove;
+        }
+
+        private void ApplyMove(RivalMove move, float playerShare)
+        {
+            switch (move)
+            {
+                case RivalMove.PriceWar:
+                    rivalPressure += 4f;
+                    rivalCustomers += 5;
+                    break;
+                case RivalMove.MarketingBlitz:
+                    rivalRating = Mathf.Clamp(rivalRating + 0.35f, 1f, 5f);
+                    rivalPressure += 5f;
+                    rivalCustomers += 4;
+                    break;
+                case RivalMove.QualityImprove:
+                    rivalQuality = Mathf.Clamp(rivalQuality + 0.45f, 0f, 10f);
+                    rivalRating = Mathf.Clamp(rivalRating + 0.15f, 1f, 5f);
+                    break;
+                case RivalMove.StaffPoach:
+                    rivalPressure += 2f;
+                    totalRivalEmployees++;
+                    if (playerShare > 45f)
+                        rivalCustomers += 3;
+                    break;
+                case RivalMove.SeekInvestment:
+                    rivalMoney += 120;
+                    rivalPressure += 1f;
+                    break;
+                case RivalMove.OpenBranch:
+                    rivalCustomers += 6;
+                    rivalIncome += 15;
+                    rivalPressure += 3f;
+                    break;
+                case RivalMove.Sabotage:
+                    var gm = GameManager.Instance;
+                    if (gm != null && gm.BoardManager != null)
+                        gm.BoardManager.SetProductionDisabledNextTurn(true);
+                    rivalPressure += 2f;
+                    break;
+            }
+        }
+
+        private string GetRivalName(VentureType venture)
+        {
+            return venture switch
+            {
+                VentureType.FastFood => "Rival Kitchen",
+                VentureType.Cafe => "Rival Cafe",
+                VentureType.TechApp => "Rival App",
+                VentureType.ClothingStore => "Rival Boutique",
+                VentureType.GroceryStore => "Rival Market",
+                _ => "Rival Co."
+            };
+        }
+
+        private string GetMoveDescription(RivalMove move)
+        {
+            return move switch
+            {
+                RivalMove.PriceWar => "Rival starts a price war.",
+                RivalMove.MarketingBlitz => "Rival launches a marketing blitz.",
+                RivalMove.QualityImprove => "Rival improves product quality.",
+                RivalMove.StaffPoach => "Rival pressures your staffing edge.",
+                RivalMove.SeekInvestment => "Rival secures new funding.",
+                RivalMove.OpenBranch => "Rival expands its footprint.",
+                RivalMove.Sabotage => "Rival triggers operational pressure.",
+                _ => "Rival adapts."
+            };
         }
     }
 }

@@ -57,6 +57,7 @@ namespace EmpireOfCards.Bootstrap
                 m.turnManager, m.economyManager, m.deckManager, m.boardManager,
                 m.comboSystem, m.territoryManager, m.fbiSystem, m.rivalAI,
                 m.shopManager, m.uiManager, m.audioManager, m.vfxManager, m.saveManager);
+            m.gameManager.SetCardLookup(data.cardLookup);
 
             // === EconomyManager ===
             m.economyManager.Init(data.balanceData, m.boardManager, m.comboSystem, m.abilitySystem, m.slotManager);
@@ -81,6 +82,7 @@ namespace EmpireOfCards.Bootstrap
             // === SlotManager ===
             m.slotManager.Init();
             m.gameManager.SetSlotManager(m.slotManager);
+            m.boardManager.Init(m.slotManager);
 
             // === StaffStateSystem (GDD Section 6) ===
             m.gameManager.SetStaffStateSystem(m.staffStateSystem);
@@ -131,7 +133,7 @@ namespace EmpireOfCards.Bootstrap
             cardFactory.Init(data.allCards);
 
             // === Event Deck: filter event cards from allCards and pass to TurnManager ===
-            var eventCards = data.allCards.Where(c => c != null && c.cardType == CardType.Event).ToList();
+            var eventCards = data.allCards.Where(c => c != null && c.cardType == CardType.Event && c.cardFamily == CardFamily.Crisis).ToList();
             m.turnManager.SetEventDeck(eventCards);
 
             Debug.Log("[WiringService] All manager, UI, and 3D references wired via typed Init() calls.");
@@ -185,6 +187,26 @@ namespace EmpireOfCards.Bootstrap
 
                 switch (slot.ZoneType)
                 {
+                    case DropZoneType.OperationSlot:
+                        success = gm.BoardManager.PlaceCardInSlot(card.CardData, SlotType.Operation, slot.SlotIndex);
+                        break;
+
+                    case DropZoneType.StaffSlot:
+                        success = gm.BoardManager.PlaceCardInSlot(card.CardData, SlotType.Staff, slot.SlotIndex, slot.ParentBusinessIndex >= 0 ? slot.ParentBusinessIndex : 0);
+                        break;
+
+                    case DropZoneType.MarketingSlot:
+                        success = gm.BoardManager.PlaceCardInSlot(card.CardData, SlotType.Marketing, slot.SlotIndex);
+                        break;
+                    case DropZoneType.SupplierSlot:
+                        success = gm.BoardManager.PlaceCardInSlot(card.CardData, SlotType.Supplier, slot.SlotIndex);
+                        break;
+                    case DropZoneType.TempEffectSlot:
+                    {
+                        success = gm.BoardManager.PlaceCardInSlot(card.CardData, SlotType.TempEffect, slot.SlotIndex);
+                        break;
+                    }
+
                     case DropZoneType.BusinessSlot:
                         success = gm.BoardManager.PlaceBusiness(card.CardData, slot.SlotIndex);
                         break;
@@ -216,7 +238,7 @@ namespace EmpireOfCards.Bootstrap
 
                     case DropZoneType.ActionZone:
                         EventBus.ActionExecuted(card.CardData);
-                        success = true;
+                        success = gm.BoardManager.PlaceUpgrade(card.CardData, -1);
                         break;
 
                     case DropZoneType.SellZone:

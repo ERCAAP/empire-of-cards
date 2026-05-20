@@ -108,5 +108,23 @@ namespace EmpireOfCards.Core
             int max = balanceData != null ? balanceData.maxBusinessSlots : Constants.MAX_OPERATION_SLOTS;
             businessSlots = Mathf.Min(businessSlots + 1, max);
         }
+
+        public void SetMoney(int amount)
+        {
+            money = amount;
+            EventBus.MoneyUpdated(money);
+        }
+
+        public void SetBusinessSlots(int slots)
+        {
+            businessSlots = Mathf.Max(1, slots);
+            EventBus.BusinessSlotsChanged(businessSlots);
+        }
+
+        public void SetActions(int current, int maximum)
+        {
+            maxActions = Mathf.Max(1, maximum);
+            actions = Mathf.Clamp(current, 0, maxActions);
+        }
     }
 }

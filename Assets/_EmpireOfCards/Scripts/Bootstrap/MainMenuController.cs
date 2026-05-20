@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 using TMPro;
+using EmpireOfCards.Core;
 
 namespace EmpireOfCards.Bootstrap
 {
@@ -15,6 +16,7 @@ namespace EmpireOfCards.Bootstrap
 
         private void Start()
         {
+            EnsureLocalization();
             CreateMenuUI();
         }
 
@@ -48,7 +50,7 @@ namespace EmpireOfCards.Bootstrap
             titleRT.anchoredPosition = new Vector2(0, 150);
             titleRT.sizeDelta = new Vector2(800, 120);
             var titleText = titleGo.AddComponent<TextMeshProUGUI>();
-            titleText.text = "EMPIRE OF CARDS";
+            titleText.text = LocalizationManager.GetWithFallback("menu.title", "EMPIRE OF CARDS");
             titleText.fontSize = 72;
             titleText.alignment = TextAlignmentOptions.Center;
             titleText.color = new Color(1f, 0.85f, 0.4f); // Gold
@@ -60,7 +62,7 @@ namespace EmpireOfCards.Bootstrap
             subRT.anchoredPosition = new Vector2(0, 70);
             subRT.sizeDelta = new Vector2(600, 40);
             var subText = subGo.AddComponent<TextMeshProUGUI>();
-            subText.text = "Build businesses with cards, defeat your rival.";
+            subText.text = LocalizationManager.GetWithFallback("menu.subtitle", "Pick a venture, build your business board, and dominate the market.");
             subText.fontSize = 24;
             subText.alignment = TextAlignmentOptions.Center;
             subText.color = new Color(0.7f, 0.7f, 0.7f);
@@ -86,7 +88,7 @@ namespace EmpireOfCards.Bootstrap
             startLabelRT.offsetMin = Vector2.zero;
             startLabelRT.offsetMax = Vector2.zero;
             var startLabel = startLabelGo.AddComponent<TextMeshProUGUI>();
-            startLabel.text = "START GAME";
+            startLabel.text = LocalizationManager.GetWithFallback("ui.start_game", "START GAME");
             startLabel.fontSize = 28;
             startLabel.alignment = TextAlignmentOptions.Center;
             startLabel.color = Color.white;
@@ -112,7 +114,7 @@ namespace EmpireOfCards.Bootstrap
             quitLabelRT.offsetMin = Vector2.zero;
             quitLabelRT.offsetMax = Vector2.zero;
             var quitLabel = quitLabelGo.AddComponent<TextMeshProUGUI>();
-            quitLabel.text = "QUIT";
+            quitLabel.text = LocalizationManager.GetWithFallback("ui.quit", "QUIT");
             quitLabel.fontSize = 22;
             quitLabel.alignment = TextAlignmentOptions.Center;
             quitLabel.color = Color.white;
@@ -127,7 +129,7 @@ namespace EmpireOfCards.Bootstrap
             verRT.anchoredPosition = new Vector2(-20, 10);
             verRT.sizeDelta = new Vector2(200, 30);
             var verText = verGo.AddComponent<TextMeshProUGUI>();
-            verText.text = "v0.1 MVP";
+            verText.text = LocalizationManager.GetWithFallback("menu.version", "v0.1 MVP");
             verText.fontSize = 16;
             verText.alignment = TextAlignmentOptions.Right;
             verText.color = new Color(0.4f, 0.4f, 0.4f);
@@ -144,6 +146,15 @@ namespace EmpireOfCards.Bootstrap
         private void OnStartClicked()
         {
             SceneManager.LoadScene(gameScene);
+        }
+
+        private static void EnsureLocalization()
+        {
+            if (LocalizationManager.Instance != null)
+                return;
+
+            var go = new GameObject("[LocalizationManager]");
+            go.AddComponent<LocalizationManager>();
         }
 
         private void OnQuitClicked()

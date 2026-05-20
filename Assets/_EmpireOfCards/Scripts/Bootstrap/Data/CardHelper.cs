@@ -53,6 +53,32 @@ namespace EmpireOfCards.Bootstrap.Data
             return card;
         }
 
+        public static CardData CreateV4Card(
+            string id,
+            string name,
+            CardType type,
+            CardFamily family,
+            VentureType venture,
+            SlotType slotType,
+            string subSlotId,
+            Rarity rarity,
+            int cost,
+            string desc,
+            CardTag[] tags)
+        {
+            var card = CreateCard(id, name, type, rarity, cost, desc, tags);
+            card.cardFamily = family;
+            card.ventureType = venture;
+            card.targetSlotType = slotType;
+            card.targetSubSlotId = subSlotId;
+            card.isGeneralCard = venture == VentureType.Diner;
+            card.tempEffectDuration = 0;
+            card.crisisTags = new string[0];
+            card.solutionTags = new string[0];
+            card.preferredPressures = new BoardPressureType[0];
+            return card;
+        }
+
         // ----------------------------------------------------------------
         // Business
         // ----------------------------------------------------------------

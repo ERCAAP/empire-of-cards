@@ -3,316 +3,252 @@ using System.Collections.Generic;
 using UnityEngine;
 using EmpireOfCards.Core;
 using EmpireOfCards.Data;
-using EmpireOfCards.Gameplay.Board;
 
 namespace EmpireOfCards.Gameplay
 {
-    /// <summary>
-    /// Represents an active business on the board with its employees, upgrades,
-    /// evolution tracking, and employee tenure tracking.
-    /// </summary>
     [Serializable]
     public class ActiveBusiness
     {
         public CardData businessCard;
         public List<CardData> employees = new List<CardData>();
-        public List<int> employeeTenure = new List<int>();          // Turns each employee has been here
+        public List<int> employeeTenure = new List<int>();
         public List<CardData> upgrades = new List<CardData>();
         public int turnsActive;
-        public int totalCustomersAttracted;                         // For evolution (GDD 3.1: 40 threshold)
+        public int totalCustomersAttracted;
         public bool isClosed;
         public int closedTurnsRemaining;
-        public int neglectTurns;                                     // Consecutive turns without employee/upgrade added
+        public int neglectTurns;
         public BusinessLevel currentLevel = BusinessLevel.Level1;
 
-        /// <summary>
-        /// Returns the effective employee slot count, considering upgrades
-        /// like Automation that close slots.
-        /// </summary>
         public int GetAvailableEmployeeSlots()
         {
-            int baseSlots = businessCard != null ? businessCard.employeeSlots : 2;
-            int closedSlots = 0;
-
-            foreach (var upgrade in upgrades)
-            {
-                if (upgrade != null)
-                    closedSlots += upgrade.closedEmployeeSlots;
-            }
-
-            return Mathf.Max(0, baseSlots - closedSlots);
+            return Mathf.Max(0, businessCard != null ? businessCard.employeeSlots : 1);
         }
     }
 
-    /// <summary>
-    /// Thin coordinator for board state. Owns the ActiveBusiness list and
-    /// delegates evolution, tenure, closure, and queries to sub-systems.
-    /// </summary>
     public class BoardManager : MonoBehaviour
     {
-        // --- Runtime State ---
-        [Header("Board State")]
         [SerializeField] private List<ActiveBusiness> playerBusinesses = new List<ActiveBusiness>();
         [SerializeField] private List<CardData> globalUpgrades = new List<CardData>();
-        [SerializeField] private int maxSlots = 3;
-
-        // --- Sabotage State ---
-        [Header("Sabotage")]
+        [SerializeField] private int maxSlots = Constants.STARTING_OPERATION_SLOTS;
         [SerializeField] private bool productionDisabledNextTurn;
-
-        // --- Active Event ---
-        [Header("Active Event")]
         [SerializeField] private CardData activeEvent;
         [SerializeField] private int activeEventTurnsRemaining;
+        [SerializeField] private VentureType activeVenture = VentureType.FastFood;
 
-        // --- Sub-Systems ---
-        private BusinessEvolution _evolution;
-        private EmployeeTenure _tenure;
-        private ClosureManager _closure;
+        private SlotManager _slotManager;
+        private VentureBoardProfile _boardProfile;
+        private readonly Dictionary<CardData, int> _tempDurations = new Dictionary<CardData, int>();
+        private readonly Dictionary<int, CardData> _operationCardMap = new Dictionary<int, CardData>();
 
-        // --- Properties ---
         public IReadOnlyList<ActiveBusiness> PlayerBusinesses => playerBusinesses;
         public IReadOnlyList<CardData> GlobalUpgrades => globalUpgrades;
         public int MaxSlots => maxSlots;
         public CardData ActiveEvent => activeEvent;
         public int ActiveEventTurnsRemaining => activeEventTurnsRemaining;
+        public VentureType ActiveVenture => activeVenture;
+        public VentureBoardProfile BoardProfile => _boardProfile;
 
-        // ----------------------------------------------------------------
-        // Initialization
-        // ----------------------------------------------------------------
-
-        private void Awake()
+        public void Init(SlotManager slotManager)
         {
-            _evolution = new BusinessEvolution();
-            _tenure = new EmployeeTenure(RemoveEmployee);
-            _closure = new ClosureManager(ReopenBusiness);
+            _slotManager = slotManager;
         }
 
-        // ----------------------------------------------------------------
-        // Placement
-        // ----------------------------------------------------------------
+        public void ConfigureForVenture(VentureType ventureType, VentureBoardProfile profile)
+        {
+            activeVenture = ventureType;
+            _boardProfile = profile;
+            maxSlots = profile != null ? profile.startingOperationSlots : Constants.STARTING_OPERATION_SLOTS;
+        }
 
-        /// <summary>
-        /// Places a business card into the next available slot. Returns true on success.
-        /// </summary>
+        public bool PlaceCardInSlot(CardData card, SlotType slotType, int slotIndex, int businessIndex = -1)
+        {
+            return slotType switch
+            {
+                SlotType.Operation => PlaceBusiness(card, slotIndex),
+                SlotType.Staff => PlaceEmployee(card, businessIndex >= 0 ? businessIndex : 0, slotIndex),
+                SlotType.Marketing => PlaceUpgrade(card, businessIndex, SlotType.Marketing, slotIndex),
+                SlotType.Supplier => PlaceUpgrade(card, businessIndex, SlotType.Supplier, slotIndex),
+                SlotType.TempEffect => PlaceUpgrade(card, businessIndex, SlotType.TempEffect, slotIndex),
+                _ => false
+            };
+        }
+
         public bool PlaceBusiness(CardData card, int slotIndex)
         {
-            if (card == null || card.cardType != CardType.Business)
-            {
-                Debug.LogWarning("[BoardManager] Card is null or not a Business type.");
-                return false;
-            }
+            if (card == null) return false;
+            if (!TryPlaceCard(card, SlotType.Operation, slotIndex)) return false;
 
-            if (GetActiveBusinessCount() >= maxSlots)
-            {
-                Debug.Log("[BoardManager] No available business slots.");
-                return false;
-            }
-
-            if (slotIndex < 0)
-                slotIndex = playerBusinesses.Count;
-
-            ActiveBusiness newBusiness = new ActiveBusiness
+            var active = new ActiveBusiness
             {
                 businessCard = card,
-                turnsActive = 0,
-                totalCustomersAttracted = 0,
-                isClosed = false,
-                closedTurnsRemaining = 0,
                 currentLevel = BusinessLevel.Level1
             };
 
             if (slotIndex >= playerBusinesses.Count)
-                playerBusinesses.Add(newBusiness);
-            else
-                playerBusinesses.Insert(slotIndex, newBusiness);
+                playerBusinesses.Add(active);
+            else if (slotIndex >= 0)
+            {
+                while (playerBusinesses.Count <= slotIndex)
+                    playerBusinesses.Add(new ActiveBusiness());
+                playerBusinesses[slotIndex] = active;
+            }
 
+            _operationCardMap[slotIndex] = card;
             EventBus.BusinessPlaced(card, slotIndex);
             return true;
         }
 
-        /// <summary>
-        /// Assigns an employee card to a specific business. Returns true on success.
-        /// </summary>
         public bool PlaceEmployee(CardData card, int businessIndex)
         {
-            if (card == null || card.cardType != CardType.Employee)
+            int slotIndex = _slotManager != null ? _slotManager.GetFirstEmptyIndex(SlotType.Staff) : -1;
+            return PlaceEmployee(card, businessIndex, slotIndex);
+        }
+
+        private bool PlaceEmployee(CardData card, int businessIndex, int slotIndex)
+        {
+            if (card == null) return false;
+            if (slotIndex < 0 || !TryPlaceCard(card, SlotType.Staff, slotIndex)) return false;
+
+            if (businessIndex >= 0 && businessIndex < playerBusinesses.Count && playerBusinesses[businessIndex] != null)
             {
-                Debug.LogWarning("[BoardManager] Card is null or not an Employee type.");
-                return false;
+                playerBusinesses[businessIndex].employees.Add(card);
+                playerBusinesses[businessIndex].employeeTenure.Add(0);
             }
 
-            if (businessIndex < 0 || businessIndex >= playerBusinesses.Count)
-            {
-                Debug.LogWarning("[BoardManager] Invalid business index.");
-                return false;
-            }
-
-            ActiveBusiness business = playerBusinesses[businessIndex];
-
-            if (business.isClosed)
-            {
-                Debug.Log("[BoardManager] Cannot assign employees to a closed business.");
-                return false;
-            }
-
-            int availableSlots = business.GetAvailableEmployeeSlots();
-            if (business.employees.Count >= availableSlots)
-            {
-                Debug.Log("[BoardManager] Business has reached maximum employee slots.");
-                return false;
-            }
-
-            business.employees.Add(card);
-            business.employeeTenure.Add(0);
-            business.neglectTurns = 0;
             EventBus.EmployeePlaced(card, businessIndex);
             return true;
         }
 
-        /// <summary>
-        /// Places an upgrade card on a specific business, or globally if businessIndex is -1.
-        /// </summary>
         public bool PlaceUpgrade(CardData card, int businessIndex)
         {
-            if (card == null || card.cardType != CardType.Upgrade)
-            {
-                Debug.LogWarning("[BoardManager] Card is null or not an Upgrade type.");
-                return false;
-            }
+            return PlaceUpgrade(card, businessIndex, card != null ? card.targetSlotType : SlotType.Operation, -1);
+        }
 
-            if (card.isGlobalUpgrade || businessIndex == -1)
+        private bool PlaceUpgrade(CardData card, int businessIndex, SlotType forcedSlotType, int preferredSlotIndex)
+        {
+            if (card == null) return false;
+
+            SlotType target = forcedSlotType;
+            if (target == SlotType.TempEffect || target == SlotType.Marketing || target == SlotType.Supplier || target == SlotType.Operation)
             {
-                globalUpgrades.Add(card);
-                EventBus.UpgradePlaced(card, -1);
+                int idx = preferredSlotIndex >= 0 ? preferredSlotIndex : (_slotManager != null ? _slotManager.GetFirstEmptyIndex(target) : -1);
+                if (idx < 0)
+                {
+                    if (target == SlotType.TempEffect && _slotManager != null)
+                    {
+                        _slotManager.ClearOldestTempEffect();
+                        idx = _slotManager.GetFirstEmptyIndex(target);
+                    }
+                }
+
+                if (idx < 0 || !TryPlaceCard(card, target, idx))
+                    return false;
+
+                if (target == SlotType.TempEffect)
+                    _tempDurations[card] = Mathf.Max(1, card.tempEffectDuration);
+                else if (target == SlotType.Operation)
+                    globalUpgrades.Add(card);
+
+                EventBus.UpgradePlaced(card, businessIndex);
                 return true;
             }
 
-            if (businessIndex < 0 || businessIndex >= playerBusinesses.Count)
-            {
-                Debug.LogWarning("[BoardManager] Invalid business index for upgrade.");
-                return false;
-            }
-
-            ActiveBusiness business = playerBusinesses[businessIndex];
-
-            if (business.isClosed)
-            {
-                Debug.Log("[BoardManager] Cannot place upgrades on a closed business.");
-                return false;
-            }
-
-            business.upgrades.Add(card);
-            business.neglectTurns = 0;
+            globalUpgrades.Add(card);
             EventBus.UpgradePlaced(card, businessIndex);
             return true;
         }
 
-        /// <summary>
-        /// Sets the active world event. Replaces any previous event.
-        /// </summary>
         public void SetActiveEvent(CardData eventCard)
         {
-            if (eventCard == null || eventCard.cardType != CardType.Event)
-                return;
-
-            if (activeEvent != null)
-                EventBus.EventExpired(activeEvent);
-
             activeEvent = eventCard;
-            activeEventTurnsRemaining = eventCard.eventDuration;
-            EventBus.EventActivated(eventCard);
+            activeEventTurnsRemaining = eventCard != null ? Mathf.Max(1, eventCard.eventDuration) : 0;
+
+            if (eventCard != null)
+            {
+                int idx = _slotManager != null ? _slotManager.GetFirstEmptyIndex(SlotType.TempEffect) : -1;
+                if (idx < 0 && _slotManager != null)
+                {
+                    _slotManager.ClearOldestTempEffect();
+                    idx = _slotManager.GetFirstEmptyIndex(SlotType.TempEffect);
+                }
+
+                if (idx >= 0)
+                    TryPlaceCard(eventCard, SlotType.TempEffect, idx);
+
+                _tempDurations[eventCard] = activeEventTurnsRemaining;
+            }
         }
 
-        // ----------------------------------------------------------------
-        // Removal
-        // ----------------------------------------------------------------
-
-        /// <summary>
-        /// Removes an employee from a business by index. Returns the removed card.
-        /// </summary>
         public CardData RemoveEmployee(int businessIndex, int employeeIndex)
         {
             if (businessIndex < 0 || businessIndex >= playerBusinesses.Count)
                 return null;
 
-            ActiveBusiness business = playerBusinesses[businessIndex];
-
-            if (employeeIndex < 0 || employeeIndex >= business.employees.Count)
+            var business = playerBusinesses[businessIndex];
+            if (business == null || employeeIndex < 0 || employeeIndex >= business.employees.Count)
                 return null;
 
-            CardData removed = business.employees[employeeIndex];
+            var removed = business.employees[employeeIndex];
             business.employees.RemoveAt(employeeIndex);
-
             if (employeeIndex < business.employeeTenure.Count)
                 business.employeeTenure.RemoveAt(employeeIndex);
 
-            Debug.Log($"[BoardManager] Removed employee '{(removed != null ? removed.cardName : "null")}' from business {businessIndex}.");
+            RemoveCardFromSlots(removed, SlotType.Staff);
             return removed;
         }
 
-        /// <summary>
-        /// Removes a specific employee card from the given business. Returns true if found.
-        /// </summary>
         public bool RemoveEmployeeByCard(int businessIndex, CardData employee)
         {
-            if (businessIndex < 0 || businessIndex >= playerBusinesses.Count)
+            if (businessIndex < 0 || businessIndex >= playerBusinesses.Count || employee == null)
                 return false;
 
-            ActiveBusiness business = playerBusinesses[businessIndex];
-            int idx = business.employees.IndexOf(employee);
+            int idx = playerBusinesses[businessIndex].employees.IndexOf(employee);
             if (idx < 0) return false;
-
             RemoveEmployee(businessIndex, idx);
             return true;
         }
 
-        /// <summary>
-        /// Permanently removes a business from the board.
-        /// </summary>
         public void RemoveBusiness(int businessIndex)
         {
             if (businessIndex < 0 || businessIndex >= playerBusinesses.Count)
                 return;
 
+            var card = playerBusinesses[businessIndex].businessCard;
             playerBusinesses.RemoveAt(businessIndex);
+            if (card != null)
+                RemoveCardFromSlots(card, SlotType.Operation);
+            _operationCardMap.Remove(businessIndex);
         }
-
-        // ----------------------------------------------------------------
-        // Business Lifecycle (delegates to sub-systems)
-        // ----------------------------------------------------------------
 
         public void CloseBusiness(int businessIndex, int turns)
         {
             if (businessIndex < 0 || businessIndex >= playerBusinesses.Count) return;
-            _closure.CloseBusiness(playerBusinesses[businessIndex], businessIndex, turns);
+            playerBusinesses[businessIndex].isClosed = true;
+            playerBusinesses[businessIndex].closedTurnsRemaining = Mathf.Max(1, turns);
+            EventBus.BusinessClosed(businessIndex);
         }
 
         public void ReopenBusiness(int businessIndex)
         {
             if (businessIndex < 0 || businessIndex >= playerBusinesses.Count) return;
-            _closure.ReopenBusiness(playerBusinesses[businessIndex], businessIndex);
+            playerBusinesses[businessIndex].isClosed = false;
+            playerBusinesses[businessIndex].closedTurnsRemaining = 0;
+            EventBus.BusinessReopened(businessIndex);
         }
 
         public void AddCustomersAttracted(int businessIndex, int customers)
         {
             if (businessIndex < 0 || businessIndex >= playerBusinesses.Count) return;
-            _evolution.AddCustomersAttracted(playerBusinesses[businessIndex], customers);
+            playerBusinesses[businessIndex].totalCustomersAttracted += Mathf.Max(0, customers);
         }
 
-        // ----------------------------------------------------------------
-        // Turn Ticking
-        // ----------------------------------------------------------------
-
-        /// <summary>
-        /// Advances all businesses by one turn. Delegates closure ticking,
-        /// employee tenure, and evolution checks to sub-systems.
-        /// </summary>
         public void TickBusinesses()
         {
             for (int i = 0; i < playerBusinesses.Count; i++)
             {
-                ActiveBusiness business = playerBusinesses[i];
+                var business = playerBusinesses[i];
+                if (business == null) continue;
 
                 if (business.isClosed)
                 {
@@ -324,80 +260,99 @@ namespace EmpireOfCards.Gameplay
 
                 business.turnsActive++;
                 business.neglectTurns++;
-
-                // --- Pop-Up Shop (B12): self-destructs after POPUP_SHOP_LIFETIME_TURNS ---
-                if (business.businessCard.cardId != null &&
-                    business.businessCard.cardId.StartsWith("B12_") &&
-                    business.turnsActive >= Constants.POPUP_SHOP_LIFETIME_TURNS)
-                {
-                    Debug.Log($"[BoardManager] Pop-Up Shop in slot {i} expired after {business.turnsActive} turns.");
-                    EventBus.BusinessClosed(i);
-                    RemoveBusiness(i);
-                    i--; // Adjust index since we removed an element
-                    continue;
-                }
-
-                if (business.neglectTurns == Constants.NEGLECT_THRESHOLD_MINOR ||
-                    business.neglectTurns == Constants.NEGLECT_THRESHOLD_MAJOR)
-                    EventBus.BusinessNeglected(i, business.neglectTurns);
-
-                _tenure.TickTenure(i, business);
-                _evolution.CheckEvolution(i, business);
+                for (int e = 0; e < business.employeeTenure.Count; e++)
+                    business.employeeTenure[e]++;
             }
 
-            TickActiveEvent();
+            TickTempEffects();
         }
 
         public void TickClosedBusinesses()
         {
-            _closure.TickClosures(playerBusinesses);
+            TickBusinesses();
         }
-
-        private void TickActiveEvent()
-        {
-            if (activeEvent == null) return;
-
-            activeEventTurnsRemaining--;
-            if (activeEventTurnsRemaining <= 0)
-            {
-                CardData expired = activeEvent;
-                activeEvent = null;
-                activeEventTurnsRemaining = 0;
-                EventBus.EventExpired(expired);
-            }
-        }
-
-        // ----------------------------------------------------------------
-        // Queries (delegates to BoardQueries)
-        // ----------------------------------------------------------------
 
         public int GetActiveBusinessCount()
-            => BoardQueries.GetActiveBusinessCount(playerBusinesses);
+        {
+            int count = 0;
+            foreach (var business in playerBusinesses)
+            {
+                if (business != null && business.businessCard != null && !business.isClosed)
+                    count++;
+            }
+            return count;
+        }
 
         public List<string> GetAllActiveCardIds()
-            => BoardQueries.GetAllActiveCardIds(playerBusinesses, globalUpgrades, activeEvent);
+        {
+            var ids = new List<string>();
+            foreach (var card in GetAllActiveCards())
+                ids.Add(card.cardId);
+            return ids;
+        }
 
         public HashSet<CardTag> GetAllActiveTags()
-            => BoardQueries.GetAllActiveTags(playerBusinesses, globalUpgrades, activeEvent);
+        {
+            var tags = new HashSet<CardTag>();
+            foreach (var card in GetAllActiveCards())
+            {
+                if (card.tags == null) continue;
+                foreach (var tag in card.tags)
+                    tags.Add(tag);
+            }
+            return tags;
+        }
 
         public bool HasTag(CardTag tag)
-            => BoardQueries.HasTag(playerBusinesses, globalUpgrades, activeEvent, tag);
+        {
+            return GetAllActiveTags().Contains(tag);
+        }
 
         public int CalculatePlayerCustomers()
-            => BoardQueries.CalculatePlayerCustomers(playerBusinesses, globalUpgrades);
+        {
+            float total = 0f;
+            foreach (var card in GetCardsInSlotType(SlotType.Operation))
+                total += Mathf.Max(0f, card.demandDelta + card.customersPerTurn);
+            foreach (var card in GetCardsInSlotType(SlotType.Marketing))
+                total += Mathf.Max(0f, card.demandDelta);
+            return Mathf.RoundToInt(total);
+        }
 
         public int FindBusinessWithEmployee(CardData employee)
-            => BoardQueries.FindBusinessWithEmployee(playerBusinesses, employee);
+        {
+            for (int i = 0; i < playerBusinesses.Count; i++)
+            {
+                if (playerBusinesses[i] != null && playerBusinesses[i].employees.Contains(employee))
+                    return i;
+            }
+            return -1;
+        }
 
         public int CountEmployeesById(string cardId)
-            => BoardQueries.CountEmployeesById(playerBusinesses, cardId);
+        {
+            int count = 0;
+            foreach (var card in GetCardsInSlotType(SlotType.Staff))
+                if (card.cardId == cardId)
+                    count++;
+            return count;
+        }
 
         public List<(CardData employee, int businessIndex, int employeeIndex)> GetAllIllegalEmployees()
-            => BoardQueries.GetAllIllegalEmployees(playerBusinesses);
-
-        // ----------------------------------------------------------------
-        // Utility
-        // ----------------------------------------------------------------
+        {
+            var result = new List<(CardData employee, int businessIndex, int employeeIndex)>();
+            for (int b = 0; b < playerBusinesses.Count; b++)
+            {
+                var business = playerBusinesses[b];
+                if (business == null) continue;
+                for (int e = 0; e < business.employees.Count; e++)
+                {
+                    var employee = business.employees[e];
+                    if (employee != null && employee.legalRiskDeltaPerTurn > 0f)
+                        result.Add((employee, b, e));
+                }
+            }
+            return result;
+        }
 
         public void Reset()
         {
@@ -406,46 +361,137 @@ namespace EmpireOfCards.Gameplay
             activeEvent = null;
             activeEventTurnsRemaining = 0;
             productionDisabledNextTurn = false;
-            maxSlots = Constants.STARTING_OPERATION_SLOTS;
+            _tempDurations.Clear();
+            _operationCardMap.Clear();
         }
 
         public void SetMaxSlots(int slots)
         {
-            maxSlots = Mathf.Clamp(slots, 1, Constants.MAX_OPERATION_SLOTS);
+            maxSlots = Mathf.Max(1, slots);
         }
 
-        // ----------------------------------------------------------------
-        // Sabotage (Rival aggressive action)
-        // ----------------------------------------------------------------
-
-        /// <summary>
-        /// When true, the next Resolve phase skips business production for 1 turn.
-        /// Automatically resets after being consumed.
-        /// </summary>
-        public bool IsProductionDisabled => productionDisabledNextTurn;
-
-        /// <summary>
-        /// Sets or clears the production-disabled flag. Called by RivalAI
-        /// when an aggressive sabotage action fires.
-        /// </summary>
         public void SetProductionDisabledNextTurn(bool disabled)
         {
             productionDisabledNextTurn = disabled;
-            if (disabled)
-                Debug.Log("[BoardManager] Production will be disabled next resolve phase.");
         }
 
-        /// <summary>
-        /// Consumes and clears the production-disabled flag.
-        /// Call this at the start of the Resolve phase.
-        /// Returns true if production was disabled (and should be skipped).
-        /// </summary>
         public bool ConsumeProductionDisabled()
         {
-            if (!productionDisabledNextTurn) return false;
+            bool current = productionDisabledNextTurn;
             productionDisabledNextTurn = false;
-            Debug.Log("[BoardManager] Production disabled this turn due to rival sabotage.");
-            return true;
+            return current;
+        }
+
+        public IReadOnlyList<CardData> GetCardsInSlotType(SlotType slotType)
+        {
+            if (_slotManager == null)
+                return Array.Empty<CardData>();
+
+            return slotType switch
+            {
+                SlotType.Operation => CollectNonNull(_slotManager.OperationSlots),
+                SlotType.Staff => CollectNonNull(_slotManager.StaffSlots),
+                SlotType.Marketing => CollectNonNull(_slotManager.MarketingSlots),
+                SlotType.Supplier => CollectNonNull(_slotManager.SupplierSlots),
+                SlotType.TempEffect => CollectNonNull(_slotManager.TempEffectSlots),
+                _ => Array.Empty<CardData>()
+            };
+        }
+
+        public IEnumerable<CardData> GetAllActiveCards()
+        {
+            foreach (var card in GetCardsInSlotType(SlotType.Operation)) yield return card;
+            foreach (var card in GetCardsInSlotType(SlotType.Staff)) yield return card;
+            foreach (var card in GetCardsInSlotType(SlotType.Marketing)) yield return card;
+            foreach (var card in GetCardsInSlotType(SlotType.Supplier)) yield return card;
+            foreach (var card in GetCardsInSlotType(SlotType.TempEffect)) yield return card;
+        }
+
+        private bool TryPlaceCard(CardData card, SlotType slotType, int slotIndex)
+        {
+            if (_slotManager == null || card == null)
+                return false;
+
+            return _slotManager.TryPlace(card, slotType, slotIndex);
+        }
+
+        private void RemoveCardFromSlots(CardData card, SlotType slotType)
+        {
+            if (_slotManager == null || card == null)
+                return;
+
+            int count = slotType switch
+            {
+                SlotType.Operation => _slotManager.OperationSlots.Count,
+                SlotType.Staff => _slotManager.StaffSlots.Count,
+                SlotType.Marketing => _slotManager.MarketingSlots.Count,
+                SlotType.Supplier => _slotManager.SupplierSlots.Count,
+                SlotType.TempEffect => _slotManager.TempEffectSlots.Count,
+                _ => 0
+            };
+
+            for (int i = 0; i < count; i++)
+            {
+                IReadOnlyList<CardData> cards = slotType switch
+                {
+                    SlotType.Operation => _slotManager.OperationSlots,
+                    SlotType.Staff => _slotManager.StaffSlots,
+                    SlotType.Marketing => _slotManager.MarketingSlots,
+                    SlotType.Supplier => _slotManager.SupplierSlots,
+                    SlotType.TempEffect => _slotManager.TempEffectSlots,
+                    _ => null
+                };
+
+                if (cards == null || cards[i] != card) continue;
+                _slotManager.TryRemove(slotType, i, out _);
+                break;
+            }
+        }
+
+        private void TickTempEffects()
+        {
+            var expired = new List<CardData>();
+            var updated = new List<(CardData card, int turns)>();
+
+            foreach (var pair in _tempDurations)
+            {
+                int next = pair.Value - 1;
+                if (next <= 0)
+                    expired.Add(pair.Key);
+                else
+                    updated.Add((pair.Key, next));
+            }
+
+            foreach (var item in updated)
+            {
+                _tempDurations[item.card] = item.turns;
+            }
+
+            foreach (var card in expired)
+            {
+                _tempDurations.Remove(card);
+                RemoveCardFromSlots(card, SlotType.TempEffect);
+                if (activeEvent == card)
+                {
+                    EventBus.EventExpired(card);
+                    activeEvent = null;
+                    activeEventTurnsRemaining = 0;
+                }
+            }
+
+            if (activeEvent != null && activeEventTurnsRemaining > 0)
+                activeEventTurnsRemaining--;
+        }
+
+        private static IReadOnlyList<CardData> CollectNonNull(IReadOnlyList<CardData> source)
+        {
+            var list = new List<CardData>();
+            for (int i = 0; i < source.Count; i++)
+            {
+                if (source[i] != null)
+                    list.Add(source[i]);
+            }
+            return list;
         }
     }
 }

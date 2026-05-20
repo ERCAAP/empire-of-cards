@@ -22,6 +22,7 @@ namespace EmpireOfCards.Bootstrap
         public static HUDBundle Build()
         {
             var hud = new HUDBundle();
+            string Loc(string key, string fallback) => EmpireOfCards.Core.LocalizationManager.GetWithFallback(key, fallback);
 
             // --- Main Canvas (Screen Space Overlay) ---
             var canvasGo = new GameObject("HUDCanvas");
@@ -70,7 +71,7 @@ namespace EmpireOfCards.Bootstrap
             tierText.GetComponent<TMP_Text>().color = ControlDeskTheme.TextPrimary;
             hud.companyTierText = tierText.GetComponent<TMP_Text>();
 
-            var fbiLabel = CreateTextElement("PressureLabel", statusPanel, "FBI PRESSURE", 11);
+            var fbiLabel = CreateTextElement("PressureLabel", statusPanel, Loc("hud.legal_pressure", "LEGAL PRESSURE"), 11);
             SetAnchors(fbiLabel, new Vector2(0, 1), new Vector2(0, 1), new Vector2(0, 1));
             fbiLabel.anchoredPosition = new Vector2(18, -76);
             fbiLabel.sizeDelta = new Vector2(110, 18);
@@ -98,7 +99,7 @@ namespace EmpireOfCards.Bootstrap
             SetAnchors(runPanel, new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(0.5f, 1));
             runPanel.anchoredPosition = new Vector2(0, -22);
 
-            var runLabel = CreateTextElement("RunLabel", runPanel, "RUN STATE", 11);
+            var runLabel = CreateTextElement("RunLabel", runPanel, Loc("hud.run_state", "RUN STATE"), 11);
             runLabel.anchoredPosition = new Vector2(0, -16);
             runLabel.sizeDelta = new Vector2(140, 18);
             runLabel.GetComponent<TMP_Text>().color = ControlDeskTheme.TextMuted;
@@ -140,7 +141,7 @@ namespace EmpireOfCards.Bootstrap
             SetAnchors(platformRatingPanel, new Vector2(0, 0.5f), new Vector2(0, 0.5f), new Vector2(0, 0.5f));
             platformRatingPanel.anchoredPosition = new Vector2(18, -6);
 
-            var platformLabelRt = CreateTextElement("PlatformLabel", platformRatingPanel, "RATING", 12);
+            var platformLabelRt = CreateTextElement("PlatformLabel", platformRatingPanel, Loc("hud.rating", "RATING"), 12);
             platformLabelRt.anchoredPosition = new Vector2(0, 16);
             platformLabelRt.sizeDelta = new Vector2(160, 18);
             platformLabelRt.GetComponent<TMP_Text>().color = ControlDeskTheme.TextMuted;
@@ -174,7 +175,7 @@ namespace EmpireOfCards.Bootstrap
             SetAnchors(legalRiskPanel, new Vector2(1, 0.5f), new Vector2(1, 0.5f), new Vector2(1, 0.5f));
             legalRiskPanel.anchoredPosition = new Vector2(-18, -6);
 
-            var legalLabelRt = CreateTextElement("LegalLabel", legalRiskPanel, "LEGAL RISK", 12);
+            var legalLabelRt = CreateTextElement("LegalLabel", legalRiskPanel, Loc("hud.legal_risk", "LEGAL RISK"), 12);
             legalLabelRt.anchoredPosition = new Vector2(0, 16);
             legalLabelRt.sizeDelta = new Vector2(160, 18);
             legalLabelRt.GetComponent<TMP_Text>().color = ControlDeskTheme.TextMuted;
@@ -210,7 +211,7 @@ namespace EmpireOfCards.Bootstrap
             marketBarPanel.sizeDelta = new Vector2(440, 34);
             StylePanel(marketBarPanel, ControlDeskTheme.WithAlpha(ControlDeskTheme.PanelSoft, 0.8f));
 
-            var marketLabelRt = CreateTextElement("MarketLabel", marketBarPanel, "MARKET", 11);
+            var marketLabelRt = CreateTextElement("MarketLabel", marketBarPanel, Loc("hud.market_share", "MARKET"), 11);
             marketLabelRt.anchoredPosition = new Vector2(-176, 0);
             marketLabelRt.sizeDelta = new Vector2(64, 22);
             marketLabelRt.GetComponent<TMP_Text>().color = ControlDeskTheme.TextMuted;
@@ -522,7 +523,7 @@ namespace EmpireOfCards.Bootstrap
             venturePanel.GetComponent<Image>().color = new Color(0.05f, 0.05f, 0.1f, 0.95f);
 
             // Title
-            var ventureTitle = CreateTextElement("VentureTitle", venturePanel, "CHOOSE YOUR FIRST VENTURE", 42);
+            var ventureTitle = CreateTextElement("VentureTitle", venturePanel, Loc("venture.title", "CHOOSE YOUR FIRST VENTURE"), 42);
             ventureTitle.anchoredPosition = new Vector2(0, 350);
             ventureTitle.sizeDelta = new Vector2(800, 60);
 
@@ -589,7 +590,7 @@ namespace EmpireOfCards.Bootstrap
             }
 
             // START button (disabled until selection)
-            var ventureStartBtn = CreateButton("VentureStartButton", venturePanel, "START");
+            var ventureStartBtn = CreateButton("VentureStartButton", venturePanel, Loc("venture.start_button", "START"));
             ventureStartBtn.anchoredPosition = new Vector2(0, -280);
             ventureStartBtn.sizeDelta = new Vector2(200, 60);
             ventureStartBtn.GetComponent<Image>().color = new Color(0.2f, 0.5f, 0.3f);

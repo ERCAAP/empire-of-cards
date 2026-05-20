@@ -9,6 +9,7 @@ using EmpireOfCards.Audio;
 using EmpireOfCards.VFX;
 using EmpireOfCards.Save;
 using EmpireOfCards.Gameplay.Staff;
+using System.Collections.Generic;
 
 namespace EmpireOfCards.Core
 {
@@ -60,6 +61,11 @@ namespace EmpireOfCards.Core
 
         [Header("=== First Venture ===")]
         [SerializeField] private VentureData selectedVenture;
+        [SerializeField] private VentureBoardProfile activeBoardProfile;
+        [SerializeField] private VentureDeckProfile activeDeckProfile;
+        [SerializeField] private VentureEconomyProfile activeEconomyProfile;
+
+        private Dictionary<string, CardData> _cardLookup;
 
         // === Extracted Sub-Objects (prefer these over backward-compat properties) ===
         public PlayerResources Resources => resources;
@@ -102,6 +108,10 @@ namespace EmpireOfCards.Core
         public SlotManager SlotManager => slotManager;
         public StaffStateSystem StaffStateSystem => staffStateSystem;
         public ChainReactionSystem ChainReactionSystem => chainReactionSystem;
+        public VentureBoardProfile ActiveBoardProfile => activeBoardProfile;
+        public VentureDeckProfile ActiveDeckProfile => activeDeckProfile;
+        public VentureEconomyProfile ActiveEconomyProfile => activeEconomyProfile;
+        public IReadOnlyDictionary<string, CardData> CardLookup => _cardLookup;
 
         /// <summary>
         /// Assigns the MetaProgressionSystem. Called by WiringService after bootstrap.
@@ -134,6 +144,14 @@ namespace EmpireOfCards.Core
         public void SetSelectedVenture(VentureData venture)
         {
             this.selectedVenture = venture;
+            activeBoardProfile = venture != null ? venture.boardProfile : null;
+            activeDeckProfile = venture != null ? venture.deckProfile : null;
+            activeEconomyProfile = venture != null ? venture.economyProfile : null;
+        }
+
+        public void SetCardLookup(Dictionary<string, CardData> lookup)
+        {
+            _cardLookup = lookup;
         }
 
         /// <summary>
@@ -210,34 +228,47 @@ namespace EmpireOfCards.Core
             rivalMarketBlocks = 0;
 
             // Initialize subsystems
-            if (deckManager != null && startingDeck != null)
-                deckManager.InitializeDeck(startingDeck);
-
-            // Apply First Venture (GDD Section 1.5)
             VentureType chosenVenture = VentureType.FastFood; // Default
             if (selectedVenture != null)
             {
                 chosenVenture = selectedVenture.ventureType;
+            }
 
-                // Add bonus money
-                if (selectedVenture.bonusMoney > 0)
-                    resources.GainMoney(selectedVenture.bonusMoney);
-
-                // Place starting business on board
-                if (selectedVenture.startingBusiness != null && boardManager != null)
-                    boardManager.PlaceBusiness(selectedVenture.startingBusiness, 0);
-
-                // Add bonus card to deck
-                if (selectedVenture.bonusDeckCard != null && deckManager != null)
-                    deckManager.AddCardToDeck(selectedVenture.bonusDeckCard);
-
-                // Filter deck: remove cards from OTHER ventures (keep chosen + general)
-                if (deckManager != null)
-                    deckManager.FilterByVenture(chosenVenture);
+            if (activeBoardProfile != null && slotManager != null)
+            {
+                slotManager.Configure(activeBoardProfile);
+                resources.SetBusinessSlots(activeBoardProfile.startingOperationSlots);
             }
 
             if (boardManager != null)
+            {
+                boardManager.Reset();
+                boardManager.ConfigureForVenture(chosenVenture, activeBoardProfile);
                 boardManager.SetMaxSlots(resources.BusinessSlots);
+            }
+
+            if (activeEconomyProfile != null && economyManager != null)
+            {
+                economyManager.SetActiveProfile(activeEconomyProfile);
+                resources.SetMoney(Mathf.RoundToInt(activeEconomyProfile.startingCash) + (selectedVenture != null ? selectedVenture.bonusMoney : 0));
+            }
+
+            if (deckManager != null)
+            {
+                if (activeDeckProfile != null && _cardLookup != null)
+                    deckManager.InitializeDeck(activeDeckProfile, _cardLookup);
+                else if (startingDeck != null)
+                    deckManager.InitializeDeck(startingDeck);
+            }
+
+            if (selectedVenture != null)
+            {
+                if (selectedVenture.startingBusiness != null && boardManager != null)
+                    boardManager.PlaceBusiness(selectedVenture.startingBusiness, 0);
+                if (selectedVenture.bonusDeckCard != null && deckManager != null)
+                    deckManager.AddCardToDeck(selectedVenture.bonusDeckCard);
+            }
+
             if (rivalAI != null)
             {
                 if (selectedVenture != null)
@@ -334,6 +365,7 @@ namespace EmpireOfCards.Core
             resources.AddBusinessSlot(balanceData);
             if (boardManager != null)
                 boardManager.SetMaxSlots(resources.BusinessSlots);
+            slotManager?.TryExpandSlot(SlotType.Operation);
             EventBus.BusinessSlotsChanged(resources.BusinessSlots);
         }
 

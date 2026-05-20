@@ -227,14 +227,14 @@ namespace EmpireOfCards.UI
             {
                 string tagName = shopManager.BiasTag switch
                 {
-                    CardTag.Food => "Food",
-                    CardTag.Tech => "Tech",
-                    CardTag.Marketing => "Marketing",
-                    CardTag.Illegal => "Illegal",
+                    CardTag.Food => LocalizationManager.GetWithFallback("shop.bias.food", "Food"),
+                    CardTag.Tech => LocalizationManager.GetWithFallback("shop.bias.tech", "Tech"),
+                    CardTag.Marketing => LocalizationManager.GetWithFallback("shop.bias.marketing", "Marketing"),
+                    CardTag.Illegal => LocalizationManager.GetWithFallback("shop.bias.illegal", "Illegal"),
                     _ => ""
                 };
                 int remaining = Constants.SHOP_BIAS_TURNS - currentTurn + 1;
-                _biasText.text = $"\u0130lk {Constants.SHOP_BIAS_TURNS} turda {tagName} kartlar\u0131 \u00F6ncelikli ({remaining} tur kald\u0131)";
+                _biasText.text = LocalizationManager.Get("shop.bias", Constants.SHOP_BIAS_TURNS, tagName, remaining);
             }
             else
             {

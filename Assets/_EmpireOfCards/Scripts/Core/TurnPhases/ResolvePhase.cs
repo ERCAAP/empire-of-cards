@@ -147,33 +147,21 @@ namespace EmpireOfCards.Core.TurnPhases
                 // 4b.6: Market share calculation
                 case ResolveStep.MarketShareCalculation:
                 {
-                    int totalMarket = gm.BalanceData != null
-                        ? gm.BalanceData.GetMarketPool(gm.CurrentTurn)
-                        : Constants.BASE_MARKET_CUSTOMERS;
-
-                    // Apply season multiplier to market pool
-                    int seasonIndex = Mathf.Clamp((gm.CurrentTurn - 1) / Constants.TURNS_PER_SEASON, 0, 4);
-                    float seasonMultiplier = GetSeasonMultiplier((SeasonType)seasonIndex);
-
-                    int adjustedMarket = Mathf.RoundToInt(totalMarket * seasonMultiplier);
-
-                    // Calculate player share from board state
+                    int totalMarket = Constants.TOTAL_MARKET_CUSTOMERS;
                     int playerCustomers = gm.PlayerCustomers;
                     int rivalCustomers = gm.RivalCustomers;
 
-                    // Clamp to adjusted market
-                    if (adjustedMarket > 0 && (playerCustomers + rivalCustomers) > adjustedMarket)
+                    if (playerCustomers + rivalCustomers > totalMarket)
                     {
-                        float total = playerCustomers + rivalCustomers;
-                        playerCustomers = Mathf.RoundToInt((playerCustomers / total) * adjustedMarket);
-                        rivalCustomers = adjustedMarket - playerCustomers;
+                        float total = Mathf.Max(1f, playerCustomers + rivalCustomers);
+                        playerCustomers = Mathf.RoundToInt((playerCustomers / total) * totalMarket);
+                        rivalCustomers = totalMarket - playerCustomers;
                     }
 
                     gm.SetPlayerCustomers(playerCustomers);
                     gm.SetRivalCustomers(rivalCustomers);
                     EventBus.MarketShareUpdated(playerCustomers, rivalCustomers);
-
-                    Debug.Log($"[ResolvePhase] MarketShare: player={playerCustomers}, rival={rivalCustomers}, market={adjustedMarket} (season x{seasonMultiplier:F2})");
+                    gm.SetMarketBlocks(Mathf.RoundToInt(playerCustomers / 10f), Mathf.RoundToInt(rivalCustomers / 10f));
                     break;
                 }
 
@@ -212,6 +200,14 @@ namespace EmpireOfCards.Core.TurnPhases
                     if (gm.EconomyManager != null)
                     {
                         gm.EconomyManager.ProcessEndOfTurn();
+                        if (gm.EconomyManager.Snapshot != null)
+                        {
+                            int playerShare = Mathf.RoundToInt(gm.EconomyManager.Snapshot.marketShare);
+                            gm.SetPlayerCustomers(playerShare);
+                            int rivalShare = Mathf.Clamp(Constants.TOTAL_MARKET_CUSTOMERS - playerShare, 0, Constants.TOTAL_MARKET_CUSTOMERS);
+                            gm.SetRivalCustomers(rivalShare);
+                            gm.SetMarketBlocks(Mathf.RoundToInt(playerShare / 10f), Mathf.RoundToInt(rivalShare / 10f));
+                        }
                     }
                     break;
 
@@ -221,20 +217,6 @@ namespace EmpireOfCards.Core.TurnPhases
                     {
                         gm.FBISystem.AccumulateRiskFromBoard();
                         gm.FBISystem.CheckForRaid();
-                    }
-
-                    // Platform rating decay: skip if any business has a Marketing-tagged employee
-                    if (gm.EconomyManager != null && gm.BoardManager != null)
-                    {
-                        bool hasMarketingCoverage = HasMarketingEmployee(gm.BoardManager);
-                        if (!hasMarketingCoverage)
-                        {
-                            Debug.Log("[ResolvePhase] No marketing coverage -- platform rating decays.");
-                        }
-                        else
-                        {
-                            Debug.Log("[ResolvePhase] Marketing coverage active -- platform rating decay skipped.");
-                        }
                     }
                     break;
 

@@ -182,6 +182,28 @@ namespace EmpireOfCards.Core
         TempEffect      // Temporary events/crises
     }
 
+    public enum CardFamily
+    {
+        Setup,
+        Growth,
+        Risk,
+        Reaction,
+        Crisis,
+        Neutral
+    }
+
+    public enum BoardPressureType
+    {
+        None,
+        LowDemand,
+        CapacityShortfall,
+        LowRating,
+        HighLegalRisk,
+        LowCash,
+        WeakQuality,
+        StaffInstability
+    }
+
     // 5-season cycle, 5 turns each (GDD v3.0 Section 14)
     public enum SeasonType
     {

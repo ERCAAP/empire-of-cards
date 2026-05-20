@@ -98,6 +98,9 @@ namespace EmpireOfCards.Data
         public VentureType ventureType;        // Which venture this card belongs to
         public SlotType targetSlotType;        // Which slot type this card targets
         public bool isGeneralCard;             // true = available in all ventures
+        public string targetSubSlotId;         // venture-specific sub-slot identifier
+        public CardFamily cardFamily;          // setup, growth, risk, reaction, crisis
+        public bool entersTempEffectOnUse;     // action/reaction can convert into temp effect
 
         [Header("--- Market Share (Operation cards) ---")]
         public float qualityScore;             // 0-10, market share quality weight
@@ -115,6 +118,20 @@ namespace EmpireOfCards.Data
         [Header("--- Supplier Effects ---")]
         public float costReductionPercent;     // Cost reduction for all operations
         public float qualityBoostAmount;       // Added to qualityScore
+
+        [Header("--- Venture Simulation v4 ---")]
+        public float demandDelta;
+        public float capacityDelta;
+        public float qualityDelta;
+        public float cashDeltaPerTurn;
+        public float upkeepCostPerTurn;
+        public float staffStabilityDelta;
+        public float legalRiskDeltaPerTurn;
+        public float ratingDeltaPerTurn;
+        public int tempEffectDuration;
+        public string[] crisisTags;
+        public string[] solutionTags;
+        public BoardPressureType[] preferredPressures;
 
         [Header("--- 3D Visual (Slot Placement) ---")]
         public Vector3 buildingScale = new Vector3(1f, 0.5f, 1f);  // Cube size when placed

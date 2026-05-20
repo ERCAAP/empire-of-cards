@@ -29,6 +29,10 @@ namespace EmpireOfCards.World
         private SlotZone3D _sellZone;
         private SlotZone3D _actionZone;
         private TextMeshPro _tierLabel;
+        private TextMeshPro _operationsHeader;
+        private TextMeshPro _staffHeader;
+        private TextMeshPro _marketingHeader;
+        private TextMeshPro _supplierHeader;
 
         public IReadOnlyList<SlotZone3D> BusinessSlots => _operationSlots;
 
@@ -275,10 +279,10 @@ namespace EmpireOfCards.World
         {
             Quaternion flatText = Quaternion.Euler(90f, 0f, 0f);
 
-            CreateDeskText("OPERATIONS", new Vector3(-3.75f, 0.16f, -2.10f), flatText, 1.65f, ControlDeskTheme.Lighten(ControlDeskTheme.OperationSlot, 0.25f), TextAlignmentOptions.Left);
-            CreateDeskText("STAFF", new Vector3(-4.20f, 0.16f, -0.78f), flatText, 1.45f, ControlDeskTheme.Lighten(ControlDeskTheme.StaffSlot, 0.25f), TextAlignmentOptions.Left);
-            CreateDeskText("MARKETING", new Vector3(-5.15f, 0.16f, 0.52f), flatText, 1.25f, ControlDeskTheme.Lighten(ControlDeskTheme.MarketingSlot, 0.22f), TextAlignmentOptions.Left);
-            CreateDeskText("SUPPLIERS", new Vector3(1.15f, 0.16f, 0.52f), flatText, 1.25f, ControlDeskTheme.Lighten(ControlDeskTheme.SupplierSlot, 0.22f), TextAlignmentOptions.Left);
+            _operationsHeader = CreateDeskText("OPERATIONS", new Vector3(-3.75f, 0.16f, -2.10f), flatText, 1.65f, ControlDeskTheme.Lighten(ControlDeskTheme.OperationSlot, 0.25f), TextAlignmentOptions.Left);
+            _staffHeader = CreateDeskText("STAFF", new Vector3(-4.20f, 0.16f, -0.78f), flatText, 1.45f, ControlDeskTheme.Lighten(ControlDeskTheme.StaffSlot, 0.25f), TextAlignmentOptions.Left);
+            _marketingHeader = CreateDeskText("MARKETING", new Vector3(-5.15f, 0.16f, 0.52f), flatText, 1.25f, ControlDeskTheme.Lighten(ControlDeskTheme.MarketingSlot, 0.22f), TextAlignmentOptions.Left);
+            _supplierHeader = CreateDeskText("SUPPLIERS", new Vector3(1.15f, 0.16f, 0.52f), flatText, 1.25f, ControlDeskTheme.Lighten(ControlDeskTheme.SupplierSlot, 0.22f), TextAlignmentOptions.Left);
             CreateDeskText("CONTROL", new Vector3(5.35f, 0.16f, 1.55f), flatText, 1.15f, ControlDeskTheme.Lighten(ControlDeskTheme.UtilitySlot, 0.18f), TextAlignmentOptions.Left);
             CreateDeskText("SHARED MARKET", new Vector3(-5.45f, 0.16f, 2.95f), flatText, 1.20f, ControlDeskTheme.TextMuted, TextAlignmentOptions.Left);
             CreateDeskText("RIVAL PRESSURE", new Vector3(-5.45f, 0.16f, 5.05f), flatText, 1.15f, ControlDeskTheme.Lighten(ControlDeskTheme.RivalSlot, 0.20f), TextAlignmentOptions.Left);
@@ -325,6 +329,8 @@ namespace EmpireOfCards.World
             EventBus.OnUpgradePlaced += HandleSlotRefresh;
             EventBus.OnMarketBlocksChanged += HandleTerritoryChanged;
             EventBus.OnBusinessSlotsChanged += UpdateVisibleSlots;
+            EventBus.OnTurnStarted += HandleTurnStarted;
+            LocalizationManager.OnLanguageChanged += ApplyVentureHeaders;
         }
 
         private void OnDisable()
@@ -335,6 +341,13 @@ namespace EmpireOfCards.World
             EventBus.OnUpgradePlaced -= HandleSlotRefresh;
             EventBus.OnMarketBlocksChanged -= HandleTerritoryChanged;
             EventBus.OnBusinessSlotsChanged -= UpdateVisibleSlots;
+            EventBus.OnTurnStarted -= HandleTurnStarted;
+            LocalizationManager.OnLanguageChanged -= ApplyVentureHeaders;
+        }
+
+        private void HandleTurnStarted(int turnNumber)
+        {
+            ApplyVentureHeaders();
         }
 
         private void HandleTerritoryChanged(int playerCount, int rivalCount)
@@ -370,6 +383,36 @@ namespace EmpireOfCards.World
             var renderer = _businessSlotRenderers[businessIndex];
             if (renderer != null)
                 renderer.material.color = ControlDeskTheme.OperationSlot;
+        }
+
+        private void ApplyVentureHeaders()
+        {
+            var profile = GameManager.Instance != null ? GameManager.Instance.ActiveBoardProfile : null;
+            if (_operationsHeader != null)
+                _operationsHeader.text = BuildHeader("board.ops", "OPS", profile != null ? profile.operationSubSlots : null);
+            if (_staffHeader != null)
+                _staffHeader.text = BuildHeader("board.staff", "STAFF", profile != null ? profile.staffSubSlots : null);
+            if (_marketingHeader != null)
+                _marketingHeader.text = BuildHeader("board.growth", "GROWTH", profile != null ? profile.marketingSubSlots : null);
+            if (_supplierHeader != null)
+                _supplierHeader.text = BuildHeader("board.supply", "SUPPLY", profile != null ? profile.supplierSubSlots : null);
+        }
+
+        private static string BuildHeader(string headerKey, string fallbackHeader, BoardSubSlotDefinition[] defs)
+        {
+            string prefix = LocalizationManager.GetWithFallback(headerKey, fallbackHeader);
+            if (defs == null || defs.Length == 0)
+                return prefix;
+
+            int count = Mathf.Min(defs.Length, 3);
+            string label = prefix + ": ";
+            for (int i = 0; i < count; i++)
+            {
+                if (i > 0) label += " / ";
+                string fallback = string.IsNullOrWhiteSpace(defs[i].fallbackLabel) ? defs[i].id : defs[i].fallbackLabel;
+                label += LocalizationManager.GetWithFallback(defs[i].labelKey, fallback).ToUpperInvariant();
+            }
+            return label;
         }
     }
 }
