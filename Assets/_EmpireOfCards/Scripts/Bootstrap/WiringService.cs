@@ -106,7 +106,7 @@ namespace EmpireOfCards.Bootstrap
                 m.uiManager.SetNeglectWarningText(hud.neglectWarningText);
 
             // === TopBarUI: TMP_Text and Image sub-elements ===
-            hud.topBarUI.Init(hud.moneyText, hud.turnText, hud.fbiBarFillImg, null);
+            hud.topBarUI.Init(hud.moneyText, hud.turnText, hud.fbiBarFillImg, null, hud.companyTierText);
 
             // === ActionBarUI: action dot Image[] ===
             hud.actionBarUI.Init(hud.actionDotImages);

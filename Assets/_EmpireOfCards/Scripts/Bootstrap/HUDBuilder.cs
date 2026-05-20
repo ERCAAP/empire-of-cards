@@ -3,6 +3,7 @@ using UnityEngine.UI;
 using TMPro;
 using EmpireOfCards.UI;
 using EmpireOfCards.UI.Indicators;
+using EmpireOfCards.Presentation;
 
 namespace EmpireOfCards.Bootstrap
 {
@@ -12,9 +13,8 @@ namespace EmpireOfCards.Bootstrap
     /// </summary>
     public static class HUDBuilder
     {
-        // HUD color palette
-        private static readonly Color GoldColor = new Color(1f, 0.85f, 0.2f);
-        private static readonly Color LightGold = new Color(1f, 0.9f, 0.3f);
+        private static readonly Color GoldColor = ControlDeskTheme.MoneyGold;
+        private static readonly Color LightGold = ControlDeskTheme.Lighten(ControlDeskTheme.MoneyGold, 0.1f);
         /// <summary>
         /// Creates the HUD canvas, all panels, buttons, and popups.
         /// Returns a HUDBundle with every reference the wiring step needs.
@@ -39,57 +39,116 @@ namespace EmpireOfCards.Bootstrap
             // --- UIManager on canvas ---
             hud.uiManager = canvasGo.AddComponent<UIManager>();
 
-            // ============================================================
-            // TOP BAR -- money, turn counter, FBI risk
-            // ============================================================
             var topBar = CreateUIPanel("TopBar", canvasGo.transform);
             SetAnchors(topBar, new Vector2(0, 1), new Vector2(1, 1), new Vector2(0.5f, 1));
-            topBar.sizeDelta = new Vector2(0, 80);
+            topBar.sizeDelta = new Vector2(0, 180);
             hud.topBarUI = topBar.gameObject.AddComponent<TopBarUI>();
 
-            // Money display - large gold text for emphasis
-            var moneyObj = CreateTextElement("MoneyDisplay", topBar, "$500", 42);
-            moneyObj.localPosition = new Vector3(-700, -40, 0);
-            moneyObj.sizeDelta = new Vector2(280, 60);
+            var statusPanel = CreateShellPanel("StatusPanel", topBar, new Vector2(320, 98), ControlDeskTheme.Panel);
+            SetAnchors(statusPanel, new Vector2(0, 1), new Vector2(0, 1), new Vector2(0, 1));
+            statusPanel.anchoredPosition = new Vector2(30, -22);
+
+            var moneyObj = CreateTextElement("MoneyDisplay", statusPanel, "$500", 38);
+            SetAnchors(moneyObj, new Vector2(0, 1), new Vector2(0, 1), new Vector2(0, 1));
+            moneyObj.anchoredPosition = new Vector2(18, -18);
+            moneyObj.sizeDelta = new Vector2(240, 42);
             hud.moneyText = moneyObj.GetComponent<TMP_Text>();
             hud.moneyText.color = GoldColor;
             hud.moneyText.fontStyle = FontStyles.Bold;
+            hud.moneyText.alignment = TextAlignmentOptions.Left;
 
-            // Turn counter - clear and readable
-            var turnObj = CreateTextElement("TurnCounter", topBar, "Turn 1/20", 28);
-            turnObj.localPosition = new Vector3(0, -40, 0);
-            turnObj.sizeDelta = new Vector2(240, 50);
-            hud.turnText = turnObj.GetComponent<TMP_Text>();
-            hud.turnText.fontStyle = FontStyles.Bold;
+            var tierChip = CreateShellPanel("TierChip", statusPanel, new Vector2(138, 28), ControlDeskTheme.WithAlpha(ControlDeskTheme.PanelLine, 0.6f));
+            SetAnchors(tierChip, new Vector2(0, 1), new Vector2(0, 1), new Vector2(0, 1));
+            tierChip.anchoredPosition = new Vector2(18, -70);
 
-            // FBI Risk bar
-            var fbiBarBg = CreateUIPanel("FBIRiskBar", topBar);
-            fbiBarBg.localPosition = new Vector3(700, -40, 0);
-            fbiBarBg.sizeDelta = new Vector2(200, 20);
-            var fbiBarBgImg = fbiBarBg.GetComponent<Image>();
-            fbiBarBgImg.color = new Color(0.2f, 0.2f, 0.2f);
+            var tierText = CreateTextElement("CompanyTierText", tierChip, "TRADER", 13);
+            tierText.anchorMin = Vector2.zero;
+            tierText.anchorMax = Vector2.one;
+            tierText.offsetMin = Vector2.zero;
+            tierText.offsetMax = Vector2.zero;
+            tierText.GetComponent<TMP_Text>().fontStyle = FontStyles.Bold;
+            tierText.GetComponent<TMP_Text>().color = ControlDeskTheme.TextPrimary;
+            hud.companyTierText = tierText.GetComponent<TMP_Text>();
+
+            var fbiLabel = CreateTextElement("PressureLabel", statusPanel, "FBI PRESSURE", 11);
+            SetAnchors(fbiLabel, new Vector2(0, 1), new Vector2(0, 1), new Vector2(0, 1));
+            fbiLabel.anchoredPosition = new Vector2(18, -76);
+            fbiLabel.sizeDelta = new Vector2(110, 18);
+            fbiLabel.GetComponent<TMP_Text>().alignment = TextAlignmentOptions.Left;
+            fbiLabel.GetComponent<TMP_Text>().color = ControlDeskTheme.TextMuted;
+
+            var fbiBarBg = CreateShellPanel("FBIRiskBar", statusPanel, new Vector2(160, 10), ControlDeskTheme.WithAlpha(Color.black, 0.45f));
+            SetAnchors(fbiBarBg, new Vector2(1, 1), new Vector2(1, 1), new Vector2(1, 1));
+            fbiBarBg.anchoredPosition = new Vector2(-18, -78);
+            RemoveOutline(fbiBarBg);
 
             var fbiBarFill = CreateUIPanel("Fill", fbiBarBg);
-            fbiBarFill.sizeDelta = new Vector2(200, 20);
+            fbiBarFill.anchorMin = new Vector2(0, 0);
+            fbiBarFill.anchorMax = new Vector2(1, 1);
+            fbiBarFill.offsetMin = Vector2.zero;
+            fbiBarFill.offsetMax = Vector2.zero;
             hud.fbiBarFillImg = fbiBarFill.GetComponent<Image>();
-            hud.fbiBarFillImg.color = Color.green;
+            hud.fbiBarFillImg.type = Image.Type.Filled;
+            hud.fbiBarFillImg.fillMethod = Image.FillMethod.Horizontal;
+            hud.fbiBarFillImg.fillOrigin = (int)Image.OriginHorizontal.Left;
+            hud.fbiBarFillImg.fillAmount = 0f;
+            hud.fbiBarFillImg.color = ControlDeskTheme.AccentRed;
 
-            // ============================================================
-            // PLATFORM RATING -- 1.0-5.0 star bar, top bar right area
-            // ============================================================
-            var platformRatingPanel = CreateUIPanel("PlatformRatingPanel", topBar);
-            platformRatingPanel.localPosition = new Vector3(450, -40, 0);
-            platformRatingPanel.sizeDelta = new Vector2(160, 40);
+            var runPanel = CreateShellPanel("RunPanel", topBar, new Vector2(280, 84), ControlDeskTheme.Panel);
+            SetAnchors(runPanel, new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(0.5f, 1));
+            runPanel.anchoredPosition = new Vector2(0, -22);
+
+            var runLabel = CreateTextElement("RunLabel", runPanel, "RUN STATE", 11);
+            runLabel.anchoredPosition = new Vector2(0, -16);
+            runLabel.sizeDelta = new Vector2(140, 18);
+            runLabel.GetComponent<TMP_Text>().color = ControlDeskTheme.TextMuted;
+
+            var turnObj = CreateTextElement("TurnCounter", runPanel, "Turn 1", 28);
+            turnObj.anchoredPosition = new Vector2(0, -42);
+            turnObj.sizeDelta = new Vector2(230, 34);
+            hud.turnText = turnObj.GetComponent<TMP_Text>();
+            hud.turnText.fontStyle = FontStyles.Bold;
+            hud.turnText.color = ControlDeskTheme.TextPrimary;
+
+            var seasonPanel = CreateUIPanel("SeasonPanel", runPanel);
+            SetAnchors(seasonPanel, new Vector2(0.5f, 0), new Vector2(0.5f, 0), new Vector2(0.5f, 0));
+            seasonPanel.anchoredPosition = new Vector2(0, 16);
+            seasonPanel.sizeDelta = new Vector2(220, 28);
+
+            var seasonNameRt = CreateTextElement("SeasonName", seasonPanel, "SPRING", 18);
+            seasonNameRt.anchoredPosition = new Vector2(-28, 0);
+            seasonNameRt.sizeDelta = new Vector2(132, 24);
+            hud.seasonNameText = seasonNameRt.GetComponent<TMP_Text>();
+            hud.seasonNameText.color = ControlDeskTheme.AccentGreen;
+            hud.seasonNameText.fontStyle = FontStyles.Bold;
+
+            var turnProgressRt = CreateTextElement("TurnProgress", seasonPanel, "1/25", 15);
+            turnProgressRt.anchoredPosition = new Vector2(74, 0);
+            turnProgressRt.sizeDelta = new Vector2(70, 22);
+            hud.seasonTurnText = turnProgressRt.GetComponent<TMP_Text>();
+            hud.seasonTurnText.color = ControlDeskTheme.TextMuted;
+
+            var seasonIndicator = seasonPanel.gameObject.AddComponent<SeasonIndicator>();
+            seasonIndicator.Init(hud.seasonNameText, hud.seasonTurnText);
+            hud.seasonIndicator = seasonIndicator;
+
+            var metricsPanel = CreateShellPanel("MetricsPanel", topBar, new Vector2(360, 98), ControlDeskTheme.Panel);
+            SetAnchors(metricsPanel, new Vector2(1, 1), new Vector2(1, 1), new Vector2(1, 1));
+            metricsPanel.anchoredPosition = new Vector2(-30, -22);
+
+            var platformRatingPanel = CreateShellPanel("PlatformRatingPanel", metricsPanel, new Vector2(156, 64), ControlDeskTheme.PanelSoft);
+            SetAnchors(platformRatingPanel, new Vector2(0, 0.5f), new Vector2(0, 0.5f), new Vector2(0, 0.5f));
+            platformRatingPanel.anchoredPosition = new Vector2(18, -6);
 
             var platformLabelRt = CreateTextElement("PlatformLabel", platformRatingPanel, "RATING", 12);
             platformLabelRt.anchoredPosition = new Vector2(0, 16);
             platformLabelRt.sizeDelta = new Vector2(160, 18);
-            platformLabelRt.GetComponent<TMP_Text>().color = new Color(0.7f, 0.7f, 0.7f);
+            platformLabelRt.GetComponent<TMP_Text>().color = ControlDeskTheme.TextMuted;
 
             var platformBarBg = CreateUIPanel("PlatformBarBg", platformRatingPanel);
             platformBarBg.anchoredPosition = new Vector2(0, -4);
             platformBarBg.sizeDelta = new Vector2(140, 12);
-            platformBarBg.GetComponent<Image>().color = new Color(0.2f, 0.2f, 0.2f);
+            platformBarBg.GetComponent<Image>().color = ControlDeskTheme.WithAlpha(Color.black, 0.4f);
 
             var platformBarFill = CreateUIPanel("PlatformBarFill", platformBarBg);
             platformBarFill.anchorMin = new Vector2(0, 0);
@@ -98,35 +157,32 @@ namespace EmpireOfCards.Bootstrap
             platformBarFill.sizeDelta = new Vector2(70f, 0); // 50% default (3.0/5.0)
             platformBarFill.anchoredPosition = Vector2.zero;
             hud.platformRatingBarFill = platformBarFill.GetComponent<Image>();
-            hud.platformRatingBarFill.color = new Color(0.3f, 0.75f, 1f);
+            hud.platformRatingBarFill.color = ControlDeskTheme.AccentBlue;
 
             var platformValueRt = CreateTextElement("PlatformValue", platformRatingPanel, "3.0", 18);
             platformValueRt.anchoredPosition = new Vector2(0, -18);
             platformValueRt.sizeDelta = new Vector2(160, 22);
             hud.platformRatingText = platformValueRt.GetComponent<TMP_Text>();
-            hud.platformRatingText.color = new Color(0.3f, 0.75f, 1f);
+            hud.platformRatingText.color = ControlDeskTheme.AccentBlue;
             hud.platformRatingText.fontStyle = FontStyles.Bold;
 
             var platformIndicator = topBar.gameObject.AddComponent<PlatformRatingIndicator>();
             platformIndicator.Init(hud.platformRatingBarFill, hud.platformRatingText);
             hud.platformRatingIndicator = platformIndicator;
 
-            // ============================================================
-            // LEGAL RISK BAR -- 0-100, color-coded, top bar right
-            // ============================================================
-            var legalRiskPanel = CreateUIPanel("LegalRiskPanel", topBar);
-            legalRiskPanel.localPosition = new Vector3(620, -40, 0);
-            legalRiskPanel.sizeDelta = new Vector2(160, 40);
+            var legalRiskPanel = CreateShellPanel("LegalRiskPanel", metricsPanel, new Vector2(156, 64), ControlDeskTheme.PanelSoft);
+            SetAnchors(legalRiskPanel, new Vector2(1, 0.5f), new Vector2(1, 0.5f), new Vector2(1, 0.5f));
+            legalRiskPanel.anchoredPosition = new Vector2(-18, -6);
 
             var legalLabelRt = CreateTextElement("LegalLabel", legalRiskPanel, "LEGAL RISK", 12);
             legalLabelRt.anchoredPosition = new Vector2(0, 16);
             legalLabelRt.sizeDelta = new Vector2(160, 18);
-            legalLabelRt.GetComponent<TMP_Text>().color = new Color(0.7f, 0.7f, 0.7f);
+            legalLabelRt.GetComponent<TMP_Text>().color = ControlDeskTheme.TextMuted;
 
             var legalBarBg = CreateUIPanel("LegalBarBg", legalRiskPanel);
             legalBarBg.anchoredPosition = new Vector2(0, -4);
             legalBarBg.sizeDelta = new Vector2(140, 12);
-            legalBarBg.GetComponent<Image>().color = new Color(0.2f, 0.2f, 0.2f);
+            legalBarBg.GetComponent<Image>().color = ControlDeskTheme.WithAlpha(Color.black, 0.4f);
 
             var legalBarFill = CreateUIPanel("LegalBarFill", legalBarBg);
             legalBarFill.anchorMin = new Vector2(0, 0);
@@ -135,65 +191,35 @@ namespace EmpireOfCards.Bootstrap
             legalBarFill.sizeDelta = new Vector2(0f, 0); // 0% default
             legalBarFill.anchoredPosition = Vector2.zero;
             hud.legalRiskBarFill = legalBarFill.GetComponent<Image>();
-            hud.legalRiskBarFill.color = new Color(0.2f, 0.85f, 0.35f); // Green at start
+            hud.legalRiskBarFill.color = ControlDeskTheme.AccentGreen;
 
             var legalValueRt = CreateTextElement("LegalValue", legalRiskPanel, "0", 18);
             legalValueRt.anchoredPosition = new Vector2(0, -18);
             legalValueRt.sizeDelta = new Vector2(160, 22);
             hud.legalRiskText = legalValueRt.GetComponent<TMP_Text>();
-            hud.legalRiskText.color = new Color(0.2f, 0.85f, 0.35f);
+            hud.legalRiskText.color = ControlDeskTheme.AccentGreen;
             hud.legalRiskText.fontStyle = FontStyles.Bold;
 
             var legalIndicator = topBar.gameObject.AddComponent<LegalRiskIndicator>();
             legalIndicator.Init(hud.legalRiskBarFill, hud.legalRiskText);
             hud.legalRiskIndicator = legalIndicator;
 
-            // ============================================================
-            // SEASON INDICATOR -- season name + turn X/25, below top bar
-            // ============================================================
-            var seasonPanel = CreateUIPanel("SeasonPanel", canvasGo.transform);
-            SetAnchors(seasonPanel, new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(0.5f, 1));
-            seasonPanel.anchoredPosition = new Vector2(0, -80);
-            seasonPanel.sizeDelta = new Vector2(300, 28);
-
-            var seasonNameRt = CreateTextElement("SeasonName", seasonPanel, "SPRING", 20);
-            seasonNameRt.anchoredPosition = new Vector2(-40, 0);
-            seasonNameRt.sizeDelta = new Vector2(160, 26);
-            hud.seasonNameText = seasonNameRt.GetComponent<TMP_Text>();
-            hud.seasonNameText.color = new Color(0.5f, 0.95f, 0.5f);
-            hud.seasonNameText.fontStyle = FontStyles.Bold;
-
-            var turnProgressRt = CreateTextElement("TurnProgress", seasonPanel, "1/25", 16);
-            turnProgressRt.anchoredPosition = new Vector2(90, 0);
-            turnProgressRt.sizeDelta = new Vector2(100, 26);
-            hud.seasonTurnText = turnProgressRt.GetComponent<TMP_Text>();
-            hud.seasonTurnText.color = new Color(0.75f, 0.75f, 0.75f);
-
-            var seasonIndicator = seasonPanel.gameObject.AddComponent<SeasonIndicator>();
-            seasonIndicator.Init(hud.seasonNameText, hud.seasonTurnText);
-            hud.seasonIndicator = seasonIndicator;
-
-            // ============================================================
-            // CUSTOMER MARKET BAR -- player (blue) vs rival (red), 100 customers
-            // Placed below the season indicator
-            // ============================================================
             var marketBarPanel = CreateUIPanel("CustomerMarketPanel", canvasGo.transform);
             SetAnchors(marketBarPanel, new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(0.5f, 1));
-            marketBarPanel.anchoredPosition = new Vector2(0, -114);
-            marketBarPanel.sizeDelta = new Vector2(500, 24);
+            marketBarPanel.anchoredPosition = new Vector2(0, -122);
+            marketBarPanel.sizeDelta = new Vector2(440, 34);
+            StylePanel(marketBarPanel, ControlDeskTheme.WithAlpha(ControlDeskTheme.PanelSoft, 0.8f));
 
             var marketLabelRt = CreateTextElement("MarketLabel", marketBarPanel, "MARKET", 11);
-            marketLabelRt.anchoredPosition = new Vector2(-230, 0);
-            marketLabelRt.sizeDelta = new Vector2(60, 22);
-            marketLabelRt.GetComponent<TMP_Text>().color = new Color(0.6f, 0.6f, 0.6f);
+            marketLabelRt.anchoredPosition = new Vector2(-176, 0);
+            marketLabelRt.sizeDelta = new Vector2(64, 22);
+            marketLabelRt.GetComponent<TMP_Text>().color = ControlDeskTheme.TextMuted;
 
-            // Background track (neutral gray)
             var marketTrackBg = CreateUIPanel("MarketTrack", marketBarPanel);
-            marketTrackBg.anchoredPosition = new Vector2(20, 0);
-            marketTrackBg.sizeDelta = new Vector2(380, 14);
-            marketTrackBg.GetComponent<Image>().color = new Color(0.25f, 0.25f, 0.25f);
+            marketTrackBg.anchoredPosition = new Vector2(18, 0);
+            marketTrackBg.sizeDelta = new Vector2(286, 12);
+            marketTrackBg.GetComponent<Image>().color = ControlDeskTheme.WithAlpha(Color.black, 0.42f);
 
-            // Player fill (left side, blue)
             var playerFill = CreateUIPanel("PlayerFill", marketTrackBg);
             playerFill.anchorMin = new Vector2(0, 0);
             playerFill.anchorMax = new Vector2(0, 1);
@@ -201,9 +227,8 @@ namespace EmpireOfCards.Bootstrap
             playerFill.sizeDelta = new Vector2(0f, 0);
             playerFill.anchoredPosition = Vector2.zero;
             hud.marketSharePlayerFill = playerFill.GetComponent<Image>();
-            hud.marketSharePlayerFill.color = new Color(0.25f, 0.55f, 1f); // Player blue
+            hud.marketSharePlayerFill.color = ControlDeskTheme.PlayerBlock;
 
-            // Rival fill (right side, red) -- anchored to right edge
             var rivalFill = CreateUIPanel("RivalFill", marketTrackBg);
             rivalFill.anchorMin = new Vector2(1, 0);
             rivalFill.anchorMax = new Vector2(1, 1);
@@ -211,74 +236,68 @@ namespace EmpireOfCards.Bootstrap
             rivalFill.sizeDelta = new Vector2(0f, 0);
             rivalFill.anchoredPosition = Vector2.zero;
             hud.marketShareRivalFill = rivalFill.GetComponent<Image>();
-            hud.marketShareRivalFill.color = new Color(0.9f, 0.2f, 0.2f); // Rival red
+            hud.marketShareRivalFill.color = ControlDeskTheme.RivalBlock;
 
-            // Score text
-            var marketScoreRt = CreateTextElement("MarketScore", marketBarPanel, "0 vs 0", 14);
-            marketScoreRt.anchoredPosition = new Vector2(230, 0);
-            marketScoreRt.sizeDelta = new Vector2(80, 22);
+            var marketScoreRt = CreateTextElement("MarketScore", marketBarPanel, "0 / 0", 14);
+            marketScoreRt.anchoredPosition = new Vector2(164, 0);
+            marketScoreRt.sizeDelta = new Vector2(90, 22);
             hud.marketShareText = marketScoreRt.GetComponent<TMP_Text>();
-            hud.marketShareText.color = new Color(0.85f, 0.85f, 0.85f);
+            hud.marketShareText.color = ControlDeskTheme.TextPrimary;
 
             var marketIndicator = marketBarPanel.gameObject.AddComponent<CustomerMarketIndicator>();
             marketIndicator.Init(hud.marketSharePlayerFill, hud.marketShareRivalFill, hud.marketShareText, marketTrackBg);
             hud.customerMarketIndicator = marketIndicator;
 
-            // Neglect warning (shows briefly when a business is neglected)
-            var neglectWarning = CreateTextElement("NeglectWarning", topBar, "", 20);
-            neglectWarning.anchoredPosition = new Vector2(0, -65);
-            neglectWarning.sizeDelta = new Vector2(500, 35);
+            var neglectWarning = CreateTextElement("NeglectWarning", topBar, "", 19);
+            SetAnchors(neglectWarning, new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(0.5f, 1));
+            neglectWarning.anchoredPosition = new Vector2(0, -160);
+            neglectWarning.sizeDelta = new Vector2(540, 28);
             var neglectTmp = neglectWarning.GetComponent<TMP_Text>();
-            neglectTmp.color = new Color(1f, 0.5f, 0.2f); // Orange warning
+            neglectTmp.color = ControlDeskTheme.AccentAmber;
             neglectTmp.fontStyle = FontStyles.Bold;
             hud.neglectWarningText = neglectTmp;
 
-            // ============================================================
-            // ACTION BAR -- action dots
-            // ============================================================
-            var actionBar = CreateUIPanel("ActionBar", canvasGo.transform);
+            var actionBar = CreateShellPanel("ActionBar", canvasGo.transform, new Vector2(250, 54), ControlDeskTheme.WithAlpha(ControlDeskTheme.Panel, 0.92f));
             SetAnchors(actionBar, new Vector2(0.5f, 0), new Vector2(0.5f, 0), new Vector2(0.5f, 0));
-            actionBar.anchoredPosition = new Vector2(0, 200);
-            actionBar.sizeDelta = new Vector2(200, 40);
+            actionBar.anchoredPosition = new Vector2(0, 124);
             hud.actionBarUI = actionBar.gameObject.AddComponent<ActionBarUI>();
 
-            // Action dots (3-5)
             hud.actionDotImages = new Image[5];
             for (int i = 0; i < 5; i++)
             {
                 var dot = CreateUIPanel($"ActionDot_{i + 1}", actionBar);
-                dot.sizeDelta = new Vector2(30, 30);
+                dot.sizeDelta = new Vector2(22, 22);
                 dot.localPosition = new Vector3((i - 2) * 35f, 0, 0);
                 hud.actionDotImages[i] = dot.GetComponent<Image>();
-                hud.actionDotImages[i].color = i < 3 ? Color.green : Color.gray;
+                hud.actionDotImages[i].color = i < 3 ? ControlDeskTheme.AccentGreen : ControlDeskTheme.WithAlpha(ControlDeskTheme.TextMuted, 0.35f);
                 if (i >= 3) dot.gameObject.SetActive(false);
             }
 
-            // ============================================================
-            // BUTTONS -- End Turn, Shop, Deck
-            // ============================================================
+            var utilityPanel = CreateShellPanel("UtilityPanel", canvasGo.transform, new Vector2(162, 108), ControlDeskTheme.WithAlpha(ControlDeskTheme.Panel, 0.92f));
+            SetAnchors(utilityPanel, new Vector2(0, 0), new Vector2(0, 0), new Vector2(0, 0));
+            utilityPanel.anchoredPosition = new Vector2(30, 34);
 
-            // End Turn Button - prominent and readable
-            var endTurnBtn = CreateButton("EndTurnButton", canvasGo.transform, "END TURN");
-            SetAnchors(endTurnBtn, new Vector2(1, 0), new Vector2(1, 0), new Vector2(1, 0));
-            endTurnBtn.anchoredPosition = new Vector2(-100, 200);
-            endTurnBtn.sizeDelta = new Vector2(180, 55);
-            endTurnBtn.GetComponentInChildren<TMP_Text>().fontSize = 24;
-            endTurnBtn.GetComponentInChildren<TMP_Text>().fontStyle = FontStyles.Bold;
-            hud.endTurnButton = endTurnBtn.GetComponent<Button>();
-
-            // Shop Button
-            var shopBtn = CreateButton("ShopButton", canvasGo.transform, "SHOP");
-            SetAnchors(shopBtn, new Vector2(0, 0), new Vector2(0, 0), new Vector2(0, 0));
-            shopBtn.anchoredPosition = new Vector2(100, 200);
-            shopBtn.sizeDelta = new Vector2(140, 50);
+            var shopBtn = CreateButton("ShopButton", utilityPanel, "SHOP");
+            SetAnchors(shopBtn, new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(0.5f, 1));
+            shopBtn.anchoredPosition = new Vector2(0, -16);
+            shopBtn.sizeDelta = new Vector2(126, 42);
+            StyleButton(shopBtn, ControlDeskTheme.WithAlpha(ControlDeskTheme.AccentGreen, 0.88f));
             hud.shopButton = shopBtn.GetComponent<Button>();
 
-            // Deck Button
-            var deckBtn = CreateButton("DeckButton", canvasGo.transform, "DECK: 14");
-            SetAnchors(deckBtn, new Vector2(0, 0), new Vector2(0, 0), new Vector2(0, 0));
-            deckBtn.anchoredPosition = new Vector2(100, 140);
-            deckBtn.sizeDelta = new Vector2(140, 40);
+            var deckBtn = CreateButton("DeckButton", utilityPanel, "DECK: 14");
+            SetAnchors(deckBtn, new Vector2(0.5f, 0), new Vector2(0.5f, 0), new Vector2(0.5f, 0));
+            deckBtn.anchoredPosition = new Vector2(0, 16);
+            deckBtn.sizeDelta = new Vector2(126, 34);
+            StyleButton(deckBtn, ControlDeskTheme.WithAlpha(ControlDeskTheme.PanelLine, 0.85f));
+
+            var endTurnBtn = CreateButton("EndTurnButton", canvasGo.transform, "END TURN");
+            SetAnchors(endTurnBtn, new Vector2(1, 0), new Vector2(1, 0), new Vector2(1, 0));
+            endTurnBtn.anchoredPosition = new Vector2(-30, 34);
+            endTurnBtn.sizeDelta = new Vector2(180, 60);
+            endTurnBtn.GetComponentInChildren<TMP_Text>().fontSize = 24;
+            endTurnBtn.GetComponentInChildren<TMP_Text>().fontStyle = FontStyles.Bold;
+            StyleButton(endTurnBtn, ControlDeskTheme.WithAlpha(ControlDeskTheme.AccentAmber, 0.92f));
+            hud.endTurnButton = endTurnBtn.GetComponent<Button>();
 
             // ============================================================
             // SHOP PANEL (hidden by default)
@@ -289,7 +308,7 @@ namespace EmpireOfCards.Bootstrap
             shopPanel.sizeDelta = Vector2.zero;
             shopPanel.offsetMin = Vector2.zero;
             shopPanel.offsetMax = Vector2.zero;
-            shopPanel.GetComponent<Image>().color = new Color(0.1f, 0.1f, 0.15f, 0.95f);
+            StylePanel(shopPanel, ControlDeskTheme.WithAlpha(ControlDeskTheme.Panel, 0.96f));
             hud.shopPanel = shopPanel.gameObject.AddComponent<ShopPanel>();
             shopPanel.gameObject.SetActive(false);
 
@@ -315,7 +334,7 @@ namespace EmpireOfCards.Bootstrap
                 shopCard.sizeDelta = new Vector2(160, 220);
                 shopCard.localPosition = new Vector3((i - 1) * 200f, -10, 0);
                 var cardBgImg = shopCard.GetComponent<Image>();
-                cardBgImg.color = new Color(0.25f, 0.25f, 0.3f);
+                cardBgImg.color = ControlDeskTheme.WithAlpha(ControlDeskTheme.PanelSoft, 0.96f);
 
                 // CanvasGroup for affordability dimming
                 shopCard.gameObject.AddComponent<CanvasGroup>();
@@ -360,7 +379,7 @@ namespace EmpireOfCards.Bootstrap
                 var buyBtn = CreateButton("BuyButton", shopCard, "BUY");
                 buyBtn.anchoredPosition = new Vector2(0, -80);
                 buyBtn.sizeDelta = new Vector2(100, 35);
-                buyBtn.GetComponent<Image>().color = new Color(0.2f, 0.6f, 0.3f);
+                StyleButton(buyBtn, ControlDeskTheme.WithAlpha(ControlDeskTheme.AccentGreen, 0.9f));
                 shopBuyButtons[i] = buyBtn.GetComponent<Button>();
 
                 // Wire CardUI serialized fields via reflection-free approach:
@@ -376,6 +395,7 @@ namespace EmpireOfCards.Bootstrap
             var shopCloseBtn = CreateButton("CloseButton", shopPanel, "CLOSE");
             shopCloseBtn.anchoredPosition = new Vector2(0, -200);
             shopCloseBtn.sizeDelta = new Vector2(120, 40);
+            StyleButton(shopCloseBtn, ControlDeskTheme.WithAlpha(ControlDeskTheme.PanelLine, 0.85f));
             hud.shopCloseButton = shopCloseBtn.GetComponent<Button>();
 
             // ============================================================
@@ -386,6 +406,7 @@ namespace EmpireOfCards.Bootstrap
             var comboPopup = CreateUIPanel("ComboPopup", canvasGo.transform);
             SetAnchors(comboPopup, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f));
             comboPopup.sizeDelta = new Vector2(600, 100);
+            StylePanel(comboPopup, ControlDeskTheme.WithAlpha(ControlDeskTheme.Panel, 0.92f));
             var comboCg = comboPopup.gameObject.AddComponent<CanvasGroup>();
             comboCg.alpha = 0f;
             hud.comboPopup = comboPopup.gameObject.AddComponent<ComboPopup>();
@@ -406,6 +427,7 @@ namespace EmpireOfCards.Bootstrap
             var eventPopup = CreateUIPanel("EventPopup", canvasGo.transform);
             SetAnchors(eventPopup, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f));
             eventPopup.sizeDelta = new Vector2(400, 300);
+            StylePanel(eventPopup, ControlDeskTheme.WithAlpha(ControlDeskTheme.Panel, 0.94f));
             var eventCg = eventPopup.gameObject.AddComponent<CanvasGroup>();
             eventCg.alpha = 0f;
             hud.eventPopup = eventPopup.gameObject.AddComponent<EventPopup>();
@@ -415,7 +437,7 @@ namespace EmpireOfCards.Bootstrap
             var rivalPopup = CreateUIPanel("RivalPopup", canvasGo.transform);
             SetAnchors(rivalPopup, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f));
             rivalPopup.sizeDelta = new Vector2(500, 200);
-            rivalPopup.GetComponent<Image>().color = new Color(0.1f, 0.1f, 0.15f, 0.9f);
+            StylePanel(rivalPopup, ControlDeskTheme.WithAlpha(ControlDeskTheme.Panel, 0.94f));
             var rivalCg = rivalPopup.gameObject.AddComponent<CanvasGroup>();
             rivalCg.alpha = 0f;
             hud.rivalPopup = rivalPopup.gameObject.AddComponent<RivalPopup>();
@@ -440,6 +462,7 @@ namespace EmpireOfCards.Bootstrap
             var tierPopupRt = CreateUIPanel("TierPopup", canvasGo.transform);
             SetAnchors(tierPopupRt, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f));
             tierPopupRt.sizeDelta = new Vector2(600, 200);
+            StylePanel(tierPopupRt, ControlDeskTheme.WithAlpha(ControlDeskTheme.Panel, 0.94f));
             var tierCg = tierPopupRt.gameObject.AddComponent<CanvasGroup>();
             tierCg.alpha = 0f;
             var tierPopup = tierPopupRt.gameObject.AddComponent<TierPopup>();
@@ -611,15 +634,46 @@ namespace EmpireOfCards.Bootstrap
             return rt;
         }
 
+        private static RectTransform CreateShellPanel(string name, Transform parent, Vector2 size, Color fillColor)
+        {
+            var panel = CreateUIPanel(name, parent);
+            panel.sizeDelta = size;
+            StylePanel(panel, fillColor);
+            return panel;
+        }
+
+        private static void StylePanel(RectTransform rt, Color fillColor)
+        {
+            var img = rt.GetComponent<Image>();
+            if (img != null)
+                img.color = fillColor;
+
+            var outline = rt.GetComponent<Outline>();
+            if (outline == null)
+                outline = rt.gameObject.AddComponent<Outline>();
+            outline.effectColor = ControlDeskTheme.WithAlpha(ControlDeskTheme.PanelLine, 0.9f);
+            outline.effectDistance = new Vector2(1.5f, -1.5f);
+        }
+
+        private static void RemoveOutline(RectTransform rt)
+        {
+            var outline = rt.GetComponent<Outline>();
+            if (outline != null)
+                outline.enabled = false;
+        }
+
         private static RectTransform CreateButton(string name, Transform parent, string label)
         {
             var go = new GameObject(name);
             go.transform.SetParent(parent, false);
             var rt = go.AddComponent<RectTransform>();
             var img = go.AddComponent<Image>();
-            img.color = new Color(0.2f, 0.5f, 0.3f);
+            img.color = ControlDeskTheme.WithAlpha(ControlDeskTheme.PanelLine, 0.9f);
             var btn = go.AddComponent<Button>();
             btn.targetGraphic = img;
+            var outline = go.AddComponent<Outline>();
+            outline.effectColor = ControlDeskTheme.WithAlpha(ControlDeskTheme.TextPrimary, 0.12f);
+            outline.effectDistance = new Vector2(1f, -1f);
 
             var textObj = new GameObject("Label");
             textObj.transform.SetParent(go.transform, false);
@@ -631,11 +685,23 @@ namespace EmpireOfCards.Bootstrap
             textRT.offsetMax = Vector2.zero;
             var text = textObj.AddComponent<TextMeshProUGUI>();
             text.text = label;
-            text.fontSize = 20;
+            text.fontSize = 18;
+            text.fontStyle = FontStyles.Bold;
             text.alignment = TextAlignmentOptions.Center;
-            text.color = Color.white;
+            text.color = ControlDeskTheme.TextPrimary;
 
             return rt;
+        }
+
+        private static void StyleButton(RectTransform rt, Color fillColor)
+        {
+            var img = rt.GetComponent<Image>();
+            if (img != null)
+                img.color = fillColor;
+
+            var outline = rt.GetComponent<Outline>();
+            if (outline != null)
+                outline.effectColor = ControlDeskTheme.WithAlpha(Color.black, 0.25f);
         }
 
         private static RectTransform CreateTextElement(string name, Transform parent, string content, int fontSize)
@@ -648,7 +714,7 @@ namespace EmpireOfCards.Bootstrap
             text.text = content;
             text.fontSize = fontSize;
             text.alignment = TextAlignmentOptions.Center;
-            text.color = Color.white;
+            text.color = ControlDeskTheme.TextPrimary;
             return rt;
         }
 
@@ -682,6 +748,7 @@ namespace EmpireOfCards.Bootstrap
         // TopBar sub-elements
         public TMP_Text moneyText;
         public TMP_Text turnText;
+        public TMP_Text companyTierText;
         public Image fbiBarFillImg;
         public TMP_Text neglectWarningText;
         public TMP_Text shopBiasText;

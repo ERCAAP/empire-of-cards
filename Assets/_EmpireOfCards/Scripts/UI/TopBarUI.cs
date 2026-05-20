@@ -31,6 +31,7 @@ namespace EmpireOfCards.UI
 
         [Header("Turn")]
         [SerializeField] private TMP_Text turnText;
+        [SerializeField] private TMP_Text companyTierText;
 
         [Header("FBI Risk")]
         [SerializeField] private Image fbiBarFill;
@@ -56,12 +57,16 @@ namespace EmpireOfCards.UI
         /// Assigns all sub-element references without reflection.
         /// Called by WiringService during bootstrap.
         /// </summary>
-        public void Init(TMP_Text money, TMP_Text turn, Image fbiFill, TMP_Text fbiText)
+        public void Init(TMP_Text money, TMP_Text turn, Image fbiFill, TMP_Text fbiText, TMP_Text tier = null)
         {
             this.moneyText = money;
             this.turnText = turn;
             this.fbiBarFill = fbiFill;
             this.fbiRiskText = fbiText;
+            this.companyTierText = tier;
+
+            if (companyTierText != null)
+                companyTierText.text = CompanyTier.Trader.ToString().ToUpperInvariant();
         }
 
         // ------------------------------------------------------------------
@@ -73,6 +78,7 @@ namespace EmpireOfCards.UI
             EventBus.OnMoneyChanged += OnMoneyChanged;
             EventBus.OnTurnStarted += OnTurnStarted;
             EventBus.OnFBIRiskChanged += OnFBIRiskChanged;
+            EventBus.OnCompanyTierChanged += OnCompanyTierChanged;
         }
 
         private void OnDisable()
@@ -80,6 +86,7 @@ namespace EmpireOfCards.UI
             EventBus.OnMoneyChanged -= OnMoneyChanged;
             EventBus.OnTurnStarted -= OnTurnStarted;
             EventBus.OnFBIRiskChanged -= OnFBIRiskChanged;
+            EventBus.OnCompanyTierChanged -= OnCompanyTierChanged;
         }
 
         private void Update()
@@ -163,6 +170,12 @@ namespace EmpireOfCards.UI
         private void OnFBIRiskChanged(float risk)
         {
             UpdateFBIRisk(risk);
+        }
+
+        private void OnCompanyTierChanged(CompanyTier tier)
+        {
+            if (companyTierText != null)
+                companyTierText.text = tier.ToString().ToUpperInvariant();
         }
 
         // ------------------------------------------------------------------

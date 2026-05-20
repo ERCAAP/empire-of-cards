@@ -8,6 +8,7 @@ using EmpireOfCards.UI.Cards;
 using EmpireOfCards.VFX;
 using EmpireOfCards.Helpers;
 using EmpireOfCards.Data;
+using EmpireOfCards.Presentation;
 
 namespace EmpireOfCards.Bootstrap
 {
@@ -131,13 +132,12 @@ namespace EmpireOfCards.Bootstrap
             }
 
             cam.orthographic = false;
-            cam.fieldOfView = 55f;
+            cam.fieldOfView = 49f;
             cam.nearClipPlane = 0.3f;
             cam.farClipPlane = 50f;
-            // Higher + wider FOV to show full board (16x14) + rival zone + hand cards
-            cam.transform.position = new Vector3(0f, 16f, -7f);
-            cam.transform.rotation = Quaternion.Euler(55f, 0f, 0f);
-            cam.backgroundColor = new Color(0.15f, 0.12f, 0.1f);
+            cam.transform.position = new Vector3(0f, 14.3f, -8.6f);
+            cam.transform.rotation = Quaternion.Euler(50f, 0f, 0f);
+            cam.backgroundColor = ControlDeskTheme.SceneBackground;
             cam.clearFlags = CameraClearFlags.SolidColor;
 
             if (cam.GetComponent<ScreenShake>() == null)
@@ -167,9 +167,8 @@ namespace EmpireOfCards.Bootstrap
         {
             var handAnchor = new GameObject("HandAnchor");
             // DO NOT parent to camera — use world space on the board surface
-            handAnchor.transform.position = new Vector3(0f, 1.0f, -3.5f);
-            // Slight tilt so cards face upward toward camera
-            handAnchor.transform.rotation = Quaternion.Euler(-20f, 0f, 0f);
+            handAnchor.transform.position = new Vector3(0f, 0.92f, -3.30f);
+            handAnchor.transform.rotation = Quaternion.Euler(-16f, 0f, 0f);
 
             var handGo = new GameObject("Hand3D");
             handGo.transform.SetParent(handAnchor.transform);
@@ -225,35 +224,35 @@ namespace EmpireOfCards.Bootstrap
         {
             // --- Ambient Light ---
             RenderSettings.ambientMode = UnityEngine.Rendering.AmbientMode.Flat;
-            RenderSettings.ambientLight = new Color(0.15f, 0.12f, 0.1f);
+            RenderSettings.ambientLight = ControlDeskTheme.AmbientWarm;
 
             // --- 1. Main Directional Light (Sun) ---
             var sunGo = new GameObject("Directional Light (Sun)");
             var sunLight = sunGo.AddComponent<Light>();
             sunLight.type = LightType.Directional;
-            sunLight.color = new Color(1.0f, 0.95f, 0.85f);
-            sunLight.intensity = 1.2f;
+            sunLight.color = new Color(1.0f, 0.92f, 0.82f);
+            sunLight.intensity = 1.35f;
             sunLight.shadows = LightShadows.Soft;
-            sunGo.transform.rotation = Quaternion.Euler(50f, -30f, 0f);
+            sunGo.transform.rotation = Quaternion.Euler(48f, -32f, 0f);
 
             // --- 2. Fill Light ---
             var fillGo = new GameObject("Directional Light (Fill)");
             var fillLight = fillGo.AddComponent<Light>();
             fillLight.type = LightType.Directional;
-            fillLight.color = new Color(0.7f, 0.8f, 1.0f);
-            fillLight.intensity = 0.3f;
+            fillLight.color = new Color(0.48f, 0.58f, 0.72f);
+            fillLight.intensity = 0.42f;
             fillLight.shadows = LightShadows.None;
-            fillGo.transform.rotation = Quaternion.Euler(30f, 150f, 0f);
+            fillGo.transform.rotation = Quaternion.Euler(24f, 148f, 0f);
 
             // --- 3. Point Light on Table Center ---
             var tableLightGo = new GameObject("Point Light (Table)");
             var tableLight = tableLightGo.AddComponent<Light>();
             tableLight.type = LightType.Point;
-            tableLight.color = new Color(1.0f, 0.85f, 0.6f);
-            tableLight.intensity = 2.0f;
-            tableLight.range = 12f;
+            tableLight.color = new Color(0.95f, 0.72f, 0.45f);
+            tableLight.intensity = 2.4f;
+            tableLight.range = 14f;
             tableLight.shadows = LightShadows.Soft;
-            tableLightGo.transform.position = new Vector3(0f, 3f, 1f);
+            tableLightGo.transform.position = new Vector3(0f, 3.6f, 0.8f);
 
             // --- 4. Global Volume (Post Processing) ---
             var volumeGo = new GameObject("--- POST PROCESSING ---");

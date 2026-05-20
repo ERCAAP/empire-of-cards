@@ -14,10 +14,13 @@ namespace EmpireOfCards.World
 
         private MeshRenderer _renderer;
         private Color _baseColor;
+        private Color _occupiedColor;
         private bool _isOccupied;
         private Card3D _placedCard;
         private bool _isPulsing;
         private Color _pulseColor;
+        private Color _validHighlightColor = new Color(0.2f, 0.9f, 0.3f, 1f);
+        private Color _invalidHighlightColor = new Color(0.9f, 0.2f, 0.2f, 1f);
         private GameObject _buildingVisual;
 
         public DropZoneType ZoneType => zoneType;
@@ -29,7 +32,12 @@ namespace EmpireOfCards.World
         private void Awake()
         {
             _renderer = GetComponent<MeshRenderer>();
-            if (_renderer != null) _baseColor = _renderer.material.color;
+            if (_renderer != null)
+            {
+                _baseColor = _renderer.material.color;
+                _occupiedColor = _baseColor;
+            }
+            _pulseColor = new Color(0.2f, 0.9f, 0.3f, 0.5f);
         }
 
         private void Update()
@@ -50,9 +58,21 @@ namespace EmpireOfCards.World
         {
             _isPulsing = on;
             if (!on && _renderer != null)
-                _renderer.material.color = _baseColor;
+                _renderer.material.color = _isOccupied ? _occupiedColor : _baseColor;
             else if (on)
-                _pulseColor = new Color(0.2f, 0.9f, 0.3f, 0.5f);
+                _pulseColor = new Color(_pulseColor.r, _pulseColor.g, _pulseColor.b, 0.55f);
+        }
+
+        public void ConfigureVisuals(Color baseColor, Color occupiedColor, Color pulseColor, Color validHighlightColor, Color invalidHighlightColor)
+        {
+            _baseColor = baseColor;
+            _occupiedColor = occupiedColor;
+            _pulseColor = pulseColor;
+            _validHighlightColor = validHighlightColor;
+            _invalidHighlightColor = invalidHighlightColor;
+
+            if (_renderer != null)
+                _renderer.material.color = _isOccupied ? _occupiedColor : _baseColor;
         }
 
         public bool CanAccept(CardData card)
@@ -140,6 +160,9 @@ namespace EmpireOfCards.World
 
             // Spawn a visual building placeholder based on slot type
             SpawnBuildingVisual(card);
+
+            if (_renderer != null)
+                _renderer.material.color = _occupiedColor;
         }
 
         public void RemoveCard()
@@ -152,6 +175,9 @@ namespace EmpireOfCards.World
                 Destroy(_buildingVisual);
                 _buildingVisual = null;
             }
+
+            if (_renderer != null)
+                _renderer.material.color = _baseColor;
         }
 
         private void SpawnBuildingVisual(Card3D card)
@@ -200,13 +226,11 @@ namespace EmpireOfCards.World
             {
                 // Direct hover highlight overrides pulse temporarily
                 _isPulsing = false;
-                _renderer.material.color = valid
-                    ? new Color(0.2f, 0.9f, 0.3f, 1f)
-                    : new Color(0.9f, 0.2f, 0.2f, 1f);
+                _renderer.material.color = valid ? _validHighlightColor : _invalidHighlightColor;
             }
             else
             {
-                _renderer.material.color = _baseColor;
+                _renderer.material.color = _isOccupied ? _occupiedColor : _baseColor;
             }
         }
 

@@ -3,6 +3,7 @@ using TMPro;
 using DG.Tweening;
 using EmpireOfCards.Data;
 using EmpireOfCards.Core;
+using EmpireOfCards.Presentation;
 
 namespace EmpireOfCards.World
 {
@@ -31,11 +32,11 @@ namespace EmpireOfCards.World
         private bool _isSnapping; // True while DOTween snap animation is running
 
         // Colors per card type
-        private static readonly Color BusinessColor = new Color(0.2f, 0.4f, 0.8f);
-        private static readonly Color EmployeeColor = new Color(0.2f, 0.7f, 0.3f);
-        private static readonly Color ActionColor = new Color(0.85f, 0.2f, 0.2f);
-        private static readonly Color UpgradeColor = new Color(0.6f, 0.2f, 0.8f);
-        private static readonly Color EventColor = new Color(0.9f, 0.8f, 0.15f);
+        private static readonly Color BusinessColor = ControlDeskTheme.OperationSlot;
+        private static readonly Color EmployeeColor = ControlDeskTheme.StaffSlot;
+        private static readonly Color ActionColor = ControlDeskTheme.ActionSlot;
+        private static readonly Color UpgradeColor = ControlDeskTheme.SupplierSlot;
+        private static readonly Color EventColor = ControlDeskTheme.EventSlot;
 
         // Properties
         public CardData CardData => _cardData;
@@ -98,11 +99,11 @@ namespace EmpireOfCards.World
                 CardType.Action => ActionColor,
                 CardType.Upgrade => UpgradeColor,
                 CardType.Event => EventColor,
-                _ => Color.gray
+                _ => ControlDeskTheme.PanelLine
             };
 
             if (_meshRenderer != null)
-                _meshRenderer.material.color = cardColor;
+                _meshRenderer.material.color = Color.Lerp(ControlDeskTheme.PanelSoft, cardColor, 0.45f);
 
             if (_nameText != null) _nameText.text = _cardData.cardName;
             if (_costText != null) _costText.text = _cardData.buyCost > 0 ? $"${_cardData.buyCost}" : "FREE";
@@ -112,7 +113,7 @@ namespace EmpireOfCards.World
             {
                 _statsText.text = _cardData.cardType switch
                 {
-                    CardType.Business => $"${_cardData.incomePerTurn}/turn  {_cardData.customersPerTurn} cust.",
+                    CardType.Business => $"${_cardData.incomePerTurn}/turn   {_cardData.customersPerTurn} cust.",
                     CardType.Employee => $"Salary: ${_cardData.salaryPerTurn}/turn",
                     CardType.Action => GetActionLabel(_cardData.actionEffectType),
                     CardType.Upgrade => GetUpgradeLabel(_cardData.upgradeEffectType),
@@ -127,14 +128,14 @@ namespace EmpireOfCards.World
         public void SetHovered(bool hovered)
         {
             _isHovered = hovered;
-            _targetScale = hovered ? Vector3.one * 1.15f : Vector3.one;
+            _targetScale = hovered ? Vector3.one * 1.08f : Vector3.one;
             if (_glowOutline != null) _glowOutline.SetActive(hovered);
         }
 
         public void SetDragging(bool dragging)
         {
             _isDragging = dragging;
-            _targetScale = dragging ? Vector3.one * 1.2f : Vector3.one;
+            _targetScale = dragging ? Vector3.one * 1.12f : Vector3.one;
 
             var col = GetComponent<Collider>();
             if (col != null) col.enabled = !dragging;

@@ -3,6 +3,7 @@ using UnityEngine.UI;
 using TMPro;
 using EmpireOfCards.Data;
 using EmpireOfCards.Core;
+using EmpireOfCards.Presentation;
 
 namespace EmpireOfCards.World
 {
@@ -25,7 +26,7 @@ namespace EmpireOfCards.World
         private const float CARD_THICKNESS = 0.03f;
 
         // Card text styling
-        private static readonly Color GoldColor = new Color(1f, 0.85f, 0.2f);
+        private static readonly Color GoldColor = ControlDeskTheme.MoneyGold;
 
         // Venture-type tint colors applied as a subtle overlay on the card body
         private static readonly Color FastFoodTint = new Color(0.85f, 0.35f, 0.15f);
@@ -50,6 +51,7 @@ namespace EmpireOfCards.World
 
             var meshRenderer = body.GetComponent<MeshRenderer>();
             meshRenderer.material = new Material(Shader.Find("Universal Render Pipeline/Lit"));
+            meshRenderer.material.color = ControlDeskTheme.PanelSoft;
 
             // Collider on root for raycasting (box matching card size)
             var col = go.AddComponent<BoxCollider>();
@@ -74,9 +76,24 @@ namespace EmpireOfCards.World
             float pixelToWorld = CARD_WIDTH / 200f; // 0.003
             canvasGo.transform.localScale = new Vector3(pixelToWorld, pixelToWorld, pixelToWorld);
 
+            var facePanel = CreatePanel(canvasGo.transform, "FacePanel",
+                new Vector2(0, 0), new Vector2(188, 262),
+                ControlDeskTheme.WithAlpha(ControlDeskTheme.Panel, 0.96f));
+
+            var accentPanel = CreatePanel(canvasGo.transform, "AccentBar",
+                new Vector2(0, 118), new Vector2(176, 18), GetCardAccent(data));
+
+            var costChip = CreatePanel(canvasGo.transform, "CostChip",
+                new Vector2(62, 93), new Vector2(58, 38),
+                ControlDeskTheme.WithAlpha(ControlDeskTheme.Darken(GoldColor, 0.55f), 0.95f));
+
+            var roleChip = CreatePanel(canvasGo.transform, "RoleChip",
+                new Vector2(0, -90), new Vector2(120, 24),
+                ControlDeskTheme.WithAlpha(ControlDeskTheme.Darken(GetCardAccent(data), 0.55f), 0.92f));
+
             // Card name (top center) - auto-sized to prevent truncation
             var nameText = CreateText(canvasGo.transform, "NameText",
-                new Vector2(0, 100), new Vector2(180, 45), 28, FontStyles.Bold, Color.white);
+                new Vector2(0, 74), new Vector2(166, 40), 26, FontStyles.Bold, ControlDeskTheme.TextPrimary);
             nameText.enableAutoSizing = true;
             nameText.fontSizeMin = 14;
             nameText.fontSizeMax = 28;
@@ -84,21 +101,25 @@ namespace EmpireOfCards.World
 
             // Cost (top right) - gold color for visibility
             var costText = CreateText(canvasGo.transform, "CostText",
-                new Vector2(70, 120), new Vector2(55, 32), 24, FontStyles.Bold, GoldColor);
+                new Vector2(62, 93), new Vector2(52, 30), 22, FontStyles.Bold, GoldColor);
 
             // Description (center) - larger and more readable
             var descText = CreateText(canvasGo.transform, "DescText",
-                new Vector2(0, -10), new Vector2(170, 120), 18, FontStyles.Normal, new Color(0.92f, 0.92f, 0.92f, 0.95f));
+                new Vector2(0, -4), new Vector2(164, 104), 17, FontStyles.Normal, ControlDeskTheme.TextPrimary);
             descText.enableAutoSizing = true;
             descText.fontSizeMin = 12;
             descText.fontSizeMax = 18;
 
             // Stats (bottom) - player-friendly summary
             var statsText = CreateText(canvasGo.transform, "StatsText",
-                new Vector2(0, -110), new Vector2(170, 40), 13, FontStyles.Normal, new Color(0.75f, 0.9f, 1f));
+                new Vector2(0, -118), new Vector2(164, 42), 12, FontStyles.Normal, ControlDeskTheme.TextMuted);
             statsText.enableAutoSizing = true;
             statsText.fontSizeMin = 10;
             statsText.fontSizeMax = 14;
+
+            var roleText = CreateText(canvasGo.transform, "RoleText",
+                new Vector2(0, -90), new Vector2(116, 20), 11, FontStyles.Bold, ControlDeskTheme.TextPrimary);
+            roleText.text = GetRoleLabel(data);
 
             // Glow outline (slightly larger card body, transparent)
             var glow = GameObject.CreatePrimitive(PrimitiveType.Cube);
@@ -133,12 +154,63 @@ namespace EmpireOfCards.World
             if (renderer == null || data == null) return;
 
             // Only tint cards that belong to a specific venture (not general cards)
-            if (data.isGeneralCard) return;
+            if (data.isGeneralCard)
+            {
+                renderer.material.color = ControlDeskTheme.Darken(ControlDeskTheme.PanelSoft, 0.05f);
+                return;
+            }
 
             Color ventureTint = GetVentureTint(data.ventureType);
-            // Blend: 70% original card-type color + 30% venture tint
+            // Blend toward a restrained desk palette rather than neon full-card color.
             Color baseColor = renderer.material.color;
-            renderer.material.color = Color.Lerp(baseColor, ventureTint, 0.3f);
+            renderer.material.color = Color.Lerp(baseColor, ventureTint, 0.16f);
+        }
+
+        private static Color GetCardAccent(CardData data)
+        {
+            if (data == null)
+                return ControlDeskTheme.PanelLine;
+
+            return data.cardType switch
+            {
+                CardType.Business => ControlDeskTheme.OperationSlot,
+                CardType.Employee => ControlDeskTheme.StaffSlot,
+                CardType.Action => ControlDeskTheme.ActionSlot,
+                CardType.Upgrade => ControlDeskTheme.SupplierSlot,
+                CardType.Event => ControlDeskTheme.EventSlot,
+                _ => ControlDeskTheme.PanelLine
+            };
+        }
+
+        private static string GetRoleLabel(CardData data)
+        {
+            if (data == null)
+                return string.Empty;
+
+            if (data.cardType == CardType.Business) return "OPERATIONS";
+            if (data.cardType == CardType.Employee) return "STAFF";
+            if (data.cardType == CardType.Upgrade) return "SUPPLIER";
+            if (data.cardType == CardType.Event) return "EVENT";
+
+            return data.targetSlotType switch
+            {
+                SlotType.Marketing => "MARKETING",
+                SlotType.Supplier => "SUPPLIER",
+                SlotType.TempEffect => "EVENT",
+                _ => "ACTION"
+            };
+        }
+
+        private static Image CreatePanel(Transform parent, string name, Vector2 pos, Vector2 size, Color color)
+        {
+            var go = new GameObject(name);
+            go.transform.SetParent(parent, false);
+            var rt = go.AddComponent<RectTransform>();
+            rt.anchoredPosition = pos;
+            rt.sizeDelta = size;
+            var img = go.AddComponent<Image>();
+            img.color = color;
+            return img;
         }
 
         private static Color GetVentureTint(VentureType venture)

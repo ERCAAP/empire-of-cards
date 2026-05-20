@@ -10,9 +10,9 @@ namespace EmpireOfCards.World
     {
         [Header("Hand Layout")]
         [SerializeField] private Transform handAnchor;
-        [SerializeField] private float cardSpacing = 0.8f;
-        [SerializeField] private float fanAngle = 8f;
-        [SerializeField] private float verticalArc = 0.15f;
+        [SerializeField] private float cardSpacing = 0.95f;
+        [SerializeField] private float fanAngle = 12f;
+        [SerializeField] private float verticalArc = 0.22f;
 
         private readonly List<Card3D> _cards = new List<Card3D>();
 
@@ -143,17 +143,18 @@ namespace EmpireOfCards.World
             int count = handCards.Count;
             if (count == 0) return;
 
-            float totalWidth = (count - 1) * cardSpacing;
+            float spacing = count >= 6 ? 0.82f : cardSpacing;
+            float totalWidth = (count - 1) * spacing;
             float startX = -totalWidth / 2f;
 
             for (int i = 0; i < count; i++)
             {
                 float t = count > 1 ? (float)i / (count - 1) : 0.5f;
-                float x = startX + i * cardSpacing;
+                float x = startX + i * spacing;
                 float y = -Mathf.Pow(t - 0.5f, 2) * 4f * verticalArc + verticalArc;
                 float angle = Mathf.Lerp(fanAngle, -fanAngle, t);
 
-                Vector3 localPos = new Vector3(x, y, -i * 0.02f);
+                Vector3 localPos = new Vector3(x, y, -i * 0.03f);
                 Vector3 worldPos = handAnchor.TransformPoint(localPos);
                 Quaternion rot = handAnchor.rotation * Quaternion.Euler(0, 0, angle);
 

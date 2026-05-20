@@ -11,8 +11,8 @@ namespace EmpireOfCards.Core
     {
         [Header("Raycast Settings")]
         [SerializeField] private Camera mainCamera;
-        [SerializeField] private float dragHeight = 1.5f;
-        [SerializeField] private float hoverHeight = 0.3f;
+        [SerializeField] private float dragHeight = 1.15f;
+        [SerializeField] private float hoverHeight = 0.18f;
 
         // State
         private Card3D _hoveredCard;
@@ -141,7 +141,7 @@ namespace EmpireOfCards.Core
             {
                 Vector3 worldPos = ray.GetPoint(dist);
                 _draggedCard.transform.position = Vector3.Lerp(
-                    _draggedCard.transform.position, worldPos, Time.deltaTime * 20f);
+                    _draggedCard.transform.position, worldPos, Time.deltaTime * 22f);
             }
 
             // Check slot hover - raycast all layers, check for SlotZone3D component
@@ -222,7 +222,7 @@ namespace EmpireOfCards.Core
             _cardOriginalRot = card.transform.rotation;
 
             card.SetDragging(true);
-            card.transform.rotation = Quaternion.Euler(0, 0, 0);
+            card.transform.rotation = Quaternion.Euler(18f, 0f, 0f);
 
             // Pulse all valid drop zones green while dragging
             var allSlots = FindObjectsByType<SlotZone3D>(FindObjectsSortMode.None);

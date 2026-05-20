@@ -16,8 +16,8 @@ namespace EmpireOfCards.UI
         [SerializeField] private Image[] actionDots;          // up to MAX_ACTIONS (5)
 
         [Header("Colors")]
-        [SerializeField] private Color filledColor = new Color(0.2f, 0.8f, 0.2f, 1f);
-        [SerializeField] private Color emptyColor = new Color(0.3f, 0.3f, 0.3f, 0.5f);
+        [SerializeField] private Color filledColor = new Color(0.36f, 0.88f, 0.50f, 1f);
+        [SerializeField] private Color emptyColor = new Color(0.65f, 0.63f, 0.58f, 0.28f);
 
         [Header("Pulse Animation")]
         [SerializeField] private float pulseScale = 1.3f;
