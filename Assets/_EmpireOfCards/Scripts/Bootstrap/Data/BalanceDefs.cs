@@ -84,23 +84,19 @@ namespace EmpireOfCards.Bootstrap.Data
             deck.presetName = "Starter Deck";
             deck.startingMoney = 500;
 
-            // Use venture-neutral (GEN) cards so FilterByVenture keeps them all
-            CardData gen01 = CardHelper.FindCard("GEN01_PopUpShop");
-            CardData gen03 = CardHelper.FindCard("GEN03_Intern");
-            CardData gen07 = CardHelper.FindCard("GEN07_SocialMediaAd");
-            CardData gen16 = CardHelper.FindCard("GEN16_BulkDealer");
+            // Legacy fallback starter deck used only when a venture profile is unavailable.
+            // Keep every card ID valid in the v4 runtime so bootstrap logs stay clean.
+            CardData baseOperation = CardHelper.FindCard("FF01");
+            CardData baseStaff = CardHelper.FindCard("TC03");
+            CardData baseMarketing = CardHelper.FindCard("NT01");
+            CardData baseSupplier = CardHelper.FindCard("NT02");
 
-            // 14 cards: general starter that works with any venture
-            // 2x Operation (Pop-Up Shop — cheap general business)
-            // 4x Staff (Intern — cheap general employee)
-            // 4x Marketing (Social Media Ad — cheap general action)
-            // 4x Supplier (Bulk Dealer — cheap general upgrade)
             deck.cards = new DeckEntry[]
             {
-                new DeckEntry { card = gen01, count = 2 },  // 2x Pop-Up Shop (basic operation)
-                new DeckEntry { card = gen03, count = 4 },  // 4x Intern (cheap staff)
-                new DeckEntry { card = gen07, count = 4 },  // 4x Social Media Ad (basic marketing)
-                new DeckEntry { card = gen16, count = 4 },  // 4x Bulk Dealer (basic supplier)
+                new DeckEntry { card = baseOperation, count = 2 },
+                new DeckEntry { card = baseStaff, count = 4 },
+                new DeckEntry { card = baseMarketing, count = 4 },
+                new DeckEntry { card = baseSupplier, count = 4 },
             };
 
             return deck;

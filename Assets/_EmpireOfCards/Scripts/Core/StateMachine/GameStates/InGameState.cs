@@ -26,13 +26,21 @@ namespace EmpireOfCards.Core.GameStates
                 return;
 
             int winCustomers = Constants.WIN_CUSTOMER_SHARE;
+            bool dominationActive = gm.CurrentTurn >= Constants.DOMINATION_CHECK_START_TURN;
 
-            if (WinLoseChecker.CheckWin(gm.PlayerCustomers, winCustomers))
+            if (dominationActive && WinLoseChecker.CheckWin(gm.PlayerCustomers, winCustomers))
             {
                 gm.EndRun(true);
                 return;
             }
-            if (WinLoseChecker.CheckLose(gm.RivalCustomers, winCustomers, gm.PlayerMoney))
+
+            if (gm.PlayerMoney <= 0)
+            {
+                gm.EndRun(false);
+                return;
+            }
+
+            if (dominationActive && gm.RivalCustomers >= winCustomers)
             {
                 gm.EndRun(false);
                 return;

@@ -171,7 +171,7 @@ namespace EmpireOfCards.UI
                     }
 
                     if (i < priceTexts.Length && priceTexts[i] != null)
-                        priceTexts[i].text = $"${shopManager.GetDiscountedPrice(currentStock[i])}";
+                        priceTexts[i].text = BuildPriceSummary(currentStock[i], shopManager.GetDiscountedPrice(currentStock[i]));
 
                     if (i < buyButtons.Length && buyButtons[i] != null)
                         buyButtons[i].interactable = true;
@@ -238,7 +238,18 @@ namespace EmpireOfCards.UI
             }
             else
             {
-                _biasText.text = "";
+                var pressure = GameManager.Instance != null && GameManager.Instance.EconomyManager != null
+                    ? GameManager.Instance.EconomyManager.CurrentPressure
+                    : BoardPressureType.None;
+                _biasText.text = pressure switch
+                {
+                    BoardPressureType.CapacityShortfall => "Shop read: low capacity detected.",
+                    BoardPressureType.LowRating => "Shop read: rating pressure rising.",
+                    BoardPressureType.HighLegalRisk => "Shop read: legal risk response.",
+                    BoardPressureType.LowCash => "Shop read: margin-saving options featured.",
+                    BoardPressureType.LowDemand => "Shop read: demand tools featured.",
+                    _ => ""
+                };
             }
         }
 
@@ -248,6 +259,18 @@ namespace EmpireOfCards.UI
                 return;
 
             shopManager.BuyCard(shopIndex);
+        }
+
+        private static string BuildPriceSummary(CardData card, int buyPrice)
+        {
+            if (card == null)
+                return string.Empty;
+
+            string upkeep = Mathf.Max(card.upkeepCostPerTurn, card.salaryPerTurn) > 0f
+                ? $"\nU:${Mathf.RoundToInt(Mathf.Max(card.upkeepCostPerTurn, card.salaryPerTurn))}"
+                : string.Empty;
+            string play = card.playCost > 0 ? $"  P:${card.playCost}" : string.Empty;
+            return $"B:${buyPrice}{play}{upkeep}";
         }
     }
 }

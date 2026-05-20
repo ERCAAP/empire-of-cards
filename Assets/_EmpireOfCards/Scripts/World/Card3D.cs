@@ -28,6 +28,7 @@ namespace EmpireOfCards.World
         private Vector3 _targetPos;
         private Quaternion _targetRot;
         private Vector3 _targetScale;
+        private Vector3 _baseScale = Vector3.one;
         private float _lerpSpeed = 12f;
         private bool _isSnapping; // True while DOTween snap animation is running
 
@@ -72,7 +73,8 @@ namespace EmpireOfCards.World
 
             _targetPos = transform.position;
             _targetRot = transform.rotation;
-            _targetScale = transform.localScale;
+            _baseScale = transform.localScale;
+            _targetScale = _baseScale;
 
             ApplyCardVisuals();
         }
@@ -106,36 +108,24 @@ namespace EmpireOfCards.World
                 _meshRenderer.material.color = Color.Lerp(ControlDeskTheme.PanelSoft, cardColor, 0.45f);
 
             if (_nameText != null) _nameText.text = _cardData.cardName;
-            if (_costText != null) _costText.text = _cardData.buyCost > 0 ? $"${_cardData.buyCost}" : "FREE";
+            if (_costText != null) _costText.text = BuildCostChip(_cardData);
             if (_descText != null) _descText.text = _cardData.description ?? "";
 
             if (_statsText != null)
-            {
-                _statsText.text = _cardData.cardType switch
-                {
-                    CardType.Business => $"${_cardData.incomePerTurn}/turn   {_cardData.customersPerTurn} cust.",
-                    CardType.Employee => $"Salary: ${_cardData.salaryPerTurn}/turn",
-                    CardType.Action => GetActionLabel(_cardData.actionEffectType),
-                    CardType.Upgrade => GetUpgradeLabel(_cardData.upgradeEffectType),
-                    CardType.Event => _cardData.eventDuration > 1
-                        ? $"Lasts {_cardData.eventDuration} turns"
-                        : "Lasts 1 turn",
-                    _ => ""
-                };
-            }
+                _statsText.text = BuildEconomicSummary(_cardData);
         }
 
         public void SetHovered(bool hovered)
         {
             _isHovered = hovered;
-            _targetScale = hovered ? Vector3.one * 1.08f : Vector3.one;
+            _targetScale = hovered ? _baseScale * 1.18f : _baseScale;
             if (_glowOutline != null) _glowOutline.SetActive(hovered);
         }
 
         public void SetDragging(bool dragging)
         {
             _isDragging = dragging;
-            _targetScale = dragging ? Vector3.one * 1.12f : Vector3.one;
+            _targetScale = dragging ? _baseScale * 1.26f : (_isHovered ? _baseScale * 1.18f : _baseScale);
 
             var col = GetComponent<Collider>();
             if (col != null) col.enabled = !dragging;
@@ -153,7 +143,8 @@ namespace EmpireOfCards.World
         /// </summary>
         public void SetBoardScale(float uniformScale)
         {
-            _targetScale = Vector3.one * uniformScale;
+            _baseScale = Vector3.one * uniformScale;
+            _targetScale = _isHovered ? _baseScale * 1.18f : _baseScale;
         }
 
         public void ReturnToOriginal(Vector3 pos, Quaternion rot)
@@ -168,6 +159,8 @@ namespace EmpireOfCards.World
             _targetPos = pos;
             _targetRot = rot;
             _isInHand = true;
+            _baseScale = Vector3.one * 1.08f;
+            _targetScale = _isHovered ? _baseScale * 1.18f : _baseScale;
         }
 
         /// <summary>
@@ -248,6 +241,41 @@ namespace EmpireOfCards.World
                 UpgradeEffectType.ReduceFBIRisk                => "Safety: -25% FBI",
                 UpgradeEffectType.ExtraAction                  => "Bonus: +1 Action",
                 _                                              => "Upgrade"
+            };
+        }
+
+        private static string BuildCostChip(CardData card)
+        {
+            if (card == null)
+                return string.Empty;
+
+            string buy = $"B {Mathf.Max(0, card.buyCost)}";
+            string play = card.playCost > 0 ? $" | P {card.playCost}" : string.Empty;
+            return buy + play;
+        }
+
+        private static string BuildEconomicSummary(CardData card)
+        {
+            if (card == null)
+                return string.Empty;
+
+            string upkeep = card.upkeepCostPerTurn > 0f
+                ? $"U {card.upkeepCostPerTurn:0}"
+                : card.salaryPerTurn > 0 ? $"U {card.salaryPerTurn}" : "U 0";
+
+            return card.cardType switch
+            {
+                CardType.Business => $"Demand {card.demandDelta:0.0} | Cap {card.capacityDelta:0.0} | {upkeep}",
+                CardType.Employee => $"Cap {card.capacityDelta:0.0} | Qual {card.qualityDelta:0.0} | {upkeep}",
+                CardType.Action => $"{GetActionLabel(card.actionEffectType)} | P {card.playCost}",
+                CardType.Upgrade when card.targetSlotType == SlotType.Marketing => $"Demand {card.demandDelta:0.0} | Rate {card.ratingDeltaPerTurn:+0.0;-0.0;0.0} | {upkeep}",
+                CardType.Upgrade when card.targetSlotType == SlotType.Supplier => $"Qual {card.qualityDelta:0.0} | Cash {card.cashDeltaPerTurn:+0.0;-0.0;0.0} | {upkeep}",
+                CardType.Upgrade when card.targetSlotType == SlotType.TempEffect => $"Temp {Mathf.Max(1, card.tempEffectDuration)}t | Rate {card.ratingDeltaPerTurn:+0.0;-0.0;0.0} | P {card.playCost}",
+                CardType.Upgrade => $"{GetUpgradeLabel(card.upgradeEffectType)} | {upkeep}",
+                CardType.Event => card.eventDuration > 1
+                    ? $"Crisis {card.eventDuration} turns"
+                    : "Crisis 1 turn",
+                _ => upkeep
             };
         }
     }

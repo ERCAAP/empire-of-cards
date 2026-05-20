@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using EmpireOfCards.Core;
 
 namespace EmpireOfCards.Data
 {
@@ -35,5 +36,41 @@ namespace EmpireOfCards.Data
             this.isMultiplier = isMultiplier;
             this.isNegative = isNegative;
         }
+    }
+
+    [System.Serializable]
+    public class TurnBriefData
+    {
+        public string headline;
+        public string detail;
+        public BoardPressureType pressure;
+        public int currentTurn;
+    }
+
+    [System.Serializable]
+    public class TurnReportData
+    {
+        public string headline;
+        public string summary;
+        public int netIncome;
+        public float ratingDelta;
+        public float marketShareDelta;
+        public List<string> reasons = new List<string>();
+    }
+
+    [System.Serializable]
+    public class RivalQueuedAction
+    {
+        public string cardId;
+        public string displayName;
+        public string laneLabel;
+        public string shortDescription;
+        public string moodIcon;
+        public float previewDelay = 0.6f;
+        public float resolveDelay = 0.7f;
+        public float pressureDelta;
+        public float ratingDelta;
+        public float qualityDelta;
+        public float demandSteal;
     }
 }

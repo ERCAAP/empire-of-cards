@@ -33,6 +33,12 @@ namespace EmpireOfCards.Gameplay
         [SerializeField] private float rivalRating = 3f;
         [SerializeField] private float rivalQuality = 5f;
         [SerializeField] private float rivalPressure = 0f;
+        [SerializeField] private float rivalMomentumCustomers = 0f;
+        [SerializeField] private string lastPlayedCardName;
+        [SerializeField] private string lastLaneLabel;
+        [SerializeField] private string lastPressureStyle;
+
+        private readonly List<RivalQueuedAction> _queuedActions = new List<RivalQueuedAction>();
 
         public int RivalMoney => rivalMoney;
         public int RivalCustomers => rivalCustomers;
@@ -41,6 +47,10 @@ namespace EmpireOfCards.Gameplay
         public string CurrentMood => "focused";
         public string MoodIcon => "!";
         public RivalData Data => data;
+        public IReadOnlyList<RivalQueuedAction> QueuedActions => _queuedActions;
+        public string LastPlayedCardName => lastPlayedCardName;
+        public string LastLaneLabel => lastLaneLabel;
+        public string LastPressureStyle => lastPressureStyle;
 
         public void Init(RivalData rivalData)
         {
@@ -62,6 +72,11 @@ namespace EmpireOfCards.Gameplay
             rivalRating = 3.2f;
             rivalQuality = 5f;
             rivalPressure = 0f;
+            rivalMomentumCustomers = 0f;
+            lastPlayedCardName = string.Empty;
+            lastLaneLabel = string.Empty;
+            lastPressureStyle = "balanced";
+            _queuedActions.Clear();
 
             rivalBusinesses.Clear();
             rivalBusinesses.Add(new RivalBusiness
@@ -92,12 +107,22 @@ namespace EmpireOfCards.Gameplay
                 ? gm.EconomyManager.Snapshot.marketShare
                 : gm.PlayerCustomers;
 
-            RivalMove move = DecideMove(playerShare, currentTurn);
-            ApplyMove(move, playerShare);
+            BuildQueuedActions(playerShare, currentTurn);
+            foreach (var action in _queuedActions)
+                ResolveQueuedAction(action, playerShare);
+            FinalizeQueuedTurn(playerShare);
+        }
 
-            rivalCustomers = Mathf.Clamp(Mathf.RoundToInt(100f - playerShare + rivalPressure), 0, 100);
+        public void FinalizeQueuedTurn(float playerShare)
+        {
+            var gm = GameManager.Instance;
+            if (gm == null)
+                return;
+
+            rivalCustomers = Mathf.Clamp(Mathf.RoundToInt(100f - playerShare + rivalPressure + rivalMomentumCustomers), 0, 100);
             rivalIncome = Mathf.RoundToInt(45f + rivalQuality * 6f + rivalRating * 8f);
             rivalMoney += Mathf.Max(10, rivalIncome / 4);
+            rivalMomentumCustomers = 0f;
 
             if (rivalBusinesses.Count > 0)
             {
@@ -108,8 +133,16 @@ namespace EmpireOfCards.Gameplay
                 lead.qualityScore = rivalQuality;
             }
 
-            EventBus.RivalActed(GetMoveDescription(move));
-            EventBus.RivalMoodChanged(move.ToString());
+            if (_queuedActions.Count > 0)
+            {
+                lastPlayedCardName = _queuedActions[_queuedActions.Count - 1].displayName;
+                lastLaneLabel = _queuedActions[_queuedActions.Count - 1].laneLabel;
+                lastPressureStyle = _queuedActions[_queuedActions.Count - 1].shortDescription;
+            }
+
+            gm.EconomyManager?.RegisterRivalPressure(rivalPressure, lastPressureStyle);
+            EventBus.RivalActed(_queuedActions.Count > 0 ? DescribeAction(_queuedActions[_queuedActions.Count - 1]) : "Rival adapts.");
+            EventBus.RivalMoodChanged(lastPressureStyle);
         }
 
         public void RespondToPoach_Accept() { }
@@ -168,6 +201,25 @@ namespace EmpireOfCards.Gameplay
             rivalCustomers = 0;
             totalRivalEmployees = 0;
             rivalPressure = 0f;
+            rivalMomentumCustomers = 0f;
+            _queuedActions.Clear();
+        }
+
+        public List<RivalQueuedAction> BuildQueuedActions(float playerShare, int currentTurn)
+        {
+            _queuedActions.Clear();
+            rivalPressure = Mathf.Max(0f, rivalPressure * 0.65f);
+
+            RivalMove primaryMove = DecideMove(playerShare, currentTurn);
+            _queuedActions.Add(BuildAction(primaryMove));
+
+            if (currentTurn >= 8 || playerShare >= 46f)
+            {
+                RivalMove secondaryMove = ChooseSecondaryMove(primaryMove, currentTurn);
+                _queuedActions.Add(BuildAction(secondaryMove));
+            }
+
+            return _queuedActions;
         }
 
         private RivalMove DecideMove(float playerShare, int currentTurn)
@@ -187,43 +239,83 @@ namespace EmpireOfCards.Gameplay
             return RivalMove.QualityImprove;
         }
 
-        private void ApplyMove(RivalMove move, float playerShare)
+        private RivalMove ChooseSecondaryMove(RivalMove primaryMove, int currentTurn)
         {
-            switch (move)
+            if (primaryMove == RivalMove.MarketingBlitz)
+                return activeVenture == VentureType.TechApp ? RivalMove.QualityImprove : RivalMove.PriceWar;
+            if (primaryMove == RivalMove.PriceWar)
+                return RivalMove.StaffPoach;
+            if (primaryMove == RivalMove.OpenBranch)
+                return RivalMove.MarketingBlitz;
+            if (activeVenture == VentureType.TechApp && currentTurn >= 12)
+                return RivalMove.SeekInvestment;
+            return RivalMove.QualityImprove;
+        }
+
+        private RivalQueuedAction BuildAction(RivalMove move)
+        {
+            string lane = move switch
             {
-                case RivalMove.PriceWar:
-                    rivalPressure += 4f;
-                    rivalCustomers += 5;
+                RivalMove.MarketingBlitz => "Growth Lane",
+                RivalMove.PriceWar => "Price Lane",
+                RivalMove.QualityImprove => "Quality Lane",
+                RivalMove.StaffPoach => "Staff Lane",
+                RivalMove.SeekInvestment => "Capital Lane",
+                RivalMove.OpenBranch => "Expansion Lane",
+                RivalMove.Sabotage => "Risk Lane",
+                _ => "Pressure Lane"
+            };
+
+            return new RivalQueuedAction
+            {
+                cardId = $"{activeVenture}_{move}",
+                displayName = GetMoveCardName(move),
+                laneLabel = lane,
+                shortDescription = GetMoveDescription(move),
+                moodIcon = GetMoveMood(move),
+                pressureDelta = GetPressureDelta(move),
+                ratingDelta = move == RivalMove.MarketingBlitz ? 0.35f : move == RivalMove.QualityImprove ? 0.15f : 0f,
+                qualityDelta = move == RivalMove.QualityImprove ? 0.45f : 0f,
+                demandSteal = move == RivalMove.PriceWar ? 5f : move == RivalMove.MarketingBlitz ? 4f : move == RivalMove.OpenBranch ? 6f : 2f
+            };
+        }
+
+        public void ResolveQueuedAction(RivalQueuedAction action, float playerShare)
+        {
+            if (action == null)
+                return;
+
+            lastPlayedCardName = action.displayName;
+            lastLaneLabel = action.laneLabel;
+            lastPressureStyle = action.shortDescription;
+
+            rivalPressure += action.pressureDelta;
+            rivalRating = Mathf.Clamp(rivalRating + action.ratingDelta, 1f, 5f);
+            rivalQuality = Mathf.Clamp(rivalQuality + action.qualityDelta, 0f, 10f);
+
+            if (action.displayName.Contains("Poach") && playerShare > 45f)
+                rivalMomentumCustomers += 3f;
+            else
+                rivalMomentumCustomers += action.demandSteal;
+
+            switch (action.displayName)
+            {
+                case "Price Drop Campaign":
+                    rivalMomentumCustomers += 2f;
                     break;
-                case RivalMove.MarketingBlitz:
-                    rivalRating = Mathf.Clamp(rivalRating + 0.35f, 1f, 5f);
-                    rivalPressure += 5f;
-                    rivalCustomers += 4;
-                    break;
-                case RivalMove.QualityImprove:
-                    rivalQuality = Mathf.Clamp(rivalQuality + 0.45f, 0f, 10f);
-                    rivalRating = Mathf.Clamp(rivalRating + 0.15f, 1f, 5f);
-                    break;
-                case RivalMove.StaffPoach:
-                    rivalPressure += 2f;
-                    totalRivalEmployees++;
-                    if (playerShare > 45f)
-                        rivalCustomers += 3;
-                    break;
-                case RivalMove.SeekInvestment:
+                case "Funding Round":
                     rivalMoney += 120;
-                    rivalPressure += 1f;
                     break;
-                case RivalMove.OpenBranch:
-                    rivalCustomers += 6;
+                case "Expansion Lease":
                     rivalIncome += 15;
-                    rivalPressure += 3f;
                     break;
-                case RivalMove.Sabotage:
+                case "Staff Poach":
+                    totalRivalEmployees++;
+                    break;
+                case "Ops Disruption":
                     var gm = GameManager.Instance;
                     if (gm != null && gm.BoardManager != null)
                         gm.BoardManager.SetProductionDisabledNextTurn(true);
-                    rivalPressure += 2f;
                     break;
             }
         }
@@ -245,14 +337,64 @@ namespace EmpireOfCards.Gameplay
         {
             return move switch
             {
-                RivalMove.PriceWar => "Rival starts a price war.",
-                RivalMove.MarketingBlitz => "Rival launches a marketing blitz.",
-                RivalMove.QualityImprove => "Rival improves product quality.",
+                RivalMove.PriceWar => "Rival cuts price to drag demand away.",
+                RivalMove.MarketingBlitz => "Rival buys visibility and review momentum.",
+                RivalMove.QualityImprove => "Rival invests in quality and trust.",
                 RivalMove.StaffPoach => "Rival pressures your staffing edge.",
-                RivalMove.SeekInvestment => "Rival secures new funding.",
-                RivalMove.OpenBranch => "Rival expands its footprint.",
-                RivalMove.Sabotage => "Rival triggers operational pressure.",
+                RivalMove.SeekInvestment => "Rival secures new capital to stay aggressive.",
+                RivalMove.OpenBranch => "Rival expands footprint into your district.",
+                RivalMove.Sabotage => "Rival pushes operational disruption.",
                 _ => "Rival adapts."
+            };
+        }
+
+        private string DescribeAction(RivalQueuedAction action)
+        {
+            return $"{action.displayName} -> {action.laneLabel}";
+        }
+
+        private string GetMoveCardName(RivalMove move)
+        {
+            return move switch
+            {
+                RivalMove.PriceWar => "Price Drop Campaign",
+                RivalMove.MarketingBlitz => "Visibility Blitz",
+                RivalMove.QualityImprove => "Quality Sprint",
+                RivalMove.StaffPoach => "Staff Poach",
+                RivalMove.SeekInvestment => "Funding Round",
+                RivalMove.OpenBranch => "Expansion Lease",
+                RivalMove.Sabotage => "Ops Disruption",
+                _ => "Pressure Shift"
+            };
+        }
+
+        private string GetMoveMood(RivalMove move)
+        {
+            return move switch
+            {
+                RivalMove.PriceWar => "$",
+                RivalMove.MarketingBlitz => "AD",
+                RivalMove.QualityImprove => "Q",
+                RivalMove.StaffPoach => "HR",
+                RivalMove.SeekInvestment => "VC",
+                RivalMove.OpenBranch => "++",
+                RivalMove.Sabotage => "!",
+                _ => "..."
+            };
+        }
+
+        private float GetPressureDelta(RivalMove move)
+        {
+            return move switch
+            {
+                RivalMove.PriceWar => 4.5f,
+                RivalMove.MarketingBlitz => 5.2f,
+                RivalMove.QualityImprove => 2.4f,
+                RivalMove.StaffPoach => 2.8f,
+                RivalMove.SeekInvestment => 1.4f,
+                RivalMove.OpenBranch => 3.4f,
+                RivalMove.Sabotage => 2.1f,
+                _ => 1f
             };
         }
     }

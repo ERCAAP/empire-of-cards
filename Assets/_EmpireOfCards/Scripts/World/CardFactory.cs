@@ -21,8 +21,8 @@ namespace EmpireOfCards.World
         }
 
         // Card dimensions in world units
-        private const float CARD_WIDTH = 0.6f;
-        private const float CARD_HEIGHT = 0.85f;
+        private const float CARD_WIDTH = 0.72f;
+        private const float CARD_HEIGHT = 1.02f;
         private const float CARD_THICKNESS = 0.03f;
 
         // Card text styling
@@ -71,29 +71,29 @@ namespace EmpireOfCards.World
             canvas.renderMode = RenderMode.WorldSpace;
 
             var canvasRT = canvas.GetComponent<RectTransform>();
-            canvasRT.sizeDelta = new Vector2(200, 280);
+            canvasRT.sizeDelta = new Vector2(220, 320);
             // Scale canvas so 200px = CARD_WIDTH world units
-            float pixelToWorld = CARD_WIDTH / 200f; // 0.003
+            float pixelToWorld = CARD_WIDTH / 220f;
             canvasGo.transform.localScale = new Vector3(pixelToWorld, pixelToWorld, pixelToWorld);
 
             var facePanel = CreatePanel(canvasGo.transform, "FacePanel",
-                new Vector2(0, 0), new Vector2(188, 262),
+                new Vector2(0, 0), new Vector2(206, 296),
                 ControlDeskTheme.WithAlpha(ControlDeskTheme.Panel, 0.96f));
 
             var accentPanel = CreatePanel(canvasGo.transform, "AccentBar",
-                new Vector2(0, 118), new Vector2(176, 18), GetCardAccent(data));
+                new Vector2(0, 134), new Vector2(192, 18), GetCardAccent(data));
 
             var costChip = CreatePanel(canvasGo.transform, "CostChip",
-                new Vector2(62, 93), new Vector2(58, 38),
+                new Vector2(68, 108), new Vector2(72, 42),
                 ControlDeskTheme.WithAlpha(ControlDeskTheme.Darken(GoldColor, 0.55f), 0.95f));
 
             var roleChip = CreatePanel(canvasGo.transform, "RoleChip",
-                new Vector2(0, -90), new Vector2(120, 24),
+                new Vector2(0, -110), new Vector2(132, 24),
                 ControlDeskTheme.WithAlpha(ControlDeskTheme.Darken(GetCardAccent(data), 0.55f), 0.92f));
 
             // Card name (top center) - auto-sized to prevent truncation
             var nameText = CreateText(canvasGo.transform, "NameText",
-                new Vector2(0, 74), new Vector2(166, 40), 26, FontStyles.Bold, ControlDeskTheme.TextPrimary);
+                new Vector2(0, 86), new Vector2(184, 44), 28, FontStyles.Bold, ControlDeskTheme.TextPrimary);
             nameText.enableAutoSizing = true;
             nameText.fontSizeMin = 14;
             nameText.fontSizeMax = 28;
@@ -101,24 +101,24 @@ namespace EmpireOfCards.World
 
             // Cost (top right) - gold color for visibility
             var costText = CreateText(canvasGo.transform, "CostText",
-                new Vector2(62, 93), new Vector2(52, 30), 22, FontStyles.Bold, GoldColor);
+                new Vector2(68, 108), new Vector2(66, 34), 16, FontStyles.Bold, GoldColor);
 
             // Description (center) - larger and more readable
             var descText = CreateText(canvasGo.transform, "DescText",
-                new Vector2(0, -4), new Vector2(164, 104), 17, FontStyles.Normal, ControlDeskTheme.TextPrimary);
+                new Vector2(0, 0), new Vector2(182, 116), 18, FontStyles.Normal, ControlDeskTheme.TextPrimary);
             descText.enableAutoSizing = true;
             descText.fontSizeMin = 12;
             descText.fontSizeMax = 18;
 
             // Stats (bottom) - player-friendly summary
             var statsText = CreateText(canvasGo.transform, "StatsText",
-                new Vector2(0, -118), new Vector2(164, 42), 12, FontStyles.Normal, ControlDeskTheme.TextMuted);
+                new Vector2(0, -132), new Vector2(184, 48), 13, FontStyles.Normal, ControlDeskTheme.TextMuted);
             statsText.enableAutoSizing = true;
             statsText.fontSizeMin = 10;
             statsText.fontSizeMax = 14;
 
             var roleText = CreateText(canvasGo.transform, "RoleText",
-                new Vector2(0, -90), new Vector2(116, 20), 11, FontStyles.Bold, ControlDeskTheme.TextPrimary);
+                new Vector2(0, -110), new Vector2(126, 20), 11, FontStyles.Bold, ControlDeskTheme.TextPrimary);
             roleText.text = GetRoleLabel(data);
 
             // Glow outline (slightly larger card body, transparent)

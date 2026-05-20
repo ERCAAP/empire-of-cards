@@ -43,8 +43,6 @@ namespace EmpireOfCards.UI
             new Color(0.3f, 0.7f, 0.35f)   // GroceryStore - green
         };
 
-        private static readonly string[] VentureEmojis = { "🍔", "☕", "📱", "👗", "🛒" };
-
         /// <summary>
         /// Assigns UI element references at runtime (since SerializeField can't
         /// be set on components added via AddComponent).

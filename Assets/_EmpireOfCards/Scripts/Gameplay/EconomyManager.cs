@@ -26,6 +26,8 @@ namespace EmpireOfCards.Gameplay
         [Header("Venture Snapshot")]
         [SerializeField] private VentureBoardSnapshot snapshot = new VentureBoardSnapshot();
         [SerializeField] private BoardPressureType currentPressure;
+        [SerializeField] private TurnBriefData currentBrief = new TurnBriefData();
+        [SerializeField] private TurnReportData lastReport = new TurnReportData();
 
         private VentureEconomyProfile _activeProfile;
         private AbilitySystem abilitySystem;
@@ -40,6 +42,8 @@ namespace EmpireOfCards.Gameplay
         private float _investorDebtPercent;
         private int _investorDebtTurns;
         private bool _cashCrisis;
+        private float _rivalPressureImpact;
+        private string _rivalPressureStyle = "balanced";
 
         public int GrossIncome => grossIncome;
         public int TotalSalaries => totalSalaries;
@@ -57,6 +61,10 @@ namespace EmpireOfCards.Gameplay
         public TaxPeriodSystem TaxPeriodSystem => taxPeriodSystem;
         public VentureBoardSnapshot Snapshot => snapshot;
         public BoardPressureType CurrentPressure => currentPressure;
+        public TurnBriefData CurrentBrief => currentBrief;
+        public TurnReportData LastReport => lastReport;
+        public float RivalPressureImpact => _rivalPressureImpact;
+        public string RivalPressureStyle => _rivalPressureStyle;
 
         public void Init(GameBalanceData balance, BoardManager board, ComboSystem combo,
             AbilitySystem ability = null, SlotManager slots = null)
@@ -96,6 +104,7 @@ namespace EmpireOfCards.Gameplay
             EventBus.PlatformRatingChanged(snapshot.rating);
             EventBus.LegalRiskUpdated(Mathf.RoundToInt(snapshot.legalRisk));
             EventBus.CashBalanceChanged(Mathf.RoundToInt(snapshot.cash));
+            UpdatePressure(0f, 0, 0);
         }
 
         public void ProcessEndOfTurn()
@@ -109,6 +118,9 @@ namespace EmpireOfCards.Gameplay
             var marketing = boardManager.GetCardsInSlotType(SlotType.Marketing);
             var suppliers = boardManager.GetCardsInSlotType(SlotType.Supplier);
             var temp = boardManager.GetCardsInSlotType(SlotType.TempEffect);
+            float previousCash = snapshot.cash;
+            float previousRating = snapshot.rating;
+            float previousMarketShare = snapshot.marketShare;
 
             float opDemand = Sum(operations, c => c.demandDelta + c.customersPerTurn * 0.2f);
             float marketingDemand = Sum(marketing, c => c.demandDelta);
@@ -179,30 +191,37 @@ namespace EmpireOfCards.Gameplay
             if (abilitySystem != null && abilitySystem.IncomeMultiplier != 1f)
                 netIncome = Mathf.RoundToInt(netIncome * abilitySystem.IncomeMultiplier);
 
-            snapshot.cash += netIncome;
             totalCustomersThisTurn = Mathf.RoundToInt(servedDemand * 6f);
 
             snapshot.marketShare = Mathf.Clamp(
                 snapshot.marketShare +
                 ((snapshot.rating - 3f) * 2f) +
                 ((snapshot.quality - 5f) * 1.5f) +
-                (servedDemand - overload) * 0.5f,
+                (servedDemand - overload) * 0.5f -
+                (_rivalPressureImpact * 1.15f),
                 0f, 100f);
 
             UpdateDerivedMetrics(servedDemand, overload, suppliers.Count, marketing.Count, temp);
             UpdatePressure(overload, marketing.Count, staff.Count);
-            UpdateCashCrisis();
 
             gm.SetPlayerCustomers(Mathf.RoundToInt(snapshot.marketShare));
-            EventBus.PlatformRatingChanged(snapshot.rating);
-            EventBus.LegalRiskUpdated(Mathf.RoundToInt(snapshot.legalRisk));
-            EventBus.CashBalanceChanged(Mathf.RoundToInt(snapshot.cash));
-            EventBus.MarketShareUpdated(Mathf.RoundToInt(snapshot.marketShare), gm.RivalCustomers);
-
             if (netIncome > 0)
                 gm.GainMoney(netIncome);
             else if (netIncome < 0)
                 gm.AdjustMoney(netIncome);
+
+            snapshot.cash = gm.PlayerMoney;
+            snapshot.activeCrisisTags = CollectActiveCrisisTags(temp);
+            UpdateCashCrisis();
+
+            EventBus.PlatformRatingChanged(snapshot.rating);
+            EventBus.LegalRiskUpdated(Mathf.RoundToInt(snapshot.legalRisk));
+            EventBus.CashBalanceChanged(Mathf.RoundToInt(snapshot.cash));
+            EventBus.MarketShareUpdated(Mathf.RoundToInt(snapshot.marketShare), gm.RivalCustomers);
+            EventBus.OrganicCustomersGained(Mathf.RoundToInt(organicDemand * 4f));
+            EventBus.IncomeBreakdownReported(BuildIncomeBreakdown(grossIncome, totalSalaries, upkeepCosts, taxAmount, netIncome));
+            lastReport = BuildTurnReport(previousCash, previousRating, previousMarketShare, overload, grossIncome, totalSalaries, upkeepCosts, taxAmount);
+            EventBus.TurnReportGenerated(lastReport);
         }
 
         public int CalculateTurnIncome(IReadOnlyList<ActiveBusiness> businesses, CardData activeEvent)
@@ -302,6 +321,36 @@ namespace EmpireOfCards.Gameplay
             EventBus.CashBalanceChanged(newBalance);
         }
 
+        public void SyncCashFromResources(int newBalance)
+        {
+            if (snapshot == null)
+                snapshot = new VentureBoardSnapshot();
+
+            snapshot.cash = newBalance;
+            EventBus.CashBalanceChanged(newBalance);
+        }
+
+        public void RegisterRivalPressure(float pressureImpact, string pressureStyle)
+        {
+            _rivalPressureImpact = Mathf.Max(0f, pressureImpact);
+            if (!string.IsNullOrWhiteSpace(pressureStyle))
+                _rivalPressureStyle = pressureStyle;
+        }
+
+        public TurnBriefData GenerateTurnBrief(int currentTurn)
+        {
+            currentBrief = new TurnBriefData
+            {
+                currentTurn = currentTurn,
+                pressure = currentPressure,
+                headline = GetBriefHeadline(currentPressure),
+                detail = GetBriefDetail(currentPressure)
+            };
+
+            EventBus.TurnBriefGenerated(currentBrief);
+            return currentBrief;
+        }
+
         public void Reset()
         {
             grossIncome = 0;
@@ -313,6 +362,8 @@ namespace EmpireOfCards.Gameplay
             _investorDebtTurns = 0;
             _cashCrisis = false;
             currentPressure = BoardPressureType.None;
+            _rivalPressureImpact = 0f;
+            _rivalPressureStyle = "balanced";
             if (_activeProfile != null)
                 SetActiveProfile(_activeProfile);
         }
@@ -399,6 +450,119 @@ namespace EmpireOfCards.Gameplay
             }
 
             currentPressure = BoardPressureType.None;
+        }
+
+        private IncomeBreakdown BuildIncomeBreakdown(int gross, int salaries, int upkeep, int tax, int net)
+        {
+            var breakdown = new IncomeBreakdown();
+            breakdown.steps.Add(new IncomeStep("Revenue", gross));
+            if (salaries > 0)
+                breakdown.steps.Add(new IncomeStep("Salaries", salaries, false, true));
+            if (upkeep > 0)
+                breakdown.steps.Add(new IncomeStep("Upkeep", upkeep, false, true));
+            if (tax > 0)
+                breakdown.steps.Add(new IncomeStep("Tax", tax, false, true));
+            breakdown.netIncome = net;
+            return breakdown;
+        }
+
+        private TurnReportData BuildTurnReport(
+            float previousCash,
+            float previousRating,
+            float previousMarketShare,
+            float overload,
+            int gross,
+            int salaries,
+            int upkeep,
+            int tax)
+        {
+            var report = new TurnReportData
+            {
+                headline = BuildReportHeadline(overload),
+                summary = $"Net {(netIncome >= 0 ? "+" : "")}{netIncome} | Rating {(snapshot.rating - previousRating >= 0f ? "+" : "")}{(snapshot.rating - previousRating):0.0} | Share {(snapshot.marketShare - previousMarketShare >= 0f ? "+" : "")}{(snapshot.marketShare - previousMarketShare):0.0}",
+                netIncome = netIncome,
+                ratingDelta = snapshot.rating - previousRating,
+                marketShareDelta = snapshot.marketShare - previousMarketShare
+            };
+
+            report.reasons.Add($"Revenue {gross}, salaries {salaries}, upkeep {upkeep}, tax {tax}.");
+            if (overload > 0.1f)
+                report.reasons.Add($"Demand exceeded capacity by {overload:0.0}; trust took a hit.");
+            else
+                report.reasons.Add($"Capacity covered demand; service flow stayed stable.");
+
+            if (snapshot.rating > previousRating)
+                report.reasons.Add($"Rating improved to {snapshot.rating:0.0}, boosting organic demand.");
+            else if (snapshot.rating < previousRating)
+                report.reasons.Add($"Rating slipped to {snapshot.rating:0.0}; recovery cards matter next.");
+
+            if (_rivalPressureImpact > 0.1f)
+                report.reasons.Add($"Rival pressure: {_rivalPressureStyle} pushed back on your market share.");
+
+            if (snapshot.cash < previousCash)
+                report.reasons.Add($"Cash fell to {snapshot.cash:0}; margin pressure is active.");
+
+            return report;
+        }
+
+        private string GetBriefHeadline(BoardPressureType pressure)
+        {
+            return pressure switch
+            {
+                BoardPressureType.CapacityShortfall => "Rush pressure is building.",
+                BoardPressureType.LowCash => "Cash runway is tightening.",
+                BoardPressureType.LowRating => "Trust is slipping.",
+                BoardPressureType.HighLegalRisk => "Legal exposure is rising.",
+                BoardPressureType.WeakQuality => "Quality is underperforming.",
+                BoardPressureType.StaffInstability => "Team stability is fragile.",
+                BoardPressureType.LowDemand => "Demand needs a push.",
+                _ => "Board is stable, push your edge."
+            };
+        }
+
+        private string GetBriefDetail(BoardPressureType pressure)
+        {
+            return pressure switch
+            {
+                BoardPressureType.CapacityShortfall => $"Demand {snapshot.demand:0.0} > capacity {snapshot.capacity:0.0}. Add staff or throughput.",
+                BoardPressureType.LowCash => $"Cash is {snapshot.cash:0}. Margin discipline matters this turn.",
+                BoardPressureType.LowRating => $"Rating is {snapshot.rating:0.0}. Recovery and quality upgrades now pay off.",
+                BoardPressureType.HighLegalRisk => $"Legal risk is {snapshot.legalRisk:0}. Defensive reactions are valuable.",
+                BoardPressureType.WeakQuality => $"Quality is {snapshot.quality:0.0}. Supplier and staff choices are lagging.",
+                BoardPressureType.StaffInstability => $"Staff stability is {snapshot.staffStability:0.0}. Burnout will cascade if ignored.",
+                BoardPressureType.LowDemand => $"Demand is only {snapshot.demand:0.0}. Marketing or discovery should lead.",
+                _ => $"Rating {snapshot.rating:0.0}, quality {snapshot.quality:0.0}, share {snapshot.marketShare:0.0}."
+            };
+        }
+
+        private string BuildReportHeadline(float overload)
+        {
+            if (netIncome < 0)
+                return "This turn burned cash.";
+            if (overload > 0.25f)
+                return "Growth outpaced the board.";
+            if (snapshot.marketShare > 55f)
+                return "You tightened your grip on the market.";
+            return "Board held together this turn.";
+        }
+
+        private static string[] CollectActiveCrisisTags(IReadOnlyList<CardData> temp)
+        {
+            var tags = new HashSet<string>();
+            for (int i = 0; i < temp.Count; i++)
+            {
+                var card = temp[i];
+                if (card == null || card.crisisTags == null) continue;
+                for (int t = 0; t < card.crisisTags.Length; t++)
+                {
+                    if (!string.IsNullOrWhiteSpace(card.crisisTags[t]))
+                        tags.Add(card.crisisTags[t]);
+                }
+            }
+
+            var result = new string[tags.Count];
+            tags.CopyTo(result);
+            return result;
         }
 
         private void UpdateCashCrisis()

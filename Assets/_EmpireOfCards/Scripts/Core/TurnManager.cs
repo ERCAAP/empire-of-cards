@@ -204,12 +204,12 @@ namespace EmpireOfCards.Core
                     TransitionToPhase(TurnPhase.PlayPhase);
                     break;
                 case TurnPhase.PlayPhase:
-                    TransitionToPhase(TurnPhase.ResolvePhase);
-                    break;
-                case TurnPhase.ResolvePhase:
                     TransitionToPhase(TurnPhase.RivalPhase);
                     break;
                 case TurnPhase.RivalPhase:
+                    TransitionToPhase(TurnPhase.ResolvePhase);
+                    break;
+                case TurnPhase.ResolvePhase:
                     FinishTurn();
                     break;
             }

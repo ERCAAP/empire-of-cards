@@ -19,6 +19,7 @@ namespace EmpireOfCards.Data
 
         [Header("--- Cost ---")]
         public int buyCost;                 // Shop/play cost
+        public int playCost;                // Cost to activate from hand this turn
 
         // ====== BUSINESS (Blue) ======
         [Header("--- Business Properties ---")]

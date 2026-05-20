@@ -10,9 +10,9 @@ namespace EmpireOfCards.World
     {
         [Header("Hand Layout")]
         [SerializeField] private Transform handAnchor;
-        [SerializeField] private float cardSpacing = 0.95f;
-        [SerializeField] private float fanAngle = 12f;
-        [SerializeField] private float verticalArc = 0.22f;
+        [SerializeField] private float cardSpacing = 1.08f;
+        [SerializeField] private float fanAngle = 10f;
+        [SerializeField] private float verticalArc = 0.18f;
 
         private readonly List<Card3D> _cards = new List<Card3D>();
 
@@ -143,7 +143,7 @@ namespace EmpireOfCards.World
             int count = handCards.Count;
             if (count == 0) return;
 
-            float spacing = count >= 6 ? 0.82f : cardSpacing;
+            float spacing = count >= 6 ? 0.94f : cardSpacing;
             float totalWidth = (count - 1) * spacing;
             float startX = -totalWidth / 2f;
 

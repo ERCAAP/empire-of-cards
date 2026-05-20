@@ -259,7 +259,9 @@ namespace EmpireOfCards.Core
             // Show appropriate UI mode
             if (_ui != null)
             {
-                string text = step.message;
+                string text = !string.IsNullOrWhiteSpace(step.locKey)
+                    ? LocalizationManager.GetWithFallback(step.locKey, step.message)
+                    : step.message;
                 string btnLabel = step.buttonLabel ?? "Got it";
 
                 if (step.displayMode == TutorialDisplayMode.FullScreen)
@@ -507,11 +509,10 @@ namespace EmpireOfCards.Core
                     stepId = "story_intro",
                     locKey = "tutorial.step1",
                     message = "You just arrived in the city with $500 and a dream.\n" +
-                              "MegaCorp controls everything. Every shop, every customer.\n" +
-                              "But you have something they don't \u2014 a deck of cards\n" +
-                              "that will build your empire.\n\n" +
-                              "YOUR GOAL: Control 6 out of 10 market territories.\n" +
-                              "Let's begin.",
+                              "You picked your first venture, and your rival starts in the same sector.\n" +
+                              "This run is about surviving pressure, building a better board,\n" +
+                              "and finishing the 25-turn market fight ahead.\n\n" +
+                              "Your goal: build smarter than the rival and take the bigger share.",
                     trigger = TutorialTrigger.Immediate,
                     displayMode = TutorialDisplayMode.FullScreen,
                     indicator = TutorialIndicator.None,
@@ -527,8 +528,9 @@ namespace EmpireOfCards.Core
                     stepId = "the_table",
                     locKey = "tutorial.step2",
                     message = "This is your battlefield \u2014 the market table.\n" +
-                              "At the top: 10 TERRITORY blocks. Control 6 to WIN.\n" +
-                              "Blue = yours. Red = MegaCorp's. Gray = up for grabs.",
+                              "Bottom: your business board.\n" +
+                              "Middle: district pressure, traffic, ratings, and market pull.\n" +
+                              "Top: the rival board and their visible moves.",
                     trigger = TutorialTrigger.Manual,
                     displayMode = TutorialDisplayMode.FloatingTip,
                     indicator = TutorialIndicator.Arrow3D,
@@ -547,7 +549,9 @@ namespace EmpireOfCards.Core
                     stepId = "your_cards",
                     locKey = "tutorial.step3",
                     message = "These are your cards \u2014 your weapons.\n" +
-                              "Each turn you draw 5 cards. You can play 3 of them.",
+                              "Each turn you draw options and spend actions to build, react,\n" +
+                              "or pressure the market. Some cards stay on the board.\n" +
+                              "Some are short-term responses.",
                     trigger = TutorialTrigger.Manual,
                     displayMode = TutorialDisplayMode.FloatingTip,
                     indicator = TutorialIndicator.Arrow3D,
@@ -566,9 +570,10 @@ namespace EmpireOfCards.Core
                     stepId = "card_colors",
                     locKey = "tutorial.step4",
                     message = "BLUE cards are Businesses \u2014 they make money.\n" +
-                              "GREEN cards are Employees \u2014 they boost businesses.\n" +
-                              "RED cards are Actions \u2014 instant powerful effects.\n" +
-                              "PURPLE cards are Upgrades \u2014 permanent improvements.",
+                              "Setup cards build capacity.\n" +
+                              "Growth cards create demand.\n" +
+                              "Risk cards spike power but raise danger.\n" +
+                              "Reaction cards repair trust, quality, or stability.",
                     trigger = TutorialTrigger.Manual,
                     displayMode = TutorialDisplayMode.FloatingTip,
                     indicator = TutorialIndicator.CardGlow,
@@ -577,39 +582,44 @@ namespace EmpireOfCards.Core
                 },
 
                 // ============================================================
-                // Step 5: YOUR FIRST MOVE -- drag the Diner
+                // Step 5: YOUR VENTURE ANCHOR
                 // ============================================================
                 new TutorialStep
                 {
                     stepId = "first_move",
                     locKey = "tutorial.step5",
-                    message = "See that blue DINER card? Drag it to one of the\n" +
-                              "empty business slots on the table.\n" +
-                              "GO ON \u2014 grab it and place it!",
+                    message = "On the left of your board is your venture anchor.\n" +
+                              "This is your storefront or app HQ.\n" +
+                              "Your first core operation starts here and upgrades make it grow.",
                     trigger = TutorialTrigger.Manual,
                     displayMode = TutorialDisplayMode.FloatingTip,
                     indicator = TutorialIndicator.Arrow3D,
-                    arrow3DPosition = new Vector3(-2.5f, 1.2f, -1.5f),
-                    arrow3DDirection = new Vector3(0.5f, -0.5f, 0.5f),
+                    arrow3DPosition = POS_FIRST_SLOT,
+                    arrow3DDirection = Vector3.down,
                     arrowColor = COLOR_GOLD,
-                    buttonLabel = "OK!",
-                    pauseGame = false   // Player needs to interact
+                    buttonLabel = "Continue",
+                    pauseGame = true
                 },
 
                 // ============================================================
-                // Step 6: BUSINESS PLACED -- celebration!
+                // Step 6: CORE ECONOMY LOOP
                 // ============================================================
                 new TutorialStep
                 {
                     stepId = "business_placed",
                     locKey = "tutorial.step6",
-                    message = "NICE! Your Diner is open for business!\n" +
-                              "It earns $50 every turn and attracts 3 customers.\n" +
-                              "Customers = market share = territories = WINNING.",
-                    trigger = TutorialTrigger.OnCardPlaced,
+                    message = "Watch the main loop:\n" +
+                              "Marketing raises demand.\n" +
+                              "Operations and staff raise capacity.\n" +
+                              "Suppliers improve quality or margin.\n" +
+                              "If demand beats capacity, rating falls and organic traffic slows.",
+                    trigger = TutorialTrigger.Manual,
                     displayMode = TutorialDisplayMode.FloatingTip,
-                    indicator = TutorialIndicator.None,
-                    buttonLabel = "Awesome!",
+                    indicator = TutorialIndicator.Arrow3D,
+                    arrow3DPosition = POS_BUSINESS_SLOTS,
+                    arrow3DDirection = Vector3.down,
+                    arrowColor = COLOR_GREEN,
+                    buttonLabel = "Got it",
                     pauseGame = true
                 },
 
@@ -621,8 +631,9 @@ namespace EmpireOfCards.Core
                     stepId = "actions_remaining",
                     locKey = "tutorial.step7",
                     message = "You used 1 action. See the green dots?\n" +
-                              "You have 2 actions left this turn.\n" +
-                              "Play more cards or...",
+                              "These pips show how many moves you still have.\n" +
+                              "A strong turn usually mixes growth with stability,\n" +
+                              "not just raw expansion.",
                     trigger = TutorialTrigger.Manual,
                     displayMode = TutorialDisplayMode.FloatingTip,
                     indicator = TutorialIndicator.Arrow2D,
@@ -640,8 +651,8 @@ namespace EmpireOfCards.Core
                     stepId = "end_turn",
                     locKey = "tutorial.step8",
                     message = "...press END TURN to let the market do its thing.\n" +
-                              "Your businesses will earn money, pay employees,\n" +
-                              "and fight MegaCorp for customers.",
+                              "Then the rival acts, the market resolves,\n" +
+                              "and your cash, rating, and market share update.",
                     trigger = TutorialTrigger.Manual,
                     displayMode = TutorialDisplayMode.FloatingTip,
                     indicator = TutorialIndicator.Arrow2D,
@@ -652,62 +663,59 @@ namespace EmpireOfCards.Core
                 },
 
                 // ============================================================
-                // Step 9: THE MARKET RESOLVES (during resolve phase)
+                // Step 9: RIVAL ACTIONS
                 // ============================================================
                 new TutorialStep
                 {
                     stepId = "market_resolves",
                     locKey = "tutorial.step9",
-                    message = "Watch the magic happen:\n" +
-                              "1. Your businesses produce income\n" +
-                              "2. Customers flow to whoever has more to offer\n" +
-                              "3. Territories shift based on customer count\n" +
-                              "4. MegaCorp makes their move",
-                    trigger = TutorialTrigger.OnResolvePhase,
-                    triggerPhase = TurnPhase.ResolvePhase,
+                    message = "Rival phase: watch which lane they pressure.\n" +
+                              "Price, quality, growth, staffing, or expansion.\n" +
+                              "Their cards are signals you can answer next turn.",
+                    trigger = TutorialTrigger.OnRivalPhase,
                     displayMode = TutorialDisplayMode.FloatingTip,
                     indicator = TutorialIndicator.None,
                     autoAdvance = true,
-                    autoAdvanceDelay = 6f,
+                    autoAdvanceDelay = 4.5f,
                     pauseGame = false
                 },
 
                 // ============================================================
-                // Step 10: MONEY UPDATE
+                // Step 10: THE MARKET RESOLVES
                 // ============================================================
                 new TutorialStep
                 {
                     stepId = "money_update",
                     locKey = "tutorial.step10",
-                    message = "See that? Your money changed!\n" +
-                              "$50 income from Diner\n" +
-                              "-$15 salary for your Intern\n" +
-                              "-$5 tax (15% of income)\n" +
-                              "= $30 profit this turn!",
-                    trigger = TutorialTrigger.OnTurnEnd,
+                    message = "Resolve phase compares demand, capacity, quality,\n" +
+                              "rating, upkeep, and risk.\n" +
+                              "Good sequencing becomes profit.\n" +
+                              "Bad sequencing becomes pressure.",
+                    trigger = TutorialTrigger.OnResolvePhase,
                     displayMode = TutorialDisplayMode.FloatingTip,
-                    indicator = TutorialIndicator.Arrow2D,
-                    arrow2DScreenPos = SCREEN_MONEY,
-                    arrow2DDirection = Vector2.left,
-                    buttonLabel = "Nice!",
-                    pauseGame = true
+                    indicator = TutorialIndicator.None,
+                    autoAdvance = true,
+                    autoAdvanceDelay = 5.5f,
+                    pauseGame = false
                 },
 
                 // ============================================================
-                // Step 11: MEGACORP'S TURN
+                // Step 11: TURN REPORT
                 // ============================================================
                 new TutorialStep
                 {
                     stepId = "megacorp_turn",
                     locKey = "tutorial.step11",
-                    message = "Now MegaCorp plays. They're building too.\n" +
-                              "Watch what they do \u2014 knowing your enemy is key.",
-                    trigger = TutorialTrigger.OnRivalPhase,
+                    message = "Turn report: check why your money, rating,\n" +
+                              "and market share changed.\n" +
+                              "If trust slips or overload hits, the report tells you why.",
+                    trigger = TutorialTrigger.OnTurnEnd,
                     displayMode = TutorialDisplayMode.FloatingTip,
-                    indicator = TutorialIndicator.None,
-                    autoAdvance = true,
-                    autoAdvanceDelay = 5f,
-                    pauseGame = false
+                    indicator = TutorialIndicator.Arrow2D,
+                    arrow2DScreenPos = SCREEN_MONEY,
+                    arrow2DDirection = Vector2.left,
+                    buttonLabel = "Understood",
+                    pauseGame = true
                 },
 
                 // ============================================================
@@ -717,9 +725,10 @@ namespace EmpireOfCards.Core
                 {
                     stepId = "the_shop",
                     locKey = "tutorial.step12",
-                    message = "Need better cards? Press SHOP to buy new ones.\n" +
-                              "Stronger cards = better combos = more profit.\n" +
-                              "But don't go broke \u2014 save money for emergencies!",
+                    message = "Need a different answer? Open SHOP.\n" +
+                              "Buy cost gets a card into your economy.\n" +
+                              "Play cost activates it.\n" +
+                              "Upkeep and salary are what you carry every turn.",
                     trigger = TutorialTrigger.Immediate,
                     displayMode = TutorialDisplayMode.FloatingTip,
                     indicator = TutorialIndicator.Arrow2D,
@@ -737,10 +746,10 @@ namespace EmpireOfCards.Core
                     stepId = "winning_strategy",
                     locKey = "tutorial.step13",
                     message = "Tips to dominate:\n\n" +
-                              "\u2022 Place Barista in Coffee Shop = LATTE ART combo (+$40!)\n" +
-                              "\u2022 Accountant cuts your tax in half\n" +
-                              "\u2022 Watch out \u2014 Hacker earns big but FBI might raid you\n" +
-                              "\u2022 6 territories = YOU WIN. Go get 'em!",
+                              "\u2022 Demand without capacity destroys rating\n" +
+                              "\u2022 Supplier and staff quality create organic growth\n" +
+                              "\u2022 Risk cards are short-term power, not free value\n" +
+                              "\u2022 Watch the rival lane and answer the right pressure",
                     trigger = TutorialTrigger.Manual,
                     displayMode = TutorialDisplayMode.FullScreen,
                     indicator = TutorialIndicator.None,
@@ -755,9 +764,9 @@ namespace EmpireOfCards.Core
                 {
                     stepId = "go",
                     locKey = "tutorial.step14",
-                    message = "The market is yours for the taking.\n" +
-                              "Build. Hire. Combo. Dominate.\n\n" +
-                              "Good luck, entrepreneur!",
+                    message = "Build the board. Protect trust. Scale at the right speed.\n" +
+                              "Finish stronger than the rival by turn 25.\n\n" +
+                              "Good luck.",
                     trigger = TutorialTrigger.Manual,
                     displayMode = TutorialDisplayMode.FullScreen,
                     indicator = TutorialIndicator.None,

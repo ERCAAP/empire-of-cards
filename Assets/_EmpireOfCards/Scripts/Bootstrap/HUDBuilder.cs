@@ -258,6 +258,27 @@ namespace EmpireOfCards.Bootstrap
             neglectTmp.fontStyle = FontStyles.Bold;
             hud.neglectWarningText = neglectTmp;
 
+            var flowPanel = CreateShellPanel("TurnFlowPanel", canvasGo.transform, new Vector2(620, 88), ControlDeskTheme.WithAlpha(ControlDeskTheme.Panel, 0.88f));
+            SetAnchors(flowPanel, new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(0.5f, 1));
+            flowPanel.anchoredPosition = new Vector2(0, -168);
+
+            var briefRt = CreateTextElement("TurnBriefText", flowPanel, "BRIEF", 18);
+            briefRt.anchoredPosition = new Vector2(0, 18);
+            briefRt.sizeDelta = new Vector2(580, 30);
+            var briefTmp = briefRt.GetComponent<TMP_Text>();
+            briefTmp.alignment = TextAlignmentOptions.Center;
+            briefTmp.color = ControlDeskTheme.AccentAmber;
+            briefTmp.fontStyle = FontStyles.Bold;
+            hud.turnBriefText = briefTmp;
+
+            var reportRt = CreateTextElement("TurnReportText", flowPanel, "REPORT", 15);
+            reportRt.anchoredPosition = new Vector2(0, -18);
+            reportRt.sizeDelta = new Vector2(580, 32);
+            var reportTmp = reportRt.GetComponent<TMP_Text>();
+            reportTmp.alignment = TextAlignmentOptions.Center;
+            reportTmp.color = ControlDeskTheme.TextMuted;
+            hud.turnReportText = reportTmp;
+
             var actionBar = CreateShellPanel("ActionBar", canvasGo.transform, new Vector2(250, 54), ControlDeskTheme.WithAlpha(ControlDeskTheme.Panel, 0.92f));
             SetAnchors(actionBar, new Vector2(0.5f, 0), new Vector2(0.5f, 0), new Vector2(0.5f, 0));
             actionBar.anchoredPosition = new Vector2(0, 124);
@@ -357,8 +378,8 @@ namespace EmpireOfCards.Bootstrap
 
                 // Card description / stats (middle)
                 var descRt = CreateTextElement("CardDesc", shopCard, "", 14);
-                descRt.anchoredPosition = new Vector2(0, 15);
-                descRt.sizeDelta = new Vector2(140, 60);
+                descRt.anchoredPosition = new Vector2(0, 24);
+                descRt.sizeDelta = new Vector2(140, 70);
                 var shopDescTmp = descRt.GetComponent<TMP_Text>();
                 shopDescTmp.alignment = TextAlignmentOptions.Center;
                 shopDescTmp.color = new Color(0.85f, 0.85f, 0.85f);
@@ -368,12 +389,15 @@ namespace EmpireOfCards.Bootstrap
 
                 // Price text (below description) - bold gold
                 var priceRt = CreateTextElement("PriceText", shopCard, "$0", 24);
-                priceRt.anchoredPosition = new Vector2(0, -35);
-                priceRt.sizeDelta = new Vector2(140, 30);
+                priceRt.anchoredPosition = new Vector2(0, -32);
+                priceRt.sizeDelta = new Vector2(140, 46);
                 var shopPriceTmp = priceRt.GetComponent<TMP_Text>();
                 shopPriceTmp.alignment = TextAlignmentOptions.Center;
                 shopPriceTmp.color = GoldColor;
                 shopPriceTmp.fontStyle = FontStyles.Bold;
+                shopPriceTmp.enableAutoSizing = true;
+                shopPriceTmp.fontSizeMin = 12;
+                shopPriceTmp.fontSizeMax = 24;
                 shopPriceTexts[i] = shopPriceTmp;
 
                 // Buy button (bottom of card)
@@ -533,11 +557,11 @@ namespace EmpireOfCards.Bootstrap
             var ventureNameTexts = new TMP_Text[5];
             var ventureDescTexts = new TMP_Text[5];
             string[] ventureNames = {
-                "🍔 FAST FOOD",
-                "☕ CAFE",
-                "📱 TECH APP",
-                "👗 CLOTHING STORE",
-                "🛒 GROCERY STORE"
+                "FAST FOOD",
+                "CAFE",
+                "TECH APP",
+                "CLOTHING STORE",
+                "GROCERY STORE"
             };
             string[] ventureDescs = {
                 "High volume, low margin.\n+1 Cook in starter deck.\nFood combo potential.",
@@ -753,6 +777,8 @@ namespace EmpireOfCards.Bootstrap
         public Image fbiBarFillImg;
         public TMP_Text neglectWarningText;
         public TMP_Text shopBiasText;
+        public TMP_Text turnBriefText;
+        public TMP_Text turnReportText;
 
         // ActionBar sub-elements
         public Image[] actionDotImages;

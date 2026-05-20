@@ -15,6 +15,7 @@ namespace EmpireOfCards.Core
         public const int MAX_TURNS = 25;             // 25 turns, 5 seasons x 5 turns
         public const int TURNS_PER_SEASON = 5;
         public const int SEASON_COUNT = 5;
+        public const int DOMINATION_CHECK_START_TURN = 6;
         #endregion
 
         #region Dynamic Game Length (GDD v3.0 Section 16)

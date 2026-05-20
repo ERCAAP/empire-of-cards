@@ -87,6 +87,11 @@ namespace EmpireOfCards.Core
         public static event Action<int, int> OnMarketShareChanged;         // playerCount, rivalCount
         #endregion
 
+        #region Turn Messaging Events
+        public static event Action<TurnBriefData> OnTurnBriefGenerated;
+        public static event Action<TurnReportData> OnTurnReportGenerated;
+        #endregion
+
         #region Economy Events
         public static event Action<int> OnMoneyChanged;                    // newAmount
         public static event Action<int> OnIncomeReceived;                  // amount
@@ -119,6 +124,7 @@ namespace EmpireOfCards.Core
         public static event Action<string> OnRivalTaunt;                   // taunt text
         public static event Action<string> OnRivalMoodChanged;             // mood icon string
         public static event Action<string> OnRivalStrategyComment;         // one-time strategy remark
+        public static event Action<RivalQueuedAction> OnRivalActionQueued; // lane/card preview
         #endregion
 
         #region Company Tier Events
@@ -215,6 +221,11 @@ namespace EmpireOfCards.Core
         public static void MarketShareUpdated(int player, int rival) => OnMarketShareChanged?.Invoke(player, rival);
         #endregion
 
+        #region Turn Messaging Invoke Helpers
+        public static void TurnBriefGenerated(TurnBriefData brief) => OnTurnBriefGenerated?.Invoke(brief);
+        public static void TurnReportGenerated(TurnReportData report) => OnTurnReportGenerated?.Invoke(report);
+        #endregion
+
         #region Economy Invoke Helpers
         public static void MoneyUpdated(int amount) => OnMoneyChanged?.Invoke(amount);
         public static void IncomeReceived(int amount) => OnIncomeReceived?.Invoke(amount);
@@ -247,6 +258,7 @@ namespace EmpireOfCards.Core
         public static void RivalTaunted(string taunt) => OnRivalTaunt?.Invoke(taunt);
         public static void RivalMoodChanged(string moodIcon) => OnRivalMoodChanged?.Invoke(moodIcon);
         public static void RivalStrategyCommented(string comment) => OnRivalStrategyComment?.Invoke(comment);
+        public static void RivalActionQueued(RivalQueuedAction action) => OnRivalActionQueued?.Invoke(action);
         #endregion
 
         #region Company Tier Invoke Helpers
@@ -363,6 +375,10 @@ namespace EmpireOfCards.Core
             // Customer Market
             OnMarketShareChanged = null;
 
+            // Turn messaging
+            OnTurnBriefGenerated = null;
+            OnTurnReportGenerated = null;
+
             // Platform Rating
             OnPlatformRatingChanged = null;
 
@@ -400,6 +416,7 @@ namespace EmpireOfCards.Core
             OnRivalTaunt = null;
             OnRivalMoodChanged = null;
             OnRivalStrategyComment = null;
+            OnRivalActionQueued = null;
 
             // Company Tier
             OnCompanyTierChanged = null;

@@ -87,7 +87,7 @@ namespace EmpireOfCards.UI.Cards
                 descriptionText.text = data.description;
 
             if (costText != null)
-                costText.text = data.buyCost > 0 ? $"${data.buyCost}" : "";
+                costText.text = BuildCostLine(data);
 
             // Icon
             if (cardIcon != null && data.icon != null)
@@ -224,18 +224,16 @@ namespace EmpireOfCards.UI.Cards
             switch (card.cardType)
             {
                 case CardType.Business:
-                    return $"Income: {card.incomePerTurn}/turn  Customers: {card.customersPerTurn}/turn  Slots: {card.employeeSlots}";
+                    return $"Demand {card.demandDelta:0.0}  Cap {card.capacityDelta:0.0}  Upkeep {card.upkeepCostPerTurn:0}";
 
                 case CardType.Employee:
-                    return $"Salary: {card.salaryPerTurn}/turn  Customers: +{card.customerBonus}";
+                    return $"Salary {card.salaryPerTurn}/turn  Stability {card.staffStabilityDelta:+0.0;-0.0;0.0}";
 
                 case CardType.Action:
-                    return card.actionFBIRisk > 0
-                        ? $"Effect: {card.actionValue}  FBI: +{card.actionFBIRisk}%"
-                        : $"Effect: {card.actionValue}";
+                    return $"Play {card.playCost}  Effect {card.actionValue}";
 
                 case CardType.Upgrade:
-                    return card.isGlobalUpgrade ? "Global Upgrade" : "Business Upgrade";
+                    return $"Play {card.playCost}  Upkeep {card.upkeepCostPerTurn:0}";
 
                 case CardType.Event:
                     return $"Duration: {card.eventDuration} turns";
@@ -243,6 +241,16 @@ namespace EmpireOfCards.UI.Cards
                 default:
                     return "";
             }
+        }
+
+        private string BuildCostLine(CardData card)
+        {
+            if (card == null)
+                return string.Empty;
+
+            string buy = $"Buy ${card.buyCost}";
+            string play = card.playCost > 0 ? $" | Play ${card.playCost}" : string.Empty;
+            return buy + play;
         }
     }
 }

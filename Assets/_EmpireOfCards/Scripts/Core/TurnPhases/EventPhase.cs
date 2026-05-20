@@ -32,8 +32,9 @@ namespace EmpireOfCards.Core.TurnPhases
 
             bool shouldFireEvent = _turnManager.CurrentTurnNumber > 0
                 && _turnManager.CurrentTurnNumber % interval == 0;
+            bool pressureTriggered = ShouldTriggerPressureCrisis(gm);
 
-            if (shouldFireEvent && _turnManager.ActiveEvent == null)
+            if ((shouldFireEvent || pressureTriggered) && _turnManager.ActiveEvent == null)
             {
                 var eventCard = _turnManager.DrawRandomEvent();
                 if (eventCard != null)
@@ -46,6 +47,20 @@ namespace EmpireOfCards.Core.TurnPhases
                     Debug.LogWarning("[EventPhase] Event should fire but event deck is empty.");
                 }
             }
+        }
+
+        private bool ShouldTriggerPressureCrisis(GameManager gm)
+        {
+            if (gm == null || gm.EconomyManager == null || gm.EconomyManager.Snapshot == null)
+                return false;
+
+            var snapshot = gm.EconomyManager.Snapshot;
+            return gm.EconomyManager.CurrentPressure == EmpireOfCards.Core.BoardPressureType.HighLegalRisk
+                || gm.EconomyManager.CurrentPressure == EmpireOfCards.Core.BoardPressureType.LowRating
+                || gm.EconomyManager.CurrentPressure == EmpireOfCards.Core.BoardPressureType.CapacityShortfall
+                || gm.EconomyManager.CurrentPressure == EmpireOfCards.Core.BoardPressureType.StaffInstability
+                || snapshot.legalRisk >= 32f
+                || snapshot.rating <= 2.8f;
         }
 
         /// <summary>

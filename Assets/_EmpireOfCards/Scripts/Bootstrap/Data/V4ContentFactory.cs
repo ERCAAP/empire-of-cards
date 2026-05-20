@@ -338,6 +338,7 @@ namespace EmpireOfCards.Bootstrap.Data
         private static CardData MakeOperation(string id, string name, VentureType venture, string subSlot, string desc, int cost, float demand, float capacity, float quality, float cash, float price, float speed, float buildingHeight, CardTag[] tags)
         {
             var card = CardHelper.CreateV4Card(id, name, CardType.Business, CardFamily.Setup, venture, SlotType.Operation, subSlot, Rarity.Common, cost, desc, tags);
+            card.playCost = 0;
             card.demandDelta = demand;
             card.capacityDelta = capacity;
             card.qualityDelta = quality;
@@ -355,6 +356,7 @@ namespace EmpireOfCards.Bootstrap.Data
         {
             var card = CardHelper.CreateV4Card(id, name, CardType.Employee, CardFamily.Setup, venture, SlotType.Staff, subSlot, Rarity.Common, 0, desc, tags);
             card.buyCost = upkeep * 2;
+            card.playCost = 0;
             card.salaryPerTurn = upkeep;
             card.demandDelta = demand;
             card.capacityDelta = capacity;
@@ -371,6 +373,7 @@ namespace EmpireOfCards.Bootstrap.Data
         {
             var card = CardHelper.CreateV4Card(id, name, CardType.Upgrade, CardFamily.Setup, venture, SlotType.Supplier, subSlot, Rarity.Uncommon, upkeep, desc, tags);
             card.isGeneralCard = isGeneral;
+            card.playCost = 0;
             card.upkeepCostPerTurn = upkeep;
             card.demandDelta = demand;
             card.capacityDelta = capacity;
@@ -390,6 +393,7 @@ namespace EmpireOfCards.Bootstrap.Data
         {
             var card = CardHelper.CreateV4Card(id, name, CardType.Upgrade, CardFamily.Growth, venture, SlotType.Marketing, subSlot, Rarity.Common, upkeep, desc, tags);
             card.isGeneralCard = isGeneral;
+            card.playCost = Mathf.Max(4, Mathf.RoundToInt(cashCost * 0.45f));
             card.demandDelta = demand;
             card.ratingDeltaPerTurn = rating;
             card.upkeepCostPerTurn = cashCost;
@@ -406,6 +410,7 @@ namespace EmpireOfCards.Bootstrap.Data
         {
             var card = CardHelper.CreateV4Card(id, name, CardType.Upgrade, family, venture, SlotType.TempEffect, subSlot, Rarity.Uncommon, cost, desc, tags);
             card.isGeneralCard = isGeneral;
+            card.playCost = Mathf.Max(6, Mathf.RoundToInt(cost * 0.5f));
             card.demandDelta = demand;
             card.capacityDelta = capacity;
             card.legalRiskDeltaPerTurn = legalRisk;
@@ -426,6 +431,7 @@ namespace EmpireOfCards.Bootstrap.Data
         private static CardData MakeCrisis(string id, string name, VentureType venture, string desc, string crisisTag, int duration, float demandPenalty, float qualityPenalty, float legalRisk, CardTag[] tags)
         {
             var card = CardHelper.CreateV4Card(id, name, CardType.Event, CardFamily.Crisis, venture, SlotType.TempEffect, crisisTag, Rarity.Uncommon, 0, desc, tags);
+            card.playCost = 0;
             card.tempEffectDuration = duration;
             card.eventDuration = duration;
             card.demandDelta = demandPenalty;

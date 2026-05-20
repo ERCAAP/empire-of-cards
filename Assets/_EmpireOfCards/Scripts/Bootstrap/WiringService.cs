@@ -106,6 +106,8 @@ namespace EmpireOfCards.Bootstrap
             // === Neglect warning text -> UIManager ===
             if (hud.neglectWarningText != null)
                 m.uiManager.SetNeglectWarningText(hud.neglectWarningText);
+            if (hud.turnBriefText != null || hud.turnReportText != null)
+                m.uiManager.SetFlowTexts(hud.turnBriefText, hud.turnReportText);
 
             // === TopBarUI: TMP_Text and Image sub-elements ===
             hud.topBarUI.Init(hud.moneyText, hud.turnText, hud.fbiBarFillImg, null, hud.companyTierText);
@@ -184,6 +186,18 @@ namespace EmpireOfCards.Bootstrap
                 if (gm == null) return;
 
                 bool success = false;
+                bool requiresPlayCost = slot.ZoneType != DropZoneType.SellZone && slot.ZoneType != DropZoneType.BurnZone;
+                bool playCostPaid = false;
+
+                if (requiresPlayCost && card != null && card.CardData != null && card.CardData.playCost > 0)
+                {
+                    playCostPaid = gm.SpendMoney(card.CardData.playCost);
+                    if (!playCostPaid)
+                    {
+                        card.ReturnToHand();
+                        return;
+                    }
+                }
 
                 switch (slot.ZoneType)
                 {
@@ -284,6 +298,8 @@ namespace EmpireOfCards.Bootstrap
                 }
                 else
                 {
+                    if (playCostPaid && card != null && card.CardData != null && card.CardData.playCost > 0)
+                        gm.GainMoney(card.CardData.playCost);
                     card.ReturnToHand();
                 }
             };

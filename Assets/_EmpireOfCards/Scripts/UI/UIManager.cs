@@ -30,6 +30,10 @@ namespace EmpireOfCards.UI
         [SerializeField] private TMP_Text neglectWarningText;
         private float _neglectWarningTimer;
 
+        [Header("Turn Flow")]
+        [SerializeField] private TMP_Text turnBriefText;
+        [SerializeField] private TMP_Text turnReportText;
+
         [Header("Income Cascade")]
         [SerializeField] private float cascadeStepDuration = 0.4f;
         [SerializeField] private float cascadeNetHoldDuration = 0.8f;
@@ -70,6 +74,11 @@ namespace EmpireOfCards.UI
         /// Called by WiringService after Init().
         /// </summary>
         public void SetNeglectWarningText(TMP_Text text) { neglectWarningText = text; }
+        public void SetFlowTexts(TMP_Text brief, TMP_Text report)
+        {
+            turnBriefText = brief;
+            turnReportText = report;
+        }
 
         // ------------------------------------------------------------------
         // Lifecycle
@@ -91,6 +100,9 @@ namespace EmpireOfCards.UI
             EventBus.OnIncomeBreakdown += HandleIncomeBreakdown;
             EventBus.OnRivalMoodChanged += HandleRivalMoodChanged;
             EventBus.OnRivalStrategyComment += HandleRivalStrategyComment;
+            EventBus.OnTurnBriefGenerated += HandleTurnBriefGenerated;
+            EventBus.OnTurnReportGenerated += HandleTurnReportGenerated;
+            EventBus.OnRivalActionQueued += HandleRivalActionQueued;
         }
 
         private void OnDisable()
@@ -109,6 +121,9 @@ namespace EmpireOfCards.UI
             EventBus.OnIncomeBreakdown -= HandleIncomeBreakdown;
             EventBus.OnRivalMoodChanged -= HandleRivalMoodChanged;
             EventBus.OnRivalStrategyComment -= HandleRivalStrategyComment;
+            EventBus.OnTurnBriefGenerated -= HandleTurnBriefGenerated;
+            EventBus.OnTurnReportGenerated -= HandleTurnReportGenerated;
+            EventBus.OnRivalActionQueued -= HandleRivalActionQueued;
         }
 
         // ------------------------------------------------------------------
@@ -140,6 +155,8 @@ namespace EmpireOfCards.UI
 
         private void HandleRivalAction(string action)
         {
+            if (string.IsNullOrWhiteSpace(action) || action.Contains("->"))
+                return;
             if (rivalPopup != null)
                 rivalPopup.Show(action, string.Empty);
         }
@@ -224,6 +241,28 @@ namespace EmpireOfCards.UI
                 StopCoroutine(_activeCascade);
 
             _activeCascade = StartCoroutine(IncomeCascadeRoutine(breakdown));
+        }
+
+        private void HandleTurnBriefGenerated(TurnBriefData brief)
+        {
+            if (turnBriefText == null || brief == null) return;
+            turnBriefText.text = $"BRIEF  {brief.headline}\n{brief.detail}";
+        }
+
+        private void HandleTurnReportGenerated(TurnReportData report)
+        {
+            if (turnReportText == null || report == null) return;
+
+            string reasons = report.reasons != null && report.reasons.Count > 0
+                ? report.reasons[0]
+                : report.summary;
+            turnReportText.text = $"REPORT  {report.headline}\n{reasons}";
+        }
+
+        private void HandleRivalActionQueued(RivalQueuedAction action)
+        {
+            if (rivalPopup != null && action != null)
+                rivalPopup.Show($"{action.displayName}  [{action.laneLabel}]", action.shortDescription);
         }
 
         // ------------------------------------------------------------------

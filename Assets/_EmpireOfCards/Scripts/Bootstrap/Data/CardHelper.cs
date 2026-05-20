@@ -46,6 +46,7 @@ namespace EmpireOfCards.Bootstrap.Data
             card.cardType = type;
             card.rarity = rarity;
             card.buyCost = cost;
+            card.playCost = 0;
             card.description = desc;
             card.tags = tags;
             card.name = id; // For debug display

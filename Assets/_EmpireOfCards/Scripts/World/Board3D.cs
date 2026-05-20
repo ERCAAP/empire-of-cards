@@ -33,6 +33,14 @@ namespace EmpireOfCards.World
         private TextMeshPro _staffHeader;
         private TextMeshPro _marketingHeader;
         private TextMeshPro _supplierHeader;
+        private TextMeshPro _districtTrafficLabel;
+        private TextMeshPro _districtRatingLabel;
+        private TextMeshPro _districtPullLabel;
+        private TextMeshPro _rivalCardLabel;
+        private TextMeshPro _rivalStyleLabel;
+        private TextMeshPro _rivalCrisisLabel;
+        private TextMeshPro _businessAnchorLabel;
+        private GameObject _businessAnchorVisual;
 
         public IReadOnlyList<SlotZone3D> BusinessSlots => _operationSlots;
 
@@ -150,6 +158,8 @@ namespace EmpireOfCards.World
                 new Vector3(1.25f, 0.08f, 1.05f),
                 ControlDeskTheme.ActionSlot,
                 DropZoneType.ActionZone, 0);
+
+            BuildBusinessAnchor();
         }
 
         private void BuildMarketBand()
@@ -292,6 +302,20 @@ namespace EmpireOfCards.World
             CreateDeskText("EVENTS", new Vector3(5.55f, 0.16f, 1.45f), flatText, 1.00f, ControlDeskTheme.Lighten(ControlDeskTheme.EventSlot, 0.22f), TextAlignmentOptions.Center);
 
             _tierLabel = CreateDeskText("TRADER", new Vector3(-5.95f, 0.16f, -2.95f), flatText, 1.25f, ControlDeskTheme.MoneyGold, TextAlignmentOptions.Left);
+            _districtTrafficLabel = CreateDeskText("Traffic / Visibility: Stable", new Vector3(-5.35f, 0.16f, 3.35f), flatText, 0.82f, ControlDeskTheme.AccentAmber, TextAlignmentOptions.Left);
+            _districtRatingLabel = CreateDeskText("Word of Mouth: Neutral", new Vector3(-1.35f, 0.16f, 3.35f), flatText, 0.82f, ControlDeskTheme.AccentBlue, TextAlignmentOptions.Left);
+            _districtPullLabel = CreateDeskText("Market Pull: Balanced", new Vector3(2.65f, 0.16f, 3.35f), flatText, 0.82f, ControlDeskTheme.AccentGreen, TextAlignmentOptions.Left);
+            _rivalCardLabel = CreateDeskText("Last Card: Waiting", new Vector3(-5.35f, 0.16f, 5.35f), flatText, 0.80f, ControlDeskTheme.TextPrimary, TextAlignmentOptions.Left);
+            _rivalStyleLabel = CreateDeskText("Pressure: Balanced", new Vector3(-1.35f, 0.16f, 5.35f), flatText, 0.80f, ControlDeskTheme.TextMuted, TextAlignmentOptions.Left);
+            _rivalCrisisLabel = CreateDeskText("Crisis Read: Clean", new Vector3(2.65f, 0.16f, 5.35f), flatText, 0.80f, ControlDeskTheme.TextMuted, TextAlignmentOptions.Left);
+        }
+
+        private void BuildBusinessAnchor()
+        {
+            _businessAnchorVisual = CreateCube("BusinessAnchor", new Vector3(-5.35f, 0.18f, -1.45f), new Vector3(1.05f, 0.55f, 1.05f), ControlDeskTheme.Darken(ControlDeskTheme.OperationSlot, 0.12f));
+            Destroy(_businessAnchorVisual.GetComponent<Collider>());
+            CreateCube("BusinessAnchorSign", new Vector3(-5.35f, 0.72f, -0.85f), new Vector3(1.25f, 0.18f, 0.12f), ControlDeskTheme.PanelLine).GetComponent<Collider>().enabled = false;
+            _businessAnchorLabel = CreateDeskText("NEW VENTURE", new Vector3(-5.35f, 0.78f, -0.85f), Quaternion.Euler(35f, 0f, 0f), 0.95f, ControlDeskTheme.TextPrimary, TextAlignmentOptions.Center);
         }
 
         private TextMeshPro CreateDeskText(string text, Vector3 localPos, Quaternion localRot, float fontSize, Color color, TextAlignmentOptions alignment)
@@ -330,6 +354,9 @@ namespace EmpireOfCards.World
             EventBus.OnMarketBlocksChanged += HandleTerritoryChanged;
             EventBus.OnBusinessSlotsChanged += UpdateVisibleSlots;
             EventBus.OnTurnStarted += HandleTurnStarted;
+            EventBus.OnTurnBriefGenerated += HandleTurnBrief;
+            EventBus.OnTurnReportGenerated += HandleTurnReport;
+            EventBus.OnRivalActionQueued += HandleRivalActionQueued;
             LocalizationManager.OnLanguageChanged += ApplyVentureHeaders;
         }
 
@@ -342,12 +369,16 @@ namespace EmpireOfCards.World
             EventBus.OnMarketBlocksChanged -= HandleTerritoryChanged;
             EventBus.OnBusinessSlotsChanged -= UpdateVisibleSlots;
             EventBus.OnTurnStarted -= HandleTurnStarted;
+            EventBus.OnTurnBriefGenerated -= HandleTurnBrief;
+            EventBus.OnTurnReportGenerated -= HandleTurnReport;
+            EventBus.OnRivalActionQueued -= HandleRivalActionQueued;
             LocalizationManager.OnLanguageChanged -= ApplyVentureHeaders;
         }
 
         private void HandleTurnStarted(int turnNumber)
         {
             ApplyVentureHeaders();
+            UpdateBusinessAnchor();
         }
 
         private void HandleTerritoryChanged(int playerCount, int rivalCount)
@@ -385,6 +416,36 @@ namespace EmpireOfCards.World
                 renderer.material.color = ControlDeskTheme.OperationSlot;
         }
 
+        private void HandleTurnBrief(TurnBriefData brief)
+        {
+            if (brief == null) return;
+
+            if (_districtTrafficLabel != null)
+                _districtTrafficLabel.text = $"Traffic / Visibility: {brief.headline}";
+            if (_districtRatingLabel != null)
+                _districtRatingLabel.text = $"Word of Mouth: {brief.detail}";
+        }
+
+        private void HandleTurnReport(TurnReportData report)
+        {
+            if (report == null) return;
+
+            if (_districtPullLabel != null)
+                _districtPullLabel.text = $"Market Pull: {report.summary}";
+        }
+
+        private void HandleRivalActionQueued(RivalQueuedAction action)
+        {
+            if (action == null) return;
+
+            if (_rivalCardLabel != null)
+                _rivalCardLabel.text = $"Last Card: {action.displayName}";
+            if (_rivalStyleLabel != null)
+                _rivalStyleLabel.text = $"Pressure: {action.laneLabel}";
+            if (_rivalCrisisLabel != null)
+                _rivalCrisisLabel.text = $"Threat: {action.shortDescription}";
+        }
+
         private void ApplyVentureHeaders()
         {
             var profile = GameManager.Instance != null ? GameManager.Instance.ActiveBoardProfile : null;
@@ -396,6 +457,30 @@ namespace EmpireOfCards.World
                 _marketingHeader.text = BuildHeader("board.growth", "GROWTH", profile != null ? profile.marketingSubSlots : null);
             if (_supplierHeader != null)
                 _supplierHeader.text = BuildHeader("board.supply", "SUPPLY", profile != null ? profile.supplierSubSlots : null);
+            UpdateBusinessAnchor();
+        }
+
+        private void UpdateBusinessAnchor()
+        {
+            if (_businessAnchorVisual == null || _businessAnchorLabel == null)
+                return;
+
+            var gm = GameManager.Instance;
+            VentureType venture = gm != null && gm.ActiveBoardProfile != null
+                ? gm.ActiveBoardProfile.ventureType
+                : VentureType.FastFood;
+            string displayName = gm != null ? gm.RunDisplayName : "New Venture";
+
+            _businessAnchorVisual.GetComponent<MeshRenderer>().material.color = venture switch
+            {
+                VentureType.FastFood => ControlDeskTheme.Darken(new Color(0.77f, 0.29f, 0.17f), 0.1f),
+                VentureType.Cafe => ControlDeskTheme.Darken(new Color(0.50f, 0.36f, 0.22f), 0.1f),
+                VentureType.TechApp => ControlDeskTheme.Darken(new Color(0.23f, 0.50f, 0.83f), 0.05f),
+                VentureType.ClothingStore => ControlDeskTheme.Darken(new Color(0.66f, 0.21f, 0.46f), 0.05f),
+                VentureType.GroceryStore => ControlDeskTheme.Darken(new Color(0.23f, 0.60f, 0.28f), 0.05f),
+                _ => ControlDeskTheme.OperationSlot
+            };
+            _businessAnchorLabel.text = displayName.ToUpperInvariant();
         }
 
         private static string BuildHeader(string headerKey, string fallbackHeader, BoardSubSlotDefinition[] defs)

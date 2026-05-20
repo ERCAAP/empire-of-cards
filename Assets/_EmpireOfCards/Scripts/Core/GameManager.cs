@@ -64,6 +64,7 @@ namespace EmpireOfCards.Core
         [SerializeField] private VentureBoardProfile activeBoardProfile;
         [SerializeField] private VentureDeckProfile activeDeckProfile;
         [SerializeField] private VentureEconomyProfile activeEconomyProfile;
+        [SerializeField] private string runDisplayName;
 
         private Dictionary<string, CardData> _cardLookup;
 
@@ -112,6 +113,9 @@ namespace EmpireOfCards.Core
         public VentureDeckProfile ActiveDeckProfile => activeDeckProfile;
         public VentureEconomyProfile ActiveEconomyProfile => activeEconomyProfile;
         public IReadOnlyDictionary<string, CardData> CardLookup => _cardLookup;
+        public string RunDisplayName => string.IsNullOrWhiteSpace(runDisplayName)
+            ? (selectedVenture != null ? selectedVenture.ventureName : "New Venture")
+            : runDisplayName;
 
         /// <summary>
         /// Assigns the MetaProgressionSystem. Called by WiringService after bootstrap.
@@ -147,6 +151,7 @@ namespace EmpireOfCards.Core
             activeBoardProfile = venture != null ? venture.boardProfile : null;
             activeDeckProfile = venture != null ? venture.deckProfile : null;
             activeEconomyProfile = venture != null ? venture.economyProfile : null;
+            runDisplayName = venture != null ? venture.ventureName : "New Venture";
         }
 
         public void SetCardLookup(Dictionary<string, CardData> lookup)
@@ -251,6 +256,7 @@ namespace EmpireOfCards.Core
             {
                 economyManager.SetActiveProfile(activeEconomyProfile);
                 resources.SetMoney(Mathf.RoundToInt(activeEconomyProfile.startingCash) + (selectedVenture != null ? selectedVenture.bonusMoney : 0));
+                economyManager.SyncCashFromResources(resources.Money);
             }
 
             if (deckManager != null)
@@ -307,6 +313,8 @@ namespace EmpireOfCards.Core
         {
             currentTurn++;
             EventBus.TurnStarted(currentTurn);
+            if (economyManager != null)
+                economyManager.GenerateTurnBrief(currentTurn);
 
             if (turnManager != null)
                 turnManager.BeginTurn(currentTurn);
@@ -321,13 +329,21 @@ namespace EmpireOfCards.Core
             EventBus.TurnEnded(currentTurn);
 
             int winCustomers = Constants.WIN_CUSTOMER_SHARE;
+            bool dominationActive = currentTurn >= Constants.DOMINATION_CHECK_START_TURN;
 
-            if (WinLoseChecker.CheckWin(playerCustomers, winCustomers))
+            if (dominationActive && WinLoseChecker.CheckWin(playerCustomers, winCustomers))
             {
                 EndRun(true);
                 return;
             }
-            if (WinLoseChecker.CheckLose(rivalCustomers, winCustomers, resources.Money))
+
+            if (resources.Money <= 0)
+            {
+                EndRun(false);
+                return;
+            }
+
+            if (dominationActive && rivalCustomers >= winCustomers)
             {
                 EndRun(false);
                 return;
@@ -353,9 +369,25 @@ namespace EmpireOfCards.Core
         // === Delegating Resource Methods (backward-compat) ---
         // Callers can migrate to GameManager.Instance.Resources.X directly.
 
-        public bool SpendMoney(int amount) => resources.SpendMoney(amount);
-        public void GainMoney(int amount) => resources.GainMoney(amount);
-        public void AdjustMoney(int netAmount) => resources.AdjustMoney(netAmount);
+        public bool SpendMoney(int amount)
+        {
+            bool success = resources.SpendMoney(amount);
+            if (success)
+                economyManager?.SyncCashFromResources(resources.Money);
+            return success;
+        }
+
+        public void GainMoney(int amount)
+        {
+            resources.GainMoney(amount);
+            economyManager?.SyncCashFromResources(resources.Money);
+        }
+
+        public void AdjustMoney(int netAmount)
+        {
+            resources.AdjustMoney(netAmount);
+            economyManager?.SyncCashFromResources(resources.Money);
+        }
         public bool UseAction() => resources.UseAction();
         public void ResetActions() => resources.ResetActions();
         public void AddExtraAction(int count = 1) => resources.AddExtraAction(count, balanceData);
