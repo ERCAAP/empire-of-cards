@@ -130,7 +130,15 @@ namespace EmpireOfCards.World
         {
             if (handAnchor == null) return;
 
-            int count = _cards.Count;
+            // Only layout cards that are still in hand (not placed on board)
+            var handCards = new List<Card3D>();
+            for (int i = 0; i < _cards.Count; i++)
+            {
+                if (_cards[i] != null && _cards[i].IsInHand)
+                    handCards.Add(_cards[i]);
+            }
+
+            int count = handCards.Count;
             if (count == 0) return;
 
             float totalWidth = (count - 1) * cardSpacing;
@@ -147,7 +155,7 @@ namespace EmpireOfCards.World
                 Vector3 worldPos = handAnchor.TransformPoint(localPos);
                 Quaternion rot = handAnchor.rotation * Quaternion.Euler(0, 0, angle);
 
-                _cards[i].SetHandPosition(worldPos, rot);
+                handCards[i].SetHandPosition(worldPos, rot);
             }
         }
     }

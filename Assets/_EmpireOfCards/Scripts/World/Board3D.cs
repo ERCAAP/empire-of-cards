@@ -144,7 +144,7 @@ namespace EmpireOfCards.World
             for (int i = 0; i < Constants.STARTING_TEMP_EFFECT_SLOTS; i++)
             {
                 var slot = CreateSlotCube($"TempEffectSlot_{i + 1:D2}",
-                    new Vector3(6.2f, 0.05f, -2.0f + i * 1.3f),
+                    new Vector3(5.5f, 0.05f, -2.0f + i * 1.3f),
                     new Vector3(1.2f, 0.1f, 1.0f),
                     new Color(0.6f, 0.35f, 0.1f));
 
@@ -155,7 +155,7 @@ namespace EmpireOfCards.World
 
             // Sell Zone — right column, below TempEffect stack
             var sell = CreateSlotCube("SellZone",
-                new Vector3(6.2f, 0.05f, 1.0f),
+                new Vector3(5.5f, 0.05f, 1.0f),
                 new Vector3(1.2f, 0.1f, 1.5f),
                 new Color(0.6f, 0.4f, 0.1f));
             _sellZone = sell.AddComponent<SlotZone3D>();
@@ -163,7 +163,7 @@ namespace EmpireOfCards.World
 
             // Action Zone — right column, above Sell
             var action = CreateSlotCube("ActionZone",
-                new Vector3(6.2f, 0.05f, 2.2f),
+                new Vector3(5.5f, 0.05f, 2.2f),
                 new Vector3(1.2f, 0.1f, 1.5f),
                 new Color(0.7f, 0.15f, 0.15f));
             _actionZone = action.AddComponent<SlotZone3D>();
@@ -303,11 +303,11 @@ namespace EmpireOfCards.World
                         new Color(0.8f, 0.5f, 0.9f));
             CreateLabel("SUPPLIERS", new Vector3(3.1f, labelY, 0.4f), labelRot, slotFont,
                         new Color(0.9f, 0.75f, 0.35f));
-            CreateLabel("EVENTS", new Vector3(6.2f, labelY, -2.65f), labelRot, slotFont * 0.85f,
+            CreateLabel("EVENTS", new Vector3(5.5f, labelY, -2.65f), labelRot, slotFont * 0.85f,
                         new Color(0.95f, 0.5f, 0.2f));
-            CreateLabel("SELL", new Vector3(6.2f, labelY, 0.35f), labelRot, slotFont,
+            CreateLabel("SELL", new Vector3(5.5f, labelY, 0.35f), labelRot, slotFont,
                         new Color(0.9f, 0.7f, 0.2f));
-            CreateLabel("ACTION", new Vector3(6.2f, labelY, 1.65f), labelRot, slotFont,
+            CreateLabel("ACTION", new Vector3(5.5f, labelY, 1.65f), labelRot, slotFont,
                         new Color(0.9f, 0.3f, 0.3f));
 
             // === ZONE 2: CUSTOMER MARKET ZONE ===

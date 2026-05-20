@@ -135,8 +135,8 @@ namespace EmpireOfCards.Bootstrap
             cam.nearClipPlane = 0.3f;
             cam.farClipPlane = 50f;
             // Higher + wider FOV to show full board (16x14) + rival zone + hand cards
-            cam.transform.position = new Vector3(0f, 16f, -5f);
-            cam.transform.rotation = Quaternion.Euler(58f, 0f, 0f);
+            cam.transform.position = new Vector3(0f, 16f, -7f);
+            cam.transform.rotation = Quaternion.Euler(55f, 0f, 0f);
             cam.backgroundColor = new Color(0.15f, 0.12f, 0.1f);
             cam.clearFlags = CameraClearFlags.SolidColor;
 
@@ -166,12 +166,10 @@ namespace EmpireOfCards.Bootstrap
         private Hand3D Build3DHand(Camera mainCamera, CardFactory cardFactory)
         {
             var handAnchor = new GameObject("HandAnchor");
-            handAnchor.transform.SetParent(mainCamera.transform);
-            // LOCAL position relative to camera — bottom of screen, forward into view
-            // Camera is at (0,14,-6) rot(55,0,0) — local Z goes forward-down toward board
-            handAnchor.transform.localPosition = new Vector3(0f, -3.5f, 8f);
-            // Local rotation: 35° tilts cards to face upward (55° cam - 35° = ~flat readable)
-            handAnchor.transform.localRotation = Quaternion.Euler(35f, 0f, 0f);
+            // DO NOT parent to camera — use world space on the board surface
+            handAnchor.transform.position = new Vector3(0f, 0.5f, -4f);
+            // Slight tilt so cards face upward toward camera
+            handAnchor.transform.rotation = Quaternion.Euler(-20f, 0f, 0f);
 
             var handGo = new GameObject("Hand3D");
             handGo.transform.SetParent(handAnchor.transform);
