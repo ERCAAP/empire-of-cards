@@ -57,7 +57,34 @@ namespace EmpireOfCards.Core
         #endregion
 
         #region Board Slot Events
-        public static event Action<int> OnBusinessSlotsChanged;            // newMaxSlots
+        public static event Action<int> OnBusinessSlotsChanged;            // newMaxSlots (legacy)
+        public static event Action<CardData, SlotType> OnCardPlacedInSlot; // card, slotType
+        public static event Action<CardData, SlotType> OnCardRemovedFromSlot;
+        public static event Action<SlotType, int> OnSlotExpanded;          // slotType, newCount
+        #endregion
+
+        #region Legal Risk Events
+        public static event Action<int> OnLegalRiskChanged;                // newRiskScore (0-100)
+        public static event Action<LegalRiskLevel> OnLegalRiskLevelChanged;
+        public static event Action<int> OnLegalRaidOccurred;               // penalty amount
+        #endregion
+
+        #region Platform Rating Events
+        public static event Action<float> OnPlatformRatingChanged;         // newRating (1.0-5.0)
+        #endregion
+
+        #region Cash Flow Events
+        public static event Action<int> OnCashBalanceChanged;              // newBalance
+        public static event Action OnCashCrisisStarted;
+        public static event Action OnCashCrisisResolved;
+        #endregion
+
+        #region Season Events
+        public static event Action<SeasonType, int> OnSeasonChanged;       // season, seasonIndex
+        #endregion
+
+        #region Customer Market Events
+        public static event Action<int, int> OnMarketShareChanged;         // playerCount, rivalCount
         #endregion
 
         #region Economy Events
@@ -138,6 +165,33 @@ namespace EmpireOfCards.Core
 
         #region Board Slot Invoke Helpers
         public static void BusinessSlotsChanged(int maxSlots) => OnBusinessSlotsChanged?.Invoke(maxSlots);
+        public static void CardPlacedInSlot(CardData card, SlotType slot) => OnCardPlacedInSlot?.Invoke(card, slot);
+        public static void CardRemovedFromSlot(CardData card, SlotType slot) => OnCardRemovedFromSlot?.Invoke(card, slot);
+        public static void SlotExpanded(SlotType slot, int newCount) => OnSlotExpanded?.Invoke(slot, newCount);
+        #endregion
+
+        #region Legal Risk Invoke Helpers
+        public static void LegalRiskUpdated(int score) => OnLegalRiskChanged?.Invoke(score);
+        public static void LegalRiskLevelUpdated(LegalRiskLevel level) => OnLegalRiskLevelChanged?.Invoke(level);
+        public static void LegalRaidOccurred(int penalty) => OnLegalRaidOccurred?.Invoke(penalty);
+        #endregion
+
+        #region Season Invoke Helpers
+        public static void SeasonChanged(SeasonType season, int index) => OnSeasonChanged?.Invoke(season, index);
+        #endregion
+
+        #region Platform Rating Invoke Helpers
+        public static void PlatformRatingChanged(float rating) => OnPlatformRatingChanged?.Invoke(rating);
+        #endregion
+
+        #region Cash Flow Invoke Helpers
+        public static void CashBalanceChanged(int balance) => OnCashBalanceChanged?.Invoke(balance);
+        public static void CashCrisisStarted() => OnCashCrisisStarted?.Invoke();
+        public static void CashCrisisResolved() => OnCashCrisisResolved?.Invoke();
+        #endregion
+
+        #region Customer Market Invoke Helpers
+        public static void MarketShareUpdated(int player, int rival) => OnMarketShareChanged?.Invoke(player, rival);
         #endregion
 
         #region Economy Invoke Helpers
@@ -217,6 +271,28 @@ namespace EmpireOfCards.Core
 
             // Board Slots
             OnBusinessSlotsChanged = null;
+            OnCardPlacedInSlot = null;
+            OnCardRemovedFromSlot = null;
+            OnSlotExpanded = null;
+
+            // Legal Risk
+            OnLegalRiskChanged = null;
+            OnLegalRiskLevelChanged = null;
+            OnLegalRaidOccurred = null;
+
+            // Seasons
+            OnSeasonChanged = null;
+
+            // Customer Market
+            OnMarketShareChanged = null;
+
+            // Platform Rating
+            OnPlatformRatingChanged = null;
+
+            // Cash Flow
+            OnCashBalanceChanged = null;
+            OnCashCrisisStarted = null;
+            OnCashCrisisResolved = null;
 
             // Economy
             OnMoneyChanged = null;

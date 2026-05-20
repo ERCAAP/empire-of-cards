@@ -77,6 +77,9 @@ namespace EmpireOfCards.Bootstrap
             m.companyTierSystem.Init(m.boardManager, m.comboSystem);
             m.gameManager.SetCompanyTierSystem(m.companyTierSystem);
 
+            // === SlotManager ===
+            m.slotManager.Init();
+
             // === ShopManager ===
             m.shopManager.Init(data.shopPool, m.deckManager, m.economyManager, m.comboSystem);
 
@@ -218,6 +221,32 @@ namespace EmpireOfCards.Bootstrap
                         gm.DeckManager.BurnCard(card.CardData); // Remove from deck permanently
                         success = true;
                         break;
+
+                    // === Slot System v2 (GDD v3.0 Section 4) ===
+                    case DropZoneType.OperationSlot:
+                        success = gm.BoardManager.PlaceBusiness(card.CardData, slot.SlotIndex);
+                        if (success) EventBus.CardPlacedInSlot(card.CardData, SlotType.Operation);
+                        break;
+
+                    case DropZoneType.StaffSlot:
+                        success = gm.BoardManager.PlaceEmployee(card.CardData, slot.ParentBusinessIndex);
+                        if (success) EventBus.CardPlacedInSlot(card.CardData, SlotType.Staff);
+                        break;
+
+                    case DropZoneType.MarketingSlot:
+                        success = gm.BoardManager.PlaceUpgrade(card.CardData, -1);
+                        if (success) EventBus.CardPlacedInSlot(card.CardData, SlotType.Marketing);
+                        break;
+
+                    case DropZoneType.SupplierSlot:
+                        success = gm.BoardManager.PlaceUpgrade(card.CardData, -1);
+                        if (success) EventBus.CardPlacedInSlot(card.CardData, SlotType.Supplier);
+                        break;
+
+                    case DropZoneType.TempEffectSlot:
+                        EventBus.CardPlacedInSlot(card.CardData, SlotType.TempEffect);
+                        success = true;
+                        break;
                 }
 
                 if (success)
@@ -241,6 +270,12 @@ namespace EmpireOfCards.Bootstrap
                         case DropZoneType.BurnZone:
                             UnityEngine.Object.Destroy(card.gameObject, 0.3f);
                             slot.RemoveCard();
+                            break;
+                        case DropZoneType.MarketingSlot:
+                            // Marketing cards stay for the turn, removed on resolve
+                            break;
+                        case DropZoneType.TempEffectSlot:
+                            // Temp effect cards are managed by TurnManager resolve phase
                             break;
                     }
                 }

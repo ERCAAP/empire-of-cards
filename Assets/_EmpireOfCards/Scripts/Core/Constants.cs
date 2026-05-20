@@ -11,14 +11,16 @@ namespace EmpireOfCards.Core
         public const float SELL_RATE = 0.4f;        // Sell card = 40%
         #endregion
 
-        #region Run Structure (GDD Section 10)
-        public const int MAX_TURNS = 30;             // Hard cap (GDD dynamic game length)
+        #region Run Structure (GDD v3.0 Section 16)
+        public const int MAX_TURNS = 25;             // 25 turns, 5 seasons x 5 turns
+        public const int TURNS_PER_SEASON = 5;
+        public const int SEASON_COUNT = 5;
         #endregion
 
-        #region Dynamic Game Length (GDD Section 1.7)
-        public const int SOFT_CAP_TURN = 25;                    // Income penalty starts
+        #region Dynamic Game Length (GDD v3.0 Section 16)
+        public const int SOFT_CAP_TURN = 20;                    // Income penalty starts at turn 20
         public const float SOFT_CAP_PENALTY = 0.05f;            // -5% per turn after soft cap
-        public const int HARD_CAP_TURN = 30;                    // Forced end
+        public const int HARD_CAP_TURN = 25;                    // Forced end at turn 25
         #endregion
 
         #region Business Maintenance (GDD Section 3.1)
@@ -39,9 +41,61 @@ namespace EmpireOfCards.Core
         public const int REDRAWS_PER_TURN = 1;
         #endregion
 
-        #region Slot System (GDD Section 5)
-        public const int STARTING_SLOTS = 3;
-        public const int MAX_SLOTS = 5;
+        #region Slot System v2 (GDD v3.0 Section 4)
+        // Starting slot counts per type
+        public const int STARTING_OPERATION_SLOTS = 4;
+        public const int STARTING_STAFF_SLOTS = 5;
+        public const int STARTING_MARKETING_SLOTS = 3;
+        public const int STARTING_SUPPLIER_SLOTS = 2;
+        public const int STARTING_TEMP_EFFECT_SLOTS = 3; // Fixed, never expands
+
+        // Maximum slot counts per type
+        public const int MAX_OPERATION_SLOTS = 8;
+        public const int MAX_STAFF_SLOTS = 10;
+        public const int MAX_MARKETING_SLOTS = 5;
+        public const int MAX_SUPPLIER_SLOTS = 4;
+        public const int MAX_TEMP_EFFECT_SLOTS = 3; // Fixed
+        #endregion
+
+        #region Customer Market System (GDD v3.0 Section 7)
+        public const int TOTAL_MARKET_CUSTOMERS = 100;
+        public const int WIN_CUSTOMER_SHARE = 60;            // 60/100 = 60% win condition
+        public const float CUSTOMER_WEIGHT_QUALITY = 0.30f;
+        public const float CUSTOMER_WEIGHT_PRICE = 0.20f;
+        public const float CUSTOMER_WEIGHT_PLATFORM_RATING = 0.20f;
+        public const float CUSTOMER_WEIGHT_MARKETING = 0.15f;
+        public const float CUSTOMER_WEIGHT_SPEED = 0.10f;
+        public const float CUSTOMER_WEIGHT_LOYALTY = 0.05f;
+        #endregion
+
+        #region Platform Rating (GDD v3.0 Section 8)
+        public const float PLATFORM_RATING_MIN = 1.0f;
+        public const float PLATFORM_RATING_MAX = 5.0f;
+        public const float PLATFORM_RATING_DEFAULT = 3.0f;
+        public const float PLATFORM_RATING_DECAY_PER_TURN = 0.1f; // Without marketing
+        public const float PLATFORM_RATING_GAIN_GREAT_REVIEW = 0.3f;
+        public const float PLATFORM_RATING_GAIN_MARKETING = 0.2f;
+        public const float PLATFORM_RATING_LOSS_BAD_EVENT = 0.5f;
+        #endregion
+
+        #region Legal Risk System (GDD v3.0 Section 13)
+        public const int LEGAL_RISK_MIN = 0;
+        public const int LEGAL_RISK_MAX = 100;
+        public const int LEGAL_RISK_CAUTION_THRESHOLD = 26;
+        public const int LEGAL_RISK_DANGER_THRESHOLD = 51;
+        public const int LEGAL_RISK_CERTAIN_THRESHOLD = 76;
+        public const float LEGAL_RISK_INCOME_PENALTY = 0.15f; // -15% income when in Danger
+        public const int LEGAL_RISK_DECAY_PER_TURN = 3;       // Risk drops 3 per turn naturally
+        #endregion
+
+        #region Cash Flow (GDD v3.0)
+        public const int CASH_CRISIS_THRESHOLD = 3;              // Turns with negative balance before crisis triggers
+        #endregion
+
+        #region Season System (GDD v3.0 Section 14)
+        public const float SEASON_PEAK_INCOME_MULTIPLIER = 1.25f;
+        public const float SEASON_TRANSITION_INCOME_PENALTY = 0.70f; // -30% during transitions
+        public const float SEASON_OFFPEAK_INCOME_MULTIPLIER = 0.85f;
         #endregion
 
         #region Tax (GDD Section 9.2)

@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using EmpireOfCards.UI;
+using EmpireOfCards.UI.Indicators;
 
 namespace EmpireOfCards.Bootstrap
 {
@@ -72,6 +73,156 @@ namespace EmpireOfCards.Bootstrap
             fbiBarFill.sizeDelta = new Vector2(200, 20);
             hud.fbiBarFillImg = fbiBarFill.GetComponent<Image>();
             hud.fbiBarFillImg.color = Color.green;
+
+            // ============================================================
+            // PLATFORM RATING -- 1.0-5.0 star bar, top bar right area
+            // ============================================================
+            var platformRatingPanel = CreateUIPanel("PlatformRatingPanel", topBar);
+            platformRatingPanel.localPosition = new Vector3(450, -40, 0);
+            platformRatingPanel.sizeDelta = new Vector2(160, 40);
+
+            var platformLabelRt = CreateTextElement("PlatformLabel", platformRatingPanel, "RATING", 12);
+            platformLabelRt.anchoredPosition = new Vector2(0, 16);
+            platformLabelRt.sizeDelta = new Vector2(160, 18);
+            platformLabelRt.GetComponent<TMP_Text>().color = new Color(0.7f, 0.7f, 0.7f);
+
+            var platformBarBg = CreateUIPanel("PlatformBarBg", platformRatingPanel);
+            platformBarBg.anchoredPosition = new Vector2(0, -4);
+            platformBarBg.sizeDelta = new Vector2(140, 12);
+            platformBarBg.GetComponent<Image>().color = new Color(0.2f, 0.2f, 0.2f);
+
+            var platformBarFill = CreateUIPanel("PlatformBarFill", platformBarBg);
+            platformBarFill.anchorMin = new Vector2(0, 0);
+            platformBarFill.anchorMax = new Vector2(0, 1);
+            platformBarFill.pivot = new Vector2(0, 0.5f);
+            platformBarFill.sizeDelta = new Vector2(70f, 0); // 50% default (3.0/5.0)
+            platformBarFill.anchoredPosition = Vector2.zero;
+            hud.platformRatingBarFill = platformBarFill.GetComponent<Image>();
+            hud.platformRatingBarFill.color = new Color(0.3f, 0.75f, 1f);
+
+            var platformValueRt = CreateTextElement("PlatformValue", platformRatingPanel, "3.0", 18);
+            platformValueRt.anchoredPosition = new Vector2(0, -18);
+            platformValueRt.sizeDelta = new Vector2(160, 22);
+            hud.platformRatingText = platformValueRt.GetComponent<TMP_Text>();
+            hud.platformRatingText.color = new Color(0.3f, 0.75f, 1f);
+            hud.platformRatingText.fontStyle = FontStyles.Bold;
+
+            var platformIndicator = topBar.gameObject.AddComponent<PlatformRatingIndicator>();
+            platformIndicator.Init(hud.platformRatingBarFill, hud.platformRatingText);
+            hud.platformRatingIndicator = platformIndicator;
+
+            // ============================================================
+            // LEGAL RISK BAR -- 0-100, color-coded, top bar right
+            // ============================================================
+            var legalRiskPanel = CreateUIPanel("LegalRiskPanel", topBar);
+            legalRiskPanel.localPosition = new Vector3(620, -40, 0);
+            legalRiskPanel.sizeDelta = new Vector2(160, 40);
+
+            var legalLabelRt = CreateTextElement("LegalLabel", legalRiskPanel, "LEGAL RISK", 12);
+            legalLabelRt.anchoredPosition = new Vector2(0, 16);
+            legalLabelRt.sizeDelta = new Vector2(160, 18);
+            legalLabelRt.GetComponent<TMP_Text>().color = new Color(0.7f, 0.7f, 0.7f);
+
+            var legalBarBg = CreateUIPanel("LegalBarBg", legalRiskPanel);
+            legalBarBg.anchoredPosition = new Vector2(0, -4);
+            legalBarBg.sizeDelta = new Vector2(140, 12);
+            legalBarBg.GetComponent<Image>().color = new Color(0.2f, 0.2f, 0.2f);
+
+            var legalBarFill = CreateUIPanel("LegalBarFill", legalBarBg);
+            legalBarFill.anchorMin = new Vector2(0, 0);
+            legalBarFill.anchorMax = new Vector2(0, 1);
+            legalBarFill.pivot = new Vector2(0, 0.5f);
+            legalBarFill.sizeDelta = new Vector2(0f, 0); // 0% default
+            legalBarFill.anchoredPosition = Vector2.zero;
+            hud.legalRiskBarFill = legalBarFill.GetComponent<Image>();
+            hud.legalRiskBarFill.color = new Color(0.2f, 0.85f, 0.35f); // Green at start
+
+            var legalValueRt = CreateTextElement("LegalValue", legalRiskPanel, "0", 18);
+            legalValueRt.anchoredPosition = new Vector2(0, -18);
+            legalValueRt.sizeDelta = new Vector2(160, 22);
+            hud.legalRiskText = legalValueRt.GetComponent<TMP_Text>();
+            hud.legalRiskText.color = new Color(0.2f, 0.85f, 0.35f);
+            hud.legalRiskText.fontStyle = FontStyles.Bold;
+
+            var legalIndicator = topBar.gameObject.AddComponent<LegalRiskIndicator>();
+            legalIndicator.Init(hud.legalRiskBarFill, hud.legalRiskText);
+            hud.legalRiskIndicator = legalIndicator;
+
+            // ============================================================
+            // SEASON INDICATOR -- season name + turn X/25, below top bar
+            // ============================================================
+            var seasonPanel = CreateUIPanel("SeasonPanel", canvasGo.transform);
+            SetAnchors(seasonPanel, new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(0.5f, 1));
+            seasonPanel.anchoredPosition = new Vector2(0, -80);
+            seasonPanel.sizeDelta = new Vector2(300, 28);
+
+            var seasonNameRt = CreateTextElement("SeasonName", seasonPanel, "SPRING", 20);
+            seasonNameRt.anchoredPosition = new Vector2(-40, 0);
+            seasonNameRt.sizeDelta = new Vector2(160, 26);
+            hud.seasonNameText = seasonNameRt.GetComponent<TMP_Text>();
+            hud.seasonNameText.color = new Color(0.5f, 0.95f, 0.5f);
+            hud.seasonNameText.fontStyle = FontStyles.Bold;
+
+            var turnProgressRt = CreateTextElement("TurnProgress", seasonPanel, "1/25", 16);
+            turnProgressRt.anchoredPosition = new Vector2(90, 0);
+            turnProgressRt.sizeDelta = new Vector2(100, 26);
+            hud.seasonTurnText = turnProgressRt.GetComponent<TMP_Text>();
+            hud.seasonTurnText.color = new Color(0.75f, 0.75f, 0.75f);
+
+            var seasonIndicator = seasonPanel.gameObject.AddComponent<SeasonIndicator>();
+            seasonIndicator.Init(hud.seasonNameText, hud.seasonTurnText);
+            hud.seasonIndicator = seasonIndicator;
+
+            // ============================================================
+            // CUSTOMER MARKET BAR -- player (blue) vs rival (red), 100 customers
+            // Placed below the season indicator
+            // ============================================================
+            var marketBarPanel = CreateUIPanel("CustomerMarketPanel", canvasGo.transform);
+            SetAnchors(marketBarPanel, new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(0.5f, 1));
+            marketBarPanel.anchoredPosition = new Vector2(0, -114);
+            marketBarPanel.sizeDelta = new Vector2(500, 24);
+
+            var marketLabelRt = CreateTextElement("MarketLabel", marketBarPanel, "MARKET", 11);
+            marketLabelRt.anchoredPosition = new Vector2(-230, 0);
+            marketLabelRt.sizeDelta = new Vector2(60, 22);
+            marketLabelRt.GetComponent<TMP_Text>().color = new Color(0.6f, 0.6f, 0.6f);
+
+            // Background track (neutral gray)
+            var marketTrackBg = CreateUIPanel("MarketTrack", marketBarPanel);
+            marketTrackBg.anchoredPosition = new Vector2(20, 0);
+            marketTrackBg.sizeDelta = new Vector2(380, 14);
+            marketTrackBg.GetComponent<Image>().color = new Color(0.25f, 0.25f, 0.25f);
+
+            // Player fill (left side, blue)
+            var playerFill = CreateUIPanel("PlayerFill", marketTrackBg);
+            playerFill.anchorMin = new Vector2(0, 0);
+            playerFill.anchorMax = new Vector2(0, 1);
+            playerFill.pivot = new Vector2(0, 0.5f);
+            playerFill.sizeDelta = new Vector2(0f, 0);
+            playerFill.anchoredPosition = Vector2.zero;
+            hud.marketSharePlayerFill = playerFill.GetComponent<Image>();
+            hud.marketSharePlayerFill.color = new Color(0.25f, 0.55f, 1f); // Player blue
+
+            // Rival fill (right side, red) -- anchored to right edge
+            var rivalFill = CreateUIPanel("RivalFill", marketTrackBg);
+            rivalFill.anchorMin = new Vector2(1, 0);
+            rivalFill.anchorMax = new Vector2(1, 1);
+            rivalFill.pivot = new Vector2(1, 0.5f);
+            rivalFill.sizeDelta = new Vector2(0f, 0);
+            rivalFill.anchoredPosition = Vector2.zero;
+            hud.marketShareRivalFill = rivalFill.GetComponent<Image>();
+            hud.marketShareRivalFill.color = new Color(0.9f, 0.2f, 0.2f); // Rival red
+
+            // Score text
+            var marketScoreRt = CreateTextElement("MarketScore", marketBarPanel, "0 vs 0", 14);
+            marketScoreRt.anchoredPosition = new Vector2(230, 0);
+            marketScoreRt.sizeDelta = new Vector2(80, 22);
+            hud.marketShareText = marketScoreRt.GetComponent<TMP_Text>();
+            hud.marketShareText.color = new Color(0.85f, 0.85f, 0.85f);
+
+            var marketIndicator = marketBarPanel.gameObject.AddComponent<CustomerMarketIndicator>();
+            marketIndicator.Init(hud.marketSharePlayerFill, hud.marketShareRivalFill, hud.marketShareText, marketTrackBg);
+            hud.customerMarketIndicator = marketIndicator;
 
             // Neglect warning (shows briefly when a business is neglected)
             var neglectWarning = CreateTextElement("NeglectWarning", topBar, "", 20);
@@ -293,7 +444,7 @@ namespace EmpireOfCards.Bootstrap
             tierCg.alpha = 0f;
             var tierPopup = tierPopupRt.gameObject.AddComponent<TierPopup>();
 
-            var tierTitleText = CreateTextElement("TierTitle", tierPopupRt, "GİRİŞİMCİ", 52);
+            var tierTitleText = CreateTextElement("TierTitle", tierPopupRt, "ENTREPRENEUR", 52);
             tierTitleText.anchoredPosition = new Vector2(0, 30);
             tierTitleText.sizeDelta = new Vector2(500, 70);
             var tierTitleTmp = tierTitleText.GetComponent<TMP_Text>();
@@ -348,34 +499,42 @@ namespace EmpireOfCards.Bootstrap
             venturePanel.GetComponent<Image>().color = new Color(0.05f, 0.05f, 0.1f, 0.95f);
 
             // Title
-            var ventureTitle = CreateTextElement("VentureTitle", venturePanel, "İLK GİRİŞİMİNİ SEÇ", 42);
+            var ventureTitle = CreateTextElement("VentureTitle", venturePanel, "CHOOSE YOUR FIRST VENTURE", 42);
             ventureTitle.anchoredPosition = new Vector2(0, 350);
             ventureTitle.sizeDelta = new Vector2(800, 60);
 
-            // 4 Venture cards in a row
-            var ventureCards = new RectTransform[4];
-            var ventureCardImages = new Image[4];
-            var ventureNameTexts = new TMP_Text[4];
-            var ventureDescTexts = new TMP_Text[4];
-            string[] ventureNames = { "🍔 BÜFE", "💻 TECH STARTUP", "📢 REKLAM AJANSI", "🕶️ KARANLIK PAZAR" };
+            // 5 Venture cards in a row (GDD v3.0 Section 1.5)
+            var ventureCards = new RectTransform[5];
+            var ventureCardImages = new Image[5];
+            var ventureNameTexts = new TMP_Text[5];
+            var ventureDescTexts = new TMP_Text[5];
+            string[] ventureNames = {
+                "🍔 FAST FOOD",
+                "☕ CAFE",
+                "📱 TECH APP",
+                "👗 CLOTHING STORE",
+                "🛒 GROCERY STORE"
+            };
             string[] ventureDescs = {
-                "Büfe tahtada hazır.\nDestene +1 Şef.\nFood combo'lara yön verir.",
-                "Tech Startup tahtada hazır.\nDestene +1 Hacker.\nGeç oyun gücü.",
-                "Reklam Ajansı tahtada hazır.\nDestene +1 Marketing Guru.\nMüşteri odaklı.",
-                "İşletme yok, +200 ekstra para.\nDestene +1 Dolandırıcı.\nRiskli ama hızlı."
+                "High volume, low margin.\n+1 Cook in starter deck.\nFood combo potential.",
+                "Loyalty-driven income.\n+1 Barista in starter deck.\nPlatform rating matters.",
+                "Viral growth possible.\n+1 Developer in starter deck.\nPlatform fees apply.",
+                "Seasonal demand cycles.\n+1 Sales Associate in deck.\nTrend-sensitive.",
+                "Steady local demand.\n+1 Cashier in starter deck.\nSpoilage risk mechanic."
             };
             Color[] ventureColors = {
-                new Color(0.9f, 0.5f, 0.2f),
-                new Color(0.3f, 0.6f, 0.9f),
-                new Color(0.9f, 0.3f, 0.5f),
-                new Color(0.4f, 0.4f, 0.4f)
+                new Color(0.9f, 0.4f, 0.1f),   // FastFood - red-orange
+                new Color(0.6f, 0.38f, 0.22f),  // Cafe - coffee brown
+                new Color(0.25f, 0.55f, 0.95f), // TechApp - blue
+                new Color(0.85f, 0.25f, 0.55f), // ClothingStore - pink
+                new Color(0.3f, 0.7f, 0.35f)    // GroceryStore - green
             };
 
-            for (int i = 0; i < 4; i++)
+            for (int i = 0; i < 5; i++)
             {
                 var card = CreateUIPanel($"VentureCard_{i}", venturePanel);
-                card.sizeDelta = new Vector2(320, 400);
-                card.anchoredPosition = new Vector2((i - 1.5f) * 340f, -20);
+                card.sizeDelta = new Vector2(260, 400);
+                card.anchoredPosition = new Vector2((i - 2f) * 275f, -20);
                 var cardImg = card.GetComponent<Image>();
                 cardImg.color = new Color(0.15f, 0.15f, 0.2f, 0.95f);
                 card.gameObject.AddComponent<Button>().targetGraphic = cardImg;
@@ -407,7 +566,7 @@ namespace EmpireOfCards.Bootstrap
             }
 
             // START button (disabled until selection)
-            var ventureStartBtn = CreateButton("VentureStartButton", venturePanel, "BAŞLA");
+            var ventureStartBtn = CreateButton("VentureStartButton", venturePanel, "START");
             ventureStartBtn.anchoredPosition = new Vector2(0, -280);
             ventureStartBtn.sizeDelta = new Vector2(200, 60);
             ventureStartBtn.GetComponent<Image>().color = new Color(0.2f, 0.5f, 0.3f);
@@ -542,5 +701,26 @@ namespace EmpireOfCards.Bootstrap
         public TMP_Text[] ventureNameTexts;
         public TMP_Text[] ventureDescTexts;
         public Button ventureStartButton;
+
+        // Platform Rating Indicator
+        public PlatformRatingIndicator platformRatingIndicator;
+        public Image platformRatingBarFill;
+        public TMP_Text platformRatingText;
+
+        // Legal Risk Indicator
+        public LegalRiskIndicator legalRiskIndicator;
+        public Image legalRiskBarFill;
+        public TMP_Text legalRiskText;
+
+        // Season Indicator
+        public SeasonIndicator seasonIndicator;
+        public TMP_Text seasonNameText;
+        public TMP_Text seasonTurnText;
+
+        // Customer Market Bar
+        public CustomerMarketIndicator customerMarketIndicator;
+        public Image marketSharePlayerFill;
+        public Image marketShareRivalFill;
+        public TMP_Text marketShareText;
     }
 }

@@ -35,161 +35,220 @@ namespace EmpireOfCards.World
 
         // Created at runtime
         private TextMeshPro _tierLabel;
+
+        // Slot System v2 — player zone slots
+        private readonly List<SlotZone3D> _operationSlots = new List<SlotZone3D>();
+        private readonly List<SlotZone3D> _staffSlots = new List<SlotZone3D>();
+        private readonly List<SlotZone3D> _marketingSlots = new List<SlotZone3D>();
+        private readonly List<SlotZone3D> _supplierSlots = new List<SlotZone3D>();
+        private readonly List<SlotZone3D> _tempEffectSlots = new List<SlotZone3D>();
+
+        // Legacy lists (kept for backward-compat with UpdateVisibleSlots / employee markers)
         private readonly List<SlotZone3D> _businessSlots = new List<SlotZone3D>();
         private readonly List<SlotZone3D> _employeeSlots = new List<SlotZone3D>();
         private readonly List<SlotZone3D> _upgradeSlots = new List<SlotZone3D>();
+        private readonly List<MeshRenderer> _businessSlotRenderers = new List<MeshRenderer>();
+
+        // Market zone
         private readonly List<GameObject> _territoryBlocks = new List<GameObject>();
         private readonly List<MeshRenderer> _territoryRenderers = new List<MeshRenderer>();
-        private readonly List<MeshRenderer> _businessSlotRenderers = new List<MeshRenderer>();
+
+        // Utility zones
         private SlotZone3D _sellZone;
         private SlotZone3D _actionZone;
 
         // Employee marker cubes — keyed by "bizIndex_empSlotIndex"
         private readonly Dictionary<string, GameObject> _employeeMarkers = new Dictionary<string, GameObject>();
 
-        public IReadOnlyList<SlotZone3D> BusinessSlots => _businessSlots;
+        public IReadOnlyList<SlotZone3D> BusinessSlots => _operationSlots; // Operation = main business slots
 
         public void BuildBoard()
         {
-            // === TABLE (large flat cube) ===
+            // ====================================================================
+            // TABLE (large flat cube)
+            // ====================================================================
             var table = GameObject.CreatePrimitive(PrimitiveType.Cube);
             table.name = "Table";
             table.transform.SetParent(transform);
             table.transform.localPosition = new Vector3(0, -0.25f, 0);
-            table.transform.localScale = new Vector3(16, 0.5f, 12);
-            table.GetComponent<MeshRenderer>().material.color = new Color(0.35f, 0.22f, 0.12f); // Wood
+            table.transform.localScale = new Vector3(20, 0.5f, 16);
+            table.GetComponent<MeshRenderer>().material.color = new Color(0.35f, 0.22f, 0.12f);
             table.layer = LayerMask.NameToLayer("Default");
-            Destroy(table.GetComponent<Collider>()); // Table doesn't need raycast
+            Destroy(table.GetComponent<Collider>());
 
-            // === TERRITORY MAP (10 cubes, top of board) ===
-            for (int i = 0; i < 10; i++)
+            // ====================================================================
+            // ZONE 1 — PLAYER ZONE (bottom, Z = -5 to -1)
+            // Layout: Operation row, then Staff/Marketing/Supplier/TempEffect rows
+            // ====================================================================
+
+            // Row A: Operation Slots (4 starting, max 8) — main business infrastructure
+            for (int i = 0; i < Constants.STARTING_OPERATION_SLOTS; i++)
+            {
+                var slot = CreateSlotCube($"OperationSlot_{i + 1:D2}",
+                    new Vector3((i - 1.5f) * 2.8f, 0.05f, -4.5f),
+                    new Vector3(2.4f, 0.1f, 2.0f),
+                    new Color(0.2f, 0.3f, 0.5f));
+
+                var zone = slot.AddComponent<SlotZone3D>();
+                zone.RuntimeInit(DropZoneType.OperationSlot, i);
+                _operationSlots.Add(zone);
+                _businessSlots.Add(zone); // Legacy alias
+                _businessSlotRenderers.Add(slot.GetComponent<MeshRenderer>());
+            }
+
+            // Row B: Staff Slots (5 starting) — employees
+            for (int i = 0; i < Constants.STARTING_STAFF_SLOTS; i++)
+            {
+                var slot = CreateSlotCube($"StaffSlot_{i + 1:D2}",
+                    new Vector3((i - 2f) * 2.2f, 0.05f, -2.2f),
+                    new Vector3(1.8f, 0.1f, 1.5f),
+                    new Color(0.2f, 0.45f, 0.25f));
+
+                var zone = slot.AddComponent<SlotZone3D>();
+                zone.RuntimeInit(DropZoneType.StaffSlot, i);
+                _staffSlots.Add(zone);
+                _employeeSlots.Add(zone); // Legacy alias
+            }
+
+            // Row C-Left: Marketing Slots (3 starting) — ad campaigns
+            for (int i = 0; i < Constants.STARTING_MARKETING_SLOTS; i++)
+            {
+                var slot = CreateSlotCube($"MarketingSlot_{i + 1:D2}",
+                    new Vector3(-6f + i * 2.2f, 0.05f, -0.5f),
+                    new Vector3(1.8f, 0.1f, 1.2f),
+                    new Color(0.5f, 0.25f, 0.5f));
+
+                var zone = slot.AddComponent<SlotZone3D>();
+                zone.RuntimeInit(DropZoneType.MarketingSlot, i);
+                _marketingSlots.Add(zone);
+                _upgradeSlots.Add(zone); // Legacy alias
+            }
+
+            // Row C-Right: Supplier Slots (2 starting) — supply deals
+            for (int i = 0; i < Constants.STARTING_SUPPLIER_SLOTS; i++)
+            {
+                var slot = CreateSlotCube($"SupplierSlot_{i + 1:D2}",
+                    new Vector3(3f + i * 2.2f, 0.05f, -0.5f),
+                    new Vector3(1.8f, 0.1f, 1.2f),
+                    new Color(0.45f, 0.35f, 0.15f));
+
+                var zone = slot.AddComponent<SlotZone3D>();
+                zone.RuntimeInit(DropZoneType.SupplierSlot, i);
+                _supplierSlots.Add(zone);
+            }
+
+            // Row C-Far Right: TempEffect Slots (always 3) — crises/events
+            for (int i = 0; i < Constants.STARTING_TEMP_EFFECT_SLOTS; i++)
+            {
+                var slot = CreateSlotCube($"TempEffectSlot_{i + 1:D2}",
+                    new Vector3(7.5f, 0.05f, -4.5f + i * 1.5f),
+                    new Vector3(1.4f, 0.1f, 1.2f),
+                    new Color(0.6f, 0.35f, 0.1f));
+
+                var zone = slot.AddComponent<SlotZone3D>();
+                zone.RuntimeInit(DropZoneType.TempEffectSlot, i);
+                _tempEffectSlots.Add(zone);
+            }
+
+            // Sell Zone (right of player area)
+            var sell = CreateSlotCube("SellZone",
+                new Vector3(9.0f, 0.05f, -2.5f),
+                new Vector3(1.5f, 0.1f, 2.0f),
+                new Color(0.6f, 0.4f, 0.1f));
+            _sellZone = sell.AddComponent<SlotZone3D>();
+            _sellZone.RuntimeInit(DropZoneType.SellZone, 0);
+
+            // Action Zone (right of player area)
+            var action = CreateSlotCube("ActionZone",
+                new Vector3(9.0f, 0.05f, -0.2f),
+                new Vector3(1.5f, 0.1f, 1.5f),
+                new Color(0.7f, 0.15f, 0.15f));
+            _actionZone = action.AddComponent<SlotZone3D>();
+            _actionZone.RuntimeInit(DropZoneType.ActionZone, 0);
+
+            // ====================================================================
+            // ZONE 2 — MARKET / CUSTOMER ZONE (middle, Z = 0.5 to 1.5)
+            // 100-customer shared pool represented as 10 territory blocks
+            // ====================================================================
+            CreateDivider("Divider_PlayerMarket", new Vector3(0, 0.07f, 0.8f), new Vector3(16f, 0.02f, 0.05f));
+
+            for (int i = 0; i < Constants.TERRITORY_COUNT; i++)
             {
                 var terr = GameObject.CreatePrimitive(PrimitiveType.Cube);
                 terr.name = $"Territory_{i + 1:D2}";
                 terr.transform.SetParent(transform);
-                float x = (i - 4.5f) * 1.2f;
-                terr.transform.localPosition = new Vector3(x, 0.1f, 4.5f);
-                terr.transform.localScale = new Vector3(1.0f, 0.25f, 1.0f);
+                float x = (i - 4.5f) * 1.5f;
+                terr.transform.localPosition = new Vector3(x, 0.1f, 1.3f);
+                terr.transform.localScale = new Vector3(1.2f, 0.3f, 0.8f);
                 terr.GetComponent<MeshRenderer>().material.color = Color.gray;
                 Destroy(terr.GetComponent<Collider>());
                 _territoryBlocks.Add(terr);
                 _territoryRenderers.Add(terr.GetComponent<MeshRenderer>());
             }
 
-            // === PLAYER BUSINESS SLOTS (5 cubes, center-bottom) ===
-            for (int i = 0; i < 5; i++)
-            {
-                var slot = GameObject.CreatePrimitive(PrimitiveType.Cube);
-                slot.name = $"BusinessSlot_{i + 1:D2}";
-                slot.transform.SetParent(transform);
-                float x = (i - 2) * 2.5f;
-                slot.transform.localPosition = new Vector3(x, 0.05f, -1.5f);
-                slot.transform.localScale = new Vector3(1.8f, 0.1f, 2.5f);
-                slot.GetComponent<MeshRenderer>().material.color = new Color(0.25f, 0.25f, 0.3f);
+            CreateDivider("Divider_MarketRival", new Vector3(0, 0.07f, 2.2f), new Vector3(16f, 0.02f, 0.05f));
 
-                _businessSlotRenderers.Add(slot.GetComponent<MeshRenderer>());
+            // ====================================================================
+            // ZONE 3 — RIVAL ZONE (top, Z = 2.5 to 6)
+            // Visual only — rival's board state, no drop zones
+            // ====================================================================
 
-                var zone = slot.AddComponent<SlotZone3D>();
-                zone.RuntimeInit(DropZoneType.BusinessSlot, i);
-                _businessSlots.Add(zone);
-
-                // Employee sub-slots (3 per business)
-                for (int e = 0; e < 3; e++)
-                {
-                    var empSlot = GameObject.CreatePrimitive(PrimitiveType.Cube);
-                    empSlot.name = $"EmpSlot_{e + 1:D2}";
-                    empSlot.transform.SetParent(slot.transform);
-                    empSlot.transform.localPosition = new Vector3((e - 1) * 0.38f, 1f, -0.45f);
-                    empSlot.transform.localScale = new Vector3(0.45f, 0.5f, 0.3f);
-                    empSlot.GetComponent<MeshRenderer>().material.color = new Color(0.2f, 0.35f, 0.2f);
-
-                    var empZone = empSlot.AddComponent<SlotZone3D>();
-                    empZone.RuntimeInit(DropZoneType.EmployeeSlot, e, i);
-                    _employeeSlots.Add(empZone);
-                }
-
-                // Hide slots 4-5 initially
-                if (i >= 3) slot.SetActive(false);
-            }
-
-            // === RIVAL AREA (3 slots, top) ===
-            for (int i = 0; i < 3; i++)
-            {
-                var rivalSlot = GameObject.CreatePrimitive(PrimitiveType.Cube);
-                rivalSlot.name = $"RivalSlot_{i + 1:D2}";
-                rivalSlot.transform.SetParent(transform);
-                float x = (i - 1) * 2.8f;
-                rivalSlot.transform.localPosition = new Vector3(x, 0.05f, 2.5f);
-                rivalSlot.transform.localScale = new Vector3(1.5f, 0.1f, 1.2f);
-                rivalSlot.GetComponent<MeshRenderer>().material.color = new Color(0.5f, 0.15f, 0.15f);
-                Destroy(rivalSlot.GetComponent<Collider>()); // Read-only
-            }
-
-            // === UPGRADE AREA (left side) ===
+            // Rival operation slots (4 visual-only)
             for (int i = 0; i < 4; i++)
             {
-                var upSlot = GameObject.CreatePrimitive(PrimitiveType.Cube);
-                upSlot.name = $"UpgradeSlot_{i + 1:D2}";
-                upSlot.transform.SetParent(transform);
-                upSlot.transform.localPosition = new Vector3(-6.5f, 0.05f, -2f + i * 1.3f);
-                upSlot.transform.localScale = new Vector3(1.2f, 0.1f, 1f);
-                upSlot.GetComponent<MeshRenderer>().material.color = new Color(0.35f, 0.2f, 0.45f);
-
-                var upZone = upSlot.AddComponent<SlotZone3D>();
-                upZone.RuntimeInit(DropZoneType.UpgradeSlot, i);
-                _upgradeSlots.Add(upZone);
+                var rivalSlot = CreateSlotCube($"RivalOp_{i + 1:D2}",
+                    new Vector3((i - 1.5f) * 2.8f, 0.05f, 4.0f),
+                    new Vector3(2.4f, 0.1f, 1.8f),
+                    new Color(0.5f, 0.15f, 0.15f));
+                Destroy(rivalSlot.GetComponent<Collider>());
             }
 
-            // === SELL ZONE (right side) ===
-            var sell = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            sell.name = "SellZone";
-            sell.transform.SetParent(transform);
-            sell.transform.localPosition = new Vector3(6.5f, 0.05f, -1.5f);
-            sell.transform.localScale = new Vector3(1.5f, 0.1f, 1.5f);
-            sell.GetComponent<MeshRenderer>().material.color = new Color(0.6f, 0.4f, 0.1f);
-            _sellZone = sell.AddComponent<SlotZone3D>();
-            _sellZone.RuntimeInit(DropZoneType.SellZone, 0);
+            // Rival staff slots (3 visual-only)
+            for (int i = 0; i < 3; i++)
+            {
+                var rivalStaff = CreateSlotCube($"RivalStaff_{i + 1:D2}",
+                    new Vector3((i - 1f) * 2.2f, 0.05f, 2.8f),
+                    new Vector3(1.8f, 0.1f, 1.0f),
+                    new Color(0.45f, 0.12f, 0.12f));
+                Destroy(rivalStaff.GetComponent<Collider>());
+            }
 
-            // === ACTION ZONE (center, for action cards) ===
-            var action = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            action.name = "ActionZone";
-            action.transform.SetParent(transform);
-            action.transform.localPosition = new Vector3(6.5f, 0.05f, 0.5f);
-            action.transform.localScale = new Vector3(1.5f, 0.1f, 1.5f);
-            action.GetComponent<MeshRenderer>().material.color = new Color(0.6f, 0.15f, 0.15f);
-            _actionZone = action.AddComponent<SlotZone3D>();
-            _actionZone.RuntimeInit(DropZoneType.ActionZone, 0);
-
-            // === EVENT DISPLAY (center-top) ===
-            var eventArea = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            eventArea.name = "EventDisplay";
-            eventArea.transform.SetParent(transform);
-            eventArea.transform.localPosition = new Vector3(3.5f, 0.15f, 3.5f);
-            eventArea.transform.localScale = new Vector3(1.2f, 0.02f, 1.7f);
-            eventArea.GetComponent<MeshRenderer>().material.color = new Color(0.9f, 0.8f, 0.15f, 0.3f);
+            // Event display (rival side corner)
+            var eventArea = CreateSlotCube("EventDisplay",
+                new Vector3(6.5f, 0.05f, 4.0f),
+                new Vector3(1.5f, 0.08f, 1.8f),
+                new Color(0.9f, 0.8f, 0.15f, 0.3f));
             Destroy(eventArea.GetComponent<Collider>());
 
-            // === VISUAL DIVIDERS ===
-            // Divider between player zone and territory map
-            var div1 = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            div1.name = "Divider_PlayerTerritory";
-            div1.transform.SetParent(transform);
-            div1.transform.localPosition = new Vector3(0, 0.06f, 1.5f);
-            div1.transform.localScale = new Vector3(14f, 0.02f, 0.05f);
-            div1.GetComponent<MeshRenderer>().material.color = new Color(0.5f, 0.5f, 0.5f, 0.5f);
-            Destroy(div1.GetComponent<Collider>());
-
-            // Divider between territory map and rival zone
-            var div2 = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            div2.name = "Divider_TerritoryRival";
-            div2.transform.SetParent(transform);
-            div2.transform.localPosition = new Vector3(0, 0.06f, 3.5f);
-            div2.transform.localScale = new Vector3(14f, 0.02f, 0.05f);
-            div2.GetComponent<MeshRenderer>().material.color = new Color(0.5f, 0.5f, 0.5f, 0.5f);
-            Destroy(div2.GetComponent<Collider>());
-
-            // === FLOATING BOARD LABELS ===
+            // ====================================================================
+            // BOARD LABELS
+            // ====================================================================
             CreateBoardLabels();
+        }
+
+        /// <summary>
+        /// Creates a named cube slot with given position, scale and color as a board child.
+        /// </summary>
+        private GameObject CreateSlotCube(string slotName, Vector3 localPos, Vector3 localScale, Color color)
+        {
+            var go = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            go.name = slotName;
+            go.transform.SetParent(transform);
+            go.transform.localPosition = localPos;
+            go.transform.localScale = localScale;
+            go.GetComponent<MeshRenderer>().material.color = color;
+            return go;
+        }
+
+        private void CreateDivider(string divName, Vector3 localPos, Vector3 localScale)
+        {
+            var div = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            div.name = divName;
+            div.transform.SetParent(transform);
+            div.transform.localPosition = localPos;
+            div.transform.localScale = localScale;
+            div.GetComponent<MeshRenderer>().material.color = new Color(0.55f, 0.55f, 0.55f, 0.5f);
+            Destroy(div.GetComponent<Collider>());
         }
 
         // Called by TerritoryManager to update visuals
@@ -216,35 +275,37 @@ namespace EmpireOfCards.World
         /// </summary>
         private void CreateBoardLabels()
         {
-            // Label positions are relative to the board root.
-            // Y is raised above the board surface; text faces the camera (flat on XZ, rotated to face -Z).
             float labelY = 0.6f;
             float fontSize = 4f;
-            Quaternion labelRot = Quaternion.Euler(55f, 0f, 0f); // Match camera angle
+            Quaternion labelRot = Quaternion.Euler(40f, 0f, 0f);
 
-            // COMPANY TIER -- top-left corner
-            _tierLabel = CreateLabel("ESNAF", new Vector3(-6f, labelY, 4.2f), labelRot, fontSize * 0.9f,
-                        new Color(0.9f, 0.75f, 0.3f));
+            // === ZONE 1: PLAYER ZONE ===
+            CreateLabel("YOUR OPERATION", new Vector3(0f, labelY, -5.2f), labelRot, fontSize * 0.85f,
+                        new Color(0.4f, 0.6f, 1f));
+            CreateLabel("STAFF", new Vector3(0f, labelY, -2.8f), labelRot, fontSize * 0.75f,
+                        new Color(0.4f, 0.9f, 0.5f));
+            CreateLabel("MARKETING", new Vector3(-5f, labelY, -0.8f), labelRot, fontSize * 0.7f,
+                        new Color(0.8f, 0.5f, 0.9f));
+            CreateLabel("SUPPLIERS", new Vector3(3.5f, labelY, -0.8f), labelRot, fontSize * 0.7f,
+                        new Color(0.9f, 0.75f, 0.35f));
+            CreateLabel("EVENTS", new Vector3(8.2f, labelY, -3.2f), labelRot, fontSize * 0.7f,
+                        new Color(0.95f, 0.5f, 0.2f));
+            CreateLabel("SELL", new Vector3(9.2f, labelY, -2.2f), labelRot, fontSize * 0.75f,
+                        new Color(0.9f, 0.7f, 0.2f));
+            CreateLabel("ACTION", new Vector3(9.2f, labelY, -0.0f), labelRot, fontSize * 0.75f,
+                        new Color(0.9f, 0.3f, 0.3f));
 
-            // YOUR BUSINESSES -- above player business slots (center-bottom)
-            CreateLabel("YOUR BUSINESSES", new Vector3(0f, labelY, -0.2f), labelRot, fontSize,
-                        new Color(0.5f, 0.7f, 1f));
-
-            // RIVAL -- above rival area (center-top)
-            CreateLabel("RIVAL", new Vector3(0f, labelY, 3.2f), labelRot, fontSize,
-                        new Color(1f, 0.4f, 0.4f));
-
-            // TERRITORIES -- above territory bar (very top)
-            CreateLabel("TERRITORIES", new Vector3(0f, labelY, 5.2f), labelRot, fontSize,
+            // === ZONE 2: MARKET ZONE ===
+            CreateLabel("CUSTOMER MARKET", new Vector3(0f, labelY, 1.2f), labelRot, fontSize * 0.85f,
                         new Color(0.9f, 0.9f, 0.9f));
 
-            // UPGRADES -- above upgrade area (left side)
-            CreateLabel("UPGRADES", new Vector3(-6.5f, labelY, 1f), labelRot, fontSize * 0.85f,
-                        new Color(0.7f, 0.45f, 0.9f));
+            // === ZONE 3: RIVAL ZONE ===
+            CreateLabel("RIVAL", new Vector3(0f, labelY, 3.5f), labelRot, fontSize,
+                        new Color(1f, 0.4f, 0.4f));
 
-            // SELL -- above sell zone (right side)
-            CreateLabel("SELL", new Vector3(6.5f, labelY, -1f), labelRot, fontSize * 0.85f,
-                        new Color(0.9f, 0.7f, 0.2f));
+            // === COMPANY TIER — top-left ===
+            _tierLabel = CreateLabel("TRADER", new Vector3(-8f, labelY, 4.5f), labelRot, fontSize * 0.9f,
+                        new Color(0.9f, 0.75f, 0.3f));
         }
 
         /// <summary>
@@ -277,7 +338,7 @@ namespace EmpireOfCards.World
         //  Tier Change -- update the board label when company tier changes
         // ================================================================
 
-        private static readonly string[] TierNames = { "ESNAF", "GİRİŞİMCİ", "ŞİRKET", "HOLDİNG" };
+        private static readonly string[] TierNames = { "TRADER", "ENTREPRENEUR", "CORPORATION", "CONGLOMERATE" };
         private static readonly Color[] TierLabelColors = {
             new Color(0.9f, 0.75f, 0.3f),
             new Color(0.3f, 0.8f, 0.4f),

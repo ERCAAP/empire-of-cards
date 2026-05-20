@@ -241,7 +241,7 @@ namespace EmpireOfCards.Editor
             cards[6].randomIncomeMax = 250;
 
             // B08 - Ad Agency
-            cards[7] = CreateBusiness("B08_ReklamAjansi", "Ad Agency", Rarity.Uncommon,
+            cards[7] = CreateBusiness("B08_AdAgency", "Ad Agency", Rarity.Uncommon,
                 "Low income but boosts all your businesses.", 200, 60, 3, 2,
                 new[] { CardTag.Marketing, CardTag.Support });
             cards[7].globalCustomerBonus = 2;
@@ -552,7 +552,7 @@ namespace EmpireOfCards.Editor
                 new[] { CardTag.Logistics });
 
             // U04 - Billboard
-            cards[3] = CreateUpgrade("U04_ReklamPanosu", "Billboard", Rarity.Common,
+            cards[3] = CreateUpgrade("U04_Billboard", "Billboard", Rarity.Common,
                 "Cheap, simple, effective.", 120,
                 UpgradeEffectType.GlobalCustomerFlat, 3f, true, 0, 0,
                 new[] { CardTag.Marketing });

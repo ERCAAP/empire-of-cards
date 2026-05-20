@@ -30,12 +30,12 @@ namespace EmpireOfCards.UI
         private RectTransform rectTransform;
 
         // Tier display data
-        private static readonly string[] TierNames = { "ESNAF", "GİRİŞİMCİ", "ŞİRKET", "HOLDİNG" };
+        private static readonly string[] TierNames = { "TRADER", "ENTREPRENEUR", "CORPORATION", "CONGLOMERATE" };
         private static readonly string[] TierSubtitles = {
             "",
-            "İşin büyümeye başlıyor!",
-            "Artık ciddi bir şirketsin!",
-            "İmparatorluğun yükseliyor!"
+            "Your business is growing!",
+            "You are a serious company now!",
+            "Your empire is rising!"
         };
         private static readonly Color[] TierColors = {
             new Color(0.7f, 0.7f, 0.7f),

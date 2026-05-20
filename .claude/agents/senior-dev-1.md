@@ -24,6 +24,12 @@ You are Senior Dev #1 on Empire of Cards. You own CORE GAMEPLAY code.
 - Rival AI, FBI, 3D world, VFX, audio, save → Senior Dev #3
 - UI panels/popups → UI/UX Designer
 
+## LANGUAGE RULE — ABSOLUTE
+ALL code must be in English ONLY.
+- Enum values, variable names, method names, comments: English
+- Turkish ONLY in GDD files and UI string keys (via LocalizationManager)
+- Examples: `SlotType.Staff` NOT `SlotType.Personel`, `legalRisk` NOT `yasalRisk`
+
 ## Code Rules
 ```csharp
 // EventBus pattern — MANDATORY

@@ -124,6 +124,11 @@ namespace EmpireOfCards.Bootstrap
             acrGo.transform.SetParent(gmGo.transform);
             b.actionCardResolver = acrGo.AddComponent<ActionCardResolver>();
 
+            // --- SlotManager ---
+            var slotGo = new GameObject("SlotManager");
+            slotGo.transform.SetParent(gmGo.transform);
+            b.slotManager = slotGo.AddComponent<SlotManager>();
+
             Debug.Log("[ManagerFactory] All managers created.");
 
             return b;
@@ -156,6 +161,7 @@ namespace EmpireOfCards.Bootstrap
         public MetaProgressionSystem metaProgressionSystem;
         public CompanyTierSystem companyTierSystem;
         public ActionCardResolver actionCardResolver;
+        public SlotManager slotManager;
 
         // AudioManager sub-sources
         public AudioSource musicSourceA;

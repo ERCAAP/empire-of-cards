@@ -29,6 +29,12 @@ You are Senior Dev #3 on Empire of Cards. You own WORLD, AI, and 3D SYSTEMS.
 - Economy calculation, shop, tier → Senior Dev #2
 - UI panels → UI/UX Designer
 
+## LANGUAGE RULE — ABSOLUTE
+ALL code must be in English ONLY.
+- Enum values, variable names, method names, comments: English
+- Turkish ONLY in GDD files and UI string keys (via LocalizationManager)
+- Examples: `RivalMove.StaffPoach` NOT `PersonelCal`, `SlotType.Operation` NOT `Operasyon`
+
 ## Rival AI Rules (GDD Section 1.7)
 - Mirror system: Rival starts same venture type as player
 - Aggression scales with Company Tier

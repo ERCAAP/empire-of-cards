@@ -83,6 +83,35 @@ namespace EmpireOfCards.World
                 case DropZoneType.BurnZone:
                     return true;
 
+                // === New Slot System v2 (GDD v3.0 Section 4) ===
+                case DropZoneType.OperationSlot:
+                    // Operation cards: Business type (infrastructure), not occupied
+                    return card.cardType == CardType.Business && !_isOccupied;
+
+                case DropZoneType.StaffSlot:
+                    // Staff cards: Employee type, parent business must be active
+                    if (card.cardType != CardType.Employee || _isOccupied) return false;
+                    var gm2 = GameManager.Instance;
+                    if (gm2 == null || gm2.BoardManager == null) return false;
+                    var bizList = gm2.BoardManager.PlayerBusinesses;
+                    return parentBusinessIndex < 0 // Global staff slot
+                           || (parentBusinessIndex < bizList.Count
+                               && bizList[parentBusinessIndex] != null
+                               && !bizList[parentBusinessIndex].isClosed);
+
+                case DropZoneType.MarketingSlot:
+                    // Marketing cards: tagged with CardTag.Marketing or Action type
+                    return !_isOccupied && (card.cardType == CardType.Action
+                           || (card.tags != null && System.Array.IndexOf(card.tags, CardTag.Marketing) >= 0));
+
+                case DropZoneType.SupplierSlot:
+                    // Supplier cards: Upgrade type with logistics/supply tags
+                    return !_isOccupied && card.cardType == CardType.Upgrade;
+
+                case DropZoneType.TempEffectSlot:
+                    // Event/crisis cards go here temporarily
+                    return card.cardType == CardType.Event;
+
                 default:
                     return false;
             }
@@ -98,15 +127,19 @@ namespace EmpireOfCards.World
             Vector3 target = transform.position + Vector3.up * 0.15f;
             card.SnapToPosition(target, Quaternion.identity);
 
-            // Scale card to fit slot — smaller cards for sub-slots
+            // Scale card to fit slot
             float scale = zoneType switch
             {
-                DropZoneType.EmployeeSlot => 0.5f,
-                DropZoneType.UpgradeSlot  => 0.6f,
-                DropZoneType.ActionZone   => 0.7f,
-                DropZoneType.SellZone     => 0.7f,
-                DropZoneType.BurnZone     => 0.7f,
-                _                         => 0.7f   // BusinessSlot default
+                DropZoneType.EmployeeSlot   => 0.5f,
+                DropZoneType.StaffSlot      => 0.5f,
+                DropZoneType.UpgradeSlot    => 0.6f,
+                DropZoneType.SupplierSlot   => 0.6f,
+                DropZoneType.ActionZone     => 0.7f,
+                DropZoneType.MarketingSlot  => 0.7f,
+                DropZoneType.SellZone       => 0.7f,
+                DropZoneType.BurnZone       => 0.7f,
+                DropZoneType.TempEffectSlot => 0.65f,
+                _                           => 0.8f   // OperationSlot / BusinessSlot
             };
             card.SetBoardScale(scale);
         }

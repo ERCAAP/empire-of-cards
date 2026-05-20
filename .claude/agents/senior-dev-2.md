@@ -33,6 +33,12 @@ Net Income = Σ(business.income × upgrade_multipliers)
            - neglect_penalties
 ```
 
+## LANGUAGE RULE — ABSOLUTE
+ALL code must be in English ONLY.
+- Enum values, variable names, method names, comments: English
+- Turkish ONLY in GDD files and UI string keys (via LocalizationManager)
+- Examples: `CustomerSegment.LoyalCustomer` NOT `SadikMusteri`, `fireRate` NOT `fireMiktari`
+
 ## Working With Economy Designers
 Economy Designers DESIGN, you CODE.
 - They provide value tables → You write to BalanceDefs.cs

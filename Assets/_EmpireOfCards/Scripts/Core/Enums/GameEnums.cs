@@ -151,13 +151,71 @@ namespace EmpireOfCards.Core
         Level3  // Store/Chain
     }
 
-    // First Venture selection at game start (GDD Section 1.5)
+    // 5 selectable venture types at game start (GDD v3.0 Section 1.5)
     public enum VentureType
     {
-        Diner,          // Diner - food starter
-        TechStartup,    // Tech Startup - tech starter
-        AdAgency,       // Ad Agency - marketing starter
-        BlackMarket     // Black Market - no business, extra money
+        FastFood,       // Fast food restaurant — high volume, low margin
+        Cafe,           // Coffee shop — loyalty-driven, barista-dependent
+        TechApp,        // Mobile/web app — platform fees, viral potential
+        ClothingStore,  // Retail fashion — seasonal cycles, trend-sensitive
+        GroceryStore,   // Neighborhood market — spoilage risk, veresiye system
+
+        // Legacy (v1 starters — kept for save compatibility)
+        Diner,
+        TechStartup,
+        AdAgency,
+        BlackMarket
+    }
+
+    // 5 slot types replacing the old single-business-slot system (GDD v3.0 Section 4)
+    public enum SlotType
+    {
+        Operation,      // Physical infrastructure (table, kitchen, server)
+        Staff,          // Employees (cook, barista, developer)
+        Marketing,      // Ad campaigns (flyer, influencer, google ads)
+        Supplier,       // Supply deals (butcher, firebase, organic)
+        TempEffect      // Temporary events/crises
+    }
+
+    // 5-season cycle, 5 turns each (GDD v3.0 Section 14)
+    public enum SeasonType
+    {
+        Spring,         // Balanced demand
+        Summer,         // High foot traffic, heat events
+        Autumn,         // Back-to-school, fashion transition
+        Winter,         // Holiday surge, cold chain costs
+        RamadanSeason   // Demand shift (food/cafe affected)
+    }
+
+    // Legal risk level brackets (GDD v3.0 Section 13)
+    public enum LegalRiskLevel
+    {
+        Safe,           // 0-25: No risk
+        Caution,        // 26-50: Minor penalties
+        Danger,         // 51-75: FBI interest, income penalty
+        Certain         // 76-100: Raid imminent
+    }
+
+    // Customer segments for market pool (GDD v3.0 Section 7)
+    public enum CustomerSegment
+    {
+        PriceSensitive,     // Chooses cheapest option
+        QualitySeeking,     // Chooses highest quality score
+        TrendFollower,      // Chooses highest platform rating
+        LoyalRegular,       // Sticks with established business
+        NewCustomer         // First-time, influenced by marketing
+    }
+
+    // Rival AI moves (GDD v3.0 Section 15)
+    public enum RivalMove
+    {
+        PriceWar,           // Lower prices, steal price-sensitive customers
+        MarketingBlitz,     // Boost platform rating, steal trend followers
+        QualityImprove,     // Raise quality score
+        StaffPoach,         // Steal a staff card effect
+        SeekInvestment,     // Gain extra income this turn
+        OpenBranch,         // Add a slot (increases rival capacity)
+        Sabotage            // Target player's highest-income slot
     }
 
     // Company Tier progression (GDD Section 1.6)

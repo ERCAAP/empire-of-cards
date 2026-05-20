@@ -29,6 +29,16 @@ namespace EmpireOfCards.Gameplay
         [SerializeField] private int netIncome;
         [SerializeField] private int totalCustomersThisTurn;
 
+        // --- Platform Rating (GDD v3.0 Section 8) ---
+        [Header("Platform Rating")]
+        [SerializeField] private float platformRating = Constants.PLATFORM_RATING_DEFAULT;
+
+        // --- Cash Flow (GDD v3.0) ---
+        [Header("Cash Flow")]
+        [SerializeField] private int cashBalance;
+        private int cashCrisisCounter;
+        private bool inCashCrisis;
+
         // --- Ability System Reference ---
         private AbilitySystem abilitySystem;
 
@@ -44,6 +54,9 @@ namespace EmpireOfCards.Gameplay
         public int TaxAmount => taxAmount;
         public int NetIncome => netIncome;
         public int TotalCustomersThisTurn => totalCustomersThisTurn;
+        public float PlatformRating => platformRating;
+        public int CashBalance => cashBalance;
+        public bool IsCashCrisis => inCashCrisis;
 
         /// <summary>
         /// Assigns all dependencies without reflection.
@@ -291,6 +304,79 @@ namespace EmpireOfCards.Gameplay
             return false;
         }
 
+        // ----------------------------------------------------------------
+        // Platform Rating (GDD v3.0 Section 8)
+        // ----------------------------------------------------------------
+
+        /// <summary>
+        /// Adjusts platform rating by delta, clamped to [1.0, 5.0].
+        /// Fires EventBus.PlatformRatingChanged.
+        /// </summary>
+        public void ModifyPlatformRating(float delta)
+        {
+            platformRating = UnityEngine.Mathf.Clamp(
+                platformRating + delta,
+                Constants.PLATFORM_RATING_MIN,
+                Constants.PLATFORM_RATING_MAX);
+            EventBus.PlatformRatingChanged(platformRating);
+        }
+
+        /// <summary>
+        /// Returns a customer multiplier based on platform rating bands.
+        /// 4.5+ = +25%, 4.0+ = +15%, 3.5+ = +5%, 3.0+ = 0%, below 3.0 = -10%.
+        /// </summary>
+        public float GetRatingCustomerMultiplier()
+        {
+            if (platformRating >= 4.5f) return 1.25f;
+            if (platformRating >= 4.0f) return 1.15f;
+            if (platformRating >= 3.5f) return 1.05f;
+            if (platformRating >= 3.0f) return 1.00f;
+            return 0.90f; // Below 3.0 — poor reputation
+        }
+
+        /// <summary>
+        /// Decay platform rating by Constants.PLATFORM_RATING_DECAY_PER_TURN each turn
+        /// if no marketing slot is active. Called from ResolvePhase.
+        /// </summary>
+        public void DecayPlatformRating()
+        {
+            ModifyPlatformRating(-Constants.PLATFORM_RATING_DECAY_PER_TURN);
+        }
+
+        // ----------------------------------------------------------------
+        // Cash Flow
+        // ----------------------------------------------------------------
+
+        /// <summary>
+        /// Updates the tracked cash balance and fires an event.
+        /// Called by GameManager after GainMoney/SpendMoney operations.
+        /// </summary>
+        public void UpdateCashBalance(int newBalance)
+        {
+            cashBalance = newBalance;
+            EventBus.CashBalanceChanged(cashBalance);
+
+            if (cashBalance < 0)
+            {
+                cashCrisisCounter++;
+                if (!inCashCrisis && cashCrisisCounter >= Constants.CASH_CRISIS_THRESHOLD)
+                {
+                    inCashCrisis = true;
+                    EventBus.CashCrisisStarted();
+                }
+            }
+            else if (inCashCrisis)
+            {
+                inCashCrisis = false;
+                cashCrisisCounter = 0;
+                EventBus.CashCrisisResolved();
+            }
+            else
+            {
+                cashCrisisCounter = 0;
+            }
+        }
+
         /// <summary>
         /// Resets economy state for a new run.
         /// </summary>
@@ -301,6 +387,10 @@ namespace EmpireOfCards.Gameplay
             taxAmount = 0;
             netIncome = 0;
             totalCustomersThisTurn = 0;
+            platformRating = Constants.PLATFORM_RATING_DEFAULT;
+            cashBalance = 0;
+            cashCrisisCounter = 0;
+            inCashCrisis = false;
             debtTracker.Reset();
         }
     }

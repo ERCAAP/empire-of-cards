@@ -1,4 +1,5 @@
 using EmpireOfCards.Core.StateMachine;
+using EmpireOfCards.Data;
 
 namespace EmpireOfCards.Core.TurnPhases
 {
@@ -32,6 +33,48 @@ namespace EmpireOfCards.Core.TurnPhases
         public void Exit()
         {
             // UI disables card dragging
+        }
+
+        /// <summary>
+        /// Maps a CardData type to the default SlotType it should target.
+        /// Used by InputManager3D to highlight valid zones when player picks up a card.
+        /// Returns null for Action cards (single-use, no slot).
+        /// </summary>
+        public static SlotType? GetDefaultSlotType(CardData card)
+        {
+            if (card == null) return null;
+
+            switch (card.cardType)
+            {
+                case CardType.Business:
+                    return SlotType.Operation;
+
+                case CardType.Employee:
+                    return SlotType.Staff;
+
+                case CardType.Upgrade:
+                    // Route by tag: Marketing or Logistics/Supplier tags
+                    if (card.tags != null)
+                    {
+                        foreach (var tag in card.tags)
+                        {
+                            if (tag == CardTag.Marketing || tag == CardTag.Influencer)
+                                return SlotType.Marketing;
+                            if (tag == CardTag.Logistics || tag == CardTag.Organic)
+                                return SlotType.Supplier;
+                        }
+                    }
+                    return SlotType.Operation; // Default upgrades go to operation
+
+                case CardType.Event:
+                    return SlotType.TempEffect;
+
+                case CardType.Action:
+                    return null; // Single-use, targets ActionZone directly
+
+                default:
+                    return null;
+            }
         }
     }
 }

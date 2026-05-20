@@ -33,16 +33,17 @@ namespace EmpireOfCards.UI
         private static readonly Color SelectedColor = new Color(0.2f, 0.4f, 0.6f, 1f);
         private static readonly Color HoverColor = new Color(0.2f, 0.25f, 0.35f, 0.95f);
 
-        // Venture-specific accent colors
+        // Venture-specific accent colors (order matches VentureType enum: FastFood, Cafe, TechApp, ClothingStore, GroceryStore)
         private static readonly Color[] VentureAccents = new Color[]
         {
-            new Color(0.9f, 0.5f, 0.2f),   // Bufe - orange
-            new Color(0.3f, 0.6f, 0.9f),   // Tech - blue
-            new Color(0.9f, 0.3f, 0.5f),   // Reklam - pink
-            new Color(0.4f, 0.4f, 0.4f)    // Karanlik - dark gray
+            new Color(0.9f, 0.4f, 0.1f),   // FastFood - red-orange
+            new Color(0.6f, 0.38f, 0.22f), // Cafe - coffee brown
+            new Color(0.25f, 0.55f, 0.95f),// TechApp - blue
+            new Color(0.85f, 0.25f, 0.55f),// ClothingStore - pink/rose
+            new Color(0.3f, 0.7f, 0.35f)   // GroceryStore - green
         };
 
-        private static readonly string[] VentureEmojis = { "🍔", "💻", "📢", "🕶️" };
+        private static readonly string[] VentureEmojis = { "🍔", "☕", "📱", "👗", "🛒" };
 
         /// <summary>
         /// Assigns UI element references at runtime (since SerializeField can't

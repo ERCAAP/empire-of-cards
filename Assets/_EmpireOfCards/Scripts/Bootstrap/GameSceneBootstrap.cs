@@ -134,8 +134,8 @@ namespace EmpireOfCards.Bootstrap
             cam.fieldOfView = 45f;
             cam.nearClipPlane = 0.3f;
             cam.farClipPlane = 50f;
-            cam.transform.position = new Vector3(0f, 8.5f, -5.5f);
-            cam.transform.rotation = Quaternion.Euler(55f, 0f, 0f);
+            cam.transform.position = new Vector3(0f, 8f, -8f);
+            cam.transform.rotation = Quaternion.Euler(40f, 0f, 0f);
             cam.backgroundColor = new Color(0.15f, 0.12f, 0.1f);
             cam.clearFlags = CameraClearFlags.SolidColor;
 
@@ -166,8 +166,10 @@ namespace EmpireOfCards.Bootstrap
         {
             var handAnchor = new GameObject("HandAnchor");
             handAnchor.transform.SetParent(mainCamera.transform);
-            handAnchor.transform.localPosition = new Vector3(0f, -1.2f, 4f);
-            handAnchor.transform.localRotation = Quaternion.Euler(-50f, 0f, 0f);
+            // World position: at bottom edge of camera view, just in front of the board.
+            // SetParent(keepWorldPosition=false) then overwrite with world pos.
+            handAnchor.transform.position = new Vector3(0f, 0.5f, -7f);
+            handAnchor.transform.rotation = Quaternion.Euler(0f, 0f, 0f);
 
             var handGo = new GameObject("Hand3D");
             handGo.transform.SetParent(handAnchor.transform);
