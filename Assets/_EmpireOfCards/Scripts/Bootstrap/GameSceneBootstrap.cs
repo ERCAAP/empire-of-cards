@@ -167,7 +167,7 @@ namespace EmpireOfCards.Bootstrap
         {
             var handAnchor = new GameObject("HandAnchor");
             // DO NOT parent to camera — use world space on the board surface
-            handAnchor.transform.position = new Vector3(0f, 0.5f, -4f);
+            handAnchor.transform.position = new Vector3(0f, 1.0f, -3.5f);
             // Slight tilt so cards face upward toward camera
             handAnchor.transform.rotation = Quaternion.Euler(-20f, 0f, 0f);
 

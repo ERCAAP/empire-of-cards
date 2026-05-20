@@ -21,8 +21,9 @@ namespace EmpireOfCards.Bootstrap
             var act = ActionCardDefs.Create();
             var upg = UpgradeCardDefs.Create();
             var evt = EventCardDefs.Create();
+            var gen = GeneralCardDefs.Create();
 
-            var allCards = Combine(biz, emp, act, upg, evt);
+            var allCards = Combine(biz, emp, act, upg, evt, gen);
 
             // Combos, balance, deck, rival, shop
             var combos  = ComboDefs.Create(allCards);

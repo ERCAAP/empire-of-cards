@@ -228,6 +228,10 @@ namespace EmpireOfCards.Bootstrap
                 {
                     gm.UseAction();
 
+                    // Remove the card from DeckManager's hand list so it does NOT
+                    // re-enter the discard pile during DiscardHand() at next turn.
+                    gm.DeckManager.RemoveFromHand(card.CardData);
+
                     // PlaceCard MUST run before CardPlayed so IsInHand is false
                     // when Hand3D.RemoveCardFromHand checks — otherwise it destroys
                     // the card that should stay on the board.

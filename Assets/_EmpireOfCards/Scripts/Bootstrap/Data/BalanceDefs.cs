@@ -84,30 +84,23 @@ namespace EmpireOfCards.Bootstrap.Data
             deck.presetName = "Starter Deck";
             deck.startingMoney = 500;
 
-            CardData b01 = CardHelper.FindCard("B01_Diner");
-            CardData b02 = CardHelper.FindCard("B02_CoffeeShop");
-            CardData c01 = CardHelper.FindCard("C01_Intern");
-            CardData c02 = CardHelper.FindCard("C02_JuniorMarketer");
-            CardData c03 = CardHelper.FindCard("C03_Barista");
-            CardData a01 = CardHelper.FindCard("A01_Flyer");
-            CardData a02 = CardHelper.FindCard("A02_SmallInvestment");
-            CardData u01 = CardHelper.FindCard("U01_OfficeSupplies");
+            // Use venture-neutral (GEN) cards so FilterByVenture keeps them all
+            CardData gen01 = CardHelper.FindCard("GEN01_PopUpShop");
+            CardData gen03 = CardHelper.FindCard("GEN03_Intern");
+            CardData gen07 = CardHelper.FindCard("GEN07_SocialMediaAd");
+            CardData gen16 = CardHelper.FindCard("GEN16_BulkDealer");
 
-            // 14 cards: diverse starter with combo potential
-            // 2x Business (Diner + Coffee Shop = early combo potential with Barista)
-            // 3x Employee (1 Intern + 1 Jr Marketer + 1 Barista = variety + Latte Art combo piece)
-            // 4x Action (2 Flyer + 2 Small Investment = choices between customers vs money)
-            // 2x Upgrade (Office Supplies = immediate value)
+            // 14 cards: general starter that works with any venture
+            // 2x Operation (Pop-Up Shop — cheap general business)
+            // 4x Staff (Intern — cheap general employee)
+            // 4x Marketing (Social Media Ad — cheap general action)
+            // 4x Supplier (Bulk Dealer — cheap general upgrade)
             deck.cards = new DeckEntry[]
             {
-                new DeckEntry { card = b01, count = 1 },   // 1x Diner (venture gives another)
-                new DeckEntry { card = b02, count = 1 },   // 1x Coffee Shop (combo potential!)
-                new DeckEntry { card = c01, count = 1 },   // 1x Intern (cheap starter)
-                new DeckEntry { card = c02, count = 1 },   // 1x Jr Marketer (income boost)
-                new DeckEntry { card = c03, count = 1 },   // 1x Barista (Latte Art combo!)
-                new DeckEntry { card = a01, count = 2 },   // 2x Flyer (customer burst)
-                new DeckEntry { card = a02, count = 2 },   // 2x Small Investment (money burst)
-                new DeckEntry { card = u01, count = 2 },   // 2x Office Supplies (immediate value)
+                new DeckEntry { card = gen01, count = 2 },  // 2x Pop-Up Shop (basic operation)
+                new DeckEntry { card = gen03, count = 4 },  // 4x Intern (cheap staff)
+                new DeckEntry { card = gen07, count = 4 },  // 4x Social Media Ad (basic marketing)
+                new DeckEntry { card = gen16, count = 4 },  // 4x Bulk Dealer (basic supplier)
             };
 
             return deck;

@@ -82,12 +82,17 @@ namespace EmpireOfCards.Gameplay
             int removed = drawPile.RemoveAll(card =>
                 card != null
                 && !card.isGeneralCard
-                && card.ventureType != chosenVenture
-                && card.ventureType != default);
+                && card.ventureType != chosenVenture);
+
+            // Also filter discard pile
+            discardPile.RemoveAll(card =>
+                card != null
+                && !card.isGeneralCard
+                && card.ventureType != chosenVenture);
 
             if (removed > 0)
             {
-                Debug.Log($"[DeckManager] Filtered deck by {chosenVenture}: removed {removed} cards from other ventures. Remaining: {drawPile.Count}");
+                Debug.Log($"[DeckManager] Filtered deck by {chosenVenture}: removed {removed} cards. Remaining: {drawPile.Count}");
                 ShuffleDeck();
             }
         }
@@ -232,6 +237,17 @@ namespace EmpireOfCards.Gameplay
         {
             if (card == null) return;
             discardPile.Add(card);
+        }
+
+        /// <summary>
+        /// Removes a card from the hand without discarding it.
+        /// Used when a card is played to the board — it should NOT
+        /// re-enter the discard pile or be available for DiscardHand().
+        /// </summary>
+        public void RemoveFromHand(CardData card)
+        {
+            if (card == null) return;
+            hand.Remove(card);
         }
 
         /// <summary>
