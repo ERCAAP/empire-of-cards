@@ -70,12 +70,14 @@ namespace EmpireOfCards.Core
     // Resolve phase sub-steps from GDD Section 4.2 Step 4
     public enum ResolveStep
     {
-        BusinessProduce,    // 4a: Businesses produce
-        CustomerFlow,       // 4b: Customers flow / territory
-        ComboCheck,         // 4c: Combo check
-        TierCheck,          // 4c.5: Company tier evaluation
-        IncomeCalculation,  // 4d: Income calculated
-        DeteriorationCheck  // 4e: Deterioration check (FBI, closure, leaving)
+        BusinessProduce,        // 4a: Businesses produce
+        CustomerFlow,           // 4b: Customers flow / territory
+        SeasonCheck,            // 4b.5: Season transition check
+        MarketShareCalculation, // 4b.6: Market share calculation
+        ComboCheck,             // 4c: Combo check
+        TierCheck,              // 4c.5: Company tier evaluation
+        IncomeCalculation,      // 4d: Income calculated
+        DeteriorationCheck      // 4e: Deterioration check (FBI, closure, leaving)
     }
 
     // Employee active ability types from GDD Section 3.2

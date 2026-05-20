@@ -132,7 +132,7 @@ namespace EmpireOfCards.Core.TurnPhases
 
                     if (currentTurn > 1 && newSeason != _lastSeason)
                     {
-                        EventBus.SeasonChanged(newSeason);
+                        EventBus.SeasonChanged(newSeason, seasonIndex);
                         Debug.Log($"[ResolvePhase] Season changed to {newSeason}");
                     }
 
@@ -240,12 +240,12 @@ namespace EmpireOfCards.Core.TurnPhases
         {
             return season switch
             {
-                SeasonType.EarlyGame   => Constants.SEASON_MULTIPLIER_EARLY_GAME,
-                SeasonType.Growth      => Constants.SEASON_MULTIPLIER_GROWTH,
-                SeasonType.Peak        => Constants.SEASON_MULTIPLIER_PEAK,
-                SeasonType.Transition  => Constants.SEASON_MULTIPLIER_TRANSITION,
-                SeasonType.OffPeak     => Constants.SEASON_MULTIPLIER_OFF_PEAK,
-                _                      => 1.0f
+                SeasonType.Spring        => Constants.SEASON_MULTIPLIER_SPRING,
+                SeasonType.Summer        => Constants.SEASON_MULTIPLIER_SUMMER,
+                SeasonType.Autumn        => Constants.SEASON_MULTIPLIER_AUTUMN,
+                SeasonType.Winter        => Constants.SEASON_MULTIPLIER_WINTER,
+                SeasonType.RamadanSeason => Constants.SEASON_MULTIPLIER_RAMADAN,
+                _                        => 1.0f
             };
         }
 

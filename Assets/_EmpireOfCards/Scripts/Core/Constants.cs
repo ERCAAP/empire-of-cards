@@ -96,6 +96,13 @@ namespace EmpireOfCards.Core
         public const float SEASON_PEAK_INCOME_MULTIPLIER = 1.25f;
         public const float SEASON_TRANSITION_INCOME_PENALTY = 0.70f; // -30% during transitions
         public const float SEASON_OFFPEAK_INCOME_MULTIPLIER = 0.85f;
+
+        // Per-season multipliers used by ResolvePhase.GetSeasonMultiplier()
+        public const float SEASON_MULTIPLIER_SPRING = 1.0f;          // Balanced
+        public const float SEASON_MULTIPLIER_SUMMER = 1.25f;         // Peak foot traffic
+        public const float SEASON_MULTIPLIER_AUTUMN = 0.70f;         // Transition penalty
+        public const float SEASON_MULTIPLIER_WINTER = 1.15f;         // Holiday surge
+        public const float SEASON_MULTIPLIER_RAMADAN = 0.85f;        // Off-peak shift
         #endregion
 
         #region Tax (GDD Section 9.2)
@@ -147,15 +154,14 @@ namespace EmpireOfCards.Core
         public const int EMPLOYEE_LEAVE_TURN_THRESHOLD = 8; // Employee working 8+ turns
         #endregion
 
-        #region Company Tier (GDD Section 1.6)
-        public const int TIER_ENTREPRENEUR_BUSINESSES = 2;
+        #region Company Tier (GDD Section 1.6 — customer-based v3.0)
+        public const int TIER_ENTREPRENEUR_CUSTOMERS = 20;
         public const int TIER_ENTREPRENEUR_COMBOS = 1;
-        public const int TIER_CORPORATION_BUSINESSES = 3;
+        public const int TIER_CORPORATION_CUSTOMERS = 45;
         public const int TIER_CORPORATION_COMBOS = 2;
-        public const int TIER_CORPORATION_TERRITORIES = 4;
-        public const int TIER_CONGLOMERATE_BUSINESSES = 3;
+        public const float TIER_CORPORATION_OPERATION_OCCUPANCY = 0.75f;
+        public const int TIER_CONGLOMERATE_CUSTOMERS = 60;
         public const int TIER_CONGLOMERATE_COMBOS = 3;
-        public const int TIER_CONGLOMERATE_TERRITORIES = 5;
         public const int TIER_SCORE_ENTREPRENEUR = 200;
         public const int TIER_SCORE_CORPORATION = 500;
         public const int TIER_SCORE_CONGLOMERATE = 1000;
