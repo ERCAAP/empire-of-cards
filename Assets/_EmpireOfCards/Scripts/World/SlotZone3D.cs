@@ -180,6 +180,24 @@ namespace EmpireOfCards.World
                 _renderer.material.color = _baseColor;
         }
 
+        public void ApplyRestoredCard(CardData data)
+        {
+            _isOccupied = data != null;
+            _placedCard = null;
+
+            if (_buildingVisual != null)
+            {
+                Destroy(_buildingVisual);
+                _buildingVisual = null;
+            }
+
+            if (data != null)
+                SpawnBuildingVisual(data);
+
+            if (_renderer != null)
+                _renderer.material.color = _isOccupied ? _occupiedColor : _baseColor;
+        }
+
         private void SpawnBuildingVisual(Card3D card)
         {
             if (_buildingVisual != null)
@@ -189,7 +207,18 @@ namespace EmpireOfCards.World
             }
 
             if (card == null || card.CardData == null) return;
-            CardData data = card.CardData;
+            SpawnBuildingVisual(card.CardData);
+        }
+
+        private void SpawnBuildingVisual(CardData data)
+        {
+            if (_buildingVisual != null)
+            {
+                Destroy(_buildingVisual);
+                _buildingVisual = null;
+            }
+
+            if (data == null) return;
 
             var building = GameObject.CreatePrimitive(PrimitiveType.Cube);
             building.name = $"Building_{data.cardId}";

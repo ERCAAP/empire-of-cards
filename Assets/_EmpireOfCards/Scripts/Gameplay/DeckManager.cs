@@ -29,6 +29,10 @@ namespace EmpireOfCards.Gameplay
         public int HandSize => handSize;
         public VentureDeckProfile ActiveDeckProfile => _activeDeckProfile;
 
+        public List<string> GetDrawPileIds() => ToIds(drawPile);
+        public List<string> GetHandIds() => ToIds(hand);
+        public List<string> GetDiscardPileIds() => ToIds(discardPile);
+
         public void InitializeDeck(DeckPresetData preset)
         {
             Reset();
@@ -204,6 +208,27 @@ namespace EmpireOfCards.Gameplay
             redrawsRemaining = 0;
         }
 
+        public void RestoreState(
+            VentureDeckProfile profile,
+            Dictionary<string, CardData> lookup,
+            IList<string> drawIds,
+            IList<string> handIds,
+            IList<string> discardIds,
+            int restoredRedraws)
+        {
+            Reset();
+            _activeDeckProfile = profile;
+            _lookup = lookup;
+
+            RestorePile(drawIds, drawPile);
+            RestorePile(handIds, hand);
+            RestorePile(discardIds, discardPile);
+            redrawsRemaining = Mathf.Clamp(restoredRedraws, 0, redrawsPerTurn);
+
+            for (int i = 0; i < hand.Count; i++)
+                EventBus.CardDrawn(hand[i]);
+        }
+
         private void PullCardBySlotTypeToFront(SlotType slotType, int insertAt)
         {
             for (int i = insertAt; i < drawPile.Count; i++)
@@ -322,6 +347,29 @@ namespace EmpireOfCards.Gameplay
             }
 
             return weightedCards[weightedCards.Count - 1].card;
+        }
+
+        private void RestorePile(IList<string> ids, List<CardData> target)
+        {
+            if (ids == null || _lookup == null)
+                return;
+
+            for (int i = 0; i < ids.Count; i++)
+            {
+                string id = ids[i];
+                if (string.IsNullOrWhiteSpace(id))
+                    continue;
+                if (_lookup.TryGetValue(id, out var card) && card != null)
+                    target.Add(card);
+            }
+        }
+
+        private static List<string> ToIds(List<CardData> cards)
+        {
+            var ids = new List<string>(cards.Count);
+            for (int i = 0; i < cards.Count; i++)
+                ids.Add(cards[i] != null ? cards[i].cardId : string.Empty);
+            return ids;
         }
 
         private void AddIdsToPile(string[] ids, List<CardData> target, int copies)

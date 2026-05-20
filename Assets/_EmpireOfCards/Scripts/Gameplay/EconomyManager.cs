@@ -368,6 +368,18 @@ namespace EmpireOfCards.Gameplay
                 SetActiveProfile(_activeProfile);
         }
 
+        public void RestoreSnapshot(VentureBoardSnapshot restored)
+        {
+            if (restored == null)
+                return;
+
+            snapshot = restored;
+            EventBus.PlatformRatingChanged(snapshot.rating);
+            EventBus.LegalRiskUpdated(Mathf.RoundToInt(snapshot.legalRisk));
+            EventBus.CashBalanceChanged(Mathf.RoundToInt(snapshot.cash));
+            UpdatePressure(Mathf.Max(0f, snapshot.demand - snapshot.capacity), 0, 0);
+        }
+
         private void UpdateDerivedMetrics(float servedDemand, float overload, int supplierCount, int marketingCount, IReadOnlyList<CardData> temp)
         {
             if (snapshot.derivedMetrics == null || snapshot.derivedMetrics.Length == 0)

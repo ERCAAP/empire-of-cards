@@ -16,6 +16,7 @@ namespace EmpireOfCards.Core.TurnPhases
         public void Enter()
         {
             _turnManager.ResetPlayerEndedPlayPhase();
+            GameManager.Instance?.SaveCheckpoint();
             // UI enables card dragging, action dots, end turn button
         }
 

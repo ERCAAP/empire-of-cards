@@ -55,6 +55,20 @@ namespace EmpireOfCards.World
                 _operationSlots[i].gameObject.SetActive(i < maxSlots);
         }
 
+        public void RefreshSlotOccupancyVisuals()
+        {
+            var gm = GameManager.Instance;
+            if (gm == null || gm.SlotManager == null)
+                return;
+
+            ApplySlotVisuals(_operationSlots, gm.SlotManager.OperationSlots);
+            ApplySlotVisuals(_staffSlots, gm.SlotManager.StaffSlots);
+            ApplySlotVisuals(_marketingSlots, gm.SlotManager.MarketingSlots);
+            ApplySlotVisuals(_supplierSlots, gm.SlotManager.SupplierSlots);
+            ApplySlotVisuals(_tempEffectSlots, gm.SlotManager.TempEffectSlots);
+            UpdateBusinessAnchor();
+        }
+
         public void BuildBoard()
         {
             BuildDeskFoundation();
@@ -498,6 +512,13 @@ namespace EmpireOfCards.World
                 label += LocalizationManager.GetWithFallback(defs[i].labelKey, fallback).ToUpperInvariant();
             }
             return label;
+        }
+
+        private static void ApplySlotVisuals(IReadOnlyList<SlotZone3D> zones, IReadOnlyList<CardData> cards)
+        {
+            int count = Mathf.Min(zones.Count, cards.Count);
+            for (int i = 0; i < count; i++)
+                zones[i].ApplyRestoredCard(cards[i]);
         }
     }
 }

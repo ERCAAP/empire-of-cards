@@ -9,6 +9,9 @@ using EmpireOfCards.VFX;
 using EmpireOfCards.Helpers;
 using EmpireOfCards.Data;
 using EmpireOfCards.Presentation;
+using EmpireOfCards.Save;
+using TMPro;
+using UnityEngine.UI;
 
 namespace EmpireOfCards.Bootstrap
 {
@@ -23,6 +26,17 @@ namespace EmpireOfCards.Bootstrap
     /// </summary>
     public class GameSceneBootstrap : MonoBehaviour
     {
+        private TutorialManager _tutorialManager;
+        private VentureSelectionUI _ventureSelectionUI;
+        private VentureData[] _ventures;
+        private Board3D _board3D;
+        private GameDataBundle _data;
+        private GameObject _runNamePanel;
+        private TMP_InputField _runNameInput;
+        private TMP_Text _runNameTitleText;
+        private VentureData _pendingVenture;
+        private string _pendingRunName;
+
         private void Awake()
         {
             // 1. Create all game data in memory
@@ -58,6 +72,7 @@ namespace EmpireOfCards.Bootstrap
             // 9.5. Store venture selection references
             _ventureSelectionUI = hud.ventureSelectionUI;
             _ventures = data.ventures;
+            _data = data;
 
             // Wire venture UI card buttons and start button
             if (_ventureSelectionUI != null && hud.ventureCards != null)
@@ -71,17 +86,19 @@ namespace EmpireOfCards.Bootstrap
 
             // 10. Create Tutorial system (after all wiring is complete)
             _tutorialManager = CreateTutorial(hud);
+            CreateRunNamePrompt(hud);
 
             Debug.Log("[GameSceneBootstrap] 3D scene created successfully.");
         }
 
-        // Tutorial reference kept for Start()
-        private TutorialManager _tutorialManager;
-        private VentureSelectionUI _ventureSelectionUI;
-        private VentureData[] _ventures;
-
         private void Start()
         {
+            if (RunLaunchConfig.LaunchMode == RunLaunchMode.LoadRun)
+            {
+                TryRestoreSavedRun();
+                return;
+            }
+
             // Show venture selection instead of starting immediately
             if (_ventureSelectionUI != null && _ventures != null && _ventures.Length > 0)
             {
@@ -99,7 +116,7 @@ namespace EmpireOfCards.Bootstrap
         private void OnVentureChosen(VentureData venture)
         {
             _ventureSelectionUI.OnVentureSelected -= OnVentureChosen;
-            StartRun(venture);
+            ShowRunNamePrompt(venture);
         }
 
         private void StartRun(VentureData venture)
@@ -109,11 +126,40 @@ namespace EmpireOfCards.Bootstrap
 
             if (venture != null)
                 gm.SetSelectedVenture(venture);
+            if (!string.IsNullOrWhiteSpace(_pendingRunName))
+                gm.SetRunDisplayName(_pendingRunName);
 
             gm.StartNewRun();
+            _pendingRunName = null;
 
             if (_tutorialManager != null)
                 _tutorialManager.TryStartTutorial();
+        }
+
+        private void TryRestoreSavedRun()
+        {
+            var gm = GameManager.Instance;
+            var save = SaveManager.Instance;
+            if (gm == null || save == null || !save.HasRunSave())
+            {
+                RunLaunchConfig.PrepareNewRun();
+                StartRun(null);
+                return;
+            }
+
+            RunSaveData run = save.LoadRun();
+            VentureData venture = FindVenture((VentureType)run.ventureType);
+            if (venture == null)
+            {
+                RunLaunchConfig.PrepareNewRun();
+                StartRun(null);
+                return;
+            }
+
+            gm.SetSelectedVenture(venture);
+            gm.SetRunDisplayName(run.runName);
+            gm.RestoreRunCheckpoint(run);
+            _board3D?.RefreshSlotOccupancyVisuals();
         }
 
         // ================================================================
@@ -154,6 +200,7 @@ namespace EmpireOfCards.Bootstrap
             var boardGo = new GameObject("--- BOARD 3D ---");
             var board3D = boardGo.AddComponent<Board3D>();
             board3D.BuildBoard();
+            _board3D = board3D;
             return board3D;
         }
 
@@ -214,6 +261,162 @@ namespace EmpireOfCards.Bootstrap
             tutorialManager.Init(tutorialUI);
 
             return tutorialManager;
+        }
+
+        private void CreateRunNamePrompt(HUDBundle hud)
+        {
+            Transform canvasParent = hud.uiManager != null ? hud.uiManager.transform : null;
+            if (canvasParent == null)
+                return;
+
+            _runNamePanel = new GameObject("RunNamePanel");
+            _runNamePanel.transform.SetParent(canvasParent, false);
+            var panelRt = _runNamePanel.AddComponent<RectTransform>();
+            panelRt.anchorMin = Vector2.zero;
+            panelRt.anchorMax = Vector2.one;
+            panelRt.offsetMin = Vector2.zero;
+            panelRt.offsetMax = Vector2.zero;
+            var bg = _runNamePanel.AddComponent<Image>();
+            bg.color = new Color(0.03f, 0.03f, 0.08f, 0.94f);
+
+            var titleGo = new GameObject("RunNameTitle");
+            titleGo.transform.SetParent(_runNamePanel.transform, false);
+            var titleRt = titleGo.AddComponent<RectTransform>();
+            titleRt.anchoredPosition = new Vector2(0f, 110f);
+            titleRt.sizeDelta = new Vector2(700f, 60f);
+            _runNameTitleText = titleGo.AddComponent<TextMeshProUGUI>();
+            _runNameTitleText.fontSize = 36;
+            _runNameTitleText.alignment = TextAlignmentOptions.Center;
+            _runNameTitleText.color = Color.white;
+
+            var inputRoot = new GameObject("RunNameInput");
+            inputRoot.transform.SetParent(_runNamePanel.transform, false);
+            var inputRt = inputRoot.AddComponent<RectTransform>();
+            inputRt.anchoredPosition = new Vector2(0f, 20f);
+            inputRt.sizeDelta = new Vector2(560f, 64f);
+            var inputBg = inputRoot.AddComponent<Image>();
+            inputBg.color = new Color(0.14f, 0.14f, 0.18f, 1f);
+
+            _runNameInput = inputRoot.AddComponent<TMP_InputField>();
+
+            var viewportGo = new GameObject("Viewport");
+            viewportGo.transform.SetParent(inputRoot.transform, false);
+            var viewportRt = viewportGo.AddComponent<RectTransform>();
+            viewportRt.anchorMin = Vector2.zero;
+            viewportRt.anchorMax = Vector2.one;
+            viewportRt.offsetMin = new Vector2(18f, 10f);
+            viewportRt.offsetMax = new Vector2(-18f, -10f);
+            viewportGo.AddComponent<RectMask2D>();
+
+            var placeholderGo = new GameObject("Placeholder");
+            placeholderGo.transform.SetParent(viewportGo.transform, false);
+            var placeholderRt = placeholderGo.AddComponent<RectTransform>();
+            placeholderRt.anchorMin = Vector2.zero;
+            placeholderRt.anchorMax = Vector2.one;
+            placeholderRt.offsetMin = Vector2.zero;
+            placeholderRt.offsetMax = Vector2.zero;
+            var placeholder = placeholderGo.AddComponent<TextMeshProUGUI>();
+            placeholder.text = "Enter a company or app name";
+            placeholder.fontSize = 24;
+            placeholder.color = new Color(0.62f, 0.62f, 0.68f);
+            placeholder.alignment = TextAlignmentOptions.MidlineLeft;
+
+            var textGo = new GameObject("Text");
+            textGo.transform.SetParent(viewportGo.transform, false);
+            var textRt = textGo.AddComponent<RectTransform>();
+            textRt.anchorMin = Vector2.zero;
+            textRt.anchorMax = Vector2.one;
+            textRt.offsetMin = Vector2.zero;
+            textRt.offsetMax = Vector2.zero;
+            var inputText = textGo.AddComponent<TextMeshProUGUI>();
+            inputText.fontSize = 24;
+            inputText.color = Color.white;
+            inputText.alignment = TextAlignmentOptions.MidlineLeft;
+
+            _runNameInput.textViewport = viewportRt;
+            _runNameInput.textComponent = inputText;
+            _runNameInput.placeholder = placeholder;
+
+            var buttonGo = new GameObject("RunNameConfirm");
+            buttonGo.transform.SetParent(_runNamePanel.transform, false);
+            var buttonRt = buttonGo.AddComponent<RectTransform>();
+            buttonRt.anchoredPosition = new Vector2(0f, -90f);
+            buttonRt.sizeDelta = new Vector2(260f, 58f);
+            var buttonBg = buttonGo.AddComponent<Image>();
+            buttonBg.color = new Color(0.20f, 0.56f, 0.34f, 1f);
+            var button = buttonGo.AddComponent<Button>();
+            button.targetGraphic = buttonBg;
+            button.onClick.AddListener(ConfirmRunName);
+
+            var buttonLabelGo = new GameObject("Label");
+            buttonLabelGo.transform.SetParent(buttonGo.transform, false);
+            var buttonLabelRt = buttonLabelGo.AddComponent<RectTransform>();
+            buttonLabelRt.anchorMin = Vector2.zero;
+            buttonLabelRt.anchorMax = Vector2.one;
+            buttonLabelRt.offsetMin = Vector2.zero;
+            buttonLabelRt.offsetMax = Vector2.zero;
+            var buttonLabel = buttonLabelGo.AddComponent<TextMeshProUGUI>();
+            buttonLabel.text = "START RUN";
+            buttonLabel.fontSize = 26;
+            buttonLabel.color = Color.white;
+            buttonLabel.alignment = TextAlignmentOptions.Center;
+
+            _runNamePanel.SetActive(false);
+        }
+
+        private void ShowRunNamePrompt(VentureData venture)
+        {
+            if (_runNamePanel == null)
+            {
+                StartRun(venture);
+                return;
+            }
+
+            _pendingVenture = venture;
+            _runNameTitleText.text = $"Name your {GetNamingLabel(venture)}";
+            _runNameInput.text = venture != null ? venture.ventureName : "New Venture";
+            _runNamePanel.SetActive(true);
+            _runNameInput.ActivateInputField();
+        }
+
+        private void ConfirmRunName()
+        {
+            if (_pendingVenture == null)
+                return;
+
+            string enteredName = _runNameInput != null ? _runNameInput.text : string.Empty;
+            if (string.IsNullOrWhiteSpace(enteredName))
+                enteredName = _pendingVenture.ventureName;
+
+            _pendingRunName = enteredName;
+            _runNamePanel.SetActive(false);
+
+            VentureData venture = _pendingVenture;
+            _pendingVenture = null;
+            StartRun(venture);
+        }
+
+        private VentureData FindVenture(VentureType type)
+        {
+            if (_data == null || _data.ventures == null)
+                return null;
+
+            for (int i = 0; i < _data.ventures.Length; i++)
+            {
+                var venture = _data.ventures[i];
+                if (venture != null && venture.ventureType == type)
+                    return venture;
+            }
+
+            return null;
+        }
+
+        private static string GetNamingLabel(VentureData venture)
+        {
+            if (venture == null)
+                return "venture";
+
+            return venture.ventureType == VentureType.TechApp ? "app" : "company";
         }
 
         // ================================================================

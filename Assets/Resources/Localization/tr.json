@@ -9,6 +9,7 @@
         {"key": "ui.turn_current", "value": "Tur {0}"},
         {"key": "ui.turn_softcap", "value": "Tur {0} \u26a0\ufe0f"},
         {"key": "ui.start_game", "value": "OYUNA BA\u015eLA"},
+        {"key": "ui.load_game", "value": "KAYDI Y\u00dcKLE"},
         {"key": "ui.quit", "value": "\u00c7IKI\u015e"},
         {"key": "ui.play_again", "value": "TEKRAR OYNA"},
         {"key": "ui.main_menu", "value": "ANA MEN\u00dc"},
@@ -19,6 +20,8 @@
 
         {"key": "menu.title", "value": "KART \u0130MPARATORLU\u011eU"},
         {"key": "menu.subtitle", "value": "Girişimini seç, işletme tahtanı kur ve pazarı ele geçir."},
+        {"key": "menu.no_save", "value": "Hen\u00fcz kay\u0131tl\u0131 \u015firket yok."},
+        {"key": "menu.saved_run", "value": "Kay\u0131tl\u0131 \u015firket"},
         {"key": "menu.version", "value": "v0.1 MVP"},
 
         {"key": "board.your_businesses", "value": "\u0130\u015eLETMELER\u0130N"},

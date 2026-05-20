@@ -204,6 +204,37 @@ namespace EmpireOfCards.Gameplay
 
         public bool HasEmpty(SlotType slotType) => GetFirstEmptyIndex(slotType) >= 0;
 
+        public List<string> GetSlotIds(SlotType slotType)
+        {
+            var list = GetList(slotType);
+            var result = new List<string>();
+            if (list == null) return result;
+
+            for (int i = 0; i < list.Count; i++)
+                result.Add(list[i] != null ? list[i].cardId : string.Empty);
+
+            return result;
+        }
+
+        public void RestoreState(
+            IList<CardData> operationCards,
+            IList<CardData> staffCards,
+            IList<CardData> marketingCards,
+            IList<CardData> supplierCards,
+            IList<CardData> tempCards)
+        {
+            _operationMax = operationCards != null ? operationCards.Count : Constants.STARTING_OPERATION_SLOTS;
+            _staffMax = staffCards != null ? staffCards.Count : Constants.STARTING_STAFF_SLOTS;
+            _marketingMax = marketingCards != null ? marketingCards.Count : Constants.STARTING_MARKETING_SLOTS;
+            _supplierMax = supplierCards != null ? supplierCards.Count : Constants.STARTING_SUPPLIER_SLOTS;
+
+            RestoreList(_operationSlots, operationCards, _operationMax);
+            RestoreList(_staffSlots, staffCards, _staffMax);
+            RestoreList(_marketingSlots, marketingCards, _marketingMax);
+            RestoreList(_supplierSlots, supplierCards, _supplierMax);
+            RestoreList(_tempEffectSlots, tempCards, _tempEffectMax);
+        }
+
         // ====================================================================
         //  TEMP EFFECT MANAGEMENT
         // ====================================================================
@@ -256,6 +287,15 @@ namespace EmpireOfCards.Gameplay
                 SlotType.TempEffect => _tempEffectSlots,
                 _                   => null
             };
+        }
+
+        private static void RestoreList(List<CardData> target, IList<CardData> source, int count)
+        {
+            InitializeSlotList(target, Mathf.Max(0, count));
+            if (source == null) return;
+
+            for (int i = 0; i < source.Count && i < target.Count; i++)
+                target[i] = source[i];
         }
     }
 }

@@ -19,6 +19,39 @@ namespace EmpireOfCards.Save
         public List<string> unlockedCardIds = new List<string>();
         public int bestScore;
         public bool tutorialCompleted;
+        public RunSaveData activeRun;
+    }
+
+    [Serializable]
+    public class RunSaveData
+    {
+        public string runName;
+        public int ventureType;
+        public int currentTurn;
+        public int playerMoney;
+        public int playerActions;
+        public int playerMaxActions;
+        public int playerBusinessSlots;
+        public int playerCustomers;
+        public int rivalCustomers;
+        public int playerMarketBlocks;
+        public int rivalMarketBlocks;
+        public float fbiRisk;
+        public int redrawsRemaining;
+        public EmpireOfCards.Data.VentureBoardSnapshot economySnapshot;
+        public List<string> drawPileIds = new List<string>();
+        public List<string> handIds = new List<string>();
+        public List<string> discardPileIds = new List<string>();
+        public List<string> operationSlotIds = new List<string>();
+        public List<string> staffSlotIds = new List<string>();
+        public List<string> marketingSlotIds = new List<string>();
+        public List<string> supplierSlotIds = new List<string>();
+        public List<string> tempEffectSlotIds = new List<string>();
+
+        public bool HasData()
+        {
+            return !string.IsNullOrWhiteSpace(runName);
+        }
     }
 
     /// <summary>
@@ -77,6 +110,8 @@ namespace EmpireOfCards.Save
 
             if (won)
                 cachedData.runsWon++;
+
+            cachedData.activeRun = null;
 
             // Calculate score from GameManager
             var gm = GameManager.Instance;
@@ -172,6 +207,45 @@ namespace EmpireOfCards.Save
         public bool HasSave()
         {
             return File.Exists(GetSavePath());
+        }
+
+        public bool HasRunSave()
+        {
+            return cachedData != null && cachedData.activeRun != null && cachedData.activeRun.HasData();
+        }
+
+        public RunSaveData LoadRun()
+        {
+            if (cachedData == null)
+                cachedData = LoadFromDisk();
+
+            return cachedData != null && cachedData.activeRun != null && cachedData.activeRun.HasData()
+                ? cachedData.activeRun
+                : null;
+        }
+
+        public void SaveRun(RunSaveData runData)
+        {
+            if (runData == null)
+                return;
+
+            if (cachedData == null)
+                cachedData = new SaveData();
+
+            cachedData.activeRun = runData;
+            Save(cachedData);
+        }
+
+        public void DeleteRunSave()
+        {
+            if (cachedData == null)
+                cachedData = LoadFromDisk();
+
+            if (cachedData == null)
+                cachedData = new SaveData();
+
+            cachedData.activeRun = null;
+            Save(cachedData);
         }
 
         /// <summary>

@@ -90,6 +90,16 @@ namespace EmpireOfCards.Core
             TransitionToPhase(TurnPhase.EventPhase);
         }
 
+        public void ResumePlayPhase(int turnNumber)
+        {
+            currentTurn = turnNumber;
+            isTurnActive = true;
+            _playerEndedPlayPhase = false;
+            currentPhase = TurnPhase.PlayPhase;
+            EventBus.PhaseStarted(TurnPhase.PlayPhase);
+            _phaseStateMachine.Initialize(new TurnPhases.PlayPhase(this));
+        }
+
         /// <summary>
         /// Called by the End Turn button during the Play Phase.
         /// </summary>

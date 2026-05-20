@@ -365,6 +365,55 @@ namespace EmpireOfCards.Gameplay
             _operationCardMap.Clear();
         }
 
+        public void RebuildFromSlots()
+        {
+            playerBusinesses.Clear();
+            globalUpgrades.Clear();
+            _tempDurations.Clear();
+            _operationCardMap.Clear();
+            activeEvent = null;
+            activeEventTurnsRemaining = 0;
+
+            if (_slotManager == null)
+                return;
+
+            for (int i = 0; i < _slotManager.OperationSlots.Count; i++)
+            {
+                var card = _slotManager.OperationSlots[i];
+                var business = new ActiveBusiness
+                {
+                    businessCard = card,
+                    currentLevel = BusinessLevel.Level1
+                };
+                playerBusinesses.Add(business);
+                if (card != null)
+                    _operationCardMap[i] = card;
+            }
+
+            foreach (var card in _slotManager.MarketingSlots)
+            {
+                if (card != null)
+                    globalUpgrades.Add(card);
+            }
+
+            foreach (var card in _slotManager.SupplierSlots)
+            {
+                if (card != null)
+                    globalUpgrades.Add(card);
+            }
+
+            foreach (var card in _slotManager.TempEffectSlots)
+            {
+                if (card == null) continue;
+                _tempDurations[card] = Mathf.Max(1, card.tempEffectDuration);
+                if (activeEvent == null && (card.cardType == CardType.Event || card.cardFamily == CardFamily.Crisis))
+                {
+                    activeEvent = card;
+                    activeEventTurnsRemaining = Mathf.Max(1, card.eventDuration > 0 ? card.eventDuration : card.tempEffectDuration);
+                }
+            }
+        }
+
         public void SetMaxSlots(int slots)
         {
             maxSlots = Mathf.Max(1, slots);

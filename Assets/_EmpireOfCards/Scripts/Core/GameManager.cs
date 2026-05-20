@@ -154,6 +154,13 @@ namespace EmpireOfCards.Core
             runDisplayName = venture != null ? venture.ventureName : "New Venture";
         }
 
+        public void SetRunDisplayName(string displayName)
+        {
+            runDisplayName = string.IsNullOrWhiteSpace(displayName)
+                ? (selectedVenture != null ? selectedVenture.ventureName : "New Venture")
+                : displayName.Trim();
+        }
+
         public void SetCardLookup(Dictionary<string, CardData> lookup)
         {
             _cardLookup = lookup;
@@ -210,7 +217,7 @@ namespace EmpireOfCards.Core
 
         // === Game Flow ===
 
-        public void StartNewRun()
+        public void StartNewRun(bool autoStartTurn = true)
         {
             currentTurn = 0;
             gameIsRunning = true;
@@ -306,7 +313,8 @@ namespace EmpireOfCards.Core
             SetGameState(GameState.Playing);
             _gameStateMachine.Initialize(new InGameState());
 
-            StartNextTurn();
+            if (autoStartTurn)
+                StartNextTurn();
         }
 
         public void StartNextTurn()
@@ -318,6 +326,62 @@ namespace EmpireOfCards.Core
 
             if (turnManager != null)
                 turnManager.BeginTurn(currentTurn);
+        }
+
+        public void SaveCheckpoint()
+        {
+            if (saveManager == null || selectedVenture == null || deckManager == null || slotManager == null)
+                return;
+
+            saveManager.SaveRun(BuildRunSave());
+        }
+
+        public void RestoreRunCheckpoint(RunSaveData runData)
+        {
+            if (runData == null || !runData.HasData() || selectedVenture == null)
+                return;
+
+            StartNewRun(false);
+
+            SetRunDisplayName(runData.runName);
+            currentTurn = Mathf.Max(1, runData.currentTurn);
+
+            resources.SetMoney(runData.playerMoney);
+            resources.SetActions(runData.playerActions, runData.playerMaxActions);
+            resources.SetBusinessSlots(runData.playerBusinessSlots);
+            fbiRisk = runData.fbiRisk;
+            playerCustomers = Mathf.Max(0, runData.playerCustomers);
+            rivalCustomers = Mathf.Max(0, runData.rivalCustomers);
+            SetMarketBlocks(runData.playerMarketBlocks, runData.rivalMarketBlocks);
+            EventBus.FBIRiskUpdated(fbiRisk);
+
+            if (activeBoardProfile != null && slotManager != null)
+                slotManager.Configure(activeBoardProfile);
+
+            var opCards = ResolveCards(runData.operationSlotIds);
+            var staffCards = ResolveCards(runData.staffSlotIds);
+            var marketingCards = ResolveCards(runData.marketingSlotIds);
+            var supplierCards = ResolveCards(runData.supplierSlotIds);
+            var tempCards = ResolveCards(runData.tempEffectSlotIds);
+            slotManager?.RestoreState(opCards, staffCards, marketingCards, supplierCards, tempCards);
+            boardManager?.RebuildFromSlots();
+
+            deckManager?.RestoreState(
+                activeDeckProfile,
+                _cardLookup,
+                runData.drawPileIds,
+                runData.handIds,
+                runData.discardPileIds,
+                runData.redrawsRemaining);
+
+            if (economyManager != null && runData.economySnapshot != null)
+                economyManager.RestoreSnapshot(runData.economySnapshot);
+            else
+                economyManager?.SyncCashFromResources(resources.Money);
+
+            EventBus.MoneyUpdated(resources.Money);
+            EventBus.TurnStarted(currentTurn);
+            turnManager?.ResumePlayPhase(currentTurn);
         }
 
         /// <summary>
@@ -447,6 +511,56 @@ namespace EmpireOfCards.Core
                 EventBus.ClearAll();
                 Instance = null;
             }
+        }
+
+        private RunSaveData BuildRunSave()
+        {
+            return new RunSaveData
+            {
+                runName = RunDisplayName,
+                ventureType = (int)(selectedVenture != null ? selectedVenture.ventureType : VentureType.FastFood),
+                currentTurn = currentTurn,
+                playerMoney = resources.Money,
+                playerActions = resources.Actions,
+                playerMaxActions = resources.MaxActions,
+                playerBusinessSlots = resources.BusinessSlots,
+                playerCustomers = playerCustomers,
+                rivalCustomers = rivalCustomers,
+                playerMarketBlocks = playerMarketBlocks,
+                rivalMarketBlocks = rivalMarketBlocks,
+                fbiRisk = fbiRisk,
+                redrawsRemaining = deckManager != null ? deckManager.RedrawsRemaining : 0,
+                economySnapshot = economyManager != null ? economyManager.Snapshot : null,
+                drawPileIds = deckManager != null ? deckManager.GetDrawPileIds() : new List<string>(),
+                handIds = deckManager != null ? deckManager.GetHandIds() : new List<string>(),
+                discardPileIds = deckManager != null ? deckManager.GetDiscardPileIds() : new List<string>(),
+                operationSlotIds = slotManager != null ? slotManager.GetSlotIds(SlotType.Operation) : new List<string>(),
+                staffSlotIds = slotManager != null ? slotManager.GetSlotIds(SlotType.Staff) : new List<string>(),
+                marketingSlotIds = slotManager != null ? slotManager.GetSlotIds(SlotType.Marketing) : new List<string>(),
+                supplierSlotIds = slotManager != null ? slotManager.GetSlotIds(SlotType.Supplier) : new List<string>(),
+                tempEffectSlotIds = slotManager != null ? slotManager.GetSlotIds(SlotType.TempEffect) : new List<string>()
+            };
+        }
+
+        private List<CardData> ResolveCards(IList<string> ids)
+        {
+            var cards = new List<CardData>();
+            if (ids == null)
+                return cards;
+
+            for (int i = 0; i < ids.Count; i++)
+            {
+                string id = ids[i];
+                if (string.IsNullOrWhiteSpace(id))
+                {
+                    cards.Add(null);
+                    continue;
+                }
+
+                cards.Add(_cardLookup != null && _cardLookup.TryGetValue(id, out var card) ? card : null);
+            }
+
+            return cards;
         }
     }
 }

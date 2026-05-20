@@ -3,6 +3,7 @@ using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 using TMPro;
 using EmpireOfCards.Core;
+using EmpireOfCards.Save;
 
 namespace EmpireOfCards.Bootstrap
 {
@@ -13,10 +14,13 @@ namespace EmpireOfCards.Bootstrap
     public class MainMenuController : MonoBehaviour
     {
         [SerializeField] private string gameScene = "Game";
+        private Button _loadButton;
+        private TMP_Text _loadHintText;
 
         private void Start()
         {
             EnsureLocalization();
+            EnsureSaveManager();
             CreateMenuUI();
         }
 
@@ -71,7 +75,7 @@ namespace EmpireOfCards.Bootstrap
             var startBtnGo = new GameObject("StartButton");
             startBtnGo.transform.SetParent(canvasGo.transform, false);
             var startRT = startBtnGo.AddComponent<RectTransform>();
-            startRT.anchoredPosition = new Vector2(0, -50);
+            startRT.anchoredPosition = new Vector2(0, -35);
             startRT.sizeDelta = new Vector2(300, 60);
             var startImg = startBtnGo.AddComponent<Image>();
             startImg.color = new Color(0.2f, 0.6f, 0.3f);
@@ -93,11 +97,47 @@ namespace EmpireOfCards.Bootstrap
             startLabel.alignment = TextAlignmentOptions.Center;
             startLabel.color = Color.white;
 
+            // Load Button
+            var loadBtnGo = new GameObject("LoadButton");
+            loadBtnGo.transform.SetParent(canvasGo.transform, false);
+            var loadRT = loadBtnGo.AddComponent<RectTransform>();
+            loadRT.anchoredPosition = new Vector2(0, -120);
+            loadRT.sizeDelta = new Vector2(300, 56);
+            var loadImg = loadBtnGo.AddComponent<Image>();
+            loadImg.color = new Color(0.20f, 0.33f, 0.58f);
+            _loadButton = loadBtnGo.AddComponent<Button>();
+            _loadButton.targetGraphic = loadImg;
+            _loadButton.onClick.AddListener(OnLoadClicked);
+
+            var loadLabelGo = new GameObject("LoadLabel");
+            loadLabelGo.transform.SetParent(loadBtnGo.transform, false);
+            var loadLabelRT = loadLabelGo.AddComponent<RectTransform>();
+            loadLabelRT.anchorMin = Vector2.zero;
+            loadLabelRT.anchorMax = Vector2.one;
+            loadLabelRT.sizeDelta = Vector2.zero;
+            loadLabelRT.offsetMin = Vector2.zero;
+            loadLabelRT.offsetMax = Vector2.zero;
+            var loadLabel = loadLabelGo.AddComponent<TextMeshProUGUI>();
+            loadLabel.text = LocalizationManager.GetWithFallback("ui.load_game", "LOAD GAME");
+            loadLabel.fontSize = 24;
+            loadLabel.alignment = TextAlignmentOptions.Center;
+            loadLabel.color = Color.white;
+
+            var loadHintGo = new GameObject("LoadHint");
+            loadHintGo.transform.SetParent(canvasGo.transform, false);
+            var loadHintRT = loadHintGo.AddComponent<RectTransform>();
+            loadHintRT.anchoredPosition = new Vector2(0, -168);
+            loadHintRT.sizeDelta = new Vector2(520, 28);
+            _loadHintText = loadHintGo.AddComponent<TextMeshProUGUI>();
+            _loadHintText.fontSize = 18;
+            _loadHintText.alignment = TextAlignmentOptions.Center;
+            _loadHintText.color = new Color(0.72f, 0.72f, 0.76f);
+
             // Quit Button
             var quitBtnGo = new GameObject("QuitButton");
             quitBtnGo.transform.SetParent(canvasGo.transform, false);
             var quitRT = quitBtnGo.AddComponent<RectTransform>();
-            quitRT.anchoredPosition = new Vector2(0, -140);
+            quitRT.anchoredPosition = new Vector2(0, -245);
             quitRT.sizeDelta = new Vector2(200, 50);
             var quitImg = quitBtnGo.AddComponent<Image>();
             quitImg.color = new Color(0.5f, 0.2f, 0.2f);
@@ -141,10 +181,22 @@ namespace EmpireOfCards.Bootstrap
                 esGo.AddComponent<UnityEngine.EventSystems.EventSystem>();
                 esGo.AddComponent<UnityEngine.InputSystem.UI.InputSystemUIInputModule>();
             }
+
+            RefreshLoadState();
         }
 
         private void OnStartClicked()
         {
+            RunLaunchConfig.PrepareNewRun();
+            SceneManager.LoadScene(gameScene);
+        }
+
+        private void OnLoadClicked()
+        {
+            if (SaveManager.Instance == null || !SaveManager.Instance.HasRunSave())
+                return;
+
+            RunLaunchConfig.PrepareLoadRun();
             SceneManager.LoadScene(gameScene);
         }
 
@@ -157,6 +209,15 @@ namespace EmpireOfCards.Bootstrap
             go.AddComponent<LocalizationManager>();
         }
 
+        private static void EnsureSaveManager()
+        {
+            if (SaveManager.Instance != null)
+                return;
+
+            var go = new GameObject("[SaveManager]");
+            go.AddComponent<SaveManager>();
+        }
+
         private void OnQuitClicked()
         {
 #if UNITY_EDITOR
@@ -164,6 +225,26 @@ namespace EmpireOfCards.Bootstrap
 #else
             Application.Quit();
 #endif
+        }
+
+        private void RefreshLoadState()
+        {
+            bool hasRun = SaveManager.Instance != null && SaveManager.Instance.HasRunSave();
+            if (_loadButton != null)
+                _loadButton.interactable = hasRun;
+
+            if (_loadHintText == null)
+                return;
+
+            if (!hasRun)
+            {
+                _loadHintText.text = LocalizationManager.GetWithFallback("menu.no_save", "No saved company yet.");
+                return;
+            }
+
+            var run = SaveManager.Instance.LoadRun();
+            string runName = run != null ? run.runName : "Saved Run";
+            _loadHintText.text = $"{LocalizationManager.GetWithFallback("menu.saved_run", "Saved company")}: {runName}";
         }
     }
 }

@@ -9,6 +9,7 @@
         {"key": "ui.turn_current", "value": "Turn {0}"},
         {"key": "ui.turn_softcap", "value": "Turn {0} \u26a0\ufe0f"},
         {"key": "ui.start_game", "value": "START GAME"},
+        {"key": "ui.load_game", "value": "LOAD GAME"},
         {"key": "ui.quit", "value": "QUIT"},
         {"key": "ui.play_again", "value": "PLAY AGAIN"},
         {"key": "ui.main_menu", "value": "MAIN MENU"},
@@ -19,6 +20,8 @@
 
         {"key": "menu.title", "value": "EMPIRE OF CARDS"},
         {"key": "menu.subtitle", "value": "Pick a venture, build your board, and dominate the market."},
+        {"key": "menu.no_save", "value": "No saved company yet."},
+        {"key": "menu.saved_run", "value": "Saved company"},
         {"key": "menu.version", "value": "v0.1 MVP"},
 
         {"key": "board.your_businesses", "value": "YOUR BUSINESSES"},
