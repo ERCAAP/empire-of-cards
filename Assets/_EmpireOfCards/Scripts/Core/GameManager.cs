@@ -53,6 +53,7 @@ namespace EmpireOfCards.Core
         [SerializeField] private SaveManager saveManager;
         [SerializeField] private MetaProgressionSystem metaProgressionSystem;
         [SerializeField] private CompanyTierSystem companyTierSystem;
+        [SerializeField] private SlotManager slotManager;
 
         [Header("=== First Venture ===")]
         [SerializeField] private VentureData selectedVenture;
@@ -95,6 +96,7 @@ namespace EmpireOfCards.Core
         public SaveManager SaveManager => saveManager;
         public MetaProgressionSystem MetaProgressionSystem => metaProgressionSystem;
         public CompanyTierSystem CompanyTierSystem => companyTierSystem;
+        public SlotManager SlotManager => slotManager;
 
         /// <summary>
         /// Assigns the MetaProgressionSystem. Called by WiringService after bootstrap.
@@ -107,6 +109,11 @@ namespace EmpireOfCards.Core
         public void SetCompanyTierSystem(CompanyTierSystem cts)
         {
             this.companyTierSystem = cts;
+        }
+
+        public void SetSlotManager(SlotManager sm)
+        {
+            this.slotManager = sm;
         }
 
         public void SetSelectedVenture(VentureData venture)
@@ -253,24 +260,22 @@ namespace EmpireOfCards.Core
         {
             EventBus.TurnEnded(currentTurn);
 
-            int winReq = balanceData != null ? balanceData.winTerritories : Constants.WIN_TERRITORIES;
-            int loseReq = balanceData != null ? balanceData.loseTerritories : Constants.LOSE_TERRITORIES;
+            int winCustomers = Constants.WIN_CUSTOMER_SHARE;
 
-            if (WinLoseChecker.CheckWin(playerTerritories, winReq))
+            if (WinLoseChecker.CheckWin(playerCustomers, winCustomers))
             {
                 EndRun(true);
                 return;
             }
-            if (WinLoseChecker.CheckLose(rivalTerritories, loseReq, resources.Money))
+            if (WinLoseChecker.CheckLose(rivalCustomers, winCustomers, resources.Money))
             {
                 EndRun(false);
                 return;
             }
 
-            // GDD Section 10: Turn 20 = final turn
             if (currentTurn >= MaxTurns)
             {
-                EndRun(playerTerritories >= rivalTerritories);
+                EndRun(playerCustomers >= rivalCustomers);
                 return;
             }
 

@@ -6,7 +6,7 @@ using EmpireOfCards.Data;
 namespace EmpireOfCards.Bootstrap.Data
 {
     /// <summary>
-    /// Creates the 4 First Venture options at runtime (GDD Section 1.5).
+    /// Creates the 5 First Venture options at runtime (GDD Section 1.5).
     /// Same pattern as other Bootstrap.Data factories.
     /// </summary>
     public static class VentureDataFactory
@@ -15,46 +15,56 @@ namespace EmpireOfCards.Bootstrap.Data
         {
             var lookup = BuildLookup(allCards);
 
-            var ventures = new VentureData[4];
+            var ventures = new VentureData[5];
 
-            // Diner - food starter
+            // FastFood - fast food starter
             ventures[0] = CreateVenture(
-                VentureType.Diner,
-                "Diner",
-                "Start with a humble diner. Solid food foundation.",
-                FindCard(lookup, "B01_Diner"),
-                FindCard(lookup, "C04_Chef"),
+                VentureType.FastFood,
+                "Fast Food",
+                "Start with a fast food joint. Quick income, high volume.",
+                FindCard(lookup, "FFC01_Grill"),
+                FindCard(lookup, "FFC04_LineCook"),
                 0
             );
 
-            // Tech Startup - tech starter
+            // Cafe - cafe starter
             ventures[1] = CreateVenture(
-                VentureType.TechStartup,
-                "Tech Startup",
-                "Start with a tech startup. Slow start, big payoff.",
-                FindCard(lookup, "B04_TechStartup"),
-                FindCard(lookup, "C07_Hacker"),  // already English
+                VentureType.Cafe,
+                "Cafe",
+                "Start with a cozy cafe. Quality over quantity.",
+                FindCard(lookup, "CAF01_EspressoBar"),
+                FindCard(lookup, "CAF04_Barista"),
                 0
             );
 
-            // Ad Agency - marketing starter
+            // TechApp - tech app starter
             ventures[2] = CreateVenture(
-                VentureType.AdAgency,
-                "Ad Agency",
-                "Start with an ad agency. Boost all your businesses.",
-                FindCard(lookup, "B08_AdAgency"),
-                FindCard(lookup, "C05_MarketingGuru"),
+                VentureType.TechApp,
+                "Tech App",
+                "Start with a tech app. Slow start, massive scale.",
+                FindCard(lookup, "TEC01_AppLaunch"),
+                FindCard(lookup, "TEC04_Developer"),
                 0
             );
 
-            // Black Market - no business, extra money
+            // ClothingStore - clothing store starter
             ventures[3] = CreateVenture(
-                VentureType.BlackMarket,
-                "Black Market",
-                "No starting business. Extra cash and a shady contact.",
-                null,
-                FindCard(lookup, "C09_Fraudster"),
-                Constants.BLACK_MARKET_BONUS_MONEY
+                VentureType.ClothingStore,
+                "Clothing Store",
+                "Start with a clothing store. Style meets strategy.",
+                FindCard(lookup, "CLO01_Storefront"),
+                FindCard(lookup, "CLO04_Tailor"),
+                0
+            );
+
+            // GroceryStore - grocery store starter
+            ventures[4] = CreateVenture(
+                VentureType.GroceryStore,
+                "Grocery Store",
+                "Start with a grocery store. Steady customers, reliable income.",
+                FindCard(lookup, "GRO01_FreshProduce"),
+                FindCard(lookup, "GRO04_Stocker"),
+                0
             );
 
             return ventures;

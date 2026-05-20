@@ -3,28 +3,30 @@ namespace EmpireOfCards.Core
     /// <summary>
     /// Pure-logic win/lose evaluation. No side effects, no dependencies.
     /// Extracted from GameManager so victory conditions are testable in isolation.
+    ///
+    /// GDD v3.0: Win/lose is based on customer share, not territory count.
+    /// Player wins at 60 customers, rival wins (player loses) at 60 customers.
+    /// Bankruptcy (money <= 0) is still a lose condition.
     /// </summary>
     public static class WinLoseChecker
     {
         /// <summary>
-        /// WIN: Player has enough territories (GDD Section 6.3, default 6).
+        /// WIN: Player has enough customers (GDD v3.0, default 60).
         /// </summary>
-        public static bool CheckWin(int playerTerritories, int winRequirement)
+        public static bool CheckWin(int playerCustomers, int winThreshold)
         {
-            return playerTerritories >= winRequirement;
+            return playerCustomers >= winThreshold;
         }
 
         /// <summary>
-        /// LOSE: Rival dominates (default 7 territories) OR player is bankrupt.
-        /// Turn-20 timeout is handled separately by GameManager.EndCurrentTurn().
+        /// LOSE: Rival has enough customers OR player is bankrupt.
+        /// Turn timeout is handled separately by GameManager.EndCurrentTurn().
         /// </summary>
-        public static bool CheckLose(int rivalTerritories, int loseRequirement, int playerMoney)
+        public static bool CheckLose(int rivalCustomers, int loseThreshold, int playerMoney)
         {
-            // Rival dominates
-            if (rivalTerritories >= loseRequirement)
+            if (rivalCustomers >= loseThreshold)
                 return true;
 
-            // Bankruptcy (GDD: Money drops to 0 = BANKRUPT)
             if (playerMoney <= 0)
                 return true;
 

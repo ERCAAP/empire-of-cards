@@ -1,19 +1,10 @@
+using System.Collections.Generic;
+using UnityEngine;
 using EmpireOfCards.Core;
 using EmpireOfCards.Data;
 
 namespace EmpireOfCards.Gameplay
 {
-    /// <summary>
-    /// Pure decision logic for the rival AI (GDD Section 8).
-    /// Stateless: takes game state in, returns an action string.
-    ///
-    /// Decision tree:
-    /// 1. Player territories > 5 AND aggression enabled => "aggressive"
-    /// 2. Rival money >= business cost AND less than 3 businesses => "open_business"
-    /// 3. Empty employee slots AND enough money => "hire_employee"
-    /// 4. Late game, aggression enabled, rival behind => "event_bonus"
-    /// 5. Default => "normal_growth"
-    /// </summary>
     public class RivalDecisionTree
     {
         private readonly RivalData data;
@@ -24,7 +15,72 @@ namespace EmpireOfCards.Gameplay
         }
 
         /// <summary>
-        /// Evaluates the decision tree and returns the action the rival should take.
+        /// New decision method returning a typed RivalMove.
+        /// Evaluates rival state and picks the best move.
+        /// </summary>
+        public RivalMove DecideMove(
+            int playerTerritories,
+            int rivalTerritories,
+            int currentTurn,
+            int rivalMoney,
+            List<RivalBusiness> rivalBusinesses,
+            bool aggressionEnabled)
+        {
+            if (data == null) return RivalMove.QualityImprove;
+
+            int businessCount = rivalBusinesses.Count;
+            bool hasFunds = rivalMoney >= data.businessCostThreshold;
+            bool rivalBehind = rivalTerritories < playerTerritories;
+            float avgQuality = CalculateAverageQuality(rivalBusinesses);
+            float avgPrice = CalculateAveragePrice(rivalBusinesses);
+            int avgLegalRisk = CalculateAverageLegalRisk(rivalBusinesses);
+
+            // High aggression: player is way ahead and aggression enabled
+            if (aggressionEnabled && playerTerritories > 5)
+            {
+                // High legal risk -> avoid Sabotage
+                if (avgLegalRisk < 50)
+                    return RivalMove.Sabotage;
+                else
+                    return RivalMove.StaffPoach;
+            }
+
+            // Rival behind on territories: aggressive economic moves
+            if (rivalBehind && aggressionEnabled)
+            {
+                if (avgPrice < 6f)
+                    return RivalMove.PriceWar;
+                if (avgQuality < 6f)
+                    return RivalMove.QualityImprove;
+                return RivalMove.MarketingBlitz;
+            }
+
+            // Expand if we have money and room
+            if (hasFunds && businessCount < data.maxBusinesses)
+                return RivalMove.OpenBranch;
+
+            // Need funds
+            if (rivalMoney < data.hireCostThreshold)
+                return RivalMove.SeekInvestment;
+
+            // Late game: push on marketing
+            if (currentTurn >= 12)
+                return RivalMove.MarketingBlitz;
+
+            // Quality is low: improve
+            if (avgQuality < 5f)
+                return RivalMove.QualityImprove;
+
+            // Price is low: price war
+            if (avgPrice < 5f)
+                return RivalMove.PriceWar;
+
+            // Default: balanced improvement
+            return RivalMove.QualityImprove;
+        }
+
+        /// <summary>
+        /// Legacy decision method. Returns a string action for backward compatibility.
         /// </summary>
         public string DecideAction(
             int playerTerritories,
@@ -37,13 +93,9 @@ namespace EmpireOfCards.Gameplay
         {
             if (data == null) return "normal_growth";
 
-            // 1. Player territories > 5 => AGGRESSIVE
             if (playerTerritories > 5 && aggressionEnabled)
-            {
                 return "aggressive";
-            }
 
-            // Patent Wall: if player has this upgrade, rival costs increase by 25%
             float patentWallMultiplier = 1f;
             GameManager gm = GameManager.Instance;
             if (gm != null && gm.BoardManager != null)
@@ -58,29 +110,48 @@ namespace EmpireOfCards.Gameplay
                 }
             }
 
-            // 2. Rival money >= business cost AND < 3 businesses => OPEN BUSINESS
             int effectiveBusinessCost = (int)(data.businessCostThreshold * patentWallMultiplier);
             if (rivalMoney >= effectiveBusinessCost && businessCount < 3)
-            {
                 return "open_business";
-            }
 
-            // 3. Empty employee slots => HIRE
             int effectiveHireCost = (int)(data.hireCostThreshold * patentWallMultiplier);
             if (hasEmptyEmployeeSlots && rivalMoney >= effectiveHireCost)
-            {
                 return "hire_employee";
-            }
 
-            // 4. Event benefits rival => EVENT BONUS
             if (currentTurn >= 12 && aggressionEnabled)
             {
                 if (rivalTerritories < playerTerritories)
                     return "event_bonus";
             }
 
-            // 5. Default => NORMAL GROWTH
             return "normal_growth";
+        }
+
+        private float CalculateAverageQuality(List<RivalBusiness> businesses)
+        {
+            if (businesses.Count == 0) return 5f;
+            float total = 0f;
+            foreach (var biz in businesses)
+                total += biz.qualityScore;
+            return total / businesses.Count;
+        }
+
+        private float CalculateAveragePrice(List<RivalBusiness> businesses)
+        {
+            if (businesses.Count == 0) return 5f;
+            float total = 0f;
+            foreach (var biz in businesses)
+                total += biz.priceScore;
+            return total / businesses.Count;
+        }
+
+        private int CalculateAverageLegalRisk(List<RivalBusiness> businesses)
+        {
+            if (businesses.Count == 0) return 0;
+            int total = 0;
+            foreach (var biz in businesses)
+                total += biz.legalRisk;
+            return total / businesses.Count;
         }
     }
 }

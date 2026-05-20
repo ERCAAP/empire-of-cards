@@ -1,31 +1,42 @@
 #if UNITY_EDITOR
 using UnityEngine;
 using UnityEditor;
+using System.Collections.Generic;
 using EmpireOfCards.Core;
 using EmpireOfCards.Data;
 
 namespace EmpireOfCards.Editor
 {
     /// <summary>
-    /// Generates ALL ScriptableObject assets from the GDD data.
+    /// Generates ALL ScriptableObject assets for the v2 Venture & Slot system.
     /// Menu: EmpireOfCards > Generate All Assets
-    /// Creates: GameBalance, 40 Cards, Starting Deck, MegaCorp Rival, 10 Combos, MetaProgression
+    /// 5 ventures x 15 cards + 20 general = 95 card target.
     /// </summary>
     public static class AssetGenerator
     {
         // -------------------------------------------------------------------
         // Root paths
         // -------------------------------------------------------------------
-        private const string DataRoot        = "Assets/_EmpireOfCards/Data";
-        private const string CardsRoot       = "Assets/_EmpireOfCards/Data/Cards";
-        private const string BusinessCards   = "Assets/_EmpireOfCards/Data/Cards/Business";
-        private const string EmployeeCards   = "Assets/_EmpireOfCards/Data/Cards/Employee";
-        private const string ActionCards     = "Assets/_EmpireOfCards/Data/Cards/Action";
-        private const string UpgradeCards    = "Assets/_EmpireOfCards/Data/Cards/Upgrade";
-        private const string EventCards      = "Assets/_EmpireOfCards/Data/Cards/Event";
-        private const string DecksRoot       = "Assets/_EmpireOfCards/Data/Decks";
-        private const string RivalsRoot      = "Assets/_EmpireOfCards/Data/Rivals";
-        private const string CombosRoot      = "Assets/_EmpireOfCards/Data/Combos";
+        private const string DataRoot   = "Assets/_EmpireOfCards/Data";
+        private const string CardsRoot  = "Assets/_EmpireOfCards/Data/Cards";
+        private const string DecksRoot  = "Assets/_EmpireOfCards/Data/Decks";
+        private const string RivalsRoot = "Assets/_EmpireOfCards/Data/Rivals";
+        private const string CombosRoot = "Assets/_EmpireOfCards/Data/Combos";
+
+        // Per-venture card folders
+        private const string FastFoodCards    = "Assets/_EmpireOfCards/Data/Cards/FastFood";
+        private const string CafeCards        = "Assets/_EmpireOfCards/Data/Cards/Cafe";
+        private const string TechAppCards     = "Assets/_EmpireOfCards/Data/Cards/TechApp";
+        private const string ClothingCards    = "Assets/_EmpireOfCards/Data/Cards/ClothingStore";
+        private const string GroceryCards     = "Assets/_EmpireOfCards/Data/Cards/GroceryStore";
+        private const string GeneralCards     = "Assets/_EmpireOfCards/Data/Cards/General";
+
+        // Legacy folders kept for backward compat
+        private const string BusinessCards = "Assets/_EmpireOfCards/Data/Cards/Business";
+        private const string EmployeeCards = "Assets/_EmpireOfCards/Data/Cards/Employee";
+        private const string ActionCards   = "Assets/_EmpireOfCards/Data/Cards/Action";
+        private const string UpgradeCards  = "Assets/_EmpireOfCards/Data/Cards/Upgrade";
+        private const string EventCards    = "Assets/_EmpireOfCards/Data/Cards/Event";
 
         // -------------------------------------------------------------------
         // MENU ITEM
@@ -52,16 +63,23 @@ namespace EmpireOfCards.Editor
         // -------------------------------------------------------------------
         private static void EnsureFolders()
         {
-            EnsureFolder("Assets/_EmpireOfCards",        "Data");
-            EnsureFolder(DataRoot,                       "Cards");
-            EnsureFolder(CardsRoot,                      "Business");
-            EnsureFolder(CardsRoot,                      "Employee");
-            EnsureFolder(CardsRoot,                      "Action");
-            EnsureFolder(CardsRoot,                      "Upgrade");
-            EnsureFolder(CardsRoot,                      "Event");
-            EnsureFolder(DataRoot,                       "Decks");
-            EnsureFolder(DataRoot,                       "Rivals");
-            EnsureFolder(DataRoot,                       "Combos");
+            EnsureFolder("Assets/_EmpireOfCards", "Data");
+            EnsureFolder(DataRoot, "Cards");
+            EnsureFolder(CardsRoot, "FastFood");
+            EnsureFolder(CardsRoot, "Cafe");
+            EnsureFolder(CardsRoot, "TechApp");
+            EnsureFolder(CardsRoot, "ClothingStore");
+            EnsureFolder(CardsRoot, "GroceryStore");
+            EnsureFolder(CardsRoot, "General");
+            // Legacy folders
+            EnsureFolder(CardsRoot, "Business");
+            EnsureFolder(CardsRoot, "Employee");
+            EnsureFolder(CardsRoot, "Action");
+            EnsureFolder(CardsRoot, "Upgrade");
+            EnsureFolder(CardsRoot, "Event");
+            EnsureFolder(DataRoot, "Decks");
+            EnsureFolder(DataRoot, "Rivals");
+            EnsureFolder(DataRoot, "Combos");
         }
 
         private static void EnsureFolder(string parent, string folderName)
@@ -81,7 +99,6 @@ namespace EmpireOfCards.Editor
             T existing = AssetDatabase.LoadAssetAtPath<T>(path);
             if (existing != null)
             {
-                // Reuse existing to preserve references
                 return existing;
             }
             T asset = ScriptableObject.CreateInstance<T>();
@@ -94,6 +111,413 @@ namespace EmpireOfCards.Editor
             EditorUtility.SetDirty(obj);
         }
 
+        private static string GetVentureFolder(VentureType venture)
+        {
+            switch (venture)
+            {
+                case VentureType.FastFood:      return FastFoodCards;
+                case VentureType.Cafe:           return CafeCards;
+                case VentureType.TechApp:        return TechAppCards;
+                case VentureType.ClothingStore:  return ClothingCards;
+                case VentureType.GroceryStore:   return GroceryCards;
+                default:                         return GeneralCards;
+            }
+        }
+
+        // ===================================================================
+        // CARD CREATION HELPERS (v2 Venture & Slot system)
+        // ===================================================================
+
+        private static CardData CreateOperation(string id, string name, VentureType venture,
+            int buyCost, int income, int customers, float quality, float price, float speed)
+        {
+            string folder = GetVentureFolder(venture);
+            string path = folder + "/" + id + ".asset";
+            var c = CreateOrReplace<CardData>(path);
+
+            c.cardId = id;
+            c.cardName = name;
+            c.cardType = CardType.Business;
+            c.rarity = Rarity.Common;
+            c.buyCost = buyCost;
+            c.incomePerTurn = income;
+            c.customersPerTurn = customers;
+            c.tags = new CardTag[0];
+
+            // v2 fields
+            c.ventureType = venture;
+            c.targetSlotType = SlotType.Operation;
+            c.isGeneralCard = false;
+            c.qualityScore = quality;
+            c.priceScore = price;
+            c.serviceSpeedScore = speed;
+
+            // Reset legacy fields
+            c.hasTrendBonus = false;
+            c.trendIncomeMultiplier = 1f;
+            c.activationDelay = 0;
+            c.requiresTrendToOperate = false;
+            c.hasRandomIncome = false;
+            c.randomIncomeMin = 0;
+            c.randomIncomeMax = 0;
+            c.foodBonusTag = "";
+            c.foodBonusAmount = 0;
+            c.globalCustomerBonus = 0;
+            c.canEvolve = false;
+            c.employeeSlots = 0;
+
+            // Reset v2 non-operation fields
+            c.platformRatingGain = 0f;
+            c.platformRatingOnPlay = 0f;
+            c.legalRiskPerTurn = 0;
+            c.legalRiskOnPlay = 0;
+            c.costReductionPercent = 0f;
+            c.qualityBoostAmount = 0f;
+
+            MarkDirty(c);
+            return c;
+        }
+
+        private static CardData CreateStaff(string id, string name, VentureType venture,
+            int buyCost, int salary, int customerBonus, int synergyBonus)
+        {
+            string folder = GetVentureFolder(venture);
+            string path = folder + "/" + id + ".asset";
+            var c = CreateOrReplace<CardData>(path);
+
+            c.cardId = id;
+            c.cardName = name;
+            c.cardType = CardType.Employee;
+            c.rarity = Rarity.Common;
+            c.buyCost = buyCost;
+            c.salaryPerTurn = salary;
+            c.customerBonus = customerBonus;
+            c.synergyCustomerBonus = synergyBonus;
+            c.tags = new CardTag[0];
+
+            // v2 fields
+            c.ventureType = venture;
+            c.targetSlotType = SlotType.Staff;
+            c.isGeneralCard = false;
+
+            // Reset other fields
+            c.synergyTag = CardTag.Food;
+            c.incomeMultiplier = 0f;
+            c.incomeFlatBonus = 0f;
+            c.incomeBonusTag = CardTag.Food;
+            c.fbiRiskPerTurn = 0;
+            c.illegalIncomePerTurn = 0;
+            c.preventsTransfer = false;
+            c.taxReduction = 0f;
+            c.activeAbilityType = ActiveAbilityType.None;
+            c.activeAbilityName = "";
+            c.activeAbilityDesc = "";
+            c.abilityValue1 = 0f;
+            c.abilityValue2 = 0;
+            c.qualityScore = 0f;
+            c.priceScore = 0f;
+            c.serviceSpeedScore = 0f;
+            c.platformRatingGain = 0f;
+            c.platformRatingOnPlay = 0f;
+            c.legalRiskPerTurn = 0;
+            c.legalRiskOnPlay = 0;
+            c.costReductionPercent = 0f;
+            c.qualityBoostAmount = 0f;
+
+            MarkDirty(c);
+            return c;
+        }
+
+        private static CardData CreateMarketing(string id, string name, VentureType venture,
+            int buyCost, float ratingGain, float ratingOnPlay)
+        {
+            string folder = GetVentureFolder(venture);
+            string path = folder + "/" + id + ".asset";
+            var c = CreateOrReplace<CardData>(path);
+
+            c.cardId = id;
+            c.cardName = name;
+            c.cardType = CardType.Action;
+            c.rarity = Rarity.Common;
+            c.buyCost = buyCost;
+            c.tags = new[] { CardTag.Marketing };
+
+            // v2 fields
+            c.ventureType = venture;
+            c.targetSlotType = SlotType.Marketing;
+            c.isGeneralCard = false;
+            c.platformRatingGain = ratingGain;
+            c.platformRatingOnPlay = ratingOnPlay;
+
+            // Reset unrelated
+            c.qualityScore = 0f;
+            c.priceScore = 0f;
+            c.serviceSpeedScore = 0f;
+            c.legalRiskPerTurn = 0;
+            c.legalRiskOnPlay = 0;
+            c.costReductionPercent = 0f;
+            c.qualityBoostAmount = 0f;
+            c.actionEffectType = ActionEffectType.None;
+            c.actionValue = 0;
+            c.actionMultiplier = 0f;
+            c.actionFBIRisk = 0;
+            c.actionDebtDuration = 0;
+            c.actionDebtPercent = 0f;
+            c.actionIncomeSacrifice = 0f;
+
+            MarkDirty(c);
+            return c;
+        }
+
+        private static CardData CreateSupplier(string id, string name, VentureType venture,
+            int buyCost, float costReduction, float qualityBoost)
+        {
+            string folder = GetVentureFolder(venture);
+            string path = folder + "/" + id + ".asset";
+            var c = CreateOrReplace<CardData>(path);
+
+            c.cardId = id;
+            c.cardName = name;
+            c.cardType = CardType.Upgrade;
+            c.rarity = Rarity.Common;
+            c.buyCost = buyCost;
+            c.tags = new[] { CardTag.Support };
+
+            // v2 fields
+            c.ventureType = venture;
+            c.targetSlotType = SlotType.Supplier;
+            c.isGeneralCard = false;
+            c.costReductionPercent = costReduction;
+            c.qualityBoostAmount = qualityBoost;
+
+            // Reset unrelated
+            c.qualityScore = 0f;
+            c.priceScore = 0f;
+            c.serviceSpeedScore = 0f;
+            c.platformRatingGain = 0f;
+            c.platformRatingOnPlay = 0f;
+            c.legalRiskPerTurn = 0;
+            c.legalRiskOnPlay = 0;
+            c.upgradeEffectType = UpgradeEffectType.None;
+            c.upgradeValue = 0f;
+            c.isGlobalUpgrade = false;
+            c.closedEmployeeSlots = 0;
+            c.extraActions = 0;
+
+            MarkDirty(c);
+            return c;
+        }
+
+        private static CardData CreateEvent(string id, string name, VentureType venture,
+            EventEffectType effectType, int duration, float multiplier)
+        {
+            string folder = GetVentureFolder(venture);
+            string path = folder + "/" + id + ".asset";
+            var c = CreateOrReplace<CardData>(path);
+
+            c.cardId = id;
+            c.cardName = name;
+            c.cardType = CardType.Event;
+            c.rarity = Rarity.Common;
+            c.buyCost = 0;
+            c.tags = new CardTag[0];
+
+            c.eventEffectType = effectType;
+            c.eventDuration = duration;
+            c.eventMultiplier = multiplier;
+            c.affectedTags = new CardTag[0];
+            c.eventCustomerPenalty = 0;
+            c.eventFBIThreshold = 0f;
+
+            // v2 fields
+            c.ventureType = venture;
+            c.targetSlotType = SlotType.TempEffect;
+            c.isGeneralCard = false;
+
+            // Reset unrelated
+            c.qualityScore = 0f;
+            c.priceScore = 0f;
+            c.serviceSpeedScore = 0f;
+            c.platformRatingGain = 0f;
+            c.platformRatingOnPlay = 0f;
+            c.legalRiskPerTurn = 0;
+            c.legalRiskOnPlay = 0;
+            c.costReductionPercent = 0f;
+            c.qualityBoostAmount = 0f;
+
+            MarkDirty(c);
+            return c;
+        }
+
+        // General card variant (isGeneralCard = true, stored in General folder)
+        private static CardData CreateGeneralOperation(string id, string name,
+            int buyCost, int income, int customers, float quality, float price, float speed)
+        {
+            string path = GeneralCards + "/" + id + ".asset";
+            var c = CreateOrReplace<CardData>(path);
+
+            c.cardId = id;
+            c.cardName = name;
+            c.cardType = CardType.Business;
+            c.rarity = Rarity.Common;
+            c.buyCost = buyCost;
+            c.incomePerTurn = income;
+            c.customersPerTurn = customers;
+            c.tags = new CardTag[0];
+
+            c.ventureType = VentureType.FastFood; // default, unused for general
+            c.targetSlotType = SlotType.Operation;
+            c.isGeneralCard = true;
+            c.qualityScore = quality;
+            c.priceScore = price;
+            c.serviceSpeedScore = speed;
+
+            c.hasTrendBonus = false;
+            c.trendIncomeMultiplier = 1f;
+            c.activationDelay = 0;
+            c.requiresTrendToOperate = false;
+            c.hasRandomIncome = false;
+            c.randomIncomeMin = 0;
+            c.randomIncomeMax = 0;
+            c.foodBonusTag = "";
+            c.foodBonusAmount = 0;
+            c.globalCustomerBonus = 0;
+            c.canEvolve = false;
+            c.employeeSlots = 0;
+            c.platformRatingGain = 0f;
+            c.platformRatingOnPlay = 0f;
+            c.legalRiskPerTurn = 0;
+            c.legalRiskOnPlay = 0;
+            c.costReductionPercent = 0f;
+            c.qualityBoostAmount = 0f;
+
+            MarkDirty(c);
+            return c;
+        }
+
+        private static CardData CreateGeneralStaff(string id, string name,
+            int buyCost, int salary, int customerBonus)
+        {
+            string path = GeneralCards + "/" + id + ".asset";
+            var c = CreateOrReplace<CardData>(path);
+
+            c.cardId = id;
+            c.cardName = name;
+            c.cardType = CardType.Employee;
+            c.rarity = Rarity.Common;
+            c.buyCost = buyCost;
+            c.salaryPerTurn = salary;
+            c.customerBonus = customerBonus;
+            c.synergyCustomerBonus = 0;
+            c.tags = new CardTag[0];
+
+            c.ventureType = VentureType.FastFood;
+            c.targetSlotType = SlotType.Staff;
+            c.isGeneralCard = true;
+
+            c.synergyTag = CardTag.Food;
+            c.incomeMultiplier = 0f;
+            c.incomeFlatBonus = 0f;
+            c.incomeBonusTag = CardTag.Food;
+            c.fbiRiskPerTurn = 0;
+            c.illegalIncomePerTurn = 0;
+            c.preventsTransfer = false;
+            c.taxReduction = 0f;
+            c.activeAbilityType = ActiveAbilityType.None;
+            c.activeAbilityName = "";
+            c.activeAbilityDesc = "";
+            c.abilityValue1 = 0f;
+            c.abilityValue2 = 0;
+            c.qualityScore = 0f;
+            c.priceScore = 0f;
+            c.serviceSpeedScore = 0f;
+            c.platformRatingGain = 0f;
+            c.platformRatingOnPlay = 0f;
+            c.legalRiskPerTurn = 0;
+            c.legalRiskOnPlay = 0;
+            c.costReductionPercent = 0f;
+            c.qualityBoostAmount = 0f;
+
+            MarkDirty(c);
+            return c;
+        }
+
+        private static CardData CreateGeneralMarketing(string id, string name,
+            int buyCost, float ratingGain, float ratingOnPlay)
+        {
+            string path = GeneralCards + "/" + id + ".asset";
+            var c = CreateOrReplace<CardData>(path);
+
+            c.cardId = id;
+            c.cardName = name;
+            c.cardType = CardType.Action;
+            c.rarity = Rarity.Common;
+            c.buyCost = buyCost;
+            c.tags = new[] { CardTag.Marketing };
+
+            c.ventureType = VentureType.FastFood;
+            c.targetSlotType = SlotType.Marketing;
+            c.isGeneralCard = true;
+            c.platformRatingGain = ratingGain;
+            c.platformRatingOnPlay = ratingOnPlay;
+
+            c.qualityScore = 0f;
+            c.priceScore = 0f;
+            c.serviceSpeedScore = 0f;
+            c.legalRiskPerTurn = 0;
+            c.legalRiskOnPlay = 0;
+            c.costReductionPercent = 0f;
+            c.qualityBoostAmount = 0f;
+            c.actionEffectType = ActionEffectType.None;
+            c.actionValue = 0;
+            c.actionMultiplier = 0f;
+            c.actionFBIRisk = 0;
+            c.actionDebtDuration = 0;
+            c.actionDebtPercent = 0f;
+            c.actionIncomeSacrifice = 0f;
+
+            MarkDirty(c);
+            return c;
+        }
+
+        private static CardData CreateGeneralEvent(string id, string name,
+            EventEffectType effectType, int duration, float multiplier)
+        {
+            string path = GeneralCards + "/" + id + ".asset";
+            var c = CreateOrReplace<CardData>(path);
+
+            c.cardId = id;
+            c.cardName = name;
+            c.cardType = CardType.Event;
+            c.rarity = Rarity.Uncommon;
+            c.buyCost = 0;
+            c.tags = new CardTag[0];
+
+            c.eventEffectType = effectType;
+            c.eventDuration = duration;
+            c.eventMultiplier = multiplier;
+            c.affectedTags = new CardTag[0];
+            c.eventCustomerPenalty = 0;
+            c.eventFBIThreshold = 0f;
+
+            c.ventureType = VentureType.FastFood;
+            c.targetSlotType = SlotType.TempEffect;
+            c.isGeneralCard = true;
+
+            c.qualityScore = 0f;
+            c.priceScore = 0f;
+            c.serviceSpeedScore = 0f;
+            c.platformRatingGain = 0f;
+            c.platformRatingOnPlay = 0f;
+            c.legalRiskPerTurn = 0;
+            c.legalRiskOnPlay = 0;
+            c.costReductionPercent = 0f;
+            c.qualityBoostAmount = 0f;
+
+            MarkDirty(c);
+            return c;
+        }
+
         // ===================================================================
         // 1. GAME BALANCE
         // ===================================================================
@@ -104,11 +528,11 @@ namespace EmpireOfCards.Editor
 
             // General
             gb.startingMoney          = 500;
-            gb.maxTurns               = 20;
+            gb.maxTurns               = 25;
             gb.startingActions        = 3;
             gb.maxActions             = 5;
-            gb.startingBusinessSlots  = 3;
-            gb.maxBusinessSlots       = 5;
+            gb.startingBusinessSlots  = 4;
+            gb.maxBusinessSlots       = 8;
             gb.handSize               = 5;
             gb.redrawsPerTurn         = 1;
             gb.shopCardsPerTurn       = 3;
@@ -124,10 +548,10 @@ namespace EmpireOfCards.Editor
             gb.fbiRaidPenalty         = 300;
             gb.fbiStartingRisk        = 0f;
 
-            // Territory
-            gb.totalTerritories       = 10;
-            gb.winTerritories         = 6;
-            gb.loseTerritories        = 7;
+            // Territory / Customer Share
+            gb.totalTerritories       = 100;
+            gb.winTerritories         = 60;
+            gb.loseTerritories        = 60;
 
             // Market Pool
             gb.baseMarketCustomers    = 60;
@@ -157,510 +581,610 @@ namespace EmpireOfCards.Editor
         }
 
         // ===================================================================
-        // 2. ALL 40 CARDS
+        // 2. ALL CARDS (5 ventures + general)
         // ===================================================================
         private static CardData[] GenerateAllCards()
         {
-            CardData[] all = new CardData[40];
-            int idx = 0;
+            var all = new List<CardData>();
 
-            // --- 8 Business Cards ---
-            CardData[] businesses = GenerateBusinessCards();
-            for (int i = 0; i < businesses.Length; i++) all[idx++] = businesses[i];
+            // --- FastFood venture cards ---
+            all.AddRange(GenerateFastFoodCards());
 
-            // --- 10 Employee Cards ---
-            CardData[] employees = GenerateEmployeeCards();
-            for (int i = 0; i < employees.Length; i++) all[idx++] = employees[i];
+            // --- Cafe venture cards ---
+            all.AddRange(GenerateCafeCards());
 
-            // --- 10 Action Cards ---
-            CardData[] actions = GenerateActionCards();
-            for (int i = 0; i < actions.Length; i++) all[idx++] = actions[i];
+            // --- TechApp venture cards ---
+            all.AddRange(GenerateTechAppCards());
 
-            // --- 6 Upgrade Cards ---
-            CardData[] upgrades = GenerateUpgradeCards();
-            for (int i = 0; i < upgrades.Length; i++) all[idx++] = upgrades[i];
+            // --- ClothingStore venture cards ---
+            all.AddRange(GenerateClothingStoreCards());
 
-            // --- 6 Event Cards ---
-            CardData[] events = GenerateEventCards();
-            for (int i = 0; i < events.Length; i++) all[idx++] = events[i];
+            // --- GroceryStore venture cards ---
+            all.AddRange(GenerateGroceryStoreCards());
 
-            Debug.Log($"[AssetGenerator] {idx} card assets created.");
-            return all;
+            // --- General cards (available to all ventures) ---
+            all.AddRange(GenerateGeneralCards());
+
+            Debug.Log($"[AssetGenerator] {all.Count} card assets created.");
+            return all.ToArray();
         }
 
         // -------------------------------------------------------------------
-        // 2a. BUSINESS CARDS
+        // FastFood (FFC prefix)
         // -------------------------------------------------------------------
-        private static CardData[] GenerateBusinessCards()
+        private static CardData[] GenerateFastFoodCards()
         {
-            CardData[] cards = new CardData[8];
+            var cards = new List<CardData>();
 
-            // B01 - Diner
-            cards[0] = CreateBusiness("B01_Bufe", "Diner", Rarity.Common,
-                "Humble beginnings. Everyone's first business.", 0, 50, 3, 1,
-                new[] { CardTag.Food, CardTag.Basic });
-            cards[0].canEvolve = true;
+            // Operation cards
+            var c = CreateOperation("FFC01_Grill", "Grill Station", VentureType.FastFood,
+                100, 40, 3, 5f, 7f, 8f);
+            c.description = "Fast and cheap. The core of any fast food joint.";
+            c.rarity = Rarity.Common;
+            cards.Add(c);
 
-            // B02 - Coffee Shop
-            cards[1] = CreateBusiness("B02_Kahveci", "Coffee Shop", Rarity.Common,
-                "Trend-sensitive. Very profitable at the right time.", 150, 80, 5, 2,
-                new[] { CardTag.Food, CardTag.Coffee, CardTag.Trendy });
-            cards[1].hasTrendBonus = true;
-            cards[1].trendIncomeMultiplier = 1.5f;
+            c = CreateOperation("FFC02_FryerUnit", "Fryer Unit", VentureType.FastFood,
+                120, 50, 4, 4f, 8f, 9f);
+            c.description = "Golden fries keep customers coming back.";
+            c.rarity = Rarity.Common;
+            cards.Add(c);
 
-            // B03 - Burger Chain
-            cards[2] = CreateBusiness("B03_BurgerZinciri", "Burger Chain", Rarity.Uncommon,
-                "Many employees = many synergies. But salaries add up.", 250, 100, 6, 3,
-                new[] { CardTag.Food, CardTag.Chain });
+            c = CreateOperation("FFC03_DriveThru", "Drive-Through", VentureType.FastFood,
+                200, 70, 6, 6f, 6f, 10f);
+            c.description = "Speed is everything. Serve without stopping.";
+            c.rarity = Rarity.Uncommon;
+            cards.Add(c);
 
-            // B04 - Tech Startup
-            cards[3] = CreateBusiness("B04_TechStartup", "Tech Startup", Rarity.Uncommon,
-                "Patience required. But when it hits, it hits big.", 200, 150, 4, 2,
-                new[] { CardTag.Tech, CardTag.Startup });
-            cards[3].activationDelay = 3;
+            // Staff cards
+            c = CreateStaff("FFC04_LineCook", "Line Cook", VentureType.FastFood,
+                60, 15, 2, 4);
+            c.description = "Fast hands, fast food.";
+            cards.Add(c);
 
-            // B05 - Nightclub
-            cards[4] = CreateBusiness("B05_GeceKulubu", "Nightclub", Rarity.Rare,
-                "High reward, high risk. Dead when trends die.", 350, 180, 10, 2,
-                new[] { CardTag.Entertainment, CardTag.Nightlife, CardTag.Trendy });
-            cards[4].requiresTrendToOperate = true;
+            c = CreateStaff("FFC05_Cashier", "Cashier", VentureType.FastFood,
+                40, 10, 1, 2);
+            c.description = "Keeps the line moving.";
+            cards.Add(c);
 
-            // B06 - Organic Farm
-            cards[5] = CreateBusiness("B06_OrganikCiftlik", "Organic Farm", Rarity.Common,
-                "Weak alone. But powers up all food businesses.", 120, 40, 2, 1,
-                new[] { CardTag.Food, CardTag.Organic, CardTag.Support });
-            cards[5].foodBonusTag = "Food";
-            cards[5].foodBonusAmount = 20;
+            // Marketing cards
+            c = CreateMarketing("FFC06_ValueMeal", "Value Meal Promo", VentureType.FastFood,
+                80, 0.5f, 1.0f);
+            c.description = "Combo deals bring the crowds.";
+            cards.Add(c);
 
-            // B07 - Crypto Exchange
-            cards[6] = CreateBusiness("B07_KriptoBorsasi", "Crypto Exchange", Rarity.Rare,
-                "Gambling. Sometimes zero, sometimes jackpot.", 300, 0, 2, 1,
-                new[] { CardTag.Tech, CardTag.Crypto, CardTag.Risky });
-            cards[6].hasRandomIncome = true;
-            cards[6].randomIncomeMin = 0;
-            cards[6].randomIncomeMax = 250;
+            // Supplier cards
+            c = CreateSupplier("FFC07_BulkMeat", "Bulk Meat Supplier", VentureType.FastFood,
+                90, 15f, 1f);
+            c.description = "Cheaper ingredients, same taste.";
+            cards.Add(c);
 
-            // B08 - Ad Agency
-            cards[7] = CreateBusiness("B08_AdAgency", "Ad Agency", Rarity.Uncommon,
-                "Low income but boosts all your businesses.", 200, 60, 3, 2,
-                new[] { CardTag.Marketing, CardTag.Support });
-            cards[7].globalCustomerBonus = 2;
-
-            return cards;
-        }
-
-        private static CardData CreateBusiness(string id, string name, Rarity rarity,
-            string desc, int cost, int income, int customers, int slots, CardTag[] tags)
-        {
-            string path = BusinessCards + "/" + id + ".asset";
-            var c = CreateOrReplace<CardData>(path);
-            c.cardId              = id;
-            c.cardName            = name;
-            c.cardType            = CardType.Business;
-            c.rarity              = rarity;
-            c.description         = desc;
-            c.buyCost             = cost;
-            c.incomePerTurn       = income;
-            c.customersPerTurn    = customers;
-            c.employeeSlots       = slots;
-            c.tags                = tags;
-            // Reset defaults that may linger from previous generation
-            c.hasTrendBonus              = false;
-            c.trendIncomeMultiplier      = 1f;
-            c.activationDelay            = 0;
-            c.requiresTrendToOperate     = false;
-            c.hasRandomIncome            = false;
-            c.randomIncomeMin            = 0;
-            c.randomIncomeMax            = 0;
-            c.foodBonusTag               = "";
-            c.foodBonusAmount            = 0;
-            c.globalCustomerBonus        = 0;
-            c.canEvolve                  = false;
+            // Event card
+            c = CreateEvent("FFC08_HealthScare", "Health Scare", VentureType.FastFood,
+                EventEffectType.TagCustomerPenalty, 2, -0.2f);
+            c.description = "Bad press hits fast food hard.";
+            c.rarity = Rarity.Uncommon;
+            c.affectedTags = new[] { CardTag.Food };
+            c.eventCustomerPenalty = -3;
             MarkDirty(c);
-            return c;
+            cards.Add(c);
+
+            return cards.ToArray();
         }
 
         // -------------------------------------------------------------------
-        // 2b. EMPLOYEE CARDS
+        // Cafe (CAF prefix)
         // -------------------------------------------------------------------
-        private static CardData[] GenerateEmployeeCards()
+        private static CardData[] GenerateCafeCards()
         {
-            CardData[] cards = new CardData[10];
+            var cards = new List<CardData>();
 
-            // C01 - Intern
-            cards[0] = CreateEmployee("C01_Stajyer", "Intern", Rarity.Common,
-                "Cheap but weak. Starter card.", 15, tags: new[] { CardTag.Basic });
-            cards[0].customerBonus       = 1;
-            cards[0].activeAbilityType   = ActiveAbilityType.AddCustomersThisTurn;
-            cards[0].activeAbilityName   = "Hustle";
-            cards[0].activeAbilityDesc   = "Adds +3 customers to this business this turn.";
-            cards[0].abilityValue2       = 3;
+            // Operation cards
+            var c = CreateOperation("CAF01_EspressoBar", "Espresso Bar", VentureType.Cafe,
+                120, 55, 3, 7f, 5f, 6f);
+            c.description = "Premium coffee at premium prices.";
+            c.rarity = Rarity.Common;
+            cards.Add(c);
 
-            // C02 - Junior Marketer
-            cards[1] = CreateEmployee("C02_CaylakPazarlamaci", "Junior Marketer", Rarity.Common,
-                "Small but consistent bonus.", 20, tags: new[] { CardTag.Marketing, CardTag.Basic });
-            cards[1].incomeMultiplier    = 0.10f;
-            cards[1].activeAbilityType   = ActiveAbilityType.AddCustomersThisTurn;
-            cards[1].activeAbilityName   = "Campaign";
-            cards[1].activeAbilityDesc   = "Adds +5 customers to this business this turn.";
-            cards[1].abilityValue2       = 5;
+            c = CreateOperation("CAF02_PastryCounter", "Pastry Counter", VentureType.Cafe,
+                90, 35, 2, 8f, 6f, 5f);
+            c.description = "Fresh pastries pair perfectly with coffee.";
+            c.rarity = Rarity.Common;
+            cards.Add(c);
 
-            // C03 - Barista
-            cards[2] = CreateEmployee("C03_Barista", "Barista", Rarity.Uncommon,
-                "Doubles in coffee shops.", 25,
-                tags: new[] { CardTag.Food, CardTag.Coffee });
-            cards[2].customerBonus         = 3;
-            cards[2].synergyCustomerBonus  = 6;
-            cards[2].synergyTag            = CardTag.Coffee;
-            cards[2].activeAbilityType     = ActiveAbilityType.MultiplyCustomersThisTurn;
-            cards[2].activeAbilityName     = "Latte Festival";
-            cards[2].activeAbilityDesc     = "Customers x2 this turn.";
-            cards[2].abilityValue1         = 2f;
+            c = CreateOperation("CAF03_CozyLounge", "Cozy Lounge", VentureType.Cafe,
+                180, 60, 5, 9f, 4f, 3f);
+            c.description = "People linger longer. And spend more.";
+            c.rarity = Rarity.Uncommon;
+            cards.Add(c);
 
-            // C04 - Chef
-            cards[3] = CreateEmployee("C04_Sef", "Chef", Rarity.Uncommon,
-                "Strong in food sector.", 30,
-                tags: new[] { CardTag.Food });
-            cards[3].customerBonus       = 3;
-            cards[3].incomeFlatBonus     = 30f;
-            cards[3].incomeBonusTag      = CardTag.Food;
-            cards[3].activeAbilityType   = ActiveAbilityType.MultiplyIncomeThisTurn;
-            cards[3].activeAbilityName   = "Special Menu";
-            cards[3].activeAbilityDesc   = "Income x1.5 this turn.";
-            cards[3].abilityValue1       = 1.5f;
+            // Staff cards
+            c = CreateStaff("CAF04_Barista", "Barista", VentureType.Cafe,
+                70, 20, 3, 6);
+            c.description = "Latte art and loyal customers.";
+            c.rarity = Rarity.Uncommon;
+            cards.Add(c);
 
-            // C05 - Marketing Guru
-            cards[4] = CreateEmployee("C05_MarketingGurusu", "Marketing Guru", Rarity.Rare,
-                "Expensive but powerful. Combo piece.", 45,
-                tags: new[] { CardTag.Marketing, CardTag.Guru });
-            cards[4].incomeMultiplier    = 0.25f;
-            cards[4].activeAbilityType   = ActiveAbilityType.AddCustomersToAll;
-            cards[4].activeAbilityName   = "Viral Campaign";
-            cards[4].activeAbilityDesc   = "+3 customers to all businesses.";
-            cards[4].abilityValue2       = 3;
+            c = CreateStaff("CAF05_BaristaTrainee", "Barista Trainee", VentureType.Cafe,
+                30, 8, 1, 2);
+            c.description = "Learning the craft. Cheap but improving.";
+            cards.Add(c);
 
-            // C06 - Influencer
-            cards[5] = CreateEmployee("C06_Influencer", "Influencer", Rarity.Rare,
-                "Explodes during trends. Average otherwise.", 50,
-                tags: new[] { CardTag.Marketing, CardTag.Influencer, CardTag.Trendy });
-            cards[5].customerBonus         = 5;
-            cards[5].synergyCustomerBonus  = 12;
-            cards[5].synergyTag            = CardTag.Trendy;
-            cards[5].activeAbilityType     = ActiveAbilityType.StealCustomersFromRival;
-            cards[5].activeAbilityName     = "Post Story";
-            cards[5].activeAbilityDesc     = "Steal 5 customers from rival.";
-            cards[5].abilityValue2         = 5;
+            // Marketing cards
+            c = CreateMarketing("CAF06_LoyaltyCard", "Loyalty Card Program", VentureType.Cafe,
+                100, 0.8f, 0.5f);
+            c.description = "Buy 9, get the 10th free. They always come back.";
+            c.rarity = Rarity.Uncommon;
+            cards.Add(c);
 
-            // C07 - Hacker
-            cards[6] = CreateEmployee("C07_Hacker", "Hacker", Rarity.Rare,
-                "Powerful but dangerous. FBI risk every turn.", 60,
-                tags: new[] { CardTag.Tech, CardTag.Illegal });
-            cards[6].customerBonus       = -4;
-            cards[6].fbiRiskPerTurn      = 10;
-            cards[6].activeAbilityType   = ActiveAbilityType.None;
-            cards[6].activeAbilityName   = "Passive Infiltration";
-            cards[6].activeAbilityDesc   = "Steals 4 customers from rival each turn (passive).";
+            // Supplier cards
+            c = CreateSupplier("CAF07_BeanImporter", "Premium Bean Importer", VentureType.Cafe,
+                110, 10f, 2f);
+            c.description = "Single-origin beans elevate the brand.";
+            c.rarity = Rarity.Uncommon;
+            cards.Add(c);
 
-            // C08 - Accountant
-            cards[7] = CreateEmployee("C08_Muhasebeci", "Accountant", Rarity.Uncommon,
-                "Boring but saves every penny.", 30,
-                tags: new[] { CardTag.Finance });
-            cards[7].taxReduction        = 0.5f;
-            cards[7].activeAbilityType   = ActiveAbilityType.NullifyTaxThisTurn;
-            cards[7].activeAbilityName   = "Tax Plan";
-            cards[7].activeAbilityDesc   = "Tax is nullified this turn.";
-
-            // C09 - Fraudster
-            cards[8] = CreateEmployee("C09_Dolandirici", "Fraudster", Rarity.Rare,
-                "Fast money. But FBI is knocking.", 40,
-                tags: new[] { CardTag.Illegal, CardTag.Finance });
-            cards[8].illegalIncomePerTurn = 120;
-            cards[8].fbiRiskPerTurn       = 12;
-            cards[8].activeAbilityType    = ActiveAbilityType.BonusIncomeWithPenalty;
-            cards[8].activeAbilityName    = "Ponzi";
-            cards[8].activeAbilityDesc    = "+300 instant but -150 next turn.";
-            cards[8].abilityValue2        = 300;
-
-            // C10 - Loyal Manager
-            cards[9] = CreateEmployee("C10_SadikMudur", "Loyal Manager", Rarity.Uncommon,
-                "Rival can't steal employees. Defensive.", 45,
-                tags: new[] { CardTag.Management });
-            cards[9].customerBonus       = 0;
-            cards[9].incomeFlatBonus     = 20f;
-            cards[9].preventsTransfer    = true;
-            cards[9].activeAbilityType   = ActiveAbilityType.MotivateAllEmployees;
-            cards[9].activeAbilityName   = "Motivation";
-            cards[9].activeAbilityDesc   = "All employees gain +1 customer this turn.";
-
-            return cards;
-        }
-
-        private static CardData CreateEmployee(string id, string name, Rarity rarity,
-            string desc, int salary, CardTag[] tags)
-        {
-            string path = EmployeeCards + "/" + id + ".asset";
-            var c = CreateOrReplace<CardData>(path);
-            c.cardId              = id;
-            c.cardName            = name;
-            c.cardType            = CardType.Employee;
-            c.rarity              = rarity;
-            c.description         = desc;
-            c.buyCost             = 0;
-            c.salaryPerTurn       = salary;
-            c.tags                = tags;
-            // Reset employee defaults
-            c.customerBonus          = 0;
-            c.synergyCustomerBonus   = 0;
-            c.synergyTag             = CardTag.Food;
-            c.incomeMultiplier       = 0f;
-            c.incomeFlatBonus        = 0f;
-            c.incomeBonusTag         = CardTag.Food;
-            c.fbiRiskPerTurn         = 0;
-            c.illegalIncomePerTurn   = 0;
-            c.preventsTransfer       = false;
-            c.taxReduction           = 0f;
-            c.activeAbilityType      = ActiveAbilityType.None;
-            c.activeAbilityName      = "";
-            c.activeAbilityDesc      = "";
-            c.abilityValue1          = 0f;
-            c.abilityValue2          = 0;
+            // Event card
+            c = CreateEvent("CAF08_CoffeeTrend", "Coffee Trend", VentureType.Cafe,
+                EventEffectType.TagCustomerBoost, 2, 0.4f);
+            c.description = "Everyone wants artisan coffee this season.";
+            c.rarity = Rarity.Common;
+            c.affectedTags = new[] { CardTag.Coffee };
             MarkDirty(c);
-            return c;
+            cards.Add(c);
+
+            return cards.ToArray();
         }
 
         // -------------------------------------------------------------------
-        // 2c. ACTION CARDS
+        // TechApp (TEC prefix)
         // -------------------------------------------------------------------
-        private static CardData[] GenerateActionCards()
+        private static CardData[] GenerateTechAppCards()
         {
-            CardData[] cards = new CardData[10];
+            var cards = new List<CardData>();
 
-            // A01 - Flyer
-            cards[0] = CreateAction("A01_ElIlani", "Flyer", Rarity.Common,
-                "Free but weak. Starter card.", 0,
-                ActionEffectType.AddCustomersToRandom, 3, 0f, 0,
-                new[] { CardTag.Marketing, CardTag.Basic });
-
-            // A02 - Small Investment
-            cards[1] = CreateAction("A02_KucukYatirim", "Small Investment", Rarity.Common,
-                "Quick cash. Starter card.", 0,
-                ActionEffectType.AddMoneyInstant, 150, 0f, 0,
-                new[] { CardTag.Finance, CardTag.Basic });
-
-            // A03 - Viral Marketing
-            cards[2] = CreateAction("A03_ViralPazarlama", "Viral Marketing", Rarity.Uncommon,
-                "Explodes when played at the right turn.", 150,
-                ActionEffectType.MultiplyAllCustomers, 0, 2f, 0,
-                new[] { CardTag.Marketing, CardTag.Viral });
-
-            // A04 - Hostile Takeover
-            cards[3] = CreateAction("A04_DusmancaDevralma", "Hostile Takeover", Rarity.Rare,
-                "Expensive but directly weakens rival.", 400,
-                ActionEffectType.CloseRivalWeakestBusiness, 0, 0f, 0,
-                new[] { CardTag.Aggressive });
-
-            // A05 - Fake Reviews
-            cards[4] = CreateAction("A05_SahteYorumlar", "Fake Reviews", Rarity.Uncommon,
-                "Cheap customers. But risky.", 80,
-                ActionEffectType.AddCustomersWithFBI, 8, 0f, 12,
-                new[] { CardTag.Marketing, CardTag.Illegal });
-
-            // A06 - Price Slashing
-            cards[5] = CreateAction("A06_FiyatKirma", "Price Slashing", Rarity.Uncommon,
-                "Sacrifice income, steal customers.", 0,
-                ActionEffectType.StealCustomersHalfIncome, 8, 0f, 0,
-                new[] { CardTag.Aggressive, CardTag.Pricing });
-            cards[5].actionIncomeSacrifice = 0.5f;
-
-            // A07 - Sabotage
-            cards[6] = CreateAction("A07_Sabotaj", "Sabotage", Rarity.Rare,
-                "Powerful but very risky.", 250,
-                ActionEffectType.DisableRivalOneTurn, 0, 0f, 15,
-                new[] { CardTag.Aggressive, CardTag.Illegal });
-
-            // A08 - Investor Pitch
-            cards[7] = CreateAction("A08_YatirimciSunumu", "Investor Pitch", Rarity.Uncommon,
-                "Big money now. Pay later.", 0,
-                ActionEffectType.MoneyNowPayLater, 600, 0f, 0,
-                new[] { CardTag.Finance, CardTag.Investor });
-            cards[7].actionDebtDuration = 3;
-            cards[7].actionDebtPercent  = 0.15f;
-
-            // A09 - Emergency Hire
-            cards[8] = CreateAction("A09_AcilIseAlim", "Emergency Hire", Rarity.Uncommon,
-                "Quick employee. But random.", 100,
-                ActionEffectType.DrawAndPlayEmployee, 0, 0f, 0,
-                new[] { CardTag.Hiring });
-
-            // A10 - Liquidation Sale
-            cards[9] = CreateAction("A10_TasfiyeSatisi", "Liquidation Sale", Rarity.Common,
-                "Last resort. Or strategic move.", 0,
-                ActionEffectType.SacrificeBusiness, 0, 0f, 0,
-                new[] { CardTag.Finance, CardTag.Desperate });
-
-            return cards;
-        }
-
-        private static CardData CreateAction(string id, string name, Rarity rarity,
-            string desc, int cost, ActionEffectType effect, int value, float multiplier,
-            int fbiRisk, CardTag[] tags)
-        {
-            string path = ActionCards + "/" + id + ".asset";
-            var c = CreateOrReplace<CardData>(path);
-            c.cardId              = id;
-            c.cardName            = name;
-            c.cardType            = CardType.Action;
-            c.rarity              = rarity;
-            c.description         = desc;
-            c.buyCost             = cost;
-            c.tags                = tags;
-            c.actionEffectType    = effect;
-            c.actionValue         = value;
-            c.actionMultiplier    = multiplier;
-            c.actionFBIRisk       = fbiRisk;
-            // Reset action-specific defaults
-            c.actionDebtDuration    = 0;
-            c.actionDebtPercent     = 0f;
-            c.actionIncomeSacrifice = 0f;
+            // Operation cards
+            var c = CreateOperation("TEC01_AppLaunch", "App Launch", VentureType.TechApp,
+                150, 0, 0, 3f, 3f, 8f);
+            c.description = "No revenue yet. But the user base is growing.";
+            c.rarity = Rarity.Common;
+            c.activationDelay = 3;
             MarkDirty(c);
-            return c;
-        }
+            cards.Add(c);
 
-        // -------------------------------------------------------------------
-        // 2d. UPGRADE CARDS
-        // -------------------------------------------------------------------
-        private static CardData[] GenerateUpgradeCards()
-        {
-            CardData[] cards = new CardData[6];
+            c = CreateOperation("TEC02_ServerFarm", "Server Farm", VentureType.TechApp,
+                250, 80, 2, 5f, 5f, 10f);
+            c.description = "Scale up. Handle the traffic.";
+            c.rarity = Rarity.Uncommon;
+            cards.Add(c);
 
-            // U01 - Office Supplies
-            cards[0] = CreateUpgrade("U01_OfisMalzemeleri", "Office Supplies", Rarity.Common,
-                "Small but free. Starter card.", 0,
-                UpgradeEffectType.IncomePercentSingle, 10f, false, 0, 0,
-                new[] { CardTag.Basic, CardTag.Office });
+            c = CreateOperation("TEC03_PremiumTier", "Premium Tier", VentureType.TechApp,
+                200, 100, 1, 7f, 2f, 7f);
+            c.description = "Freemium to premium. The real money starts here.";
+            c.rarity = Rarity.Rare;
+            cards.Add(c);
 
-            // U02 - Automation
-            cards[1] = CreateUpgrade("U02_Otomasyon", "Automation", Rarity.Uncommon,
-                "Strong income boost. But loses an employee slot.", 300,
-                UpgradeEffectType.IncomePercentWithSlotLoss, 30f, false, 1, 0,
-                new[] { CardTag.Tech, CardTag.Automation });
+            // Staff cards
+            c = CreateStaff("TEC04_Developer", "Developer", VentureType.TechApp,
+                80, 25, 1, 3);
+            c.description = "Writes the code that runs the business.";
+            c.rarity = Rarity.Common;
+            cards.Add(c);
 
-            // U03 - Delivery Network
-            cards[2] = CreateUpgrade("U03_TeslimatAgi", "Delivery Network", Rarity.Uncommon,
-                "Very valuable with multiple businesses.", 250,
-                UpgradeEffectType.GlobalCustomerPerTurn, 2f, true, 0, 0,
-                new[] { CardTag.Logistics });
+            c = CreateStaff("TEC05_SysAdmin", "Sys Admin", VentureType.TechApp,
+                60, 18, 0, 2);
+            c.description = "Keeps the servers running. No glamour, all necessity.";
+            cards.Add(c);
 
-            // U04 - Billboard
-            cards[3] = CreateUpgrade("U04_Billboard", "Billboard", Rarity.Common,
-                "Cheap, simple, effective.", 120,
-                UpgradeEffectType.GlobalCustomerFlat, 3f, true, 0, 0,
-                new[] { CardTag.Marketing });
+            // Marketing cards
+            c = CreateMarketing("TEC06_AppStoreAd", "App Store Ad", VentureType.TechApp,
+                120, 1.0f, 2.0f);
+            c.description = "Featured placement drives massive downloads.";
+            c.rarity = Rarity.Uncommon;
+            cards.Add(c);
 
-            // U05 - Security System
-            cards[4] = CreateUpgrade("U05_GuvenlikSistemi", "Security System", Rarity.Uncommon,
-                "Essential for illegal strategies.", 280,
-                UpgradeEffectType.ReduceFBIRisk, 25f, true, 0, 0,
-                new[] { CardTag.Security });
+            // Supplier cards
+            c = CreateSupplier("TEC07_CloudProvider", "Cloud Provider", VentureType.TechApp,
+                130, 20f, 1.5f);
+            c.description = "Cheaper hosting, better uptime.";
+            c.rarity = Rarity.Uncommon;
+            cards.Add(c);
 
-            // U06 - AI Assistant
-            cards[5] = CreateUpgrade("U06_YapayZekaAsistani", "AI Assistant", Rarity.Rare,
-                "The game's strongest upgrade. Extra action per turn.", 400,
-                UpgradeEffectType.ExtraAction, 0f, true, 0, 1,
-                new[] { CardTag.Tech, CardTag.AI });
-
-            return cards;
-        }
-
-        private static CardData CreateUpgrade(string id, string name, Rarity rarity,
-            string desc, int cost, UpgradeEffectType effect, float value, bool isGlobal,
-            int closedSlots, int extraActs, CardTag[] tags)
-        {
-            string path = UpgradeCards + "/" + id + ".asset";
-            var c = CreateOrReplace<CardData>(path);
-            c.cardId                = id;
-            c.cardName              = name;
-            c.cardType              = CardType.Upgrade;
-            c.rarity                = rarity;
-            c.description           = desc;
-            c.buyCost               = cost;
-            c.tags                  = tags;
-            c.upgradeEffectType     = effect;
-            c.upgradeValue          = value;
-            c.isGlobalUpgrade       = isGlobal;
-            c.closedEmployeeSlots   = closedSlots;
-            c.extraActions          = extraActs;
+            // Event card
+            c = CreateEvent("TEC08_DataBreach", "Data Breach", VentureType.TechApp,
+                EventEffectType.TagCustomerPenalty, 1, -0.3f);
+            c.description = "Users flee. Trust takes time to rebuild.";
+            c.rarity = Rarity.Uncommon;
+            c.affectedTags = new[] { CardTag.Tech };
+            c.eventCustomerPenalty = -5;
             MarkDirty(c);
-            return c;
+            cards.Add(c);
+
+            return cards.ToArray();
         }
 
         // -------------------------------------------------------------------
-        // 2e. EVENT CARDS
+        // ClothingStore (CLO prefix)
         // -------------------------------------------------------------------
-        private static CardData[] GenerateEventCards()
+        private static CardData[] GenerateClothingStoreCards()
         {
-            CardData[] cards = new CardData[6];
+            var cards = new List<CardData>();
 
-            // E01 - Coffee Craze
-            cards[0] = CreateEvent("E01_KahveCilginligi", "Coffee Craze", Rarity.Common,
-                "Food sector booming.", 2,
-                EventEffectType.TagCustomerBoost, 0.5f,
-                new[] { CardTag.Food, CardTag.Coffee }, 0, 0f);
+            // Operation cards
+            var c = CreateOperation("CLO01_Storefront", "Storefront", VentureType.ClothingStore,
+                130, 50, 3, 6f, 6f, 5f);
+            c.description = "A well-placed shop draws foot traffic.";
+            c.rarity = Rarity.Common;
+            cards.Add(c);
 
-            // E02 - Economic Crisis
-            cards[1] = CreateEvent("E02_EkonomikKriz", "Economic Crisis", Rarity.Common,
-                "Everyone suffers. But the prepared find opportunity.", 2,
-                EventEffectType.AllIncomeReduction, -0.3f,
-                new CardTag[0], 0, 0f);
+            c = CreateOperation("CLO02_OnlineShop", "Online Shop", VentureType.ClothingStore,
+                180, 65, 4, 5f, 7f, 8f);
+            c.description = "Reach customers everywhere. No rent required.";
+            c.rarity = Rarity.Uncommon;
+            cards.Add(c);
 
-            // E03 - Viral Trend
-            cards[2] = CreateEvent("E03_ViralTrend", "Viral Trend", Rarity.Uncommon,
-                "Marketing-heavy strategy shines here.", 1,
-                EventEffectType.TagDoubleEffect, 1.0f,
-                new[] { CardTag.Marketing }, 0, 0f);
+            c = CreateOperation("CLO03_BoutiqueSection", "Boutique Section", VentureType.ClothingStore,
+                220, 80, 2, 9f, 3f, 4f);
+            c.description = "Exclusive pieces at exclusive prices.";
+            c.rarity = Rarity.Rare;
+            cards.Add(c);
 
-            // E04 - Data Breach
-            cards[3] = CreateEvent("E04_VeriSizintisi", "Data Breach", Rarity.Uncommon,
-                "Tech-focused beware. Security investment matters.", 1,
-                EventEffectType.TagCustomerPenalty, 0f,
-                new[] { CardTag.Tech }, -5, 0f);
+            // Staff cards
+            c = CreateStaff("CLO04_Tailor", "Tailor", VentureType.ClothingStore,
+                70, 20, 2, 4);
+            c.description = "Custom fits build reputation.";
+            c.rarity = Rarity.Uncommon;
+            cards.Add(c);
 
-            // E05 - Investor Season
-            cards[4] = CreateEvent("E05_YatirimciSezonu", "Investor Season", Rarity.Uncommon,
-                "Play investment cards this turn = jackpot.", 1,
-                EventEffectType.TagDoubleEffectFinance, 1.0f,
-                new[] { CardTag.Finance }, 0, 0f);
+            c = CreateStaff("CLO05_SalesAssociate", "Sales Associate", VentureType.ClothingStore,
+                40, 12, 2, 3);
+            c.description = "Friendly face at the register.";
+            cards.Add(c);
 
-            // E06 - Cancel Culture
-            cards[5] = CreateEvent("E06_IptalKulturu", "Cancel Culture", Rarity.Rare,
-                "Disaster for dirty players. Opportunity for clean ones.", 1,
-                EventEffectType.HighFBICustomerPenalty, -0.4f,
-                new CardTag[0], 0, 0.3f);
+            // Marketing cards
+            c = CreateMarketing("CLO06_FashionShow", "Fashion Show", VentureType.ClothingStore,
+                150, 0.3f, 3.0f);
+            c.description = "One big splash. Everyone talks about it.";
+            c.rarity = Rarity.Rare;
+            cards.Add(c);
 
-            return cards;
-        }
+            // Supplier cards
+            c = CreateSupplier("CLO07_FabricWholesaler", "Fabric Wholesaler", VentureType.ClothingStore,
+                100, 18f, 1f);
+            c.description = "Bulk fabric at bulk prices.";
+            cards.Add(c);
 
-        private static CardData CreateEvent(string id, string name, Rarity rarity,
-            string desc, int duration, EventEffectType effect, float multiplier,
-            CardTag[] affected, int customerPenalty, float fbiThreshold)
-        {
-            string path = EventCards + "/" + id + ".asset";
-            var c = CreateOrReplace<CardData>(path);
-            c.cardId                = id;
-            c.cardName              = name;
-            c.cardType              = CardType.Event;
-            c.rarity                = rarity;
-            c.description           = desc;
-            c.buyCost               = 0;
-            c.tags                  = new CardTag[0];
-            c.eventEffectType       = effect;
-            c.eventDuration         = duration;
-            c.eventMultiplier       = multiplier;
-            c.affectedTags          = affected;
-            c.eventCustomerPenalty  = customerPenalty;
-            c.eventFBIThreshold     = fbiThreshold;
+            // Event card
+            c = CreateEvent("CLO08_FashionWeek", "Fashion Week", VentureType.ClothingStore,
+                EventEffectType.TagCustomerBoost, 1, 0.5f);
+            c.description = "The spotlight is on fashion. Cash in.";
+            c.rarity = Rarity.Uncommon;
+            c.affectedTags = new[] { CardTag.Trendy };
             MarkDirty(c);
-            return c;
+            cards.Add(c);
+
+            return cards.ToArray();
+        }
+
+        // -------------------------------------------------------------------
+        // GroceryStore (GRO prefix)
+        // -------------------------------------------------------------------
+        private static CardData[] GenerateGroceryStoreCards()
+        {
+            var cards = new List<CardData>();
+
+            // Operation cards
+            var c = CreateOperation("GRO01_FreshProduce", "Fresh Produce Aisle", VentureType.GroceryStore,
+                80, 35, 5, 7f, 8f, 6f);
+            c.description = "Everyday essentials. Steady demand.";
+            c.rarity = Rarity.Common;
+            cards.Add(c);
+
+            c = CreateOperation("GRO02_DeliCounter", "Deli Counter", VentureType.GroceryStore,
+                110, 45, 4, 8f, 6f, 5f);
+            c.description = "Fresh cuts and prepared meals.";
+            c.rarity = Rarity.Common;
+            cards.Add(c);
+
+            c = CreateOperation("GRO03_BulkWarehouse", "Bulk Warehouse", VentureType.GroceryStore,
+                200, 60, 7, 5f, 9f, 7f);
+            c.description = "Buy in bulk. Sell in volume.";
+            c.rarity = Rarity.Uncommon;
+            cards.Add(c);
+
+            // Staff cards
+            c = CreateStaff("GRO04_Stocker", "Stocker", VentureType.GroceryStore,
+                35, 10, 2, 3);
+            c.description = "Shelves stay full. Customers stay happy.";
+            cards.Add(c);
+
+            c = CreateStaff("GRO05_StoreManager", "Store Manager", VentureType.GroceryStore,
+                80, 22, 3, 5);
+            c.description = "Keeps everything running smoothly.";
+            c.rarity = Rarity.Uncommon;
+            cards.Add(c);
+
+            // Marketing cards
+            c = CreateMarketing("GRO06_WeeklyFlyer", "Weekly Flyer", VentureType.GroceryStore,
+                50, 0.4f, 0.8f);
+            c.description = "Deals of the week. In every mailbox.";
+            cards.Add(c);
+
+            // Supplier cards
+            c = CreateSupplier("GRO07_LocalFarm", "Local Farm Partnership", VentureType.GroceryStore,
+                70, 12f, 2f);
+            c.description = "Farm to shelf. Fresher and cheaper.";
+            cards.Add(c);
+
+            // Event card
+            c = CreateEvent("GRO08_SupplyShortage", "Supply Shortage", VentureType.GroceryStore,
+                EventEffectType.AllIncomeReduction, 2, -0.15f);
+            c.description = "Supply chain disruption hits grocery hardest.";
+            c.rarity = Rarity.Uncommon;
+            cards.Add(c);
+
+            return cards.ToArray();
+        }
+
+        // -------------------------------------------------------------------
+        // General cards (GEN prefix, isGeneralCard = true)
+        // -------------------------------------------------------------------
+        private static CardData[] GenerateGeneralCards()
+        {
+            var cards = new List<CardData>();
+
+            // General Operation cards
+            var c = CreateGeneralOperation("GEN01_PopUpShop", "Pop-Up Shop",
+                60, 25, 2, 4f, 7f, 7f);
+            c.description = "Temporary but effective. Test the waters.";
+            cards.Add(c);
+
+            c = CreateGeneralOperation("GEN02_FranchiseDesk", "Franchise Desk",
+                180, 30, 1, 5f, 5f, 5f);
+            c.description = "Expand your brand through partnerships.";
+            c.rarity = Rarity.Uncommon;
+            MarkDirty(c);
+            cards.Add(c);
+
+            // General Staff cards
+            c = CreateGeneralStaff("GEN03_Intern", "Intern", 20, 5, 1);
+            c.description = "Eager to learn. Cheap to keep.";
+            cards.Add(c);
+
+            c = CreateGeneralStaff("GEN04_Accountant", "Accountant", 80, 20, 0);
+            c.description = "Saves money on taxes.";
+            c.rarity = Rarity.Uncommon;
+            c.taxReduction = 0.5f;
+            c.activeAbilityType = ActiveAbilityType.NullifyTaxThisTurn;
+            c.activeAbilityName = "Tax Plan";
+            c.activeAbilityDesc = "Tax is nullified this turn.";
+            MarkDirty(c);
+            cards.Add(c);
+
+            c = CreateGeneralStaff("GEN05_SecurityGuard", "Security Guard", 50, 15, 0);
+            c.description = "Reduces legal risk across the board.";
+            c.rarity = Rarity.Common;
+            MarkDirty(c);
+            cards.Add(c);
+
+            c = CreateGeneralStaff("GEN06_HRManager", "HR Manager", 90, 22, 1);
+            c.description = "Better staff management means lower turnover.";
+            c.rarity = Rarity.Uncommon;
+            c.activeAbilityType = ActiveAbilityType.MotivateAllEmployees;
+            c.activeAbilityName = "Team Building";
+            c.activeAbilityDesc = "All employees gain +1 customer this turn.";
+            MarkDirty(c);
+            cards.Add(c);
+
+            // General Marketing cards
+            c = CreateGeneralMarketing("GEN07_SocialMediaAd", "Social Media Ad",
+                60, 0.3f, 1.0f);
+            c.description = "Cheap reach. Everyone scrolls.";
+            cards.Add(c);
+
+            c = CreateGeneralMarketing("GEN08_BillboardAd", "Billboard Ad",
+                120, 0.6f, 0.5f);
+            c.description = "Old school but effective. High visibility.";
+            c.rarity = Rarity.Uncommon;
+            MarkDirty(c);
+            cards.Add(c);
+
+            c = CreateGeneralMarketing("GEN09_InfluencerDeal", "Influencer Deal",
+                150, 0.2f, 2.5f);
+            c.description = "One post, massive exposure.";
+            c.rarity = Rarity.Rare;
+            MarkDirty(c);
+            cards.Add(c);
+
+            // General Event cards
+            c = CreateGeneralEvent("GEN10_TaxAudit", "Tax Audit",
+                EventEffectType.AllIncomeReduction, 1, -0.2f);
+            c.description = "The taxman cometh. Everyone pays.";
+            c.rarity = Rarity.Common;
+            MarkDirty(c);
+            cards.Add(c);
+
+            c = CreateGeneralEvent("GEN11_EconomicBoom", "Economic Boom",
+                EventEffectType.TagCustomerBoost, 2, 0.3f);
+            c.description = "Good times for everyone. Spend freely.";
+            c.rarity = Rarity.Common;
+            c.affectedTags = new CardTag[0];
+            MarkDirty(c);
+            cards.Add(c);
+
+            c = CreateGeneralEvent("GEN12_Recession", "Recession",
+                EventEffectType.AllIncomeReduction, 2, -0.25f);
+            c.description = "Belts tighten. Only the efficient survive.";
+            c.rarity = Rarity.Uncommon;
+            MarkDirty(c);
+            cards.Add(c);
+
+            c = CreateGeneralEvent("GEN13_ViralTrend", "Viral Trend",
+                EventEffectType.TagDoubleEffect, 1, 1.0f);
+            c.description = "Social media explodes. Marketing pays double.";
+            c.rarity = Rarity.Uncommon;
+            c.affectedTags = new[] { CardTag.Marketing };
+            MarkDirty(c);
+            cards.Add(c);
+
+            c = CreateGeneralEvent("GEN14_InvestorSeason", "Investor Season",
+                EventEffectType.TagDoubleEffectFinance, 1, 1.0f);
+            c.description = "Money flows. Finance strategies pay off big.";
+            c.rarity = Rarity.Uncommon;
+            c.affectedTags = new[] { CardTag.Finance };
+            MarkDirty(c);
+            cards.Add(c);
+
+            c = CreateGeneralEvent("GEN15_CancelCulture", "Cancel Culture",
+                EventEffectType.HighFBICustomerPenalty, 1, -0.4f);
+            c.description = "Public backlash hits those with skeletons.";
+            c.rarity = Rarity.Rare;
+            c.eventFBIThreshold = 0.3f;
+            MarkDirty(c);
+            cards.Add(c);
+
+            // General Supplier cards
+            var sup = CreateOrReplace<CardData>(GeneralCards + "/GEN16_BulkDealer.asset");
+            sup.cardId = "GEN16_BulkDealer";
+            sup.cardName = "Bulk Dealer";
+            sup.cardType = CardType.Upgrade;
+            sup.rarity = Rarity.Common;
+            sup.buyCost = 60;
+            sup.description = "Generic cost savings for any venture.";
+            sup.tags = new[] { CardTag.Support };
+            sup.ventureType = VentureType.FastFood;
+            sup.targetSlotType = SlotType.Supplier;
+            sup.isGeneralCard = true;
+            sup.costReductionPercent = 8f;
+            sup.qualityBoostAmount = 0.5f;
+            sup.upgradeEffectType = UpgradeEffectType.None;
+            sup.upgradeValue = 0f;
+            sup.isGlobalUpgrade = false;
+            sup.closedEmployeeSlots = 0;
+            sup.extraActions = 0;
+            sup.qualityScore = 0f;
+            sup.priceScore = 0f;
+            sup.serviceSpeedScore = 0f;
+            sup.platformRatingGain = 0f;
+            sup.platformRatingOnPlay = 0f;
+            sup.legalRiskPerTurn = 0;
+            sup.legalRiskOnPlay = 0;
+            MarkDirty(sup);
+            cards.Add(sup);
+
+            // General Upgrade cards
+            var upg = CreateOrReplace<CardData>(GeneralCards + "/GEN17_Automation.asset");
+            upg.cardId = "GEN17_Automation";
+            upg.cardName = "Automation";
+            upg.cardType = CardType.Upgrade;
+            upg.rarity = Rarity.Uncommon;
+            upg.buyCost = 300;
+            upg.description = "Machines replace hands. Efficient but soulless.";
+            upg.tags = new[] { CardTag.Tech, CardTag.Automation };
+            upg.ventureType = VentureType.FastFood;
+            upg.targetSlotType = SlotType.Operation;
+            upg.isGeneralCard = true;
+            upg.upgradeEffectType = UpgradeEffectType.IncomePercentWithSlotLoss;
+            upg.upgradeValue = 30f;
+            upg.isGlobalUpgrade = false;
+            upg.closedEmployeeSlots = 1;
+            upg.extraActions = 0;
+            upg.qualityScore = 0f;
+            upg.priceScore = 0f;
+            upg.serviceSpeedScore = 0f;
+            upg.platformRatingGain = 0f;
+            upg.platformRatingOnPlay = 0f;
+            upg.legalRiskPerTurn = 0;
+            upg.legalRiskOnPlay = 0;
+            upg.costReductionPercent = 0f;
+            upg.qualityBoostAmount = 0f;
+            MarkDirty(upg);
+            cards.Add(upg);
+
+            var ai = CreateOrReplace<CardData>(GeneralCards + "/GEN18_AIAssistant.asset");
+            ai.cardId = "GEN18_AIAssistant";
+            ai.cardName = "AI Assistant";
+            ai.cardType = CardType.Upgrade;
+            ai.rarity = Rarity.Rare;
+            ai.buyCost = 400;
+            ai.description = "Extra action each turn. The strongest upgrade.";
+            ai.tags = new[] { CardTag.Tech, CardTag.AI };
+            ai.ventureType = VentureType.FastFood;
+            ai.targetSlotType = SlotType.Operation;
+            ai.isGeneralCard = true;
+            ai.upgradeEffectType = UpgradeEffectType.ExtraAction;
+            ai.upgradeValue = 0f;
+            ai.isGlobalUpgrade = true;
+            ai.closedEmployeeSlots = 0;
+            ai.extraActions = 1;
+            ai.qualityScore = 0f;
+            ai.priceScore = 0f;
+            ai.serviceSpeedScore = 0f;
+            ai.platformRatingGain = 0f;
+            ai.platformRatingOnPlay = 0f;
+            ai.legalRiskPerTurn = 0;
+            ai.legalRiskOnPlay = 0;
+            ai.costReductionPercent = 0f;
+            ai.qualityBoostAmount = 0f;
+            MarkDirty(ai);
+            cards.Add(ai);
+
+            var sec = CreateOrReplace<CardData>(GeneralCards + "/GEN19_SecuritySystem.asset");
+            sec.cardId = "GEN19_SecuritySystem";
+            sec.cardName = "Security System";
+            sec.cardType = CardType.Upgrade;
+            sec.rarity = Rarity.Uncommon;
+            sec.buyCost = 280;
+            sec.description = "Reduces legal risk across all ventures.";
+            sec.tags = new[] { CardTag.Security };
+            sec.ventureType = VentureType.FastFood;
+            sec.targetSlotType = SlotType.Operation;
+            sec.isGeneralCard = true;
+            sec.upgradeEffectType = UpgradeEffectType.ReduceFBIRisk;
+            sec.upgradeValue = 25f;
+            sec.isGlobalUpgrade = true;
+            sec.closedEmployeeSlots = 0;
+            sec.extraActions = 0;
+            sec.qualityScore = 0f;
+            sec.priceScore = 0f;
+            sec.serviceSpeedScore = 0f;
+            sec.platformRatingGain = 0f;
+            sec.platformRatingOnPlay = 0f;
+            sec.legalRiskPerTurn = 0;
+            sec.legalRiskOnPlay = 0;
+            sec.costReductionPercent = 0f;
+            sec.qualityBoostAmount = 0f;
+            MarkDirty(sec);
+            cards.Add(sec);
+
+            var delivery = CreateOrReplace<CardData>(GeneralCards + "/GEN20_DeliveryNetwork.asset");
+            delivery.cardId = "GEN20_DeliveryNetwork";
+            delivery.cardName = "Delivery Network";
+            delivery.cardType = CardType.Upgrade;
+            delivery.rarity = Rarity.Uncommon;
+            delivery.buyCost = 250;
+            delivery.description = "Reach more customers across all ventures.";
+            delivery.tags = new[] { CardTag.Logistics };
+            delivery.ventureType = VentureType.FastFood;
+            delivery.targetSlotType = SlotType.Supplier;
+            delivery.isGeneralCard = true;
+            delivery.upgradeEffectType = UpgradeEffectType.GlobalCustomerPerTurn;
+            delivery.upgradeValue = 2f;
+            delivery.isGlobalUpgrade = true;
+            delivery.closedEmployeeSlots = 0;
+            delivery.extraActions = 0;
+            delivery.qualityScore = 0f;
+            delivery.priceScore = 0f;
+            delivery.serviceSpeedScore = 0f;
+            delivery.platformRatingGain = 0f;
+            delivery.platformRatingOnPlay = 0f;
+            delivery.legalRiskPerTurn = 0;
+            delivery.legalRiskOnPlay = 0;
+            delivery.costReductionPercent = 0f;
+            delivery.qualityBoostAmount = 0f;
+            MarkDirty(delivery);
+            cards.Add(delivery);
+
+            return cards.ToArray();
         }
 
         // ===================================================================
@@ -674,23 +1198,18 @@ namespace EmpireOfCards.Editor
             deck.presetName    = "Starter Deck";
             deck.startingMoney = 500;
 
-            // Find the cards we need by ID
-            CardData b01 = FindCard(allCards, "B01_Bufe");
-            CardData c01 = FindCard(allCards, "C01_Stajyer");
-            CardData c02 = FindCard(allCards, "C02_CaylakPazarlamaci");
-            CardData a01 = FindCard(allCards, "A01_ElIlani");
-            CardData a02 = FindCard(allCards, "A02_KucukYatirim");
-            CardData u01 = FindCard(allCards, "U01_OfisMalzemeleri");
+            CardData gen01 = FindCard(allCards, "GEN01_PopUpShop");
+            CardData gen03 = FindCard(allCards, "GEN03_Intern");
+            CardData gen07 = FindCard(allCards, "GEN07_SocialMediaAd");
+            CardData gen16 = FindCard(allCards, "GEN16_BulkDealer");
 
-            // 14 cards: 2xB01, 3xC01, 2xC02, 3xA01, 2xA02, 2xU01
+            // 14 cards: general starter cards that work with any venture
             deck.cards = new DeckEntry[]
             {
-                new DeckEntry { card = b01, count = 2 },
-                new DeckEntry { card = c01, count = 3 },
-                new DeckEntry { card = c02, count = 2 },
-                new DeckEntry { card = a01, count = 3 },
-                new DeckEntry { card = a02, count = 2 },
-                new DeckEntry { card = u01, count = 2 },
+                new DeckEntry { card = gen01, count = 2 },  // 2x Pop-Up Shop (basic operation)
+                new DeckEntry { card = gen03, count = 4 },  // 4x Intern (cheap staff)
+                new DeckEntry { card = gen07, count = 4 },  // 4x Social Media Ad (basic marketing)
+                new DeckEntry { card = gen16, count = 4 },  // 4x Bulk Dealer (basic supplier)
             };
 
             MarkDirty(deck);
@@ -746,11 +1265,18 @@ namespace EmpireOfCards.Editor
 
             rival.possibleBusinessNames = new[]
             {
-                "Tech Store",
-                "Supermarket",
-                "Cafe Chain",
-                "Fitness Center"
+                "Rival Fast Food",
+                "Rival Cafe",
+                "Rival Tech App",
+                "Rival Clothing Store",
+                "Rival Grocery Store"
             };
+
+            // Venture Mirror — indexed by VentureType ordinal
+            // [0] FastFood, [1] Cafe, [2] TechApp, [3] ClothingStore, [4] GroceryStore
+            rival.ventureMatchedNames     = new[] { "Rival Fast Food", "Rival Cafe", "Rival Tech App", "Rival Clothing Store", "Rival Grocery Store" };
+            rival.ventureMatchedIncome    = new[] { 45, 55, 0, 50, 40 };
+            rival.ventureMatchedCustomers = new[] { 4, 3, 0, 3, 5 };
 
             // Growth Schedule (GDD Section 8.3)
             rival.growthMilestones = new RivalMilestone[]
@@ -760,7 +1286,7 @@ namespace EmpireOfCards.Editor
                     turn = 5,
                     targetBusinesses = 2,
                     targetEmployees = 2,
-                    targetTerritories = 3,
+                    targetTerritories = 15,
                     enableAggression = false
                 },
                 new RivalMilestone
@@ -768,7 +1294,7 @@ namespace EmpireOfCards.Editor
                     turn = 8,
                     targetBusinesses = 3,
                     targetEmployees = 4,
-                    targetTerritories = 4,
+                    targetTerritories = 25,
                     enableAggression = true
                 },
                 new RivalMilestone
@@ -776,7 +1302,7 @@ namespace EmpireOfCards.Editor
                     turn = 12,
                     targetBusinesses = 3,
                     targetEmployees = 6,
-                    targetTerritories = 5,
+                    targetTerritories = 35,
                     enableAggression = true
                 },
                 new RivalMilestone
@@ -784,7 +1310,15 @@ namespace EmpireOfCards.Editor
                     turn = 15,
                     targetBusinesses = 4,
                     targetEmployees = 8,
-                    targetTerritories = 6,
+                    targetTerritories = 45,
+                    enableAggression = true
+                },
+                new RivalMilestone
+                {
+                    turn = 20,
+                    targetBusinesses = 5,
+                    targetEmployees = 10,
+                    targetTerritories = 55,
                     enableAggression = true
                 },
             };
@@ -825,197 +1359,194 @@ namespace EmpireOfCards.Editor
         // ===================================================================
         private static void GenerateCombos(CardData[] allCards)
         {
-            // COMBO 01 - Latte Art (Easy)
+            // COMBO 01 - Latte Art (Cafe: Espresso Bar + Barista)
             {
                 var combo = CreateOrReplace<ComboData>(CombosRoot + "/COMBO_01_LatteArt.asset");
                 combo.comboId       = "COMBO_01_LatteArt";
                 combo.comboName     = "Latte Art";
                 combo.displayText   = "LATTE ART!";
                 combo.tier          = ComboTier.Easy;
-                combo.description   = "Coffee Shop + Barista = customers x2, income +50%.";
-                combo.requiredCardIds = new[] { "B02_Kahveci", "C03_Barista" };
+                combo.description   = "Espresso Bar + Barista = customers x2, income +50%.";
+                combo.requiredCardIds = new[] { "CAF01_EspressoBar", "CAF04_Barista" };
                 combo.requiredTags    = new[] { CardTag.Coffee };
                 combo.requiresSpecificPlacement = true;
-                combo.employeeCardId  = "C03_Barista";
-                combo.businessCardId  = "B02_Kahveci";
+                combo.employeeCardId  = "CAF04_Barista";
+                combo.businessCardId  = "CAF01_EspressoBar";
                 combo.customerMultiplier = 2f;
                 combo.incomeMultiplier   = 1.5f;
-                combo.glowColor          = new Color(0.6f, 0.4f, 0.2f, 1f); // coffee color
+                combo.glowColor          = new Color(0.6f, 0.4f, 0.2f, 1f);
                 combo.comboSoundId       = "combo_trigger";
                 combo.screenShakeIntensity = 0.3f;
                 combo.screenShakeDuration  = 0.3f;
                 MarkDirty(combo);
             }
 
-            // COMBO 02 - Organic Synergy (Easy)
+            // COMBO 02 - Drive-Thru Rush (FastFood: Drive-Through + Line Cook)
             {
-                var combo = CreateOrReplace<ComboData>(CombosRoot + "/COMBO_02_OrganicSynergy.asset");
-                combo.comboId       = "COMBO_02_OrganicSynergy";
-                combo.comboName     = "Organic Synergy";
-                combo.displayText   = "ORGANIC SYNERGY!";
+                var combo = CreateOrReplace<ComboData>(CombosRoot + "/COMBO_02_DriveThruRush.asset");
+                combo.comboId       = "COMBO_02_DriveThruRush";
+                combo.comboName     = "Drive-Thru Rush";
+                combo.displayText   = "DRIVE-THRU RUSH!";
                 combo.tier          = ComboTier.Easy;
-                combo.description   = "Burger Chain + Chef = income +30, customers +50%.";
-                combo.requiredCardIds = new[] { "B03_BurgerZinciri", "C04_Sef" };
+                combo.description   = "Drive-Through + Line Cook = customers +50%, speed bonus.";
+                combo.requiredCardIds = new[] { "FFC03_DriveThru", "FFC04_LineCook" };
                 combo.requiredTags    = new[] { CardTag.Food };
                 combo.requiresSpecificPlacement = true;
-                combo.employeeCardId  = "C04_Sef";
-                combo.businessCardId  = "B03_BurgerZinciri";
-                combo.bonusIncome     = 30;
+                combo.employeeCardId  = "FFC04_LineCook";
+                combo.businessCardId  = "FFC03_DriveThru";
                 combo.customerMultiplier = 1.5f;
-                combo.glowColor          = new Color(1f, 0.5f, 0f, 1f); // orange
+                combo.incomeMultiplier   = 1.2f;
+                combo.glowColor          = new Color(1f, 0.5f, 0f, 1f);
                 combo.comboSoundId       = "combo_trigger";
                 combo.screenShakeIntensity = 0.3f;
                 combo.screenShakeDuration  = 0.3f;
                 MarkDirty(combo);
             }
 
-            // COMBO 03 - Viral Storm (Easy)
+            // COMBO 03 - Tech Scale (TechApp: Server Farm + Developer)
             {
-                var combo = CreateOrReplace<ComboData>(CombosRoot + "/COMBO_03_ViralStorm.asset");
-                combo.comboId       = "COMBO_03_ViralStorm";
-                combo.comboName     = "Viral Storm";
-                combo.displayText   = "VIRAL STORM!";
+                var combo = CreateOrReplace<ComboData>(CombosRoot + "/COMBO_03_TechScale.asset");
+                combo.comboId       = "COMBO_03_TechScale";
+                combo.comboName     = "Tech Scale";
+                combo.displayText   = "TECH SCALE!";
                 combo.tier          = ComboTier.Easy;
-                combo.description   = "Tech Startup + Marketing Guru = income x2.";
-                combo.requiredCardIds = new[] { "B04_TechStartup", "C05_MarketingGurusu" };
-                combo.requiredTags    = new[] { CardTag.Tech, CardTag.Marketing };
+                combo.description   = "Server Farm + Developer = income x2.";
+                combo.requiredCardIds = new[] { "TEC02_ServerFarm", "TEC04_Developer" };
+                combo.requiredTags    = new[] { CardTag.Tech };
                 combo.requiresSpecificPlacement = true;
-                combo.employeeCardId  = "C05_MarketingGurusu";
-                combo.businessCardId  = "B04_TechStartup";
+                combo.employeeCardId  = "TEC04_Developer";
+                combo.businessCardId  = "TEC02_ServerFarm";
                 combo.incomeMultiplier = 2f;
-                combo.glowColor        = new Color(0f, 0.8f, 1f, 1f); // blue
+                combo.glowColor        = new Color(0f, 0.8f, 1f, 1f);
                 combo.comboSoundId     = "combo_trigger";
                 combo.screenShakeIntensity = 0.3f;
                 combo.screenShakeDuration  = 0.3f;
                 MarkDirty(combo);
             }
 
-            // COMBO 04 - Nightlife Frenzy (Medium)
+            // COMBO 04 - Fashion Empire (Clothing: Boutique + Tailor + Fashion Show)
             {
-                var combo = CreateOrReplace<ComboData>(CombosRoot + "/COMBO_04_NightlifeFrenzy.asset");
-                combo.comboId       = "COMBO_04_NightlifeFrenzy";
-                combo.comboName     = "Nightlife Frenzy";
-                combo.displayText   = "NIGHTLIFE FRENZY!";
+                var combo = CreateOrReplace<ComboData>(CombosRoot + "/COMBO_04_FashionEmpire.asset");
+                combo.comboId       = "COMBO_04_FashionEmpire";
+                combo.comboName     = "Fashion Empire";
+                combo.displayText   = "FASHION EMPIRE!";
                 combo.tier          = ComboTier.Medium;
-                combo.description   = "Nightclub + Influencer + Viral Trend event = customers x3.";
-                combo.requiredCardIds = new[] { "B05_GeceKulubu", "C06_Influencer" };
-                combo.requiredTags    = new[] { CardTag.Trendy, CardTag.Entertainment };
-                combo.requiresSpecificPlacement = true;
-                combo.employeeCardId  = "C06_Influencer";
-                combo.businessCardId  = "B05_GeceKulubu";
-                combo.requiresActiveEvent = true;
-                combo.requiredEventId     = "E03_ViralTrend";
+                combo.description   = "Boutique + Tailor + Fashion Show = customers x3.";
+                combo.requiredCardIds = new[] { "CLO03_BoutiqueSection", "CLO04_Tailor", "CLO06_FashionShow" };
+                combo.requiredTags    = new[] { CardTag.Trendy };
+                combo.requiresSpecificPlacement = false;
                 combo.customerMultiplier  = 3f;
-                combo.glowColor           = new Color(0.8f, 0f, 1f, 1f); // purple
+                combo.glowColor           = new Color(0.8f, 0f, 1f, 1f);
                 combo.comboSoundId        = "combo_trigger";
                 combo.screenShakeIntensity = 0.5f;
                 combo.screenShakeDuration  = 0.4f;
                 MarkDirty(combo);
             }
 
-            // COMBO 05 - Underground Empire (Medium)
+            // COMBO 05 - Farm to Table (Grocery: Fresh Produce + Local Farm)
             {
-                var combo = CreateOrReplace<ComboData>(CombosRoot + "/COMBO_05_UndergroundEmpire.asset");
-                combo.comboId       = "COMBO_05_UndergroundEmpire";
-                combo.comboName     = "Underground Empire";
-                combo.displayText   = "UNDERGROUND EMPIRE!";
-                combo.tier          = ComboTier.Medium;
-                combo.description   = "Hacker + Fraudster = +200 income/turn but FBI +8% extra.";
-                combo.requiredCardIds = new[] { "C07_Hacker", "C09_Dolandirici" };
-                combo.requiredTags    = new[] { CardTag.Illegal };
+                var combo = CreateOrReplace<ComboData>(CombosRoot + "/COMBO_05_FarmToTable.asset");
+                combo.comboId       = "COMBO_05_FarmToTable";
+                combo.comboName     = "Farm to Table";
+                combo.displayText   = "FARM TO TABLE!";
+                combo.tier          = ComboTier.Easy;
+                combo.description   = "Fresh Produce + Local Farm = quality boost, cost reduction.";
+                combo.requiredCardIds = new[] { "GRO01_FreshProduce", "GRO07_LocalFarm" };
+                combo.requiredTags    = new[] { CardTag.Food, CardTag.Organic };
                 combo.requiresSpecificPlacement = false;
-                combo.bonusIncome     = 200;
-                combo.extraFBIRisk    = 8;
-                combo.glowColor       = new Color(0.2f, 0.2f, 0.2f, 1f); // dark
+                combo.bonusIncome     = 30;
+                combo.customerMultiplier = 1.5f;
+                combo.glowColor       = new Color(0.2f, 0.8f, 0.2f, 1f);
                 combo.comboSoundId    = "combo_trigger";
-                combo.screenShakeIntensity = 0.4f;
-                combo.screenShakeDuration  = 0.3f;
-                MarkDirty(combo);
-            }
-
-            // COMBO 06 - Safe Crime (Medium)
-            {
-                var combo = CreateOrReplace<ComboData>(CombosRoot + "/COMBO_06_SafeCrime.asset");
-                combo.comboId       = "COMBO_06_SafeCrime";
-                combo.comboName     = "Safe Crime";
-                combo.displayText   = "SAFE CRIME!";
-                combo.tier          = ComboTier.Medium;
-                combo.description   = "Accountant + Fraudster = illegal income tax-free.";
-                combo.requiredCardIds = new[] { "C08_Muhasebeci", "C09_Dolandirici" };
-                combo.requiredTags    = new[] { CardTag.Finance };
-                combo.requiresSpecificPlacement = false;
-                combo.bonusIncome       = 0;
-                combo.incomeMultiplier  = 1f;
-                combo.glowColor         = new Color(0f, 0.8f, 0f, 1f); // green
-                combo.comboSoundId      = "combo_trigger";
                 combo.screenShakeIntensity = 0.3f;
                 combo.screenShakeDuration  = 0.3f;
                 MarkDirty(combo);
             }
 
-            // COMBO 07 - AI Revolution (Hard)
+            // COMBO 06 - AI Revolution (General: Automation + AI Assistant)
             {
-                var combo = CreateOrReplace<ComboData>(CombosRoot + "/COMBO_07_AIRevolution.asset");
-                combo.comboId       = "COMBO_07_AIRevolution";
+                var combo = CreateOrReplace<ComboData>(CombosRoot + "/COMBO_06_AIRevolution.asset");
+                combo.comboId       = "COMBO_06_AIRevolution";
                 combo.comboName     = "AI Revolution";
                 combo.displayText   = "AI REVOLUTION!";
                 combo.tier          = ComboTier.Hard;
-                combo.description   = "Tech Startup + Automation + AI Assistant = +1 action, income x2.";
-                combo.requiredCardIds = new[] { "B04_TechStartup", "U02_Otomasyon", "U06_YapayZekaAsistani" };
+                combo.description   = "Automation + AI Assistant = +1 action, income x2.";
+                combo.requiredCardIds = new[] { "GEN17_Automation", "GEN18_AIAssistant" };
                 combo.requiredTags    = new[] { CardTag.Tech, CardTag.AI };
                 combo.requiresSpecificPlacement = false;
                 combo.extraActions     = 1;
                 combo.incomeMultiplier = 2f;
-                combo.glowColor        = new Color(0f, 1f, 1f, 1f); // cyan
+                combo.glowColor        = new Color(0f, 1f, 1f, 1f);
                 combo.comboSoundId     = "combo_trigger";
                 combo.screenShakeIntensity = 0.6f;
                 combo.screenShakeDuration  = 0.5f;
                 MarkDirty(combo);
             }
 
-            // COMBO 08 - Ad Blitz (Medium)
+            // COMBO 07 - Crisis Hunter (General: during Recession with 1000+ money)
             {
-                var combo = CreateOrReplace<ComboData>(CombosRoot + "/COMBO_08_AdBlitz.asset");
-                combo.comboId       = "COMBO_08_AdBlitz";
-                combo.comboName     = "Ad Blitz";
-                combo.displayText   = "AD BLITZ!";
-                combo.tier          = ComboTier.Medium;
-                combo.description   = "Organic Farm + Burger Chain + Chef = all Food businesses +50 income.";
-                combo.requiredCardIds = new[] { "B06_OrganikCiftlik", "B03_BurgerZinciri", "C04_Sef" };
-                combo.requiredTags    = new[] { CardTag.Food, CardTag.Organic };
-                combo.requiresSpecificPlacement = false;
-                combo.bonusIncome     = 50;
-                combo.glowColor       = new Color(0.2f, 0.8f, 0.2f, 1f); // green
-                combo.comboSoundId    = "combo_trigger";
-                combo.screenShakeIntensity = 0.4f;
-                combo.screenShakeDuration  = 0.4f;
-                MarkDirty(combo);
-            }
-
-            // COMBO 09 - Crisis Hunter (Hard)
-            {
-                var combo = CreateOrReplace<ComboData>(CombosRoot + "/COMBO_09_CrisisHunter.asset");
-                combo.comboId       = "COMBO_09_CrisisHunter";
+                var combo = CreateOrReplace<ComboData>(CombosRoot + "/COMBO_07_CrisisHunter.asset");
+                combo.comboId       = "COMBO_07_CrisisHunter";
                 combo.comboName     = "Crisis Hunter";
                 combo.displayText   = "CRISIS HUNTER!";
                 combo.tier          = ComboTier.Hard;
-                combo.description   = "During Economic Crisis with 1000+ money: shop 50% off, steal 1 rival employee.";
+                combo.description   = "During Recession with 1000+ money: shop 50% off, steal rival employee.";
                 combo.requiredCardIds = new string[0];
                 combo.requiredTags    = new[] { CardTag.Finance };
                 combo.requiresActiveEvent  = true;
-                combo.requiredEventId      = "E02_EkonomikKriz";
+                combo.requiredEventId      = "GEN12_Recession";
                 combo.requiresMinMoney     = true;
                 combo.minMoneyRequired     = 1000;
                 combo.shopDiscount         = 0.5f;
                 combo.transferRivalEmployee = true;
-                combo.glowColor            = new Color(1f, 0.84f, 0f, 1f); // gold
+                combo.glowColor            = new Color(1f, 0.84f, 0f, 1f);
                 combo.comboSoundId         = "combo_trigger";
                 combo.screenShakeIntensity = 0.5f;
                 combo.screenShakeDuration  = 0.4f;
                 MarkDirty(combo);
             }
 
-            // COMBO 10 - Monopoly (Automatic)
+            // COMBO 08 - Value Meal Blitz (FastFood: Grill + Value Meal + Bulk Meat)
+            {
+                var combo = CreateOrReplace<ComboData>(CombosRoot + "/COMBO_08_ValueMealBlitz.asset");
+                combo.comboId       = "COMBO_08_ValueMealBlitz";
+                combo.comboName     = "Value Meal Blitz";
+                combo.displayText   = "VALUE MEAL BLITZ!";
+                combo.tier          = ComboTier.Medium;
+                combo.description   = "Grill + Value Meal Promo + Bulk Meat = income +50, customers x2.";
+                combo.requiredCardIds = new[] { "FFC01_Grill", "FFC06_ValueMeal", "FFC07_BulkMeat" };
+                combo.requiredTags    = new[] { CardTag.Food };
+                combo.requiresSpecificPlacement = false;
+                combo.bonusIncome     = 50;
+                combo.customerMultiplier = 2f;
+                combo.glowColor       = new Color(1f, 0.3f, 0.1f, 1f);
+                combo.comboSoundId    = "combo_trigger";
+                combo.screenShakeIntensity = 0.4f;
+                combo.screenShakeDuration  = 0.4f;
+                MarkDirty(combo);
+            }
+
+            // COMBO 09 - Premium Experience (Cafe: Cozy Lounge + Premium Bean Importer + Loyalty Card)
+            {
+                var combo = CreateOrReplace<ComboData>(CombosRoot + "/COMBO_09_PremiumExperience.asset");
+                combo.comboId       = "COMBO_09_PremiumExperience";
+                combo.comboName     = "Premium Experience";
+                combo.displayText   = "PREMIUM EXPERIENCE!";
+                combo.tier          = ComboTier.Hard;
+                combo.description   = "Cozy Lounge + Bean Importer + Loyalty Card = income x2, customers x2.";
+                combo.requiredCardIds = new[] { "CAF03_CozyLounge", "CAF07_BeanImporter", "CAF06_LoyaltyCard" };
+                combo.requiredTags    = new[] { CardTag.Coffee };
+                combo.requiresSpecificPlacement = false;
+                combo.incomeMultiplier    = 2f;
+                combo.customerMultiplier  = 2f;
+                combo.glowColor           = new Color(0.4f, 0.2f, 0.1f, 1f);
+                combo.comboSoundId        = "combo_trigger";
+                combo.screenShakeIntensity = 0.6f;
+                combo.screenShakeDuration  = 0.5f;
+                MarkDirty(combo);
+            }
+
+            // COMBO 10 - Monopoly (Automatic: 4+ businesses, 55%+ market share)
             {
                 var combo = CreateOrReplace<ComboData>(CombosRoot + "/COMBO_10_Monopoly.asset");
                 combo.comboId       = "COMBO_10_Monopoly";
@@ -1030,7 +1561,7 @@ namespace EmpireOfCards.Editor
                 combo.minMarketShare      = 0.55f;
                 combo.rivalCustomerPenalty = 3;
                 combo.incomeMultiplier     = 1.2f;
-                combo.glowColor            = new Color(1f, 0f, 0f, 1f); // red
+                combo.glowColor            = new Color(1f, 0f, 0f, 1f);
                 combo.comboSoundId         = "combo_trigger";
                 combo.screenShakeIntensity = 0.7f;
                 combo.screenShakeDuration  = 0.6f;
@@ -1048,7 +1579,6 @@ namespace EmpireOfCards.Editor
             string path = DataRoot + "/MetaProgression.asset";
             var meta = CreateOrReplace<MetaProgressionData>(path);
 
-            // Unlock Tiers (GDD Section 9)
             meta.unlockTiers = new UnlockTier[]
             {
                 new UnlockTier
@@ -1070,7 +1600,7 @@ namespace EmpireOfCards.Editor
                     xpRequired = 500,
                     unlockDescription = "Rare cards unlocked. Shadow Inc. rival available.",
                     unlockedCards = new CardData[0],
-                    unlockedRival = null // Shadow Inc. post-MVP
+                    unlockedRival = null
                 },
                 new UnlockTier
                 {
@@ -1084,7 +1614,7 @@ namespace EmpireOfCards.Editor
                     xpRequired = 2000,
                     unlockDescription = "The Cartel rival unlocked. Ascension 2 mode active.",
                     unlockedCards = new CardData[0],
-                    unlockedRival = null // The Cartel post-MVP
+                    unlockedRival = null
                 },
                 new UnlockTier
                 {
@@ -1095,7 +1625,6 @@ namespace EmpireOfCards.Editor
                 },
             };
 
-            // Ascension Levels
             meta.ascensionLevels = new AscensionLevel[]
             {
                 new AscensionLevel

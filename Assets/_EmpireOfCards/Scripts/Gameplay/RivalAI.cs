@@ -17,6 +17,11 @@ namespace EmpireOfCards.Gameplay
         public int customers;
         public int employeeCount;
         public int maxEmployees = 3;
+        public VentureType ventureType;
+        public float qualityScore = 5f;
+        public float platformRating = 2.5f;
+        public int legalRisk;
+        public float priceScore = 5f;
     }
 
     /// <summary>
@@ -121,25 +126,82 @@ namespace EmpireOfCards.Gameplay
             if (data == null || rivalBusinesses == null || rivalBusinesses.Count == 0) return;
 
             var firstBiz = rivalBusinesses[0];
+            firstBiz.ventureType = playerVenture;
+
             switch (playerVenture)
             {
+                // --- New ventures ---
+                case VentureType.FastFood:
+                    firstBiz.name = "Rival Fast Food";
+                    firstBiz.income = 45;
+                    firstBiz.customers = 4;
+                    firstBiz.qualityScore = 4f;
+                    firstBiz.priceScore = 7f;
+                    firstBiz.platformRating = 2.5f;
+                    break;
+                case VentureType.Cafe:
+                    firstBiz.name = "Rival Cafe";
+                    firstBiz.income = 55;
+                    firstBiz.customers = 3;
+                    firstBiz.qualityScore = 6f;
+                    firstBiz.priceScore = 5f;
+                    firstBiz.platformRating = 3.0f;
+                    break;
+                case VentureType.TechApp:
+                    firstBiz.name = "Rival Tech App";
+                    firstBiz.income = 0;
+                    firstBiz.customers = 0;
+                    firstBiz.qualityScore = 3f;
+                    firstBiz.priceScore = 5f;
+                    firstBiz.platformRating = 2.0f;
+                    break;
+                case VentureType.ClothingStore:
+                    firstBiz.name = "Rival Clothing Store";
+                    firstBiz.income = 50;
+                    firstBiz.customers = 3;
+                    firstBiz.qualityScore = 5f;
+                    firstBiz.priceScore = 6f;
+                    firstBiz.platformRating = 2.5f;
+                    break;
+                case VentureType.GroceryStore:
+                    firstBiz.name = "Rival Grocery Store";
+                    firstBiz.income = 40;
+                    firstBiz.customers = 5;
+                    firstBiz.qualityScore = 5f;
+                    firstBiz.priceScore = 8f;
+                    firstBiz.platformRating = 2.5f;
+                    break;
+
+                // --- Legacy ventures (save compatibility) ---
                 case VentureType.Diner:
                     firstBiz.name = "Rival Diner";
                     firstBiz.income = 50;
                     firstBiz.customers = 3;
+                    firstBiz.qualityScore = 5f;
+                    firstBiz.priceScore = 6f;
+                    firstBiz.platformRating = 2.5f;
                     break;
                 case VentureType.TechStartup:
                     firstBiz.name = "Rival Tech Startup";
                     firstBiz.income = 0;
                     firstBiz.customers = 0;
+                    firstBiz.qualityScore = 3f;
+                    firstBiz.priceScore = 5f;
+                    firstBiz.platformRating = 2.0f;
                     break;
                 case VentureType.AdAgency:
                     firstBiz.name = "Rival Ad Agency";
                     firstBiz.income = 60;
                     firstBiz.customers = 3;
+                    firstBiz.qualityScore = 6f;
+                    firstBiz.priceScore = 5f;
+                    firstBiz.platformRating = 3.0f;
                     break;
                 case VentureType.BlackMarket:
                     // Player chose no business, rival keeps default
+                    firstBiz.qualityScore = 5f;
+                    firstBiz.priceScore = 5f;
+                    firstBiz.platformRating = 2.5f;
                     break;
             }
 
@@ -175,57 +237,56 @@ namespace EmpireOfCards.Gameplay
             if (growth.ApplyGrowthMilestones(currentTurn, rivalBusinesses, ref totalRivalEmployees))
                 aggressionEnabled = true;
 
-            // Step 3: Pre-determine first action to inform mood tell
-            string previewAction = decisionTree.DecideAction(
+            // Step 3: Determine action count from Company Tier (GDD Section 1.7)
+            int actions = GetActionsForCurrentTier();
+
+            // Step 4: Pre-determine first action to inform mood tell
+            RivalMove previewMove = decisionTree.DecideMove(
                 playerTerritories,
                 rivalTerritories,
                 currentTurn,
                 rivalMoney,
-                rivalBusinesses.Count,
-                aggressionEnabled,
-                growth.HasEmptyEmployeeSlots(rivalBusinesses));
+                rivalBusinesses,
+                aggressionEnabled);
 
-            // Step 4: Mood tell -- determine and broadcast mood BEFORE actions
+            // Step 5: Mood tell -- determine and broadcast mood BEFORE actions
             dialogue.DetermineMood(
                 playerTerritories,
                 rivalTerritories,
                 rivalMoney,
                 data.businessCostThreshold,
-                previewAction);
+                previewMove.ToString());
 
-            // Step 5: Check player strategy and react (fires once per shift)
+            // Step 6: Check player strategy and react (fires once per shift)
             dialogue.CheckPlayerStrategy();
 
-            // Step 6: Execute actions
-            int actions = data.actionsPerTurn;
+            // Step 7: Execute actions
             for (int a = 0; a < actions; a++)
             {
-                string decision;
+                RivalMove move;
                 if (a == 0)
                 {
-                    // Use the pre-determined action for the first action
-                    decision = previewAction;
+                    move = previewMove;
                 }
                 else
                 {
-                    decision = decisionTree.DecideAction(
+                    move = decisionTree.DecideMove(
                         playerTerritories,
                         rivalTerritories,
                         currentTurn,
                         rivalMoney,
-                        rivalBusinesses.Count,
-                        aggressionEnabled,
-                        growth.HasEmptyEmployeeSlots(rivalBusinesses));
+                        rivalBusinesses,
+                        aggressionEnabled);
                 }
 
-                ExecuteAction(decision);
+                ExecuteRivalMove(move);
             }
 
-            // Step 7: Recalculate totals
+            // Step 8: Recalculate totals
             rivalCustomers = economy.CalculateRivalCustomers(rivalBusinesses);
             rivalIncome = economy.CalculateRivalIncome(rivalBusinesses);
 
-            // Step 8: Deliver a context-aware taunt
+            // Step 9: Deliver a context-aware taunt
             string taunt = dialogue.GetTaunt(playerTerritories, rivalTerritories);
             if (!string.IsNullOrEmpty(taunt))
             {
@@ -233,17 +294,123 @@ namespace EmpireOfCards.Gameplay
             }
         }
 
+        private int GetActionsForCurrentTier()
+        {
+            var gm = GameManager.Instance;
+            if (gm == null || gm.CompanyTierSystem == null) return data.actionsPerTurn;
+
+            return gm.CompanyTierSystem.CurrentTier switch
+            {
+                CompanyTier.Trader => 2,        // Tier 1
+                CompanyTier.Entrepreneur => 3,   // Tier 2
+                CompanyTier.Corporation => 4,    // Tier 3
+                CompanyTier.Conglomerate => 4,   // Tier 3+ (cap at 4)
+                _ => data.actionsPerTurn
+            };
+        }
+
         // ----------------------------------------------------------------
         // Action Dispatch
         // ----------------------------------------------------------------
 
+        private void ExecuteRivalMove(RivalMove move)
+        {
+            var gm = GameManager.Instance;
+
+            switch (move)
+            {
+                case RivalMove.PriceWar:
+                    foreach (var biz in rivalBusinesses)
+                        biz.priceScore = Mathf.Min(10f, biz.priceScore + 2f);
+                    EventBus.RivalActed("Rival launched a price war!");
+                    break;
+
+                case RivalMove.MarketingBlitz:
+                    foreach (var biz in rivalBusinesses)
+                        biz.platformRating = Mathf.Min(5f, biz.platformRating + 0.4f);
+                    EventBus.RivalActed("Rival ran a marketing blitz!");
+                    break;
+
+                case RivalMove.QualityImprove:
+                    foreach (var biz in rivalBusinesses)
+                        biz.qualityScore = Mathf.Min(10f, biz.qualityScore + 1.5f);
+                    EventBus.RivalActed("Rival improved product quality.");
+                    break;
+
+                case RivalMove.StaffPoach:
+                    if (gm != null && gm.BoardManager != null)
+                    {
+                        var playerBusinesses = gm.BoardManager.PlayerBusinesses;
+                        if (playerBusinesses != null)
+                        {
+                            int bestBonus = 0;
+                            foreach (var pb in playerBusinesses)
+                            {
+                                if (pb.isClosed) continue;
+                                foreach (var emp in pb.employees)
+                                {
+                                    if (emp != null && emp.customerBonus > bestBonus)
+                                        bestBonus = emp.customerBonus;
+                                }
+                            }
+                            if (bestBonus > 0 && rivalBusinesses.Count > 0)
+                            {
+                                rivalBusinesses[0].customers += bestBonus;
+                                EventBus.RivalActed($"Rival poached your staff! Stole {bestBonus} customer bonus.");
+                            }
+                        }
+                    }
+                    break;
+
+                case RivalMove.SeekInvestment:
+                    int investmentGain = Mathf.RoundToInt(rivalIncome * 0.3f);
+                    rivalMoney += investmentGain;
+                    EventBus.RivalActed($"Rival secured investment: +{investmentGain} money.");
+                    break;
+
+                case RivalMove.OpenBranch:
+                    if (rivalBusinesses.Count > 0)
+                    {
+                        var target = rivalBusinesses[0];
+                        foreach (var biz in rivalBusinesses)
+                        {
+                            if (biz.income > target.income) target = biz;
+                        }
+                        if (target.maxEmployees < 6)
+                        {
+                            target.maxEmployees++;
+                            // Apply Lobbyist cost-increase sabotage if active
+                            if (nextPurchaseCostMultiplier > 0f)
+                            {
+                                int baseCost = data.businessCostThreshold;
+                                int surcharge = Mathf.RoundToInt(baseCost * nextPurchaseCostMultiplier);
+                                rivalMoney -= surcharge;
+                                nextPurchaseCostMultiplier = 0f;
+                            }
+                            EventBus.RivalActed($"Rival opened a new branch for {target.name}.");
+                        }
+                    }
+                    break;
+
+                case RivalMove.Sabotage:
+                    if (gm != null && gm.BoardManager != null)
+                    {
+                        gm.BoardManager.SetProductionDisabledNextTurn(true);
+                        foreach (var biz in rivalBusinesses)
+                            biz.legalRisk = Mathf.Min(100, biz.legalRisk + 15);
+                        EventBus.RivalActed("Rival sabotaged your operations! Production disabled next turn.");
+                    }
+                    break;
+            }
+        }
+
+        // Legacy action dispatch -- kept for backward compatibility with old save/replay data
         private void ExecuteAction(string action)
         {
             switch (action)
             {
                 case "aggressive":
                     var result = growth.AggressiveAction(rivalBusinesses, ref rivalMoney);
-                    // Apply player-side effects (RivalGrowth returns data, we apply it here)
                     var gm = GameManager.Instance;
                     if (gm != null)
                     {
@@ -254,20 +421,16 @@ namespace EmpireOfCards.Gameplay
                         }
                         if (result.isSabotage)
                         {
-                            // Flag a 1-turn production loss on the player's board.
-                            // BoardManager will skip BusinessProduce step next resolve.
                             gm.BoardManager.SetProductionDisabledNextTurn(true);
                         }
                     }
                     break;
                 case "open_business":
-                    // Apply Lobbyist cost-increase sabotage if active
                     if (nextPurchaseCostMultiplier > 0f)
                     {
                         int baseCost = data.businessCostThreshold;
                         int surcharge = Mathf.RoundToInt(baseCost * nextPurchaseCostMultiplier);
                         rivalMoney -= surcharge;
-                        Debug.Log($"[RivalAI] Lobbyist sabotage: paid {surcharge} extra for business ({nextPurchaseCostMultiplier * 100}% surcharge)");
                         nextPurchaseCostMultiplier = 0f;
                     }
                     growth.OpenBusiness(rivalBusinesses, ref rivalMoney);

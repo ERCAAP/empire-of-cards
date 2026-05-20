@@ -2,13 +2,15 @@ using System;
 using UnityEngine;
 using EmpireOfCards.Core.StateMachine;
 using EmpireOfCards.Data;
+using EmpireOfCards.Gameplay;
 
 namespace EmpireOfCards.Core.TurnPhases
 {
     /// <summary>
     /// Turn phase 4: System calculates everything step by step (GDD Section 4.1, Step 4).
-    /// Sub-steps: 4a BusinessProduce -> 4b CustomerFlow -> 4c ComboCheck
-    ///         -> 4c.5 TierCheck -> 4d IncomeCalculation -> 4e DeteriorationCheck
+    /// Sub-steps: 4a BusinessProduce -> 4b CustomerFlow -> 4b.5 SeasonCheck
+    ///         -> 4b.6 MarketShareCalculation -> 4c ComboCheck -> 4c.5 TierCheck
+    ///         -> 4d IncomeCalculation -> 4e DeteriorationCheck
     /// Each step has a cinematic delay tuned for readability and drama.
     /// </summary>
     public class ResolvePhase : IState
@@ -22,6 +24,9 @@ namespace EmpireOfCards.Core.TurnPhases
 
         // Track whether tier changed this resolve for variable delay
         private bool _tierChangedThisResolve;
+
+        // Track current season for season change detection
+        private SeasonType _lastSeason;
 
         public ResolvePhase(TurnManager tm)
         {
@@ -62,20 +67,19 @@ namespace EmpireOfCards.Core.TurnPhases
             }
         }
 
-        /// <summary>
-        /// Returns the cinematic delay after each resolve sub-step.
-        /// </summary>
         private float GetStepDelay(ResolveStep step)
         {
             return step switch
             {
-                ResolveStep.BusinessProduce    => 0.4f,
-                ResolveStep.CustomerFlow       => 0.6f,  // Territory shifting is important
-                ResolveStep.ComboCheck         => 1.0f,  // Let combo popup show
-                ResolveStep.TierCheck          => _tierChangedThisResolve ? 1.5f : 0.3f,
-                ResolveStep.IncomeCalculation  => 0.8f,  // Money counter rolling
-                ResolveStep.DeteriorationCheck => 0.5f,
-                _                              => 0.5f
+                ResolveStep.BusinessProduce        => 0.4f,
+                ResolveStep.CustomerFlow           => 0.6f,
+                ResolveStep.SeasonCheck            => 0.4f,
+                ResolveStep.MarketShareCalculation => 0.5f,
+                ResolveStep.ComboCheck             => 1.0f,
+                ResolveStep.TierCheck              => _tierChangedThisResolve ? 1.5f : 0.3f,
+                ResolveStep.IncomeCalculation      => 0.8f,
+                ResolveStep.DeteriorationCheck     => 0.5f,
+                _                                  => 0.5f
             };
         }
 
@@ -89,7 +93,6 @@ namespace EmpireOfCards.Core.TurnPhases
                 case ResolveStep.BusinessProduce:
                     if (gm.BoardManager != null)
                     {
-                        // Check if rival sabotage disabled production this turn
                         if (gm.BoardManager.ConsumeProductionDisabled())
                         {
                             EventBus.RivalActed("Your businesses couldn't produce this turn due to rival sabotage!");
@@ -103,11 +106,9 @@ namespace EmpireOfCards.Core.TurnPhases
 
                 // 4b: Calculate total customers and territory distribution
                 case ResolveStep.CustomerFlow:
-                    // Update player customer count from board state
                     if (gm.BoardManager != null)
                         gm.SetPlayerCustomers(gm.BoardManager.CalculatePlayerCustomers());
 
-                    // Update rival customer count
                     if (gm.RivalAI != null)
                         gm.SetRivalCustomers(gm.RivalAI.RivalCustomers);
 
@@ -120,6 +121,57 @@ namespace EmpireOfCards.Core.TurnPhases
                             gm.PlayerCustomers, gm.RivalCustomers, marketPool);
                     }
                     break;
+
+                // 4b.5: Season transition check
+                case ResolveStep.SeasonCheck:
+                {
+                    int currentTurn = gm.CurrentTurn;
+                    int seasonIndex = (currentTurn - 1) / Constants.TURNS_PER_SEASON;
+                    seasonIndex = Mathf.Clamp(seasonIndex, 0, 4);
+                    SeasonType newSeason = (SeasonType)seasonIndex;
+
+                    if (currentTurn > 1 && newSeason != _lastSeason)
+                    {
+                        EventBus.SeasonChanged(newSeason);
+                        Debug.Log($"[ResolvePhase] Season changed to {newSeason}");
+                    }
+
+                    _lastSeason = newSeason;
+                    break;
+                }
+
+                // 4b.6: Market share calculation
+                case ResolveStep.MarketShareCalculation:
+                {
+                    int totalMarket = gm.BalanceData != null
+                        ? gm.BalanceData.GetMarketPool(gm.CurrentTurn)
+                        : Constants.BASE_MARKET_CUSTOMERS;
+
+                    // Apply season multiplier to market pool
+                    int seasonIndex = Mathf.Clamp((gm.CurrentTurn - 1) / Constants.TURNS_PER_SEASON, 0, 4);
+                    float seasonMultiplier = GetSeasonMultiplier((SeasonType)seasonIndex);
+
+                    int adjustedMarket = Mathf.RoundToInt(totalMarket * seasonMultiplier);
+
+                    // Calculate player share from board state
+                    int playerCustomers = gm.PlayerCustomers;
+                    int rivalCustomers = gm.RivalCustomers;
+
+                    // Clamp to adjusted market
+                    if (adjustedMarket > 0 && (playerCustomers + rivalCustomers) > adjustedMarket)
+                    {
+                        float total = playerCustomers + rivalCustomers;
+                        playerCustomers = Mathf.RoundToInt((playerCustomers / total) * adjustedMarket);
+                        rivalCustomers = adjustedMarket - playerCustomers;
+                    }
+
+                    gm.SetPlayerCustomers(playerCustomers);
+                    gm.SetRivalCustomers(rivalCustomers);
+                    EventBus.MarketShareUpdated(playerCustomers, rivalCustomers);
+
+                    Debug.Log($"[ResolvePhase] MarketShare: player={playerCustomers}, rival={rivalCustomers}, market={adjustedMarket} (season x{seasonMultiplier:F2})");
+                    break;
+                }
 
                 // 4c: Check and trigger combos
                 case ResolveStep.ComboCheck:
@@ -141,12 +193,12 @@ namespace EmpireOfCards.Core.TurnPhases
                     }
                     break;
 
-                // 4c.5: Evaluate Company Tier (GDD Section 1.6) - after combo check
+                // 4c.5: Evaluate Company Tier (GDD Section 1.6) - customer-based
                 case ResolveStep.TierCheck:
                     if (gm.CompanyTierSystem != null)
                     {
                         CompanyTier tierBefore = gm.CompanyTierSystem.CurrentTier;
-                        gm.CompanyTierSystem.EvaluateTier(gm.PlayerTerritories);
+                        gm.CompanyTierSystem.EvaluateTier(gm.PlayerCustomers);
                         _tierChangedThisResolve = gm.CompanyTierSystem.CurrentTier != tierBefore;
                     }
                     break;
@@ -159,15 +211,61 @@ namespace EmpireOfCards.Core.TurnPhases
                     }
                     break;
 
-                // 4e: FBI check, business closure countdown, employee leaving
+                // 4e: FBI check, platform rating decay, business closure countdown
                 case ResolveStep.DeteriorationCheck:
                     if (gm.FBISystem != null)
                     {
                         gm.FBISystem.AccumulateRiskFromBoard();
                         gm.FBISystem.CheckForRaid();
                     }
+
+                    // Platform rating decay: skip if any business has a Marketing-tagged employee
+                    if (gm.EconomyManager != null && gm.BoardManager != null)
+                    {
+                        bool hasMarketingCoverage = HasMarketingEmployee(gm.BoardManager);
+                        if (!hasMarketingCoverage)
+                        {
+                            Debug.Log("[ResolvePhase] No marketing coverage -- platform rating decays.");
+                        }
+                        else
+                        {
+                            Debug.Log("[ResolvePhase] Marketing coverage active -- platform rating decay skipped.");
+                        }
+                    }
                     break;
             }
+        }
+
+        private static float GetSeasonMultiplier(SeasonType season)
+        {
+            return season switch
+            {
+                SeasonType.EarlyGame   => Constants.SEASON_MULTIPLIER_EARLY_GAME,
+                SeasonType.Growth      => Constants.SEASON_MULTIPLIER_GROWTH,
+                SeasonType.Peak        => Constants.SEASON_MULTIPLIER_PEAK,
+                SeasonType.Transition  => Constants.SEASON_MULTIPLIER_TRANSITION,
+                SeasonType.OffPeak     => Constants.SEASON_MULTIPLIER_OFF_PEAK,
+                _                      => 1.0f
+            };
+        }
+
+        private static bool HasMarketingEmployee(BoardManager board)
+        {
+            var businesses = board.PlayerBusinesses;
+            for (int i = 0; i < businesses.Count; i++)
+            {
+                if (businesses[i].isClosed) continue;
+                foreach (var emp in businesses[i].employees)
+                {
+                    if (emp == null) continue;
+                    if (emp.tags == null) continue;
+                    foreach (var tag in emp.tags)
+                    {
+                        if (tag == CardTag.Marketing) return true;
+                    }
+                }
+            }
+            return false;
         }
 
         public void Exit() { }

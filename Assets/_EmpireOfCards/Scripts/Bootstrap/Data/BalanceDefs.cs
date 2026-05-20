@@ -163,10 +163,23 @@ namespace EmpireOfCards.Bootstrap.Data
             };
 
             // Venture Mirror (GDD Section 1.7) — indexed by VentureType ordinal
-            // [0] Diner, [1] TechStartup, [2] AdAgency, [3] BlackMarket
-            rival.ventureMatchedNames     = new[] { "Rival Diner", "Rival Tech Startup", "Rival Ad Agency", "MegaCorp HQ" };
-            rival.ventureMatchedIncome    = new[] { 50, 0, 60, 80 };
-            rival.ventureMatchedCustomers = new[] { 3, 0, 3, 5 };
+            // [0] Diner, [1] TechStartup, [2] AdAgency, [3] BlackMarket (legacy)
+            // [4] FastFood, [5] Cafe, [6] TechApp, [7] ClothingStore, [8] GroceryStore
+            rival.ventureMatchedNames = new[]
+            {
+                "Rival Diner", "Rival Tech Startup", "Rival Ad Agency", "MegaCorp HQ",
+                "Rival Fast Food", "Rival Cafe", "Rival Tech App", "Rival Clothing Store", "Rival Grocery Store"
+            };
+            rival.ventureMatchedIncome = new[]
+            {
+                50, 0, 60, 80,
+                45, 55, 0, 50, 40
+            };
+            rival.ventureMatchedCustomers = new[]
+            {
+                3, 0, 3, 5,
+                4, 3, 0, 3, 5
+            };
 
             // Growth Schedule (GDD Section 8.3)
             // Rival pacing slowed: territories reduced at each milestone
