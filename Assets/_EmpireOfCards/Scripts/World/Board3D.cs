@@ -78,19 +78,23 @@ namespace EmpireOfCards.World
 
             // ====================================================================
             // ZONE 1 — PLAYER ZONE
-            // Row A (Z = -2.0): Operation slots — business infrastructure
-            // Row B (Z = -0.5): Staff slots — employees
-            // Row C (Z = 1.0): Marketing (left) + Supplier (right)
-            // Right column (X = 6.2): TempEffect slots + Sell + Action
+            // Row A (Z = -2.0): Operation slots — business infrastructure   Y=0.05
+            // Row B (Z = -0.5): Staff slots — employees                     Y=0.06
+            // Row C (Z = 1.0):  Marketing (left) + Supplier (right)         Y=0.07
+            // Right column (X = 5.2): TempEffect slots + Sell + Action      Y=0.04
+            //
+            // Right column pulled in by 0.3 (5.5 → 5.2) so it stays on screen.
+            // Zone gap: 0.3 unit breathing room between rows via Z offsets.
             // ====================================================================
 
             // Row A: Operation Slots (4 starting) — spacing 2.2 → total 6.6 wide
+            // Y = 0.05 — ground level (deepest)
             for (int i = 0; i < Constants.STARTING_OPERATION_SLOTS; i++)
             {
                 var slot = CreateSlotCube($"OperationSlot_{i + 1:D2}",
                     new Vector3((i - 1.5f) * 2.2f, 0.05f, -2.0f),
-                    new Vector3(2.0f, 0.1f, 1.5f),
-                    new Color(0.2f, 0.3f, 0.5f));
+                    new Vector3(2.0f, 0.08f, 1.5f),
+                    new Color(0.18f, 0.25f, 0.42f));
 
                 var zone = slot.AddComponent<SlotZone3D>();
                 zone.RuntimeInit(DropZoneType.OperationSlot, i);
@@ -100,12 +104,13 @@ namespace EmpireOfCards.World
             }
 
             // Row B: Staff Slots (5 starting) — spacing 1.8 → total 7.2 wide
+            // Y = 0.06 — slightly raised (depth layer 2)
             for (int i = 0; i < Constants.STARTING_STAFF_SLOTS; i++)
             {
                 var slot = CreateSlotCube($"StaffSlot_{i + 1:D2}",
-                    new Vector3((i - 2f) * 1.8f, 0.05f, -0.5f),
-                    new Vector3(1.5f, 0.1f, 1.2f),
-                    new Color(0.2f, 0.45f, 0.25f));
+                    new Vector3((i - 2f) * 1.8f, 0.06f, -0.5f),
+                    new Vector3(1.5f, 0.08f, 1.2f),
+                    new Color(0.18f, 0.38f, 0.22f));
 
                 var zone = slot.AddComponent<SlotZone3D>();
                 zone.RuntimeInit(DropZoneType.StaffSlot, i);
@@ -114,12 +119,13 @@ namespace EmpireOfCards.World
             }
 
             // Row C-Left: Marketing Slots (3 starting) — spacing 1.8, left cluster
+            // Y = 0.07 — highest player row (depth layer 3)
             for (int i = 0; i < Constants.STARTING_MARKETING_SLOTS; i++)
             {
                 var slot = CreateSlotCube($"MarketingSlot_{i + 1:D2}",
-                    new Vector3(-4.5f + i * 1.8f, 0.05f, 1.0f),
-                    new Vector3(1.5f, 0.1f, 1.0f),
-                    new Color(0.5f, 0.25f, 0.5f));
+                    new Vector3(-4.5f + i * 1.8f, 0.07f, 1.0f),
+                    new Vector3(1.5f, 0.08f, 1.0f),
+                    new Color(0.42f, 0.2f, 0.42f));
 
                 var zone = slot.AddComponent<SlotZone3D>();
                 zone.RuntimeInit(DropZoneType.MarketingSlot, i);
@@ -128,52 +134,57 @@ namespace EmpireOfCards.World
             }
 
             // Row C-Right: Supplier Slots (2 starting) — spacing 1.8, right of center
+            // Y = 0.07 — same depth layer as Marketing
             for (int i = 0; i < Constants.STARTING_SUPPLIER_SLOTS; i++)
             {
                 var slot = CreateSlotCube($"SupplierSlot_{i + 1:D2}",
-                    new Vector3(2.2f + i * 1.8f, 0.05f, 1.0f),
-                    new Vector3(1.5f, 0.1f, 1.0f),
-                    new Color(0.45f, 0.35f, 0.15f));
+                    new Vector3(2.2f + i * 1.8f, 0.07f, 1.0f),
+                    new Vector3(1.5f, 0.08f, 1.0f),
+                    new Color(0.38f, 0.28f, 0.12f));
 
                 var zone = slot.AddComponent<SlotZone3D>();
                 zone.RuntimeInit(DropZoneType.SupplierSlot, i);
                 _supplierSlots.Add(zone);
             }
 
-            // Right column: TempEffect Slots (3 fixed) — vertical stack at far right
+            // Right column: TempEffect Slots (3 fixed) — vertical stack, pulled in to X=5.2
+            // Y = 0.04 — lowest depth (recessed utility row)
             for (int i = 0; i < Constants.STARTING_TEMP_EFFECT_SLOTS; i++)
             {
                 var slot = CreateSlotCube($"TempEffectSlot_{i + 1:D2}",
-                    new Vector3(5.5f, 0.05f, -2.0f + i * 1.3f),
-                    new Vector3(1.2f, 0.1f, 1.0f),
-                    new Color(0.6f, 0.35f, 0.1f));
+                    new Vector3(5.2f, 0.04f, -2.0f + i * 1.3f),
+                    new Vector3(1.2f, 0.08f, 1.0f),
+                    new Color(0.5f, 0.28f, 0.08f));
 
                 var zone = slot.AddComponent<SlotZone3D>();
                 zone.RuntimeInit(DropZoneType.TempEffectSlot, i);
                 _tempEffectSlots.Add(zone);
             }
 
-            // Sell Zone — right column, below TempEffect stack
+            // Sell Zone — right column, pulled in to X=5.2
             var sell = CreateSlotCube("SellZone",
-                new Vector3(5.5f, 0.05f, 1.0f),
-                new Vector3(1.2f, 0.1f, 1.5f),
-                new Color(0.6f, 0.4f, 0.1f));
+                new Vector3(5.2f, 0.04f, 1.0f),
+                new Vector3(1.2f, 0.08f, 1.5f),
+                new Color(0.5f, 0.33f, 0.08f));
             _sellZone = sell.AddComponent<SlotZone3D>();
             _sellZone.RuntimeInit(DropZoneType.SellZone, 0);
 
-            // Action Zone — right column, above Sell
+            // Action Zone — right column, above Sell, pulled in to X=5.2
             var action = CreateSlotCube("ActionZone",
-                new Vector3(5.5f, 0.05f, 2.2f),
-                new Vector3(1.2f, 0.1f, 1.5f),
-                new Color(0.7f, 0.15f, 0.15f));
+                new Vector3(5.2f, 0.04f, 2.2f),
+                new Vector3(1.2f, 0.08f, 1.5f),
+                new Color(0.6f, 0.12f, 0.12f));
             _actionZone = action.AddComponent<SlotZone3D>();
             _actionZone.RuntimeInit(DropZoneType.ActionZone, 0);
 
             // ====================================================================
             // ZONE 2 — CUSTOMER MARKET ZONE (Z = 3.8)
-            // 10 blocks, spacing 1.2, each = 10 customers from shared pool of 100
+            // 10 blocks, spacing 1.1, each = 10 customers from shared pool of 100
+            // Blocks are smaller (0.8 x 0.2 x 0.4) with tighter spacing for clarity
             // ====================================================================
-            CreateDivider("Divider_PlayerMarket", new Vector3(0, 0.07f, 3.1f), new Vector3(13f, 0.02f, 0.05f));
+
+            // Thicker, brighter divider — Y scale 0.06, near-white color
+            CreateDivider("Divider_PlayerMarket", new Vector3(0, 0.07f, 3.1f), new Vector3(13f, 0.06f, 0.08f));
 
             int marketBlocks = 10;
             for (int i = 0; i < marketBlocks; i++)
@@ -181,44 +192,46 @@ namespace EmpireOfCards.World
                 var terr = GameObject.CreatePrimitive(PrimitiveType.Cube);
                 terr.name = $"CustomerBlock_{i + 1:D2}";
                 terr.transform.SetParent(transform);
-                float x = (i - 4.5f) * 1.2f;
+                float x = (i - 4.5f) * 1.1f;
                 terr.transform.localPosition = new Vector3(x, 0.1f, 3.8f);
-                terr.transform.localScale = new Vector3(1.0f, 0.25f, 0.6f);
+                terr.transform.localScale = new Vector3(0.8f, 0.2f, 0.4f);
                 terr.GetComponent<MeshRenderer>().material.color = Color.gray;
                 Destroy(terr.GetComponent<Collider>());
                 _territoryBlocks.Add(terr);
                 _territoryRenderers.Add(terr.GetComponent<MeshRenderer>());
             }
 
-            CreateDivider("Divider_MarketRival", new Vector3(0, 0.07f, 4.5f), new Vector3(13f, 0.02f, 0.05f));
+            // Thicker, brighter divider — Y scale 0.06, near-white color
+            CreateDivider("Divider_MarketRival", new Vector3(0, 0.07f, 4.5f), new Vector3(13f, 0.06f, 0.08f));
 
             // ====================================================================
             // ZONE 3 — RIVAL ZONE (top, Z = 5 to 6.5) — visual only, no drop zones
+            // Rival slots are smaller to convey visual distance / threat scale
             // ====================================================================
 
-            // Rival operation slots (4 visual-only) — spacing 2.2
+            // Rival operation slots (4 visual-only) — compact: 1.5 x 0.08 x 0.8
             for (int i = 0; i < 4; i++)
             {
                 var rivalSlot = CreateSlotCube($"RivalOp_{i + 1:D2}",
-                    new Vector3((i - 1.5f) * 2.2f, 0.05f, 6.0f),
-                    new Vector3(2.0f, 0.1f, 1.2f),
+                    new Vector3((i - 1.5f) * 2.0f, 0.05f, 6.0f),
+                    new Vector3(1.5f, 0.08f, 0.8f),
                     new Color(0.5f, 0.15f, 0.15f));
                 Destroy(rivalSlot.GetComponent<Collider>());
             }
 
-            // Rival staff slots (3 visual-only) — spacing 1.8
+            // Rival staff slots (3 visual-only) — compact: 1.0 x 0.08 x 0.6
             for (int i = 0; i < 3; i++)
             {
                 var rivalStaff = CreateSlotCube($"RivalStaff_{i + 1:D2}",
-                    new Vector3((i - 1f) * 1.8f, 0.05f, 4.9f),
-                    new Vector3(1.5f, 0.1f, 0.8f),
+                    new Vector3((i - 1f) * 1.6f, 0.05f, 4.9f),
+                    new Vector3(1.0f, 0.08f, 0.6f),
                     new Color(0.45f, 0.12f, 0.12f));
                 Destroy(rivalStaff.GetComponent<Collider>());
             }
 
             // Event display (rival side, top-right corner)
             var eventArea = CreateSlotCube("EventDisplay",
-                new Vector3(5.5f, 0.05f, 5.8f),
+                new Vector3(5.2f, 0.05f, 5.8f),
                 new Vector3(1.5f, 0.08f, 1.5f),
                 new Color(0.9f, 0.8f, 0.15f, 0.3f));
             Destroy(eventArea.GetComponent<Collider>());
@@ -250,7 +263,8 @@ namespace EmpireOfCards.World
             div.transform.SetParent(transform);
             div.transform.localPosition = localPos;
             div.transform.localScale = localScale;
-            div.GetComponent<MeshRenderer>().material.color = new Color(0.55f, 0.55f, 0.55f, 0.5f);
+            // Bright near-white with slight warm tint — clearly visible against the table
+            div.GetComponent<MeshRenderer>().material.color = new Color(0.82f, 0.82f, 0.78f);
             Destroy(div.GetComponent<Collider>());
         }
 
@@ -286,35 +300,45 @@ namespace EmpireOfCards.World
         /// </summary>
         private void CreateBoardLabels()
         {
-            // Label Y = 0.5 — just above slot surface (slots are at Y=0.05, height=0.1 → top at Y=0.1)
-            float labelY = 0.5f;
-            // Zone labels slightly larger, slot labels smaller
+            // Labels sit BELOW each slot row (higher Z = closer to viewer in this camera setup).
+            // Offset = slot center Z + (slot depth / 2) + 0.2 gap — label never hidden by a placed card.
+            // Y slightly above surface (0.15) so text clears the table geometry.
+            float labelY = 0.15f;
             float zoneFont = 3f;
             float slotFont = 2.5f;
             // Rotation matches camera angle (55°) so labels face the viewer
             Quaternion labelRot = Quaternion.Euler(55f, 0f, 0f);
 
             // === ZONE 1: PLAYER ZONE ===
-            CreateLabel("OPERATION", new Vector3(0f, labelY, -2.65f), labelRot, slotFont,
-                        new Color(0.4f, 0.6f, 1f));
-            CreateLabel("STAFF", new Vector3(0f, labelY, -1.2f), labelRot, slotFont,
-                        new Color(0.4f, 0.9f, 0.5f));
-            CreateLabel("MARKETING", new Vector3(-3.3f, labelY, 0.4f), labelRot, slotFont,
-                        new Color(0.8f, 0.5f, 0.9f));
-            CreateLabel("SUPPLIERS", new Vector3(3.1f, labelY, 0.4f), labelRot, slotFont,
-                        new Color(0.9f, 0.75f, 0.35f));
-            CreateLabel("EVENTS", new Vector3(5.5f, labelY, -2.65f), labelRot, slotFont * 0.85f,
-                        new Color(0.95f, 0.5f, 0.2f));
-            CreateLabel("SELL", new Vector3(5.5f, labelY, 0.35f), labelRot, slotFont,
-                        new Color(0.9f, 0.7f, 0.2f));
-            CreateLabel("ACTION", new Vector3(5.5f, labelY, 1.65f), labelRot, slotFont,
-                        new Color(0.9f, 0.3f, 0.3f));
+            // Operation row: center Z=-2.0, depth=1.5 → label Z = -2.0 + 0.75 + 0.2 = -1.05
+            CreateLabel("OPERATION", new Vector3(0f, labelY, -1.05f), labelRot, slotFont,
+                        new Color(0.5f, 0.7f, 1f));
+            // Staff row: center Z=-0.5, depth=1.2 → label Z = -0.5 + 0.6 + 0.2 = 0.3
+            CreateLabel("STAFF", new Vector3(0f, labelY, 0.3f), labelRot, slotFont,
+                        new Color(0.45f, 0.9f, 0.55f));
+            // Marketing row: center Z=1.0, depth=1.0 → label Z = 1.0 + 0.5 + 0.2 = 1.7
+            CreateLabel("MARKETING", new Vector3(-3.3f, labelY, 1.7f), labelRot, slotFont,
+                        new Color(0.85f, 0.55f, 0.95f));
+            // Supplier row: center Z=1.0, depth=1.0 → same bottom edge as Marketing
+            CreateLabel("SUPPLIERS", new Vector3(3.1f, labelY, 1.7f), labelRot, slotFont,
+                        new Color(0.95f, 0.78f, 0.4f));
+            // Right column — TempEffect stack bottom: Z=-2.0, depth=1.0 → label Z = -2.0 + 0.5 + 0.2 = -1.3
+            CreateLabel("EVENTS", new Vector3(5.2f, labelY, -1.3f), labelRot, slotFont * 0.85f,
+                        new Color(0.95f, 0.55f, 0.25f));
+            // Sell zone: center Z=1.0, depth=1.5 → label Z = 1.0 + 0.75 + 0.2 = 1.95
+            CreateLabel("SELL", new Vector3(5.2f, labelY, 1.95f), labelRot, slotFont,
+                        new Color(0.9f, 0.72f, 0.25f));
+            // Action zone: center Z=2.2, depth=1.5 → label Z = 2.2 + 0.75 + 0.2 = 3.15
+            CreateLabel("ACTION", new Vector3(5.2f, labelY, 3.15f), labelRot, slotFont,
+                        new Color(0.92f, 0.35f, 0.35f));
 
             // === ZONE 2: CUSTOMER MARKET ZONE ===
-            CreateLabel("CUSTOMER MARKET (100)", new Vector3(0f, labelY, 3.8f), labelRot, zoneFont,
+            // Market blocks at Z=3.8, depth=0.4 → label Z = 3.8 + 0.2 + 0.2 = 4.2
+            CreateLabel("CUSTOMER MARKET (100)", new Vector3(0f, labelY, 4.2f), labelRot, zoneFont,
                         new Color(0.9f, 0.9f, 0.9f));
 
             // === ZONE 3: RIVAL ZONE ===
+            // Rival staff row at Z=4.9, depth=0.6 → label Z = 4.9 + 0.3 + 0.2 = 5.4
             CreateLabel("RIVAL", new Vector3(0f, labelY, 5.4f), labelRot, zoneFont,
                         new Color(1f, 0.4f, 0.4f));
 
