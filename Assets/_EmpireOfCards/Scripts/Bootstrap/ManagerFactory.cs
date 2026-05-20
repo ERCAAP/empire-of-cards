@@ -1,6 +1,7 @@
 using UnityEngine;
 using EmpireOfCards.Core;
 using EmpireOfCards.Gameplay;
+using EmpireOfCards.Gameplay.Staff;
 using EmpireOfCards.UI;
 using EmpireOfCards.Audio;
 using EmpireOfCards.VFX;
@@ -129,6 +130,16 @@ namespace EmpireOfCards.Bootstrap
             slotGo.transform.SetParent(gmGo.transform);
             b.slotManager = slotGo.AddComponent<SlotManager>();
 
+            // --- StaffStateSystem (GDD Section 6) ---
+            var staffGo = new GameObject("StaffStateSystem");
+            staffGo.transform.SetParent(gmGo.transform);
+            b.staffStateSystem = staffGo.AddComponent<StaffStateSystem>();
+
+            // --- ChainReactionSystem (GDD Section 11, 12) ---
+            var chainGo = new GameObject("ChainReactionSystem");
+            chainGo.transform.SetParent(gmGo.transform);
+            b.chainReactionSystem = chainGo.AddComponent<ChainReactionSystem>();
+
             Debug.Log("[ManagerFactory] All managers created.");
 
             return b;
@@ -162,6 +173,8 @@ namespace EmpireOfCards.Bootstrap
         public CompanyTierSystem companyTierSystem;
         public ActionCardResolver actionCardResolver;
         public SlotManager slotManager;
+        public StaffStateSystem staffStateSystem;
+        public ChainReactionSystem chainReactionSystem;
 
         // AudioManager sub-sources
         public AudioSource musicSourceA;

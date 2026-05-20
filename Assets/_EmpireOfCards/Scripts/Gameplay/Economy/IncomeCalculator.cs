@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using EmpireOfCards.Core;
+using EmpireOfCards.Core.TurnPhases;
 using EmpireOfCards.Data;
 using EmpireOfCards.Gameplay;
 
@@ -158,6 +159,31 @@ namespace EmpireOfCards.Gameplay.Economy
                     businessIncome = Mathf.RoundToInt(businessIncome * (1f - Constants.NEGLECT_PENALTY_MAJOR));
                 else if (business.neglectTurns >= Constants.NEGLECT_THRESHOLD_MINOR)
                     businessIncome = Mathf.RoundToInt(businessIncome * (1f - Constants.NEGLECT_PENALTY_MINOR));
+
+                // --- Venture-based seasonal multiplier (GDD Section 14.2) ---
+                {
+                    var gm = GameManager.Instance;
+                    if (gm != null && !card.isGeneralCard)
+                    {
+                        int turnNow = gm.CurrentTurn;
+                        int sIdx = Mathf.Clamp((turnNow - 1) / Constants.TURNS_PER_SEASON, 0, 4);
+                        SeasonType currentSeason = (SeasonType)sIdx;
+                        float ventureMult = ResolvePhase.GetVentureSeasonMultiplier(card.ventureType, currentSeason);
+                        if (ventureMult != 1f)
+                        {
+                            int beforeVentureSeason = businessIncome;
+                            businessIncome = Mathf.RoundToInt(businessIncome * ventureMult);
+
+                            if (outSteps != null && businessIncome != beforeVentureSeason)
+                            {
+                                outSteps.Add(new IncomeStep(
+                                    $"{card.ventureType} Season x{ventureMult:F2}",
+                                    businessIncome - beforeVentureSeason,
+                                    isMultiplier: true));
+                            }
+                        }
+                    }
+                }
 
                 // --- Event effects on income ---
                 if (activeEvent != null)

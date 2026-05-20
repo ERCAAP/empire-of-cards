@@ -48,6 +48,12 @@ namespace EmpireOfCards.Gameplay
         private TaxCalculator taxCalculator;
         private MarketPool marketPool;
         private DebtTracker debtTracker;
+        private SalarySystem salarySystem;
+        private InsuranceSystem insuranceSystem;
+        private CreditSystem creditSystem;
+        private InflationSystem inflationSystem;
+        private StockSystem stockSystem;
+        private TaxPeriodSystem taxPeriodSystem;
 
         // --- Properties ---
         public int GrossIncome => grossIncome;
@@ -58,6 +64,14 @@ namespace EmpireOfCards.Gameplay
         public float PlatformRating => platformRating;
         public int CashBalance => cashBalance;
         public bool IsCashCrisis => inCashCrisis;
+
+        // --- New Economy Sub-system Properties ---
+        public SalarySystem SalarySystem => salarySystem;
+        public InsuranceSystem InsuranceSystem => insuranceSystem;
+        public CreditSystem CreditSystem => creditSystem;
+        public InflationSystem InflationSystem => inflationSystem;
+        public StockSystem StockSystem => stockSystem;
+        public TaxPeriodSystem TaxPeriodSystem => taxPeriodSystem;
 
         /// <summary>
         /// Assigns all dependencies without reflection.
@@ -76,6 +90,12 @@ namespace EmpireOfCards.Gameplay
             taxCalculator = new TaxCalculator(balanceData);
             marketPool = new MarketPool(balanceData);
             debtTracker = new DebtTracker();
+            salarySystem = new SalarySystem();
+            insuranceSystem = new InsuranceSystem();
+            creditSystem = new CreditSystem();
+            inflationSystem = new InflationSystem();
+            stockSystem = new StockSystem();
+            taxPeriodSystem = new TaxPeriodSystem();
         }
 
         // ----------------------------------------------------------------
@@ -125,29 +145,6 @@ namespace EmpireOfCards.Gameplay
                         $"Ability x{abilitySystem.IncomeMultiplier:F1}",
                         abilityDelta,
                         isMultiplier: true));
-                }
-            }
-
-            // Apply SlotManager v2 quality multiplier to gross income
-            if (slotManager != null)
-            {
-                var (quality, price, speed, count) = GetOperationSlotScores();
-                if (count > 0)
-                {
-                    float avgQuality = quality / count;
-                    // Quality 5 = baseline (1.0x), quality 10 = 1.5x, quality 1 = 0.6x
-                    float qualityMultiplier = 0.4f + (avgQuality / 10f) * 1.1f;
-                    int beforeQuality = grossIncome;
-                    grossIncome = Mathf.RoundToInt(grossIncome * qualityMultiplier);
-
-                    int qualityDelta = grossIncome - beforeQuality;
-                    if (qualityDelta != 0)
-                    {
-                        breakdown.steps.Add(new IncomeStep(
-                            $"Quality x{qualityMultiplier:F2}",
-                            qualityDelta,
-                            isMultiplier: qualityDelta > 0));
-                    }
                 }
             }
 
@@ -214,6 +211,63 @@ namespace EmpireOfCards.Gameplay
             // Step 7: Tick investor debt
             debtTracker.Tick();
 
+            // Step 7b: Tick credit interest (GDD Section 5.7)
+            int creditInterest = creditSystem.TickCredits();
+            if (creditInterest > 0)
+            {
+                gm.SpendMoney(creditInterest);
+                breakdown.steps.Add(new IncomeStep("Credit Interest", -creditInterest, isNegative: true));
+                Debug.Log($"[EconomyManager] Credit interest paid: {creditInterest}");
+            }
+
+            // Step 7c: Inflation check (GDD Section 5.9)
+            if (inflationSystem.ShouldTriggerInflation(currentTurn))
+            {
+                inflationSystem.TriggerInflation(currentTurn);
+            }
+
+            // Step 7d: Stock spoilage (GDD Section 9.1-9.4)
+            if (boardManager != null && boardManager.PlayerBusinesses.Count > 0)
+            {
+                int totalSpoilage = 0;
+                foreach (var biz in boardManager.PlayerBusinesses)
+                {
+                    if (biz.isClosed || biz.businessCard == null) continue;
+                    int spoilage = stockSystem.ApplySpoilage(
+                        biz.businessCard.incomePerTurn,
+                        biz.businessCard.ventureType,
+                        currentTurn);
+                    totalSpoilage += spoilage;
+                }
+                if (totalSpoilage > 0)
+                {
+                    gm.SpendMoney(totalSpoilage);
+                    breakdown.steps.Add(new IncomeStep("Stock Spoilage", -totalSpoilage, isNegative: true));
+                }
+            }
+
+            // Step 7e: Tax period check (GDD Section 5.8)
+            taxPeriodSystem.TrackProfit(netIncome);
+            if (taxPeriodSystem.IsTaxPeriod(currentTurn))
+            {
+                var taxResult = taxPeriodSystem.ProcessTaxPeriod(currentTurn, gm.PlayerMoney);
+                if (taxResult.amountPaid > 0)
+                {
+                    gm.SpendMoney(taxResult.amountPaid);
+                    breakdown.steps.Add(new IncomeStep("Tax Period", -taxResult.amountPaid, isNegative: true));
+                }
+            }
+            else
+            {
+                // Tick any existing tax debt interest
+                int taxDebtInterest = taxPeriodSystem.TickTaxDebt();
+                if (taxDebtInterest > 0)
+                {
+                    gm.SpendMoney(taxDebtInterest);
+                    breakdown.steps.Add(new IncomeStep("Tax Debt Interest", -taxDebtInterest, isNegative: true));
+                }
+            }
+
             // Step 8: Track customers attracted per business for evolution
             totalCustomersThisTurn = 0;
             for (int i = 0; i < businesses.Count; i++)
@@ -266,6 +320,67 @@ namespace EmpireOfCards.Gameplay
         public void StartInvestorDebt(int duration, float percent)
         {
             debtTracker.StartDebt(duration, percent);
+        }
+
+        // ----------------------------------------------------------------
+        // Salary System (GDD Section 5.5)
+        // ----------------------------------------------------------------
+
+        public void RequestSalaryChoice()
+        {
+            IReadOnlyList<ActiveBusiness> businesses = boardManager.PlayerBusinesses;
+            int salaries = CalculateSalaries(businesses);
+            if (salaries > 0)
+            {
+                EventBus.SalaryChoiceRequired(salaries);
+            }
+        }
+
+        public SalaryResult ProcessSalaryChoice(SalaryChoice choice)
+        {
+            IReadOnlyList<ActiveBusiness> businesses = boardManager.PlayerBusinesses;
+            int salaries = CalculateSalaries(businesses);
+            GameManager gm = GameManager.Instance;
+            int money = gm != null ? gm.PlayerMoney : 0;
+            return salarySystem.ProcessSalary(choice, salaries, money);
+        }
+
+        // ----------------------------------------------------------------
+        // Credit System (GDD Section 5.7)
+        // ----------------------------------------------------------------
+
+        public bool CanTakeCredit(CreditType type)
+        {
+            GameManager gm = GameManager.Instance;
+            CompanyTier tier = CompanyTier.Trader;
+            if (gm != null && gm.CompanyTierSystem != null)
+                tier = gm.CompanyTierSystem.CurrentTier;
+            return creditSystem.CanTakeCredit(type, tier);
+        }
+
+        public void TakeCredit(CreditType type)
+        {
+            GameManager gm = GameManager.Instance;
+            if (gm == null) return;
+
+            CompanyTier tier = CompanyTier.Trader;
+            if (gm.CompanyTierSystem != null)
+                tier = gm.CompanyTierSystem.CurrentTier;
+
+            if (!creditSystem.CanTakeCredit(type, tier))
+            {
+                Debug.LogWarning($"[EconomyManager] Cannot take {type} credit at tier {tier}");
+                return;
+            }
+
+            creditSystem.TakeCredit(type);
+            int amount = creditSystem.GetCreditAmount(type);
+            gm.GainMoney(amount);
+        }
+
+        public int GetTotalCreditDebt()
+        {
+            return creditSystem.TotalDebt;
         }
 
         // ----------------------------------------------------------------
@@ -482,6 +597,9 @@ namespace EmpireOfCards.Gameplay
             cashCrisisCounter = 0;
             inCashCrisis = false;
             debtTracker.Reset();
+            creditSystem?.Reset();
+            inflationSystem?.Reset();
+            taxPeriodSystem?.Reset();
         }
     }
 }

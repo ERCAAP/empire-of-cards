@@ -8,6 +8,7 @@ using EmpireOfCards.UI;
 using EmpireOfCards.Audio;
 using EmpireOfCards.VFX;
 using EmpireOfCards.Save;
+using EmpireOfCards.Gameplay.Staff;
 
 namespace EmpireOfCards.Core
 {
@@ -54,6 +55,8 @@ namespace EmpireOfCards.Core
         [SerializeField] private MetaProgressionSystem metaProgressionSystem;
         [SerializeField] private CompanyTierSystem companyTierSystem;
         [SerializeField] private SlotManager slotManager;
+        [SerializeField] private StaffStateSystem staffStateSystem;
+        [SerializeField] private ChainReactionSystem chainReactionSystem;
 
         [Header("=== First Venture ===")]
         [SerializeField] private VentureData selectedVenture;
@@ -97,6 +100,8 @@ namespace EmpireOfCards.Core
         public MetaProgressionSystem MetaProgressionSystem => metaProgressionSystem;
         public CompanyTierSystem CompanyTierSystem => companyTierSystem;
         public SlotManager SlotManager => slotManager;
+        public StaffStateSystem StaffStateSystem => staffStateSystem;
+        public ChainReactionSystem ChainReactionSystem => chainReactionSystem;
 
         /// <summary>
         /// Assigns the MetaProgressionSystem. Called by WiringService after bootstrap.
@@ -114,6 +119,16 @@ namespace EmpireOfCards.Core
         public void SetSlotManager(SlotManager sm)
         {
             this.slotManager = sm;
+        }
+
+        public void SetStaffStateSystem(StaffStateSystem sss)
+        {
+            this.staffStateSystem = sss;
+        }
+
+        public void SetChainReactionSystem(ChainReactionSystem crs)
+        {
+            this.chainReactionSystem = crs;
         }
 
         public void SetSelectedVenture(VentureData venture)
@@ -241,6 +256,10 @@ namespace EmpireOfCards.Core
             }
             if (companyTierSystem != null)
                 companyTierSystem.Reset();
+            if (staffStateSystem != null)
+                staffStateSystem.Reset();
+            if (chainReactionSystem != null)
+                chainReactionSystem.Reset();
 
             // Fire initial events so UI updates
             EventBus.MoneyUpdated(resources.Money);

@@ -3,6 +3,7 @@ using UnityEngine;
 using EmpireOfCards.Core.StateMachine;
 using EmpireOfCards.Data;
 using EmpireOfCards.Gameplay;
+using EmpireOfCards.Gameplay.Staff;
 
 namespace EmpireOfCards.Core.TurnPhases
 {
@@ -79,6 +80,8 @@ namespace EmpireOfCards.Core.TurnPhases
                 ResolveStep.TierCheck              => _tierChangedThisResolve ? 1.5f : 0.3f,
                 ResolveStep.IncomeCalculation      => 0.8f,
                 ResolveStep.DeteriorationCheck     => 0.5f,
+                ResolveStep.StaffTick              => 0.4f,
+                ResolveStep.ChainReactionCheck     => 0.4f,
                 _                                  => 0.5f
             };
         }
@@ -232,6 +235,24 @@ namespace EmpireOfCards.Core.TurnPhases
                         {
                             Debug.Log("[ResolvePhase] Marketing coverage active -- platform rating decay skipped.");
                         }
+                    }
+                    break;
+
+                // 4f: Staff moral/fatigue/loyalty/XP tick (GDD 6.1, 6.4)
+                case ResolveStep.StaffTick:
+                    if (gm.StaffStateSystem != null)
+                    {
+                        gm.StaffStateSystem.TickAll();
+                        Debug.Log("[ResolvePhase] Staff states ticked.");
+                    }
+                    break;
+
+                // 4g: Chain reaction evaluation (GDD 11.1-11.3)
+                case ResolveStep.ChainReactionCheck:
+                    if (gm.ChainReactionSystem != null)
+                    {
+                        gm.ChainReactionSystem.EvaluateChains(gm.CurrentTurn);
+                        Debug.Log("[ResolvePhase] Chain reactions evaluated.");
                     }
                     break;
             }

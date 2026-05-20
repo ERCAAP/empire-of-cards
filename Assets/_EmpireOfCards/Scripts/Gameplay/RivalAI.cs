@@ -320,25 +320,7 @@ namespace EmpireOfCards.Gameplay
                 case RivalMove.StaffPoach:
                     if (gm != null && gm.BoardManager != null)
                     {
-                        var playerBusinesses = gm.BoardManager.PlayerBusinesses;
-                        if (playerBusinesses != null)
-                        {
-                            int bestBonus = 0;
-                            foreach (var pb in playerBusinesses)
-                            {
-                                if (pb.isClosed) continue;
-                                foreach (var emp in pb.employees)
-                                {
-                                    if (emp != null && emp.customerBonus > bestBonus)
-                                        bestBonus = emp.customerBonus;
-                                }
-                            }
-                            if (bestBonus > 0 && rivalBusinesses.Count > 0)
-                            {
-                                rivalBusinesses[0].customers += bestBonus;
-                                EventBus.RivalActed($"Rival poached your staff! Stole {bestBonus} customer bonus.");
-                            }
-                        }
+                        ExecuteStaffPoach(gm);
                     }
                     break;
 
@@ -382,6 +364,137 @@ namespace EmpireOfCards.Gameplay
                     }
                     break;
             }
+        }
+
+        // ----------------------------------------------------------------
+        // Headhunting (GDD Section 6.5)
+        // ----------------------------------------------------------------
+
+        // Tracks the pending poach target so response methods know which employee
+        private CardData _pendingPoachTarget;
+        private int _pendingPoachBizIndex;
+        private int _pendingPoachOffer;
+
+        private void ExecuteStaffPoach(GameManager gm)
+        {
+            var playerBusinesses = gm.BoardManager.PlayerBusinesses;
+            if (playerBusinesses == null) return;
+
+            // Find lowest-loyalty (longest-tenured) employee as target
+            CardData bestTarget = null;
+            int bestBizIndex = -1;
+            int longestTenure = -1;
+
+            for (int b = 0; b < playerBusinesses.Count; b++)
+            {
+                if (playerBusinesses[b].isClosed) continue;
+                for (int e = 0; e < playerBusinesses[b].employees.Count; e++)
+                {
+                    var emp = playerBusinesses[b].employees[e];
+                    if (emp == null) continue;
+                    if (emp.preventsTransfer) continue;
+
+                    int tenure = (e < playerBusinesses[b].employeeTenure.Count)
+                        ? playerBusinesses[b].employeeTenure[e] : 0;
+
+                    if (tenure > longestTenure || (tenure == longestTenure && emp.customerBonus > (bestTarget != null ? bestTarget.customerBonus : 0)))
+                    {
+                        bestTarget = emp;
+                        bestBizIndex = b;
+                        longestTenure = tenure;
+                    }
+                }
+            }
+
+            if (bestTarget == null)
+            {
+                EventBus.RivalActed("Rival tried to poach staff but found no viable target.");
+                return;
+            }
+
+            int rivalOffer = Mathf.RoundToInt(bestTarget.salaryPerTurn * 1.5f);
+            _pendingPoachTarget = bestTarget;
+            _pendingPoachBizIndex = bestBizIndex;
+            _pendingPoachOffer = rivalOffer;
+
+            EventBus.StaffPoachAttempted(bestTarget, rivalOffer);
+            EventBus.RivalActed($"Rival is trying to poach {bestTarget.cardName} with offer of {rivalOffer}!");
+        }
+
+        /// <summary>
+        /// Player accepts the poach: employee leaves, slot opens.
+        /// </summary>
+        public void RespondToPoach_Accept()
+        {
+            if (_pendingPoachTarget == null) return;
+
+            var gm = GameManager.Instance;
+            if (gm != null && gm.BoardManager != null)
+            {
+                gm.BoardManager.RemoveEmployeeByCard(_pendingPoachBizIndex, _pendingPoachTarget);
+            }
+
+            if (rivalBusinesses.Count > 0)
+                rivalBusinesses[0].customers += _pendingPoachTarget.customerBonus;
+
+            EventBus.StaffPoachAccepted(_pendingPoachTarget);
+            EventBus.RivalActed($"{_pendingPoachTarget.cardName} left for the rival!");
+            Debug.Log($"[RivalAI] Poach accepted: {_pendingPoachTarget.cardName} left.");
+
+            ClearPendingPoach();
+        }
+
+        /// <summary>
+        /// Player counter-offers: pays salary x 1.5, employee stays.
+        /// </summary>
+        public void RespondToPoach_CounterOffer()
+        {
+            if (_pendingPoachTarget == null) return;
+
+            int counterCost = Mathf.RoundToInt(
+                _pendingPoachTarget.salaryPerTurn * Constants.HEADHUNT_COUNTER_OFFER_MULTIPLIER);
+
+            var gm = GameManager.Instance;
+            if (gm != null)
+                gm.SpendMoney(counterCost);
+
+            EventBus.StaffPoachCountered(_pendingPoachTarget, counterCost);
+            EventBus.RivalActed($"You kept {_pendingPoachTarget.cardName} with a counter-offer of {counterCost}.");
+            Debug.Log($"[RivalAI] Poach countered: {_pendingPoachTarget.cardName} stays, cost={counterCost}.");
+
+            ClearPendingPoach();
+        }
+
+        /// <summary>
+        /// Player rejects + pays bonus: pays salary x 2, employee stays with loyalty boost.
+        /// </summary>
+        public void RespondToPoach_RejectWithBonus()
+        {
+            if (_pendingPoachTarget == null) return;
+
+            int bonusCost = Mathf.RoundToInt(
+                _pendingPoachTarget.salaryPerTurn * Constants.HEADHUNT_REJECT_BONUS_MULTIPLIER);
+
+            var gm = GameManager.Instance;
+            if (gm != null)
+                gm.SpendMoney(bonusCost);
+
+            EventBus.StaffPoachRejected(_pendingPoachTarget, bonusCost);
+            EventBus.RivalActed($"You gave {_pendingPoachTarget.cardName} a loyalty bonus of {bonusCost}. Loyalty boosted!");
+            Debug.Log($"[RivalAI] Poach rejected with bonus: {_pendingPoachTarget.cardName} stays, cost={bonusCost}, loyalty +{Constants.HEADHUNT_REJECT_LOYALTY_BONUS}.");
+
+            ClearPendingPoach();
+        }
+
+        public bool HasPendingPoach => _pendingPoachTarget != null;
+        public CardData PendingPoachTarget => _pendingPoachTarget;
+        public int PendingPoachOffer => _pendingPoachOffer;
+
+        private void ClearPendingPoach()
+        {
+            _pendingPoachTarget = null;
+            _pendingPoachBizIndex = -1;
+            _pendingPoachOffer = 0;
         }
 
         // Legacy action dispatch -- kept for backward compatibility with old save/replay data
@@ -500,6 +613,7 @@ namespace EmpireOfCards.Gameplay
             nextPurchaseCostMultiplier = 0f;
             rivalBusinesses.Clear();
             dialogue?.Reset();
+            ClearPendingPoach();
         }
     }
 }

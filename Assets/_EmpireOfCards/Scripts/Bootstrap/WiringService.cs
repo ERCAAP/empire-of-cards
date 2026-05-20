@@ -3,6 +3,7 @@ using System.Linq;
 using UnityEngine;
 using EmpireOfCards.Core;
 using EmpireOfCards.Gameplay;
+using EmpireOfCards.Gameplay.Staff;
 using EmpireOfCards.UI.Cards;
 using EmpireOfCards.World;
 
@@ -80,6 +81,13 @@ namespace EmpireOfCards.Bootstrap
             // === SlotManager ===
             m.slotManager.Init();
             m.gameManager.SetSlotManager(m.slotManager);
+
+            // === StaffStateSystem (GDD Section 6) ===
+            m.gameManager.SetStaffStateSystem(m.staffStateSystem);
+
+            // === ChainReactionSystem (GDD Section 11, 12) ===
+            m.chainReactionSystem.Init(m.boardManager, m.economyManager, m.staffStateSystem);
+            m.gameManager.SetChainReactionSystem(m.chainReactionSystem);
 
             // === ShopManager ===
             m.shopManager.Init(data.shopPool, m.deckManager, m.economyManager, m.comboSystem);

@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using EmpireOfCards.Core;
 using EmpireOfCards.Data;
+using EmpireOfCards.Gameplay.Staff;
 
 namespace EmpireOfCards.Gameplay
 {
@@ -79,6 +80,10 @@ namespace EmpireOfCards.Gameplay
 
                 case ActionEffectType.SacrificeBusiness:
                     ResolveSacrificeBusiness(gm);
+                    break;
+
+                case ActionEffectType.Overtime:
+                    ResolveOvertime(gm);
                     break;
 
                 default:
@@ -225,6 +230,23 @@ namespace EmpireOfCards.Gameplay
             gm.BoardManager.RemoveBusiness(targetIndex);
             EventBus.BusinessClosed(targetIndex);
             Debug.Log($"[ActionCardResolver] Sacrificed business {targetIndex} for {value} money.");
+        }
+
+        /// <summary>
+        /// Overtime (GDD 6.3): +50% capacity this turn, +2 fatigue to all staff.
+        /// 3 consecutive overtime turns triggers staff strike.
+        /// </summary>
+        private void ResolveOvertime(GameManager gm)
+        {
+            if (gm.StaffStateSystem == null)
+            {
+                Debug.LogWarning("[ActionCardResolver] StaffStateSystem is null, cannot apply overtime.");
+                return;
+            }
+
+            gm.StaffStateSystem.ApplyOvertime();
+            EventBus.OvertimeApplied();
+            Debug.Log("[ActionCardResolver] Overtime applied: +50% capacity, +2 fatigue to all staff.");
         }
     }
 }
