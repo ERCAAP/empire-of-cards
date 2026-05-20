@@ -128,6 +128,29 @@ namespace EmpireOfCards.Gameplay
                 }
             }
 
+            // Apply SlotManager v2 quality multiplier to gross income
+            if (slotManager != null)
+            {
+                var (quality, price, speed, count) = GetOperationSlotScores();
+                if (count > 0)
+                {
+                    float avgQuality = quality / count;
+                    // Quality 5 = baseline (1.0x), quality 10 = 1.5x, quality 1 = 0.6x
+                    float qualityMultiplier = 0.4f + (avgQuality / 10f) * 1.1f;
+                    int beforeQuality = grossIncome;
+                    grossIncome = Mathf.RoundToInt(grossIncome * qualityMultiplier);
+
+                    int qualityDelta = grossIncome - beforeQuality;
+                    if (qualityDelta != 0)
+                    {
+                        breakdown.steps.Add(new IncomeStep(
+                            $"Quality x{qualityMultiplier:F2}",
+                            qualityDelta,
+                            isMultiplier: qualityDelta > 0));
+                    }
+                }
+            }
+
             EventBus.IncomeReceived(grossIncome);
 
             // Step 2: Salaries

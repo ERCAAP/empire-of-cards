@@ -154,10 +154,6 @@ namespace EmpireOfCards.World
             }
         }
 
-        /// <summary>
-        /// Spawns a placeholder cube on the slot to represent a placed card.
-        /// Color and size are based on the card type (GDD card type colors).
-        /// </summary>
         private void SpawnBuildingVisual(Card3D card)
         {
             if (_buildingVisual != null)
@@ -167,39 +163,29 @@ namespace EmpireOfCards.World
             }
 
             if (card == null || card.CardData == null) return;
+            CardData data = card.CardData;
 
             var building = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            building.name = $"Building_{card.CardData.cardId}";
+            building.name = $"Building_{data.cardId}";
             building.transform.SetParent(transform);
             building.transform.localPosition = new Vector3(0f, 0.3f, 0f);
 
-            // Size and color by card type
-            switch (card.CardData.cardType)
+            // Use CardData visual settings (ScriptableObject driven)
+            building.transform.localScale = data.buildingScale;
+            building.GetComponent<MeshRenderer>().material.color = data.buildingColor;
+
+            // Optional label on building
+            if (!string.IsNullOrEmpty(data.buildingLabel))
             {
-                case CardType.Business: // Operation card -> blue
-                    building.transform.localScale = new Vector3(2f, 0.5f, 1.5f);
-                    building.GetComponent<MeshRenderer>().material.color = new Color(0.25f, 0.45f, 0.85f);
-                    break;
-                case CardType.Employee: // Staff card -> green
-                    building.transform.localScale = new Vector3(1.5f, 0.5f, 1f);
-                    building.GetComponent<MeshRenderer>().material.color = new Color(0.25f, 0.7f, 0.35f);
-                    break;
-                case CardType.Action: // Marketing card -> purple
-                    building.transform.localScale = new Vector3(1.5f, 0.5f, 1f);
-                    building.GetComponent<MeshRenderer>().material.color = new Color(0.6f, 0.25f, 0.7f);
-                    break;
-                case CardType.Upgrade: // Supplier card -> brown
-                    building.transform.localScale = new Vector3(1.5f, 0.5f, 1f);
-                    building.GetComponent<MeshRenderer>().material.color = new Color(0.55f, 0.4f, 0.2f);
-                    break;
-                case CardType.Event: // Event card -> orange
-                    building.transform.localScale = new Vector3(1.5f, 0.5f, 1f);
-                    building.GetComponent<MeshRenderer>().material.color = new Color(0.9f, 0.5f, 0.15f);
-                    break;
-                default:
-                    building.transform.localScale = new Vector3(1f, 0.5f, 1f);
-                    building.GetComponent<MeshRenderer>().material.color = new Color(0.5f, 0.5f, 0.5f);
-                    break;
+                var labelGo = new GameObject("BuildingLabel");
+                labelGo.transform.SetParent(building.transform);
+                labelGo.transform.localPosition = new Vector3(0f, 0.8f, 0f);
+                labelGo.transform.localScale = Vector3.one * 0.5f;
+                var tmp = labelGo.AddComponent<TMPro.TextMeshPro>();
+                tmp.text = data.buildingLabel;
+                tmp.fontSize = 3f;
+                tmp.alignment = TMPro.TextAlignmentOptions.Center;
+                tmp.color = Color.white;
             }
 
             Destroy(building.GetComponent<Collider>());

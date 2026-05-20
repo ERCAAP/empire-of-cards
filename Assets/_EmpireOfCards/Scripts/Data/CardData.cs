@@ -115,5 +115,10 @@ namespace EmpireOfCards.Data
         [Header("--- Supplier Effects ---")]
         public float costReductionPercent;     // Cost reduction for all operations
         public float qualityBoostAmount;       // Added to qualityScore
+
+        [Header("--- 3D Visual (Slot Placement) ---")]
+        public Vector3 buildingScale = new Vector3(1f, 0.5f, 1f);  // Cube size when placed
+        public Color buildingColor = Color.gray;                     // Cube color when placed
+        public string buildingLabel = "";                            // TMP label on building (optional)
     }
 }
