@@ -92,6 +92,14 @@ namespace EmpireOfCards.Core
         public static event Action<int> OnIncomeReceived;                  // amount
         public static event Action<int> OnMoneySpent;                      // amount
         public static event Action<IncomeBreakdown> OnIncomeBreakdown;     // detailed cascade
+        public static event Action<SalaryChoice, int> OnSalaryPaid;        // choice, amountPaid
+        public static event Action<int> OnSalaryChoiceRequired;            // totalSalaries
+        public static event Action<CreditType, int> OnCreditTaken;         // type, amount
+        public static event Action<CreditType> OnCreditRepaid;             // type
+        public static event Action<int> OnRentCharged;                     // rent amount
+        public static event Action<VentureType, int> OnStockSpoilageOccurred;    // venture, cost
+        public static event Action<VentureType, int> OnStockSeasonLossOccurred;  // venture, cost
+        public static event Action<int, float> OnInflationOccurred;        // currentTurn, increase
         #endregion
 
         #region Turn Flow Events
@@ -212,6 +220,14 @@ namespace EmpireOfCards.Core
         public static void IncomeReceived(int amount) => OnIncomeReceived?.Invoke(amount);
         public static void MoneySpent(int amount) => OnMoneySpent?.Invoke(amount);
         public static void IncomeBreakdownReported(IncomeBreakdown breakdown) => OnIncomeBreakdown?.Invoke(breakdown);
+        public static void SalaryPaid(SalaryChoice choice, int amountPaid) => OnSalaryPaid?.Invoke(choice, amountPaid);
+        public static void SalaryChoiceRequired(int totalSalaries) => OnSalaryChoiceRequired?.Invoke(totalSalaries);
+        public static void CreditTaken(CreditType type, int amount) => OnCreditTaken?.Invoke(type, amount);
+        public static void CreditRepaid(CreditType type) => OnCreditRepaid?.Invoke(type);
+        public static void RentCharged(int amount) => OnRentCharged?.Invoke(amount);
+        public static void StockSpoilageOccurred(VentureType venture, int cost) => OnStockSpoilageOccurred?.Invoke(venture, cost);
+        public static void StockSeasonLossOccurred(VentureType venture, int cost) => OnStockSeasonLossOccurred?.Invoke(venture, cost);
+        public static void InflationOccurred(int currentTurn, float increase) => OnInflationOccurred?.Invoke(currentTurn, increase);
         #endregion
 
         #region Turn Flow Invoke Helpers
@@ -360,6 +376,14 @@ namespace EmpireOfCards.Core
             OnIncomeReceived = null;
             OnMoneySpent = null;
             OnIncomeBreakdown = null;
+            OnSalaryPaid = null;
+            OnSalaryChoiceRequired = null;
+            OnCreditTaken = null;
+            OnCreditRepaid = null;
+            OnRentCharged = null;
+            OnStockSpoilageOccurred = null;
+            OnStockSeasonLossOccurred = null;
+            OnInflationOccurred = null;
 
             // Turn flow
             OnTurnStarted = null;

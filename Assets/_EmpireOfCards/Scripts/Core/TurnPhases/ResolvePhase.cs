@@ -258,6 +258,58 @@ namespace EmpireOfCards.Core.TurnPhases
             }
         }
 
+        public static float GetVentureSeasonMultiplier(VentureType venture, SeasonType season)
+        {
+            switch (venture)
+            {
+                case VentureType.FastFood:
+                    return season switch
+                    {
+                        SeasonType.Summer => 1.10f,
+                        SeasonType.Winter => 1.05f,
+                        SeasonType.RamadanSeason => 1.20f,
+                        _ => 1f
+                    };
+
+                case VentureType.Cafe:
+                    return season switch
+                    {
+                        SeasonType.Summer => 1.15f,
+                        SeasonType.Winter => 0.95f,
+                        SeasonType.RamadanSeason => 0.85f,
+                        _ => 1f
+                    };
+
+                case VentureType.TechApp:
+                    return season switch
+                    {
+                        SeasonType.Summer => 0.95f,
+                        SeasonType.Winter => 1.10f,
+                        _ => 1f
+                    };
+
+                case VentureType.ClothingStore:
+                    return season switch
+                    {
+                        SeasonType.Autumn => 1.20f,
+                        SeasonType.Winter => 1.10f,
+                        SeasonType.Summer => 0.95f,
+                        _ => 1f
+                    };
+
+                case VentureType.GroceryStore:
+                    return season switch
+                    {
+                        SeasonType.Winter => 1.05f,
+                        SeasonType.RamadanSeason => 1.15f,
+                        _ => 1f
+                    };
+
+                default:
+                    return 1f;
+            }
+        }
+
         private static float GetSeasonMultiplier(SeasonType season)
         {
             return season switch

@@ -55,7 +55,7 @@ namespace EmpireOfCards.Gameplay
                     break;
             }
 
-            EventBus.LocationChanged(currentLocation);
+            EventBus.LocationChanged(passiveCustomersPerTurn, rentPerTurn);
             Debug.Log($"[LocationSystem] Set to {location}: traffic={passiveCustomersPerTurn}/turn, rent={rentPerTurn}/turn");
         }
 
