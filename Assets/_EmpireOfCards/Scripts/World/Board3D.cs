@@ -70,8 +70,8 @@ namespace EmpireOfCards.World
             var table = GameObject.CreatePrimitive(PrimitiveType.Cube);
             table.name = "Table";
             table.transform.SetParent(transform);
-            table.transform.localPosition = new Vector3(0, -0.25f, 1f);
-            table.transform.localScale = new Vector3(14, 0.5f, 10);
+            table.transform.localPosition = new Vector3(0, -0.25f, 2f);
+            table.transform.localScale = new Vector3(16, 0.5f, 14);
             table.GetComponent<MeshRenderer>().material.color = new Color(0.35f, 0.22f, 0.12f);
             table.layer = LayerMask.NameToLayer("Default");
             Destroy(table.GetComponent<Collider>());
