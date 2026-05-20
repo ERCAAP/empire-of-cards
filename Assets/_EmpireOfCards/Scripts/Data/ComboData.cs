@@ -28,8 +28,8 @@ namespace EmpireOfCards.Data
         [Header("--- State Requirements ---")]
         public bool requiresMinMoney;
         public int minMoneyRequired;        // Crisis Hunter: 1000
-        public bool requiresMinTerritory;
-        public int minTerritoryRequired;    // Monopoly: territory >= some number
+        public bool requiresMinMarketBlocks;
+        public int minMarketBlocksRequired; // Monopoly: market blocks >= some number
         public int minActiveBusinesses;     // Monopoly: 4 businesses
         public float minMarketShare;        // Monopoly: 55%
 

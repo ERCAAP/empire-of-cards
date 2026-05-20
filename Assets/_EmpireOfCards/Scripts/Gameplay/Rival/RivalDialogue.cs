@@ -12,7 +12,7 @@ namespace EmpireOfCards.Gameplay
     public enum RivalMood
     {
         Calm,       // Rival is ahead or even
-        Aggressive, // Rival is behind by 2+ territories
+        Aggressive, // Rival is behind by 2+ market blocks
         Greedy,     // Rival has high money, planning a big purchase
         Scheming    // Rival is about to use a special action
     }
@@ -94,7 +94,7 @@ namespace EmpireOfCards.Gameplay
                 DialogueCategory.CloseGame, new[]
                 {
                     "This is going to be close.",
-                    "One territory away...",
+                    "One step away...",
                     "May the best business win.",
                     "Neck and neck.",
                     "Every decision matters now."
@@ -296,7 +296,7 @@ namespace EmpireOfCards.Gameplay
             if (gap >= 2)
                 return DialogueCategory.RivalDesperate;
 
-            // Close game (within 1 territory)
+            // Close game (within 1 market block)
             if (Mathf.Abs(playerBlocks - rivalBlocks) <= 1 &&
                 (playerBlocks + rivalBlocks) > 0)
                 return DialogueCategory.CloseGame;

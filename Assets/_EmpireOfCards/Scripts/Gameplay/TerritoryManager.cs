@@ -169,7 +169,7 @@ namespace EmpireOfCards.Gameplay
         /// <summary>
         /// Returns the number of market share blocks owned by the player.
         /// </summary>
-        public int GetPlayerTerritories()
+        public int GetPlayerBlocks()
         {
             return playerTerritoryCount;
         }
@@ -177,7 +177,7 @@ namespace EmpireOfCards.Gameplay
         /// <summary>
         /// Returns the number of market share blocks owned by the rival.
         /// </summary>
-        public int GetRivalTerritories()
+        public int GetRivalBlocks()
         {
             return rivalTerritoryCount;
         }
@@ -185,7 +185,7 @@ namespace EmpireOfCards.Gameplay
         /// <summary>
         /// Returns the number of unclaimed market share blocks.
         /// </summary>
-        public int GetNeutralTerritories()
+        public int GetUnclaimedBlocks()
         {
             return totalTerritories - playerTerritoryCount - rivalTerritoryCount;
         }

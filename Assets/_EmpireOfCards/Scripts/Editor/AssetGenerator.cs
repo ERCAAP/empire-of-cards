@@ -1286,7 +1286,7 @@ namespace EmpireOfCards.Editor
                     turn = 5,
                     targetBusinesses = 2,
                     targetEmployees = 2,
-                    targetTerritories = 15,
+                    targetMarketBlocks = 15,
                     enableAggression = false
                 },
                 new RivalMilestone
@@ -1294,7 +1294,7 @@ namespace EmpireOfCards.Editor
                     turn = 8,
                     targetBusinesses = 3,
                     targetEmployees = 4,
-                    targetTerritories = 25,
+                    targetMarketBlocks = 25,
                     enableAggression = true
                 },
                 new RivalMilestone
@@ -1302,7 +1302,7 @@ namespace EmpireOfCards.Editor
                     turn = 12,
                     targetBusinesses = 3,
                     targetEmployees = 6,
-                    targetTerritories = 35,
+                    targetMarketBlocks = 35,
                     enableAggression = true
                 },
                 new RivalMilestone
@@ -1310,7 +1310,7 @@ namespace EmpireOfCards.Editor
                     turn = 15,
                     targetBusinesses = 4,
                     targetEmployees = 8,
-                    targetTerritories = 45,
+                    targetMarketBlocks = 45,
                     enableAggression = true
                 },
                 new RivalMilestone
@@ -1318,7 +1318,7 @@ namespace EmpireOfCards.Editor
                     turn = 20,
                     targetBusinesses = 5,
                     targetEmployees = 10,
-                    targetTerritories = 55,
+                    targetMarketBlocks = 55,
                     enableAggression = true
                 },
             };

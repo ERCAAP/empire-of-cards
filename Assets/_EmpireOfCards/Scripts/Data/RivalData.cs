@@ -70,7 +70,7 @@ namespace EmpireOfCards.Data
         public int turn;                    // Turn 5, 8, 12, 15 etc
         public int targetBusinesses;        // Target business count
         public int targetEmployees;         // Target employee count
-        public int targetTerritories;       // Target territory count
+        public int targetMarketBlocks;      // Target market share blocks
         public bool enableAggression;       // Can be aggressive after this turn
     }
 }

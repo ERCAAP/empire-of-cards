@@ -45,7 +45,7 @@ namespace EmpireOfCards.Gameplay
                     return RivalMove.StaffPoach;
             }
 
-            // Rival behind on territories: aggressive economic moves
+            // Rival behind on market blocks: aggressive economic moves
             if (rivalBehind && aggressionEnabled)
             {
                 if (avgPrice < 6f)

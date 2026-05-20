@@ -11,7 +11,7 @@ namespace EmpireOfCards.UI
     [Serializable]
     public class ScoreData
     {
-        public int territoryScore;
+        public int customerShareScore;
         public int moneyScore;
         public int comboScore;
         public int businessScore;
@@ -31,7 +31,7 @@ namespace EmpireOfCards.UI
     public class ScoreScreen : MonoBehaviour
     {
         [Header("Score Texts")]
-        [SerializeField] private TMP_Text territoryScoreText;
+        [SerializeField] private TMP_Text customerShareScoreText;
         [SerializeField] private TMP_Text moneyScoreText;
         [SerializeField] private TMP_Text comboScoreText;
         [SerializeField] private TMP_Text businessScoreText;
@@ -155,7 +155,7 @@ namespace EmpireOfCards.UI
             // Build the ordered line array
             lines = new ScoreLine[]
             {
-                new ScoreLine { textField = territoryScoreText, targetValue = data.territoryScore },
+                new ScoreLine { textField = customerShareScoreText, targetValue = data.customerShareScore },
                 new ScoreLine { textField = moneyScoreText,     targetValue = data.moneyScore },
                 new ScoreLine { textField = comboScoreText,     targetValue = data.comboScore },
                 new ScoreLine { textField = businessScoreText,  targetValue = data.businessScore },

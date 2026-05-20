@@ -175,8 +175,8 @@ namespace EmpireOfCards.Bootstrap.Data
             };
 
             // Growth Schedule (GDD Section 8.3)
-            // Rival pacing slowed: territories reduced at each milestone
-            // to give players a comeback window (old values reached 6 territories by turn 15).
+            // Rival pacing slowed: market blocks reduced at each milestone
+            // to give players a comeback window.
             rival.growthMilestones = new RivalMilestone[]
             {
                 new RivalMilestone
@@ -184,7 +184,7 @@ namespace EmpireOfCards.Bootstrap.Data
                     turn = 5,
                     targetBusinesses = 2,
                     targetEmployees = 2,
-                    targetTerritories = 2,
+                    targetMarketBlocks = 2,
                     enableAggression = false
                 },
                 new RivalMilestone
@@ -192,7 +192,7 @@ namespace EmpireOfCards.Bootstrap.Data
                     turn = 8,
                     targetBusinesses = 2,
                     targetEmployees = 3,
-                    targetTerritories = 3,
+                    targetMarketBlocks = 3,
                     enableAggression = true
                 },
                 new RivalMilestone
@@ -200,7 +200,7 @@ namespace EmpireOfCards.Bootstrap.Data
                     turn = 12,
                     targetBusinesses = 3,
                     targetEmployees = 5,
-                    targetTerritories = 4,
+                    targetMarketBlocks = 4,
                     enableAggression = true
                 },
                 new RivalMilestone
@@ -208,7 +208,7 @@ namespace EmpireOfCards.Bootstrap.Data
                     turn = 15,
                     targetBusinesses = 3,
                     targetEmployees = 6,
-                    targetTerritories = 5,
+                    targetMarketBlocks = 5,
                     enableAggression = true
                 },
                 new RivalMilestone
@@ -216,7 +216,7 @@ namespace EmpireOfCards.Bootstrap.Data
                     turn = 20,
                     targetBusinesses = 4,
                     targetEmployees = 7,
-                    targetTerritories = 6,
+                    targetMarketBlocks = 6,
                     enableAggression = true
                 },
             };

@@ -58,7 +58,7 @@ namespace EmpireOfCards.Gameplay.Combo
         /// - Specific placement (employee X in business Y)
         /// - Active event requirement
         /// - Minimum money (Kriz Avcisi: 1000)
-        /// - Minimum territories / businesses / market share (Monopol)
+        /// - Minimum market blocks / businesses / market share (Monopol)
         /// </summary>
         public bool EvaluateCombo(
             ComboData combo,
@@ -112,8 +112,8 @@ namespace EmpireOfCards.Gameplay.Combo
             if (combo.requiresMinMoney && playerMoney < combo.minMoneyRequired)
                 return false;
 
-            // --- Minimum territory ---
-            if (combo.requiresMinTerritory && playerBlocks < combo.minTerritoryRequired)
+            // --- Minimum market blocks ---
+            if (combo.requiresMinMarketBlocks && playerBlocks < combo.minMarketBlocksRequired)
                 return false;
 
             // --- Minimum active businesses ---
