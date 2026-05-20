@@ -98,6 +98,30 @@ namespace EmpireOfCards.Gameplay
         // ----------------------------------------------------------------
 
         /// <summary>
+        /// Filters the shop pool to only include cards matching the chosen venture
+        /// or general (venture-neutral) cards. Call once at run start.
+        /// </summary>
+        public void FilterPoolByVenture(VentureType chosenVenture)
+        {
+            if (shopPool == null || shopPool.Length == 0) return;
+
+            var filtered = new List<CardData>();
+            foreach (var card in shopPool)
+            {
+                if (card == null) continue;
+                // Keep: general cards, cards matching chosen venture, cards with no venture set
+                if (card.isGeneralCard || card.ventureType == chosenVenture || card.ventureType == default)
+                    filtered.Add(card);
+            }
+
+            int removed = shopPool.Length - filtered.Count;
+            shopPool = filtered.ToArray();
+
+            if (removed > 0)
+                Debug.Log($"[ShopManager] Filtered shop pool by {chosenVenture}: removed {removed} cards. Pool: {shopPool.Length}");
+        }
+
+        /// <summary>
         /// Activates shop bias so 1 of 3 offered cards matches the player's
         /// venture sector for the first SHOP_BIAS_TURNS turns.
         /// </summary>

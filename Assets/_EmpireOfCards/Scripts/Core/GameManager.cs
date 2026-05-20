@@ -199,8 +199,11 @@ namespace EmpireOfCards.Core
                 deckManager.InitializeDeck(startingDeck);
 
             // Apply First Venture (GDD Section 1.5)
+            VentureType chosenVenture = VentureType.FastFood; // Default
             if (selectedVenture != null)
             {
+                chosenVenture = selectedVenture.ventureType;
+
                 // Add bonus money
                 if (selectedVenture.bonusMoney > 0)
                     resources.GainMoney(selectedVenture.bonusMoney);
@@ -212,6 +215,10 @@ namespace EmpireOfCards.Core
                 // Add bonus card to deck
                 if (selectedVenture.bonusDeckCard != null && deckManager != null)
                     deckManager.AddCardToDeck(selectedVenture.bonusDeckCard);
+
+                // Filter deck: remove cards from OTHER ventures (keep chosen + general)
+                if (deckManager != null)
+                    deckManager.FilterByVenture(chosenVenture);
             }
 
             if (boardManager != null)
@@ -219,14 +226,17 @@ namespace EmpireOfCards.Core
             if (rivalAI != null)
             {
                 if (selectedVenture != null)
-                    rivalAI.Initialize(selectedVenture.ventureType);
+                    rivalAI.Initialize(chosenVenture);
                 else
                     rivalAI.Initialize();
             }
             if (shopManager != null)
             {
                 if (selectedVenture != null)
-                    shopManager.SetVentureBias(selectedVenture.ventureType);
+                {
+                    shopManager.SetVentureBias(chosenVenture);
+                    shopManager.FilterPoolByVenture(chosenVenture);
+                }
                 shopManager.RefreshShop();
             }
             if (companyTierSystem != null)

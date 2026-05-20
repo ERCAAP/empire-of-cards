@@ -72,6 +72,26 @@ namespace EmpireOfCards.Gameplay
             redrawsRemaining = redrawsPerTurn;
         }
 
+        /// <summary>
+        /// Removes cards from draw pile that belong to OTHER ventures.
+        /// Keeps cards matching the chosen venture + general (isGeneralCard) cards.
+        /// Call after InitializeDeck() when venture is selected.
+        /// </summary>
+        public void FilterByVenture(VentureType chosenVenture)
+        {
+            int removed = drawPile.RemoveAll(card =>
+                card != null
+                && !card.isGeneralCard
+                && card.ventureType != chosenVenture
+                && card.ventureType != default);
+
+            if (removed > 0)
+            {
+                Debug.Log($"[DeckManager] Filtered deck by {chosenVenture}: removed {removed} cards from other ventures. Remaining: {drawPile.Count}");
+                ShuffleDeck();
+            }
+        }
+
         // ----------------------------------------------------------------
         // Shuffle
         // ----------------------------------------------------------------
