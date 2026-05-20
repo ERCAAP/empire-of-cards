@@ -65,13 +65,34 @@ namespace EmpireOfCards.Gameplay
 
         public bool TryPlace(CardData card, SlotType slotType, int slotIndex)
         {
+            if (card == null) return false;
             var list = GetList(slotType);
             if (list == null || slotIndex < 0 || slotIndex >= list.Count) return false;
             if (list[slotIndex] != null) return false; // Already occupied
 
+            // Validate card type matches slot type (GDD Section 4.3)
+            if (!IsCardValidForSlot(card, slotType)) return false;
+
             list[slotIndex] = card;
             EventBus.CardPlacedInSlot(card, slotType);
             return true;
+        }
+
+        private static bool IsCardValidForSlot(CardData card, SlotType slotType)
+        {
+            // Prefer v2 targetSlotType when set
+            if (card.targetSlotType == slotType) return true;
+
+            // Fallback: CardType-based validation
+            return slotType switch
+            {
+                SlotType.Operation  => card.cardType == CardType.Business,
+                SlotType.Staff      => card.cardType == CardType.Employee,
+                SlotType.Marketing  => card.cardType == CardType.Action || card.cardType == CardType.Upgrade,
+                SlotType.Supplier   => card.cardType == CardType.Upgrade,
+                SlotType.TempEffect => card.cardType == CardType.Event,
+                _                   => false
+            };
         }
 
         public bool TryRemove(SlotType slotType, int slotIndex, out CardData removed)
@@ -159,9 +180,27 @@ namespace EmpireOfCards.Gameplay
         // ====================================================================
 
         /// <summary>
-        /// Removes all expired TempEffect cards (called each ResolvePhase).
+        /// Removes the oldest TempEffect card when slots are full (GDD Section 4.3).
+        /// Called each ResolvePhase or when a new temp event needs space.
         /// </summary>
-        public void ClearExpiredTempEffects()
+        public void ClearOldestTempEffect()
+        {
+            // Remove first occupied slot (oldest)
+            for (int i = 0; i < _tempEffectSlots.Count; i++)
+            {
+                if (_tempEffectSlots[i] != null)
+                {
+                    EventBus.CardRemovedFromSlot(_tempEffectSlots[i], SlotType.TempEffect);
+                    _tempEffectSlots[i] = null;
+                    return;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Removes all TempEffect cards (called at end of resolve for expired effects).
+        /// </summary>
+        public void ClearAllTempEffects()
         {
             for (int i = 0; i < _tempEffectSlots.Count; i++)
             {

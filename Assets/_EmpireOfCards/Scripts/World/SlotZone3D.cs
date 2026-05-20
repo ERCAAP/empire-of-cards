@@ -83,33 +83,27 @@ namespace EmpireOfCards.World
                 case DropZoneType.BurnZone:
                     return true;
 
-                // === New Slot System v2 (GDD v3.0 Section 4) ===
+                // === Slot System v2 (GDD v3.0 Section 4) ===
+                // Uses targetSlotType from CardData v2 when available, falls back to CardType check
                 case DropZoneType.OperationSlot:
-                    // Operation cards: Business type (infrastructure), not occupied
-                    return card.cardType == CardType.Business && !_isOccupied;
+                    if (card.targetSlotType == SlotType.Operation) return true;
+                    return card.cardType == CardType.Business;
 
                 case DropZoneType.StaffSlot:
-                    // Staff cards: Employee type, parent business must be active
-                    if (card.cardType != CardType.Employee || _isOccupied) return false;
-                    var gm2 = GameManager.Instance;
-                    if (gm2 == null || gm2.BoardManager == null) return false;
-                    var bizList = gm2.BoardManager.PlayerBusinesses;
-                    return parentBusinessIndex < 0 // Global staff slot
-                           || (parentBusinessIndex < bizList.Count
-                               && bizList[parentBusinessIndex] != null
-                               && !bizList[parentBusinessIndex].isClosed);
+                    if (card.targetSlotType == SlotType.Staff) return true;
+                    return card.cardType == CardType.Employee;
 
                 case DropZoneType.MarketingSlot:
-                    // Marketing cards: tagged with CardTag.Marketing or Action type
-                    return !_isOccupied && (card.cardType == CardType.Action
-                           || (card.tags != null && System.Array.IndexOf(card.tags, CardTag.Marketing) >= 0));
+                    if (card.targetSlotType == SlotType.Marketing) return true;
+                    return card.cardType == CardType.Action
+                           || (card.tags != null && System.Array.IndexOf(card.tags, CardTag.Marketing) >= 0);
 
                 case DropZoneType.SupplierSlot:
-                    // Supplier cards: Upgrade type with logistics/supply tags
-                    return !_isOccupied && card.cardType == CardType.Upgrade;
+                    if (card.targetSlotType == SlotType.Supplier) return true;
+                    return card.cardType == CardType.Upgrade;
 
                 case DropZoneType.TempEffectSlot:
-                    // Event/crisis cards go here temporarily
+                    if (card.targetSlotType == SlotType.TempEffect) return true;
                     return card.cardType == CardType.Event;
 
                 default:

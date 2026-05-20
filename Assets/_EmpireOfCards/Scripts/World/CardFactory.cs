@@ -72,7 +72,7 @@ namespace EmpireOfCards.World
             nameText.enableAutoSizing = true;
             nameText.fontSizeMin = 14;
             nameText.fontSizeMax = 28;
-            nameText.enableWordWrapping = true;
+            nameText.textWrappingMode = TextWrappingModes.Normal;
 
             // Cost (top right) - gold color for visibility
             var costText = CreateText(canvasGo.transform, "CostText",
@@ -130,7 +130,7 @@ namespace EmpireOfCards.World
             text.fontStyle = style;
             text.color = color;
             text.alignment = TextAlignmentOptions.Center;
-            text.enableWordWrapping = true;
+            text.textWrappingMode = TextWrappingModes.Normal;
             text.overflowMode = TextOverflowModes.Ellipsis;
             return text;
         }

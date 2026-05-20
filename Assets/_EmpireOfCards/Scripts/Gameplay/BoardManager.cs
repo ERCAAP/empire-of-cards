@@ -406,12 +406,12 @@ namespace EmpireOfCards.Gameplay
             activeEvent = null;
             activeEventTurnsRemaining = 0;
             productionDisabledNextTurn = false;
-            maxSlots = Constants.STARTING_SLOTS;
+            maxSlots = Constants.STARTING_OPERATION_SLOTS;
         }
 
         public void SetMaxSlots(int slots)
         {
-            maxSlots = Mathf.Clamp(slots, 1, Constants.MAX_SLOTS);
+            maxSlots = Mathf.Clamp(slots, 1, Constants.MAX_OPERATION_SLOTS);
         }
 
         // ----------------------------------------------------------------

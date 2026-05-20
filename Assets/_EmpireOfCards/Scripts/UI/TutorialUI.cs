@@ -105,7 +105,7 @@ namespace EmpireOfCards.UI
             fsTextRT.offsetMin = new Vector2(40, 10);
             fsTextRT.offsetMax = new Vector2(-40, -20);
             var fsTextTMP = fsTextGo.GetComponent<TMP_Text>();
-            fsTextTMP.enableWordWrapping = true;
+            fsTextTMP.textWrappingMode = TextWrappingModes.Normal;
             fsTextTMP.overflowMode = TextOverflowModes.Ellipsis;
 
             // Story button ("Begin" / "Got it")
@@ -138,7 +138,7 @@ namespace EmpireOfCards.UI
             tipTextRT.offsetMin = new Vector2(25, 5);
             tipTextRT.offsetMax = new Vector2(-25, -10);
             var tipTextTMP = tipTextGo.GetComponent<TMP_Text>();
-            tipTextTMP.enableWordWrapping = true;
+            tipTextTMP.textWrappingMode = TextWrappingModes.Normal;
 
             // Tip button
             var tipBtnGo = CreateButton("TipButton", tipPanel.transform,

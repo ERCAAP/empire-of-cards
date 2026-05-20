@@ -92,5 +92,28 @@ namespace EmpireOfCards.Data
         public CardTag[] affectedTags;      // Which tags are affected
         public int eventCustomerPenalty;    // Data Breach: -5
         public float eventFBIThreshold;     // Cancel Culture: 0.30 (30%)
+
+        // ====== VENTURE & SLOT SYSTEM v2 (GDD v3.0) ======
+        [Header("--- Venture & Slot System v2 ---")]
+        public VentureType ventureType;        // Which venture this card belongs to
+        public SlotType targetSlotType;        // Which slot type this card targets
+        public bool isGeneralCard;             // true = available in all ventures
+
+        [Header("--- Market Share (Operation cards) ---")]
+        public float qualityScore;             // 0-10, market share quality weight
+        public float priceScore;               // 0-10, lower price = higher score
+        public float serviceSpeedScore;        // 0-10
+
+        [Header("--- Platform Rating (Marketing cards) ---")]
+        public float platformRatingGain;       // Per-turn gain when in MarketingSlot
+        public float platformRatingOnPlay;     // One-time gain on play
+
+        [Header("--- Legal Risk ---")]
+        public int legalRiskPerTurn;           // Per-turn risk accumulation
+        public int legalRiskOnPlay;            // Instant risk on play
+
+        [Header("--- Supplier Effects ---")]
+        public float costReductionPercent;     // Cost reduction for all operations
+        public float qualityBoostAmount;       // Added to qualityScore
     }
 }

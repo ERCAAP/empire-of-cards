@@ -167,15 +167,17 @@ namespace EmpireOfCards.World
             _actionZone.RuntimeInit(DropZoneType.ActionZone, 0);
 
             // ====================================================================
-            // ZONE 2 — MARKET / CUSTOMER ZONE (middle, Z = 0.5 to 1.5)
-            // 100-customer shared pool represented as 10 territory blocks
+            // ZONE 2 — CUSTOMER MARKET ZONE (middle, Z = 0.5 to 1.5)
+            // 100-customer shared pool: left=player (blue), right=rival (red)
+            // Visual: 10 blocks representing 10 customers each
             // ====================================================================
             CreateDivider("Divider_PlayerMarket", new Vector3(0, 0.07f, 0.8f), new Vector3(16f, 0.02f, 0.05f));
 
-            for (int i = 0; i < Constants.TERRITORY_COUNT; i++)
+            int marketBlocks = 10; // Each block = 10 customers out of 100
+            for (int i = 0; i < marketBlocks; i++)
             {
                 var terr = GameObject.CreatePrimitive(PrimitiveType.Cube);
-                terr.name = $"Territory_{i + 1:D2}";
+                terr.name = $"CustomerBlock_{i + 1:D2}";
                 terr.transform.SetParent(transform);
                 float x = (i - 4.5f) * 1.5f;
                 terr.transform.localPosition = new Vector3(x, 0.1f, 1.3f);
@@ -251,17 +253,25 @@ namespace EmpireOfCards.World
             Destroy(div.GetComponent<Collider>());
         }
 
-        // Called by TerritoryManager to update visuals
+        /// <summary>
+        /// Updates the customer market visualization. Each block = 10 customers.
+        /// Player = blue (left), Rival = red (right), Unclaimed = gray.
+        /// </summary>
         public void UpdateTerritoryVisuals(int playerCount, int rivalCount)
         {
-            for (int i = 0; i < _territoryRenderers.Count; i++)
+            // Convert customer counts to blocks (10 customers per block)
+            int playerBlocks = Mathf.CeilToInt(playerCount / 10f);
+            int rivalBlocks = Mathf.CeilToInt(rivalCount / 10f);
+            int totalBlocks = _territoryRenderers.Count;
+
+            for (int i = 0; i < totalBlocks; i++)
             {
-                if (i < playerCount)
+                if (i < playerBlocks)
                     _territoryRenderers[i].material.color = new Color(0.2f, 0.5f, 1f); // Player blue
-                else if (i < playerCount + rivalCount)
+                else if (i >= totalBlocks - rivalBlocks)
                     _territoryRenderers[i].material.color = new Color(0.9f, 0.2f, 0.2f); // Rival red
                 else
-                    _territoryRenderers[i].material.color = Color.gray; // Empty
+                    _territoryRenderers[i].material.color = Color.gray; // Unclaimed
             }
         }
 
@@ -295,8 +305,8 @@ namespace EmpireOfCards.World
             CreateLabel("ACTION", new Vector3(9.2f, labelY, -0.0f), labelRot, fontSize * 0.75f,
                         new Color(0.9f, 0.3f, 0.3f));
 
-            // === ZONE 2: MARKET ZONE ===
-            CreateLabel("CUSTOMER MARKET", new Vector3(0f, labelY, 1.2f), labelRot, fontSize * 0.85f,
+            // === ZONE 2: CUSTOMER MARKET ZONE (100 customers shared pool) ===
+            CreateLabel("CUSTOMER MARKET (100)", new Vector3(0f, labelY, 1.2f), labelRot, fontSize * 0.85f,
                         new Color(0.9f, 0.9f, 0.9f));
 
             // === ZONE 3: RIVAL ZONE ===
@@ -324,7 +334,7 @@ namespace EmpireOfCards.World
             tmp.fontSize = fontSize;
             tmp.alignment = TextAlignmentOptions.Center;
             tmp.color = color;
-            tmp.enableWordWrapping = false;
+            tmp.textWrappingMode = TextWrappingModes.NoWrap;
 
             // Make sure the label is visible but doesn't interfere with raycasts
             var rt = go.GetComponent<RectTransform>();

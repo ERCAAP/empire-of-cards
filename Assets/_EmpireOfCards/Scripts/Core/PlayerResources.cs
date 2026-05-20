@@ -30,7 +30,7 @@ namespace EmpireOfCards.Core
             money = balanceData != null ? balanceData.startingMoney : Constants.STARTING_MONEY;
             actions = balanceData != null ? balanceData.startingActions : Constants.STARTING_ACTIONS;
             maxActions = actions;
-            businessSlots = balanceData != null ? balanceData.startingBusinessSlots : Constants.STARTING_SLOTS;
+            businessSlots = balanceData != null ? balanceData.startingBusinessSlots : Constants.STARTING_OPERATION_SLOTS;
         }
 
         // === Money ===
@@ -105,7 +105,7 @@ namespace EmpireOfCards.Core
         /// </summary>
         public void AddBusinessSlot(GameBalanceData balanceData)
         {
-            int max = balanceData != null ? balanceData.maxBusinessSlots : Constants.MAX_SLOTS;
+            int max = balanceData != null ? balanceData.maxBusinessSlots : Constants.MAX_OPERATION_SLOTS;
             businessSlots = Mathf.Min(businessSlots + 1, max);
         }
     }

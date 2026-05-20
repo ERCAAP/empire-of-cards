@@ -158,13 +158,15 @@ En zor venture — gecikme ve platform komisyonu double penalty.
 | ID | İsim | buyCost | incomePerTurn | customersPerTurn | qualityScore | priceScore | serviceSpeedScore | activationDelay |
 |----|------|---------|---------------|------------------|--------------|------------|-------------------|-----------------|
 | TEC01 | MVP Lansmanı | 100 | 0 | 0 | 3 | 8 | 6 | 2 |
-| TEC02 | Freemium Sistemi | 200 | 90 | 4 | 5 | 9 | 7 | 1 |
+| TEC02 | Freemium Sistemi | 160 | 90 | 4 | 5 | 9 | 7 | 1 |
 | TEC03 | Abonelik Modeli | 320 | 180 | 4 | 7 | 5 | 8 | 1 |
 | TEC04 | Kurumsal SaaS | 450 | 260 | 3 | 8 | 4 | 9 | 2 |
 
 **Neden bu değerler?** MVP Lansmanı = 0 income, 2 tur delay. Oyuncu ilk 2 turda para kazanmaz, nakit kriz baskısı hisseder — bu kasıtlı zorluk. Freemium = yüksek müşteri (priceScore 9) ama düşük income; churn modeli burada çalışır. Abonelik = recurring revenue, dengeli. SaaS = geç game enterprise, platform komisyonu (%30) bu income'dan düşüldükten sonra gerçek return 182/tur — ROI 2.5 tur.
 
 **Tech için platform komisyonu notu:** incomePerTurn değerleri platform komisyonu kesilmeden ÖNCE gross değerlerdir. Net = gross × 0.70 (iOS) veya × 0.85 (Android).
+
+**ROI notu (Tech):** Freemium + Senior Dev (maaş 55) ile ham ROI = 160/(90-55-13.5) = 7.4 tur. Bu uzun görünür ama: (1) müşteri oranı çok yüksek (priceScore 9 = geniş kitle) dolayısıyla müşteri payı artışından dolaylı kazanç katlar, (2) Growth Hacker staffı ile birlikte gelir çarpanı artar. Tek başına zayıf kartlar; kombinasyon değerleri asıl ROI'yi 4-5 tura indirir.
 
 ---
 
