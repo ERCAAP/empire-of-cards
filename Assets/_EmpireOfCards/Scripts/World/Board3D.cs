@@ -12,7 +12,9 @@ namespace EmpireOfCards.World
 {
     public class Board3D : MonoBehaviour
     {
+        [SerializeField] private GameManager gameManager;
         [SerializeField] private BoardManager boardManager;
+        [SerializeField] private SlotManager slotManager;
 
         private readonly List<SlotZone3D> _operationSlots = new List<SlotZone3D>();
         private readonly List<SlotZone3D> _staffSlots = new List<SlotZone3D>();
@@ -51,10 +53,16 @@ namespace EmpireOfCards.World
         private GameObject _businessAnchorVisual;
 
         public IReadOnlyList<SlotZone3D> BusinessSlots => _operationSlots;
+        public IReadOnlyList<SlotZone3D> AllSlots => _allSlots;
 
-        public void Init(BoardManager board)
+        private readonly List<SlotZone3D> _allSlots = new List<SlotZone3D>();
+
+        public void Init(GameManager game, BoardManager board, SlotManager slots)
         {
+            gameManager = game;
             boardManager = board;
+            slotManager = slots;
+            BindBoardContextToSlots();
         }
 
         public void UpdateVisibleSlots(int maxSlots)
@@ -65,15 +73,14 @@ namespace EmpireOfCards.World
 
         public void RefreshSlotOccupancyVisuals()
         {
-            var gm = GameManager.Instance;
-            if (gm == null || gm.SlotManager == null)
+            if (slotManager == null)
                 return;
 
-            ApplySlotVisuals(_operationSlots, gm.SlotManager.OperationSlots);
-            ApplySlotVisuals(_staffSlots, gm.SlotManager.StaffSlots);
-            ApplySlotVisuals(_marketingSlots, gm.SlotManager.MarketingSlots);
-            ApplySlotVisuals(_supplierSlots, gm.SlotManager.SupplierSlots);
-            ApplySlotVisuals(_tempEffectSlots, gm.SlotManager.TempEffectSlots);
+            ApplySlotVisuals(_operationSlots, slotManager.OperationSlots);
+            ApplySlotVisuals(_staffSlots, slotManager.StaffSlots);
+            ApplySlotVisuals(_marketingSlots, slotManager.MarketingSlots);
+            ApplySlotVisuals(_supplierSlots, slotManager.SupplierSlots);
+            ApplySlotVisuals(_tempEffectSlots, slotManager.TempEffectSlots);
             UpdateBusinessAnchor();
         }
 
@@ -254,7 +261,17 @@ namespace EmpireOfCards.World
                 ControlDeskTheme.GuidedPulse,
                 ControlDeskTheme.ValidHighlight,
                 ControlDeskTheme.InvalidHighlight);
+            _allSlots.Add(zone);
             return zone;
+        }
+
+        private void BindBoardContextToSlots()
+        {
+            for (int i = 0; i < _allSlots.Count; i++)
+            {
+                if (_allSlots[i] != null)
+                    _allSlots[i].SetBoardManager(boardManager);
+            }
         }
 
         private GameObject CreateCube(string objectName, Vector3 localPos, Vector3 localScale, Color color)
@@ -489,7 +506,7 @@ namespace EmpireOfCards.World
 
         private void ApplyVentureHeaders()
         {
-            var profile = GameManager.Instance != null ? GameManager.Instance.ActiveBoardProfile : null;
+            var profile = gameManager != null ? gameManager.ActiveBoardProfile : null;
             if (_operationsHeader != null)
                 _operationsHeader.text = BuildHeader("board.ops", "OPS", profile != null ? profile.operationSubSlots : null);
             if (_staffHeader != null)
@@ -506,7 +523,7 @@ namespace EmpireOfCards.World
             if (_businessAnchorVisual == null || _businessAnchorLabel == null)
                 return;
 
-            var gm = GameManager.Instance;
+            var gm = gameManager;
             VentureType venture = gm != null && gm.ActiveBoardProfile != null
                 ? gm.ActiveBoardProfile.ventureType
                 : VentureType.FastFood;

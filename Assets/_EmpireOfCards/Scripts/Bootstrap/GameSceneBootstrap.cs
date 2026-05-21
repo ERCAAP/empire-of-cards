@@ -1,15 +1,8 @@
 using UnityEngine;
-using UnityEngine.Rendering;
-using UnityEngine.Rendering.Universal;
 using EmpireOfCards.Core;
-using EmpireOfCards.World;
 using EmpireOfCards.UI;
-using EmpireOfCards.UI.Cards;
-using EmpireOfCards.VFX;
-using EmpireOfCards.Helpers;
 using EmpireOfCards.Data;
-using EmpireOfCards.Presentation;
-using EmpireOfCards.Save;
+using EmpireOfCards.World;
 using TMPro;
 using UnityEngine.UI;
 
@@ -27,10 +20,9 @@ namespace EmpireOfCards.Bootstrap
     public class GameSceneBootstrap : MonoBehaviour
     {
         private TutorialManager _tutorialManager;
+        private RunLaunchCoordinator _runLaunchCoordinator;
         private VentureSelectionUI _ventureSelectionUI;
         private VentureData[] _ventures;
-        private Board3D _board3D;
-        private GameDataBundle _data;
         private TechCategoryProfile[] _techCategories;
         private GameObject _runNamePanel;
         private TMP_InputField _runNameInput;
@@ -54,53 +46,25 @@ namespace EmpireOfCards.Bootstrap
 
         private void Awake()
         {
-            // 1. Create all game data in memory
             var data = CardDataFactory.CreateAllData();
-
-            // 2. Create all managers
             var managers = ManagerFactory.CreateAll();
-
-            // 3. Setup 3D camera
-            var mainCamera = Setup3DCamera();
-
-            // 3.5. Setup lighting and post-processing
-            SetupLightingAndPostProcessing();
-
-            // 4. Build 3D board
-            var board3D = Build3DBoard();
-
-            // 5. Create card factory
-            var cardFactory = CreateCardFactory();
-
-            // 6. Build 3D hand (anchored to camera)
-            var hand3D = Build3DHand(mainCamera, cardFactory);
-
-            // 7. Build HUD overlay
+            var scene = SceneRuntimeFactory.Create();
             var hud = HUDBuilder.Build();
+            WiringService.WireAll(data, managers, scene.Board3D, scene.CardFactory, scene.Hand3D, hud, scene.MainCamera);
 
-            // 8. Create VFX root
-            CreateVFX();
-
-            // 9. Wire everything together
-            WiringService.WireAll(data, managers, board3D, cardFactory, hand3D, hud, mainCamera);
-
-            // 9.5. Store venture selection references
+            _runLaunchCoordinator = new RunLaunchCoordinator(managers.gameManager, managers.saveManager, scene.Board3D);
             _ventureSelectionUI = hud.ventureSelectionUI;
             _ventures = data.ventures;
-            _data = data;
             _techCategories = TechCategoryCatalog.CreateDefaults();
 
-            // Wire venture UI card buttons and start button
             if (_ventureSelectionUI != null && hud.ventureCards != null)
             {
-                // Set card references via fields approach - use a simple init
                 _ventureSelectionUI.SetUIReferences(
                     hud.ventureCards, hud.ventureCardImages,
                     hud.ventureNameTexts, hud.ventureDescTexts,
                     hud.ventureStartButton);
             }
 
-            // 10. Create Tutorial system (after all wiring is complete)
             _tutorialManager = CreateTutorial(hud);
             CreateRunNamePrompt(hud);
 
@@ -139,125 +103,18 @@ namespace EmpireOfCards.Bootstrap
 
         private void StartRun(VentureData venture)
         {
-            var gm = GameManager.Instance;
-            if (gm == null) return;
-
-            if (venture != null)
-                gm.SetSelectedVenture(venture);
-            if (!string.IsNullOrWhiteSpace(_pendingRunName))
-                gm.SetRunDisplayName(_pendingRunName);
-            gm.SetRunCategory(_pendingTechCategory != null ? _pendingTechCategory.categoryId : null,
-                _pendingTechCategory != null ? GetTechCategoryName(_pendingTechCategory) : null);
-            gm.SetCurrentRunSlotId(SaveManager.Instance != null ? SaveManager.Instance.CreateRunSlotId() : System.Guid.NewGuid().ToString("N"));
-
-            gm.StartNewRun();
+            _runLaunchCoordinator?.StartNewRun(venture, _pendingRunName, _pendingTechCategory, _tutorialManager);
             _pendingRunName = null;
             _pendingTechCategory = null;
-
-            if (_tutorialManager != null)
-                _tutorialManager.TryStartTutorial();
         }
 
         private void TryRestoreSavedRun()
         {
-            var gm = GameManager.Instance;
-            var save = SaveManager.Instance;
-            string slotId = RunLaunchConfig.SelectedRunSlotId;
-            if (gm == null || save == null || !save.HasRunSave(slotId))
+            if (_runLaunchCoordinator == null || !_runLaunchCoordinator.TryRestoreSavedRun(RunLaunchConfig.SelectedRunSlotId, _ventures))
             {
                 RunLaunchConfig.PrepareNewRun();
                 StartRun(null);
-                return;
             }
-
-            RunSaveData run = save.LoadRun(slotId);
-            VentureData venture = FindVenture((VentureType)run.ventureType);
-            if (venture == null)
-            {
-                RunLaunchConfig.PrepareNewRun();
-                StartRun(null);
-                return;
-            }
-
-            gm.SetSelectedVenture(venture);
-            gm.SetCurrentRunSlotId(run.slotId);
-            gm.SetRunDisplayName(run.runName);
-            gm.SetRunCategory(run.runCategoryId, run.runCategoryLabel);
-            gm.RestoreRunCheckpoint(run);
-            _board3D?.RefreshSlotOccupancyVisuals();
-        }
-
-        // ================================================================
-        // Scene-specific setup that doesn't fit a pure static factory
-        // ================================================================
-
-        private Camera Setup3DCamera()
-        {
-            var cam = Camera.main;
-            if (cam == null)
-            {
-                var camGo = new GameObject("Main Camera");
-                camGo.tag = "MainCamera";
-                cam = camGo.AddComponent<Camera>();
-                camGo.AddComponent<AudioListener>();
-            }
-
-            cam.orthographic = false;
-            cam.fieldOfView = 49f;
-            cam.nearClipPlane = 0.3f;
-            cam.farClipPlane = 50f;
-            cam.transform.position = new Vector3(0f, 14.3f, -8.6f);
-            cam.transform.rotation = Quaternion.Euler(50f, 0f, 0f);
-            cam.backgroundColor = ControlDeskTheme.SceneBackground;
-            cam.clearFlags = CameraClearFlags.SolidColor;
-
-            if (cam.GetComponent<ScreenShake>() == null)
-                cam.gameObject.AddComponent<ScreenShake>();
-
-            if (cam.GetComponent<CameraController>() == null)
-                cam.gameObject.AddComponent<CameraController>();
-
-            return cam;
-        }
-
-        private Board3D Build3DBoard()
-        {
-            var boardGo = new GameObject("--- BOARD 3D ---");
-            var board3D = boardGo.AddComponent<Board3D>();
-            board3D.BuildBoard();
-            _board3D = board3D;
-            return board3D;
-        }
-
-        private CardFactory CreateCardFactory()
-        {
-            var factoryGo = new GameObject("CardFactory");
-            return factoryGo.AddComponent<CardFactory>();
-        }
-
-        private Hand3D Build3DHand(Camera mainCamera, CardFactory cardFactory)
-        {
-            var handAnchor = new GameObject("HandAnchor");
-            // DO NOT parent to camera — use world space on the board surface
-            handAnchor.transform.position = new Vector3(0f, 1.02f, -3.55f);
-            handAnchor.transform.rotation = Quaternion.Euler(-12f, 0f, 0f);
-
-            var handGo = new GameObject("Hand3D");
-            handGo.transform.SetParent(handAnchor.transform);
-            handGo.transform.localPosition = Vector3.zero;
-            handGo.transform.localRotation = Quaternion.identity;
-            var hand3D = handGo.AddComponent<Hand3D>();
-
-            hand3D.Init(cardFactory, null, handAnchor.transform);
-
-            return hand3D;
-        }
-
-        private void CreateVFX()
-        {
-            var vfxRoot = new GameObject("--- VFX ---");
-            var poolParent = new GameObject("VFXPool");
-            poolParent.transform.SetParent(vfxRoot.transform);
         }
 
         /// <summary>
@@ -586,21 +443,6 @@ namespace EmpireOfCards.Bootstrap
             }
         }
 
-        private VentureData FindVenture(VentureType type)
-        {
-            if (_data == null || _data.ventures == null)
-                return null;
-
-            for (int i = 0; i < _data.ventures.Length; i++)
-            {
-                var venture = _data.ventures[i];
-                if (venture != null && venture.ventureType == type)
-                    return venture;
-            }
-
-            return null;
-        }
-
         private static string GetNamingLabel(VentureData venture)
         {
             if (venture == null)
@@ -707,80 +549,5 @@ namespace EmpireOfCards.Bootstrap
             return button;
         }
 
-        // ================================================================
-        // Lighting & Post-Processing
-        // ================================================================
-
-        private void SetupLightingAndPostProcessing()
-        {
-            // --- Ambient Light ---
-            RenderSettings.ambientMode = UnityEngine.Rendering.AmbientMode.Flat;
-            RenderSettings.ambientLight = ControlDeskTheme.AmbientWarm;
-
-            // --- 1. Main Directional Light (Sun) ---
-            var sunGo = new GameObject("Directional Light (Sun)");
-            var sunLight = sunGo.AddComponent<Light>();
-            sunLight.type = LightType.Directional;
-            sunLight.color = new Color(1.0f, 0.92f, 0.82f);
-            sunLight.intensity = 1.35f;
-            sunLight.shadows = LightShadows.Soft;
-            sunGo.transform.rotation = Quaternion.Euler(48f, -32f, 0f);
-
-            // --- 2. Fill Light ---
-            var fillGo = new GameObject("Directional Light (Fill)");
-            var fillLight = fillGo.AddComponent<Light>();
-            fillLight.type = LightType.Directional;
-            fillLight.color = new Color(0.48f, 0.58f, 0.72f);
-            fillLight.intensity = 0.42f;
-            fillLight.shadows = LightShadows.None;
-            fillGo.transform.rotation = Quaternion.Euler(24f, 148f, 0f);
-
-            // --- 3. Point Light on Table Center ---
-            var tableLightGo = new GameObject("Point Light (Table)");
-            var tableLight = tableLightGo.AddComponent<Light>();
-            tableLight.type = LightType.Point;
-            tableLight.color = new Color(0.95f, 0.72f, 0.45f);
-            tableLight.intensity = 2.4f;
-            tableLight.range = 14f;
-            tableLight.shadows = LightShadows.Soft;
-            tableLightGo.transform.position = new Vector3(0f, 3.6f, 0.8f);
-
-            // --- 4. Global Volume (Post Processing) ---
-            var volumeGo = new GameObject("--- POST PROCESSING ---");
-            var volume = volumeGo.AddComponent<Volume>();
-            volume.isGlobal = true;
-            volume.priority = 1f;
-
-            var profile = ScriptableObject.CreateInstance<VolumeProfile>();
-            volume.profile = profile;
-
-            // Bloom
-            var bloom = profile.Add<Bloom>(overrides: true);
-            bloom.intensity.Override(0.3f);
-            bloom.threshold.Override(0.9f);
-            bloom.scatter.Override(0.65f);
-
-            // Color Adjustments
-            var colorAdj = profile.Add<ColorAdjustments>(overrides: true);
-            colorAdj.postExposure.Override(0.1f);
-            colorAdj.contrast.Override(10f);
-            colorAdj.saturation.Override(15f);
-
-            // Vignette
-            var vignette = profile.Add<Vignette>(overrides: true);
-            vignette.intensity.Override(0.25f);
-            vignette.smoothness.Override(0.4f);
-
-            // Tonemapping
-            var tonemap = profile.Add<Tonemapping>(overrides: true);
-            tonemap.mode.Override(TonemappingMode.ACES);
-
-            // Film Grain
-            var grain = profile.Add<FilmGrain>(overrides: true);
-            grain.intensity.Override(0.1f);
-            grain.type.Override(FilmGrainLookup.Thin1);
-
-            Debug.Log("[GameSceneBootstrap] Lighting & post-processing configured.");
-        }
     }
 }

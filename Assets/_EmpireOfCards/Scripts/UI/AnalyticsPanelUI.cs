@@ -93,7 +93,7 @@ namespace EmpireOfCards.UI
                     rivalBodyText.text =
                         $"{shareLine}\n{economyLine}\n{qualityLine}\n{threatLine}\n{focusLine}\n{lastLine}";
                     if (footerText != null)
-                        footerText.text = $"Pressure: {pressureLabel.ToLowerInvariant()}\nRead: {pressureDetail}\nBuild: {buildDetail}";
+                        footerText.text = $"Pressure read: {pressureDetail}\nBuild note: {buildDetail}";
                 }
                 else
                 {

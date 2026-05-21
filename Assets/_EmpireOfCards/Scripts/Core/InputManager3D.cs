@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using EmpireOfCards.Data;
@@ -13,6 +14,8 @@ namespace EmpireOfCards.Core
         [SerializeField] private Camera mainCamera;
         [SerializeField] private float dragHeight = 1.15f;
         [SerializeField] private float hoverHeight = 0.18f;
+        [SerializeField] private GameManager gameManager;
+        [SerializeField] private AbilitySystem abilitySystem;
 
         // State
         private Card3D _hoveredCard;
@@ -23,6 +26,7 @@ namespace EmpireOfCards.Core
         private Quaternion _cardOriginalRot;
         private bool _isDragging;
         private bool _inputEnabled;
+        private readonly List<SlotZone3D> _slotZones = new List<SlotZone3D>();
 
         // Events
         public event Action<Card3D> OnCardHoverEnter;
@@ -35,6 +39,23 @@ namespace EmpireOfCards.Core
 
         public bool InputEnabled { get => _inputEnabled; set => _inputEnabled = value; }
         public Card3D DraggedCard => _draggedCard;
+
+        public void InitRuntime(Camera cameraRef, GameManager gameManagerRef, AbilitySystem abilitySystemRef, IReadOnlyList<SlotZone3D> slotZones)
+        {
+            mainCamera = cameraRef;
+            gameManager = gameManagerRef;
+            abilitySystem = abilitySystemRef;
+
+            _slotZones.Clear();
+            if (slotZones == null)
+                return;
+
+            for (int i = 0; i < slotZones.Count; i++)
+            {
+                if (slotZones[i] != null)
+                    _slotZones.Add(slotZones[i]);
+            }
+        }
 
         private void OnEnable()
         {
@@ -81,7 +102,7 @@ namespace EmpireOfCards.Core
             // Right-click: redraw a card in hand (P1 #8)
             if (mouse.rightButton.wasPressedThisFrame && _hoveredCard != null && _hoveredCard.IsInHand)
             {
-                var dm = GameManager.Instance?.DeckManager;
+                var dm = gameManager != null ? gameManager.DeckManager : null;
                 if (dm != null && dm.RedrawsRemaining > 0)
                 {
                     dm.RedrawCard(_hoveredCard.CardData);
@@ -197,18 +218,16 @@ namespace EmpireOfCards.Core
             if (card.CardData.cardType != CardType.Employee) return;
             if (card.CardData.activeAbilityType == ActiveAbilityType.None) return;
 
-            var gm = GameManager.Instance;
+            var gm = gameManager;
             if (gm == null || gm.PlayerActions <= 0) return;
             if (gm.TurnManager == null || gm.TurnManager.CurrentPhase != TurnPhase.PlayPhase) return;
-
-            var abilitySys = FindFirstObjectByType<AbilitySystem>();
-            if (abilitySys == null) return;
+            if (abilitySystem == null) return;
 
             int businessIndex = gm.BoardManager != null
                 ? gm.BoardManager.FindBusinessWithEmployee(card.CardData)
                 : -1;
 
-            if (abilitySys.TryUseAbility(card.CardData, businessIndex))
+            if (abilitySystem.TryUseAbility(card.CardData, businessIndex))
             {
                 OnAbilityUsed?.Invoke(card);
             }
@@ -216,7 +235,7 @@ namespace EmpireOfCards.Core
 
         private void PickUpCard(Card3D card)
         {
-            var gm = GameManager.Instance;
+            var gm = gameManager;
             if (gm == null || gm.PlayerActions <= 0) return;
             if (gm.TurnManager == null || gm.TurnManager.CurrentPhase != TurnPhase.PlayPhase) return;
 
@@ -229,10 +248,9 @@ namespace EmpireOfCards.Core
             card.transform.rotation = Quaternion.Euler(18f, 0f, 0f);
 
             // Pulse all valid drop zones green while dragging
-            var allSlots = FindObjectsByType<SlotZone3D>(FindObjectsSortMode.None);
-            foreach (var s in allSlots)
+            foreach (var s in _slotZones)
             {
-                if (s.CanAccept(card.CardData))
+                if (s != null && s.CanAccept(card.CardData))
                     s.SetPulse(true);
             }
 
@@ -244,9 +262,10 @@ namespace EmpireOfCards.Core
             if (_draggedCard == null) return;
 
             // Clear all highlights and pulses
-            var allSlots = FindObjectsByType<SlotZone3D>(FindObjectsSortMode.None);
-            foreach (var s in allSlots)
+            foreach (var s in _slotZones)
             {
+                if (s == null)
+                    continue;
                 s.SetHighlight(false);
                 s.SetPulse(false);
             }

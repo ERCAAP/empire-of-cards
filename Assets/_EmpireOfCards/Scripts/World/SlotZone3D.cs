@@ -1,6 +1,7 @@
 using UnityEngine;
 using EmpireOfCards.Core;
 using EmpireOfCards.Data;
+using EmpireOfCards.Gameplay;
 using EmpireOfCards.UI.Cards;
 using TMPro;
 using EmpireOfCards.Presentation;
@@ -13,6 +14,7 @@ namespace EmpireOfCards.World
         [SerializeField] private DropZoneType zoneType;
         [SerializeField] private int slotIndex;
         [SerializeField] private int parentBusinessIndex = -1;
+        [SerializeField] private BoardManager boardManager;
 
         private MeshRenderer _renderer;
         private Color _baseColor;
@@ -34,6 +36,11 @@ namespace EmpireOfCards.World
         public int ParentBusinessIndex => parentBusinessIndex;
         public bool IsOccupied => _isOccupied;
         public Card3D PlacedCard => _placedCard;
+
+        public void SetBoardManager(BoardManager board)
+        {
+            boardManager = board;
+        }
 
         private void Awake()
         {
@@ -105,10 +112,8 @@ namespace EmpireOfCards.World
 
                 case DropZoneType.EmployeeSlot:
                     if (card.cardType != CardType.Employee || _isOccupied) return false;
-                    // Only accept if parent business slot has a business placed
-                    var gm = GameManager.Instance;
-                    if (gm == null || gm.BoardManager == null) return false;
-                    var businesses = gm.BoardManager.PlayerBusinesses;
+                    if (boardManager == null) return false;
+                    var businesses = boardManager.PlayerBusinesses;
                     return parentBusinessIndex >= 0 && parentBusinessIndex < businesses.Count
                            && businesses[parentBusinessIndex] != null
                            && !businesses[parentBusinessIndex].isClosed;

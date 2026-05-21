@@ -1,0 +1,21 @@
+{
+  "name": "EmpireOfCards.Tests",
+  "rootNamespace": "EmpireOfCards.Tests",
+  "references": [
+    "EmpireOfCards.Runtime"
+  ],
+  "includePlatforms": [
+    "Editor"
+  ],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": false,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false,
+  "optionalUnityReferences": [
+    "TestAssemblies"
+  ]
+}

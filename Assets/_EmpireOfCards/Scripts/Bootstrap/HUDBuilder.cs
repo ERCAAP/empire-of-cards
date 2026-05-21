@@ -46,22 +46,22 @@ namespace EmpireOfCards.Bootstrap
             topBar.sizeDelta = new Vector2(0, 180);
             hud.topBarUI = topBar.gameObject.AddComponent<TopBarUI>();
 
-            var statusPanel = CreateShellPanel("StatusPanel", topBar, new Vector2(320, 98), ControlDeskTheme.Panel);
+            var statusPanel = CreateShellPanel("StatusPanel", topBar, new Vector2(232, 84), ControlDeskTheme.Panel);
             SetAnchors(statusPanel, new Vector2(0, 1), new Vector2(0, 1), new Vector2(0, 1));
             statusPanel.anchoredPosition = new Vector2(30, -22);
 
-            var moneyObj = CreateTextElement("MoneyDisplay", statusPanel, "$500", 38);
+            var moneyObj = CreateTextElement("MoneyDisplay", statusPanel, "$500", 36);
             SetAnchors(moneyObj, new Vector2(0, 1), new Vector2(0, 1), new Vector2(0, 1));
-            moneyObj.anchoredPosition = new Vector2(18, -18);
-            moneyObj.sizeDelta = new Vector2(240, 42);
+            moneyObj.anchoredPosition = new Vector2(18, -16);
+            moneyObj.sizeDelta = new Vector2(178, 40);
             hud.moneyText = moneyObj.GetComponent<TMP_Text>();
             hud.moneyText.color = GoldColor;
             hud.moneyText.fontStyle = FontStyles.Bold;
             hud.moneyText.alignment = TextAlignmentOptions.Left;
 
-            var tierChip = CreateShellPanel("TierChip", statusPanel, new Vector2(138, 28), ControlDeskTheme.WithAlpha(ControlDeskTheme.PanelLine, 0.6f));
+            var tierChip = CreateShellPanel("TierChip", statusPanel, new Vector2(112, 24), ControlDeskTheme.WithAlpha(ControlDeskTheme.PanelLine, 0.6f));
             SetAnchors(tierChip, new Vector2(0, 1), new Vector2(0, 1), new Vector2(0, 1));
-            tierChip.anchoredPosition = new Vector2(18, -70);
+            tierChip.anchoredPosition = new Vector2(18, -56);
 
             var tierText = CreateTextElement("CompanyTierText", tierChip, "TRADER", 13);
             tierText.anchorMin = Vector2.zero;
@@ -72,16 +72,16 @@ namespace EmpireOfCards.Bootstrap
             tierText.GetComponent<TMP_Text>().color = ControlDeskTheme.TextPrimary;
             hud.companyTierText = tierText.GetComponent<TMP_Text>();
 
-            var fbiLabel = CreateTextElement("PressureLabel", statusPanel, Loc("hud.legal_pressure", "LEGAL PRESSURE"), 11);
+            var fbiLabel = CreateTextElement("PressureLabel", statusPanel, string.Empty, 10);
             SetAnchors(fbiLabel, new Vector2(0, 1), new Vector2(0, 1), new Vector2(0, 1));
-            fbiLabel.anchoredPosition = new Vector2(18, -76);
-            fbiLabel.sizeDelta = new Vector2(110, 18);
+            fbiLabel.anchoredPosition = new Vector2(182, -24);
+            fbiLabel.sizeDelta = new Vector2(24, 8);
             fbiLabel.GetComponent<TMP_Text>().alignment = TextAlignmentOptions.Left;
-            fbiLabel.GetComponent<TMP_Text>().color = ControlDeskTheme.TextMuted;
+            fbiLabel.GetComponent<TMP_Text>().color = ControlDeskTheme.WithAlpha(ControlDeskTheme.TextMuted, 0.05f);
 
-            var fbiBarBg = CreateShellPanel("FBIRiskBar", statusPanel, new Vector2(160, 10), ControlDeskTheme.WithAlpha(Color.black, 0.45f));
+            var fbiBarBg = CreateShellPanel("FBIRiskBar", statusPanel, new Vector2(84, 5), ControlDeskTheme.WithAlpha(Color.black, 0.12f));
             SetAnchors(fbiBarBg, new Vector2(1, 1), new Vector2(1, 1), new Vector2(1, 1));
-            fbiBarBg.anchoredPosition = new Vector2(-18, -78);
+            fbiBarBg.anchoredPosition = new Vector2(-16, -58);
             RemoveOutline(fbiBarBg);
 
             var fbiBarFill = CreateUIPanel("Fill", fbiBarBg);
@@ -94,7 +94,7 @@ namespace EmpireOfCards.Bootstrap
             hud.fbiBarFillImg.fillMethod = Image.FillMethod.Horizontal;
             hud.fbiBarFillImg.fillOrigin = (int)Image.OriginHorizontal.Left;
             hud.fbiBarFillImg.fillAmount = 0f;
-            hud.fbiBarFillImg.color = ControlDeskTheme.AccentRed;
+            hud.fbiBarFillImg.color = ControlDeskTheme.WithAlpha(ControlDeskTheme.AccentRed, 0.35f);
 
             var runPanel = CreateShellPanel("RunPanel", topBar, new Vector2(280, 96), ControlDeskTheme.Panel);
             SetAnchors(runPanel, new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(0.5f, 1));
@@ -312,29 +312,29 @@ namespace EmpireOfCards.Bootstrap
             reportTmp.fontSizeMax = 11;
             hud.turnReportText = reportTmp;
 
-            var analyticsPanel = CreateShellPanel("AnalyticsPanel", canvasGo.transform, new Vector2(370, 290), ControlDeskTheme.WithAlpha(ControlDeskTheme.Panel, 0.94f));
-            SetAnchors(analyticsPanel, new Vector2(1, 0.5f), new Vector2(1, 0.5f), new Vector2(1, 0.5f));
-            analyticsPanel.anchoredPosition = new Vector2(-30, -18);
+            var analyticsPanel = CreateShellPanel("AnalyticsPanel", canvasGo.transform, new Vector2(340, 268), ControlDeskTheme.WithAlpha(ControlDeskTheme.Panel, 0.94f));
+            SetAnchors(analyticsPanel, new Vector2(1, 1), new Vector2(1, 1), new Vector2(1, 1));
+            analyticsPanel.anchoredPosition = new Vector2(-30, -136);
             var analyticsUi = analyticsPanel.gameObject.AddComponent<AnalyticsPanelUI>();
             hud.analyticsPanel = analyticsUi;
 
             var analyticsTitle = CreateTextElement("AnalyticsTitle", analyticsPanel, "CONTROL DESK", 16);
-            analyticsTitle.anchoredPosition = new Vector2(0, 96);
-            analyticsTitle.sizeDelta = new Vector2(300, 24);
+            analyticsTitle.anchoredPosition = new Vector2(0, 88);
+            analyticsTitle.sizeDelta = new Vector2(288, 22);
             var analyticsTitleTmp = analyticsTitle.GetComponent<TMP_Text>();
             analyticsTitleTmp.fontStyle = FontStyles.Bold;
             analyticsTitleTmp.color = ControlDeskTheme.AccentAmber;
 
             var playerHeader = CreateTextElement("PlayerAnalyticsHeader", analyticsPanel, "YOU", 13);
-            playerHeader.anchoredPosition = new Vector2(0, 82);
-            playerHeader.sizeDelta = new Vector2(300, 20);
+            playerHeader.anchoredPosition = new Vector2(0, 68);
+            playerHeader.sizeDelta = new Vector2(282, 18);
             var playerHeaderTmp = playerHeader.GetComponent<TMP_Text>();
             playerHeaderTmp.fontStyle = FontStyles.Bold;
             playerHeaderTmp.color = ControlDeskTheme.TextPrimary;
 
             var playerBody = CreateTextElement("PlayerAnalyticsBody", analyticsPanel, "", 12);
-            playerBody.anchoredPosition = new Vector2(0, 30);
-            playerBody.sizeDelta = new Vector2(310, 102);
+            playerBody.anchoredPosition = new Vector2(0, 18);
+            playerBody.sizeDelta = new Vector2(286, 92);
             var playerBodyTmp = playerBody.GetComponent<TMP_Text>();
             playerBodyTmp.alignment = TextAlignmentOptions.TopLeft;
             playerBodyTmp.color = ControlDeskTheme.TextPrimary;
@@ -343,20 +343,20 @@ namespace EmpireOfCards.Bootstrap
             playerBodyTmp.fontSizeMax = 12;
 
             var rivalDivider = CreateUIPanel("RivalDivider", analyticsPanel);
-            rivalDivider.anchoredPosition = new Vector2(0, -18);
-            rivalDivider.sizeDelta = new Vector2(310, 1.5f);
+            rivalDivider.anchoredPosition = new Vector2(0, -16);
+            rivalDivider.sizeDelta = new Vector2(286, 1.5f);
             rivalDivider.GetComponent<Image>().color = ControlDeskTheme.WithAlpha(ControlDeskTheme.PanelLine, 0.7f);
 
             var rivalHeader = CreateTextElement("RivalAnalyticsHeader", analyticsPanel, "RIVAL", 13);
-            rivalHeader.anchoredPosition = new Vector2(0, -40);
-            rivalHeader.sizeDelta = new Vector2(300, 20);
+            rivalHeader.anchoredPosition = new Vector2(0, -34);
+            rivalHeader.sizeDelta = new Vector2(282, 18);
             var rivalHeaderTmp = rivalHeader.GetComponent<TMP_Text>();
             rivalHeaderTmp.fontStyle = FontStyles.Bold;
             rivalHeaderTmp.color = ControlDeskTheme.TextPrimary;
 
             var rivalBody = CreateTextElement("RivalAnalyticsBody", analyticsPanel, "", 12);
-            rivalBody.anchoredPosition = new Vector2(0, -80);
-            rivalBody.sizeDelta = new Vector2(310, 100);
+            rivalBody.anchoredPosition = new Vector2(0, -70);
+            rivalBody.sizeDelta = new Vector2(286, 96);
             var rivalBodyTmp = rivalBody.GetComponent<TMP_Text>();
             rivalBodyTmp.alignment = TextAlignmentOptions.TopLeft;
             rivalBodyTmp.color = ControlDeskTheme.TextPrimary;
@@ -365,8 +365,8 @@ namespace EmpireOfCards.Bootstrap
             rivalBodyTmp.fontSizeMax = 12;
 
             var analyticsFooter = CreateTextElement("AnalyticsFooter", analyticsPanel, "", 11);
-            analyticsFooter.anchoredPosition = new Vector2(0, -128);
-            analyticsFooter.sizeDelta = new Vector2(310, 44);
+            analyticsFooter.anchoredPosition = new Vector2(0, -110);
+            analyticsFooter.sizeDelta = new Vector2(286, 36);
             var analyticsFooterTmp = analyticsFooter.GetComponent<TMP_Text>();
             analyticsFooterTmp.color = ControlDeskTheme.TextMuted;
             analyticsFooterTmp.enableAutoSizing = true;
