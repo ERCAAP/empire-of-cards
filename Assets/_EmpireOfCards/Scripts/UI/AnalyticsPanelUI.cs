@@ -57,7 +57,7 @@ namespace EmpireOfCards.UI
             float rivalShare = Mathf.Clamp(100f - playerShare, 0f, 100f);
 
             if (titleText != null)
-                titleText.text = $"CONTROL DESK  ·  {pressureLabel}";
+                titleText.text = $"CONTROL DESK  ·  YOU VS RIVAL";
 
             if (playerNameText != null)
                 playerNameText.text = $"YOU  ·  {playerName.ToUpperInvariant()}";
@@ -93,7 +93,7 @@ namespace EmpireOfCards.UI
                     rivalBodyText.text =
                         $"{shareLine}\n{economyLine}\n{qualityLine}\n{threatLine}\n{focusLine}\n{lastLine}";
                     if (footerText != null)
-                        footerText.text = $"Pressure read: {pressureDetail}\nBuild note: {buildDetail}";
+                        footerText.text = $"Pressure: {pressureLabel.ToLowerInvariant()}\nRead: {pressureDetail}\nBuild: {buildDetail}";
                 }
                 else
                 {
