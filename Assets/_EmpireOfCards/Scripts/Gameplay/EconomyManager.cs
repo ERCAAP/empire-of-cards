@@ -113,120 +113,82 @@ namespace EmpireOfCards.Gameplay
             if (gm == null || boardManager == null || slotManager == null || _activeProfile == null)
                 return;
 
-            var board = GatherBoardCards();
+            var operations = boardManager.GetCardsInSlotType(SlotType.Operation);
+            var staff = boardManager.GetCardsInSlotType(SlotType.Staff);
+            var marketing = boardManager.GetCardsInSlotType(SlotType.Marketing);
+            var suppliers = boardManager.GetCardsInSlotType(SlotType.Supplier);
+            var temp = boardManager.GetCardsInSlotType(SlotType.TempEffect);
             var techCategory = gm.ActiveTechCategoryProfile;
             float previousCash = snapshot.cash;
             float previousRating = snapshot.rating;
             float previousMarketShare = snapshot.marketShare;
 
-            float organicDemand = CalculateCoreMetrics(board, techCategory);
-            ApplySubsystemEffects(board);
-
-            float servedDemand = Mathf.Min(snapshot.demand, snapshot.capacity);
-            float overload = Mathf.Max(0f, snapshot.demand - snapshot.capacity);
-            ApplyRatingDelta(board, techCategory, overload);
-
-            int upkeepCosts = CalculateIncome(board, gm, servedDemand);
-            int subsystemExpenses = ApplyExpenseSubsystems(gm);
-
-            netIncome = grossIncome - totalSalaries - upkeepCosts - taxAmount - subsystemExpenses;
-            if (abilitySystem != null && abilitySystem.IncomeMultiplier != 1f)
-                netIncome = Mathf.RoundToInt(netIncome * abilitySystem.IncomeMultiplier);
-
-            totalCustomersThisTurn = Mathf.RoundToInt(servedDemand * 6f);
-
-            UpdateMarketAndDerived(board, gm, servedDemand, overload);
-            PublishResults(gm, board, previousCash, previousRating, previousMarketShare, overload, organicDemand, upkeepCosts, subsystemExpenses);
-        }
-
-        private BoardCards GatherBoardCards()
-        {
-            return new BoardCards
-            {
-                operations = boardManager.GetCardsInSlotType(SlotType.Operation),
-                staff = boardManager.GetCardsInSlotType(SlotType.Staff),
-                marketing = boardManager.GetCardsInSlotType(SlotType.Marketing),
-                suppliers = boardManager.GetCardsInSlotType(SlotType.Supplier),
-                temp = boardManager.GetCardsInSlotType(SlotType.TempEffect)
-            };
-        }
-
-        private float CalculateCoreMetrics(BoardCards board, TechCategoryProfile techCategory)
-        {
-            float opDemand = Sum(board.operations, c => c.demandDelta + c.customersPerTurn * 0.2f);
-            float marketingDemand = Sum(board.marketing, c => c.demandDelta);
+            float opDemand = Sum(operations, c => c.demandDelta + c.customersPerTurn * 0.2f);
+            float marketingDemand = Sum(marketing, c => c.demandDelta);
             float organicDemand = Mathf.Max(0f, (snapshot.rating - 3f) * _activeProfile.ratingToOrganicDemandWeight);
-            float tempDemand = Sum(board.temp, c => c.demandDelta);
+            float tempDemand = Sum(temp, c => c.demandDelta);
 
             snapshot.demand = Mathf.Max(0f, _activeProfile.baseDemand + opDemand + marketingDemand + organicDemand + tempDemand + (techCategory != null ? techCategory.demandModifier : 0f));
             snapshot.capacity = Mathf.Max(1f,
                 _activeProfile.startingCapacity +
                 (techCategory != null ? techCategory.capacityModifier : 0f) +
-                Sum(board.operations, c => c.capacityDelta) +
-                Sum(board.staff, c => c.capacityDelta) +
-                Sum(board.suppliers, c => c.capacityDelta) +
-                Sum(board.temp, c => c.capacityDelta));
+                Sum(operations, c => c.capacityDelta) +
+                Sum(staff, c => c.capacityDelta) +
+                Sum(suppliers, c => c.capacityDelta) +
+                Sum(temp, c => c.capacityDelta));
 
             snapshot.quality = Mathf.Clamp(
                 _activeProfile.startingQuality +
                 (techCategory != null ? techCategory.qualityModifier : 0f) +
-                Sum(board.operations, c => c.qualityDelta) +
-                Sum(board.staff, c => c.qualityDelta) +
-                Sum(board.suppliers, c => c.qualityDelta) +
-                Sum(board.temp, c => c.qualityDelta),
+                Sum(operations, c => c.qualityDelta) +
+                Sum(staff, c => c.qualityDelta) +
+                Sum(suppliers, c => c.qualityDelta) +
+                Sum(temp, c => c.qualityDelta),
                 0f, 10f);
 
             snapshot.staffStability = Mathf.Clamp(
                 _activeProfile.startingStaffStability +
-                Sum(board.staff, c => c.staffStabilityDelta) +
-                Sum(board.temp, c => c.staffStabilityDelta) -
-                Mathf.Max(0f, board.marketing.Count - board.staff.Count) * 0.4f,
+                Sum(staff, c => c.staffStabilityDelta) +
+                Sum(temp, c => c.staffStabilityDelta) -
+                Mathf.Max(0f, marketing.Count - staff.Count) * 0.4f,
                 0f, 10f);
 
             snapshot.legalRisk = Mathf.Clamp(
                 snapshot.legalRisk - _activeProfile.legalRiskDecayPerTurn +
                 (techCategory != null ? techCategory.legalRiskModifier : 0f) +
-                Sum(board.suppliers, c => c.legalRiskDeltaPerTurn) +
-                Sum(board.marketing, c => c.legalRiskDeltaPerTurn) +
-                Sum(board.temp, c => c.legalRiskDeltaPerTurn),
+                Sum(suppliers, c => c.legalRiskDeltaPerTurn) +
+                Sum(marketing, c => c.legalRiskDeltaPerTurn) +
+                Sum(temp, c => c.legalRiskDeltaPerTurn),
                 0f, Constants.LEGAL_RISK_MAX);
 
-            return organicDemand;
-        }
-
-        private void ApplySubsystemEffects(BoardCards board)
-        {
+            // --- Economy subsystem effects (modify snapshot before rating/income) ---
             float ssStability = snapshot.staffStability;
             float ssLegalRisk = snapshot.legalRisk;
             float ssQuality = snapshot.quality;
             ApplySalaryEffects(ref ssStability);
-            ApplyInsuranceEffects(ref ssLegalRisk, board.staff.Count);
-            ApplyStockEffects(ref ssQuality, board.suppliers.Count > 0);
+            ApplyInsuranceEffects(ref ssLegalRisk, staff.Count);
+            ApplyStockEffects(ref ssQuality, suppliers.Count > 0);
             snapshot.staffStability = ssStability;
             snapshot.legalRisk = ssLegalRisk;
             snapshot.quality = ssQuality;
-        }
 
-        private void ApplyRatingDelta(BoardCards board, TechCategoryProfile techCategory, float overload)
-        {
+            float servedDemand = Mathf.Min(snapshot.demand, snapshot.capacity);
+            float overload = Mathf.Max(0f, snapshot.demand - snapshot.capacity);
             float ratingDelta = ((snapshot.quality - 5f) * _activeProfile.qualityToRatingWeight)
                 - (overload * _activeProfile.capacityPenaltyMultiplier)
                 - Mathf.Max(0f, 4f - snapshot.staffStability) * _activeProfile.staffInstabilityPenalty
                 + (techCategory != null ? techCategory.ratingModifier : 0f)
-                + Sum(board.marketing, c => c.ratingDeltaPerTurn)
-                + Sum(board.temp, c => c.ratingDeltaPerTurn);
+                + Sum(marketing, c => c.ratingDeltaPerTurn)
+                + Sum(temp, c => c.ratingDeltaPerTurn);
 
             snapshot.rating = Mathf.Clamp(snapshot.rating + ratingDelta, _activeProfile.minRating, _activeProfile.maxRating);
-        }
 
-        private int CalculateIncome(BoardCards board, GameManager gm, float servedDemand)
-        {
             grossIncome = Mathf.RoundToInt(
                 servedDemand * _activeProfile.baseRevenuePerDemand +
-                Sum(board.operations, c => c.cashDeltaPerTurn) +
-                Sum(board.marketing, c => c.cashDeltaPerTurn) +
-                Sum(board.suppliers, c => c.cashDeltaPerTurn) +
-                Sum(board.temp, c => c.cashDeltaPerTurn));
+                Sum(operations, c => c.cashDeltaPerTurn) +
+                Sum(marketing, c => c.cashDeltaPerTurn) +
+                Sum(suppliers, c => c.cashDeltaPerTurn) +
+                Sum(temp, c => c.cashDeltaPerTurn));
 
             if (_investorDebtTurns > 0)
             {
@@ -234,31 +196,31 @@ namespace EmpireOfCards.Gameplay
                 _investorDebtTurns--;
             }
 
+            // Apply season multiplier to gross income (GDD Section 14)
             float seasonMultiplier = GetCurrentSeasonMultiplier(gm);
             grossIncome = Mathf.RoundToInt(grossIncome * seasonMultiplier);
 
-            totalSalaries = Mathf.RoundToInt(Sum(board.staff, c => Mathf.Max(0f, c.upkeepCostPerTurn > 0f ? c.upkeepCostPerTurn : c.salaryPerTurn)));
+            totalSalaries = Mathf.RoundToInt(Sum(staff, c => Mathf.Max(0f, c.upkeepCostPerTurn > 0f ? c.upkeepCostPerTurn : c.salaryPerTurn)));
             int upkeepCosts = Mathf.RoundToInt(
-                Sum(board.marketing, c => c.upkeepCostPerTurn) +
-                Sum(board.suppliers, c => c.upkeepCostPerTurn) +
-                Sum(board.temp, c => c.upkeepCostPerTurn));
+                Sum(marketing, c => c.upkeepCostPerTurn) +
+                Sum(suppliers, c => c.upkeepCostPerTurn) +
+                Sum(temp, c => c.upkeepCostPerTurn));
             taxAmount = grossIncome > 0 ? Mathf.RoundToInt(grossIncome * (_activeProfile.ventureType == VentureType.TechApp ? 0.08f : 0.10f)) : 0;
 
-            return upkeepCosts;
-        }
-
-        private int ApplyExpenseSubsystems(GameManager gm)
-        {
+            // --- Credit + Tax subsystem effects (modify expenses) ---
             int subsystemExpenses = 0;
             float taxLegalRisk = snapshot.legalRisk;
             ApplyCreditEffects(ref subsystemExpenses);
             ApplyTaxEffects(ref taxLegalRisk, ref subsystemExpenses, gm.CurrentTurn);
             snapshot.legalRisk = taxLegalRisk;
-            return subsystemExpenses;
-        }
 
-        private void UpdateMarketAndDerived(BoardCards board, GameManager gm, float servedDemand, float overload)
-        {
+            netIncome = grossIncome - totalSalaries - upkeepCosts - taxAmount - subsystemExpenses;
+
+            if (abilitySystem != null && abilitySystem.IncomeMultiplier != 1f)
+                netIncome = Mathf.RoundToInt(netIncome * abilitySystem.IncomeMultiplier);
+
+            totalCustomersThisTurn = Mathf.RoundToInt(servedDemand * 6f);
+
             snapshot.marketShare = Mathf.Clamp(
                 snapshot.marketShare +
                 ((snapshot.rating - 3f) * 2f) +
@@ -267,8 +229,8 @@ namespace EmpireOfCards.Gameplay
                 (_rivalPressureImpact * 1.15f),
                 0f, 100f);
 
-            UpdateDerivedMetrics(servedDemand, overload, board.suppliers.Count, board.marketing.Count, board.temp);
-            UpdatePressure(overload, board.marketing.Count, board.staff.Count);
+            UpdateDerivedMetrics(servedDemand, overload, suppliers.Count, marketing.Count, temp);
+            UpdatePressure(overload, marketing.Count, staff.Count);
 
             gm.SetPlayerCustomers(Mathf.RoundToInt(snapshot.marketShare));
             if (netIncome > 0)
@@ -277,38 +239,17 @@ namespace EmpireOfCards.Gameplay
                 gm.AdjustMoney(netIncome);
 
             snapshot.cash = gm.PlayerMoney;
-            snapshot.activeCrisisTags = CollectActiveCrisisTags(board.temp);
+            snapshot.activeCrisisTags = CollectActiveCrisisTags(temp);
             UpdateCashCrisis();
-        }
 
-        private void PublishResults(
-            GameManager gm,
-            BoardCards board,
-            float previousCash,
-            float previousRating,
-            float previousMarketShare,
-            float overload,
-            float organicDemand,
-            int upkeepCosts,
-            int subsystemExpenses)
-        {
             EventBus.PlatformRatingChanged(snapshot.rating);
             EventBus.LegalRiskUpdated(Mathf.RoundToInt(snapshot.legalRisk));
             EventBus.CashBalanceChanged(Mathf.RoundToInt(snapshot.cash));
             EventBus.MarketShareUpdated(Mathf.RoundToInt(snapshot.marketShare), gm.RivalCustomers);
             EventBus.OrganicCustomersGained(Mathf.RoundToInt(organicDemand * 4f));
-            EventBus.IncomeBreakdownReported(BuildIncomeBreakdown(grossIncome, totalSalaries, upkeepCosts, taxAmount, subsystemExpenses, netIncome));
+            EventBus.IncomeBreakdownReported(BuildIncomeBreakdown(grossIncome, totalSalaries, upkeepCosts, taxAmount, netIncome));
             lastReport = BuildTurnReport(previousCash, previousRating, previousMarketShare, overload, grossIncome, totalSalaries, upkeepCosts, taxAmount);
             EventBus.TurnReportGenerated(lastReport);
-        }
-
-        private struct BoardCards
-        {
-            public IReadOnlyList<CardData> operations;
-            public IReadOnlyList<CardData> staff;
-            public IReadOnlyList<CardData> marketing;
-            public IReadOnlyList<CardData> suppliers;
-            public IReadOnlyList<CardData> temp;
         }
 
         public int CalculateTurnIncome(IReadOnlyList<ActiveBusiness> businesses, CardData activeEvent)
@@ -429,8 +370,7 @@ namespace EmpireOfCards.Gameplay
 
         public TurnBriefData GenerateTurnBrief(int currentTurn)
         {
-            var gm = GameManager.Instance;
-            var runtime = gm != null ? gm.ActiveVentureRuntime : null;
+            var runtime = GameManager.Instance != null ? GameManager.Instance.ActiveVentureRuntime : null;
             TurnScriptBeat beat = runtime != null ? runtime.GetBeatForTurn(currentTurn) : null;
             if (beat != null)
             {
@@ -441,43 +381,27 @@ namespace EmpireOfCards.Gameplay
                     headline = beat.headline,
                     detail = beat.detail,
                     recommendedMove = beat.recommendedMove,
-                    buildIdentity = GameClarityFormatter.GetBuildIdentity(gm)
+                    buildIdentity = GameClarityFormatter.GetBuildIdentity(GameManager.Instance)
                 };
                 EventBus.TurnBriefGenerated(currentBrief);
                 return currentBrief;
             }
 
-            var venture = gm != null && gm.SelectedVenture != null
-                ? gm.SelectedVenture.ventureType
-                : VentureType.FastFood;
-            var category = gm != null ? gm.ActiveTechCategoryProfile : null;
-            string buildIdentity = GameClarityFormatter.GetBuildIdentity(gm);
-
-            if (boardManager != null && currentTurn <= 3)
+            if (TryBuildOpeningBrief(currentTurn, out var openingBrief))
             {
-                int opCount = boardManager.GetCardsInSlotType(SlotType.Operation).Count;
-                int stCount = boardManager.GetCardsInSlotType(SlotType.Staff).Count;
-                int suCount = boardManager.GetCardsInSlotType(SlotType.Supplier).Count;
-                int mkCount = boardManager.GetCardsInSlotType(SlotType.Marketing).Count;
-
-                if (TurnNarrativeService.TryBuildOpeningBrief(
-                        currentTurn, venture, opCount, stCount, suCount, mkCount,
-                        currentPressure, buildIdentity, out var openingBrief))
-                {
-                    currentBrief = openingBrief;
-                    EventBus.TurnBriefGenerated(currentBrief);
-                    return currentBrief;
-                }
+                currentBrief = openingBrief;
+                EventBus.TurnBriefGenerated(currentBrief);
+                return currentBrief;
             }
 
             currentBrief = new TurnBriefData
             {
                 currentTurn = currentTurn,
                 pressure = currentPressure,
-                headline = TurnNarrativeService.GetBriefHeadline(currentPressure, venture, category),
-                detail = TurnNarrativeService.GetBriefDetail(currentPressure, venture, category, snapshot),
-                recommendedMove = TurnNarrativeService.GetRecommendedMove(currentPressure, buildIdentity),
-                buildIdentity = buildIdentity
+                headline = GetBriefHeadline(currentPressure),
+                detail = GetBriefDetail(currentPressure),
+                recommendedMove = GetRecommendedMove(currentPressure),
+                buildIdentity = GameClarityFormatter.GetBuildIdentity(GameManager.Instance)
             };
 
             EventBus.TurnBriefGenerated(currentBrief);
@@ -610,7 +534,7 @@ namespace EmpireOfCards.Gameplay
             currentPressure = BoardPressureType.None;
         }
 
-        private IncomeBreakdown BuildIncomeBreakdown(int gross, int salaries, int upkeep, int tax, int subsystem, int net)
+        private IncomeBreakdown BuildIncomeBreakdown(int gross, int salaries, int upkeep, int tax, int net)
         {
             var breakdown = new IncomeBreakdown();
             breakdown.steps.Add(new IncomeStep("Revenue", gross));
@@ -620,8 +544,6 @@ namespace EmpireOfCards.Gameplay
                 breakdown.steps.Add(new IncomeStep("Upkeep", upkeep, false, true));
             if (tax > 0)
                 breakdown.steps.Add(new IncomeStep("Tax", tax, false, true));
-            if (subsystem > 0)
-                breakdown.steps.Add(new IncomeStep("Credit & Tax Debt", subsystem, false, true));
             breakdown.netIncome = net;
             return breakdown;
         }
@@ -636,25 +558,19 @@ namespace EmpireOfCards.Gameplay
             int upkeep,
             int tax)
         {
-            var gm = GameManager.Instance;
-            var venture = gm != null && gm.SelectedVenture != null
-                ? gm.SelectedVenture.ventureType
-                : VentureType.FastFood;
-            var category = gm != null ? gm.ActiveTechCategoryProfile : null;
-
             var report = new TurnReportData
             {
-                headline = TurnNarrativeService.BuildReportHeadline(venture, category, netIncome, overload, snapshot.marketShare),
+                headline = BuildReportHeadline(overload),
                 summary = $"Net {(netIncome >= 0 ? "+" : "")}{netIncome} | Rating {(snapshot.rating - previousRating >= 0f ? "+" : "")}{(snapshot.rating - previousRating):0.0} | Share {(snapshot.marketShare - previousMarketShare >= 0f ? "+" : "")}{(snapshot.marketShare - previousMarketShare):0.0}",
-                primaryReason = TurnNarrativeService.BuildPrimaryReason(overload, gross, salaries, upkeep, tax, netIncome, snapshot.rating, snapshot.cash, _rivalPressureImpact, _rivalPressureStyle),
-                buildIdentity = GameClarityFormatter.GetBuildIdentity(gm),
+                primaryReason = BuildPrimaryReason(overload, gross, salaries, upkeep, tax),
+                buildIdentity = GameClarityFormatter.GetBuildIdentity(GameManager.Instance),
                 netIncome = netIncome,
                 ratingDelta = snapshot.rating - previousRating,
                 marketShareDelta = snapshot.marketShare - previousMarketShare
             };
 
             report.reasons.Add($"Revenue {gross}, salaries {salaries}, upkeep {upkeep}, tax {tax}.");
-            TurnNarrativeService.AppendCategoryReason(report.reasons, category);
+            AppendCategoryReason(report.reasons);
             if (overload > 0.1f)
                 report.reasons.Add($"Demand exceeded capacity by {overload:0.0}; trust took a hit.");
             else
@@ -672,6 +588,450 @@ namespace EmpireOfCards.Gameplay
                 report.reasons.Add($"Cash fell to {snapshot.cash:0}; margin pressure is active.");
 
             return report;
+        }
+
+        private string GetBriefHeadline(BoardPressureType pressure)
+        {
+            var venture = GameManager.Instance != null && GameManager.Instance.SelectedVenture != null
+                ? GameManager.Instance.SelectedVenture.ventureType
+                : VentureType.Diner;
+            var category = GameManager.Instance != null ? GameManager.Instance.ActiveTechCategoryProfile : null;
+            if (category != null)
+            {
+                return pressure switch
+                {
+                    BoardPressureType.CapacityShortfall => $"{category.displayName} growth is outrunning the stack.",
+                    BoardPressureType.LowRating => $"{category.displayName} trust is getting fragile.",
+                    BoardPressureType.HighLegalRisk => $"{category.displayName} risk is becoming visible.",
+                    _ => pressure switch
+                    {
+                        BoardPressureType.LowCash => "Cash runway is tightening.",
+                        BoardPressureType.WeakQuality => "Quality is underperforming.",
+                        BoardPressureType.StaffInstability => "Team stability is fragile.",
+                        BoardPressureType.LowDemand => "Demand needs a push.",
+                        _ => "Board is stable, push your edge."
+                    }
+                };
+            }
+
+            return venture switch
+            {
+                VentureType.FastFood => pressure switch
+                {
+                    BoardPressureType.CapacityShortfall => "Kitchen pressure is spiking.",
+                    BoardPressureType.LowRating => "Local trust is wobbling.",
+                    BoardPressureType.WeakQuality => "Ingredient quality is falling behind.",
+                    _ => pressure switch
+                    {
+                        BoardPressureType.LowCash => "Cash runway is tightening.",
+                        BoardPressureType.HighLegalRisk => "Legal exposure is rising.",
+                        BoardPressureType.StaffInstability => "Team stability is fragile.",
+                        BoardPressureType.LowDemand => "Demand needs a push.",
+                        _ => "Board is stable, push your edge."
+                    }
+                },
+                VentureType.Cafe => pressure switch
+                {
+                    BoardPressureType.CapacityShortfall => "The bar is backing up.",
+                    BoardPressureType.LowRating => "Neighborhood trust is fading.",
+                    BoardPressureType.StaffInstability => "The shift is starting to crack.",
+                    _ => pressure switch
+                    {
+                        BoardPressureType.LowCash => "Cash runway is tightening.",
+                        BoardPressureType.HighLegalRisk => "Legal exposure is rising.",
+                        BoardPressureType.WeakQuality => "Quality is underperforming.",
+                        BoardPressureType.LowDemand => "Demand needs a push.",
+                        _ => "Board is stable, push your edge."
+                    }
+                },
+                VentureType.ClothingStore => pressure switch
+                {
+                    BoardPressureType.CapacityShortfall => "The floor cannot absorb demand.",
+                    BoardPressureType.LowRating => "Brand trust is slipping.",
+                    BoardPressureType.WeakQuality => "Fabric and fit are under pressure.",
+                    _ => pressure switch
+                    {
+                        BoardPressureType.LowCash => "Cash runway is tightening.",
+                        BoardPressureType.HighLegalRisk => "Legal exposure is rising.",
+                        BoardPressureType.StaffInstability => "Team stability is fragile.",
+                        BoardPressureType.LowDemand => "Demand needs a push.",
+                        _ => "Board is stable, push your edge."
+                    }
+                },
+                VentureType.GroceryStore => pressure switch
+                {
+                    BoardPressureType.CapacityShortfall => "Shelf pressure is building.",
+                    BoardPressureType.LowRating => "Mahalle trust is slipping.",
+                    BoardPressureType.WeakQuality => "Freshness discipline is slipping.",
+                    _ => pressure switch
+                    {
+                        BoardPressureType.LowCash => "Cash runway is tightening.",
+                        BoardPressureType.HighLegalRisk => "Legal exposure is rising.",
+                        BoardPressureType.StaffInstability => "Team stability is fragile.",
+                        BoardPressureType.LowDemand => "Demand needs a push.",
+                        _ => "Board is stable, push your edge."
+                    }
+                },
+                _ => pressure switch
+                {
+                    BoardPressureType.CapacityShortfall => "Rush pressure is building.",
+                    BoardPressureType.LowCash => "Cash runway is tightening.",
+                    BoardPressureType.LowRating => "Trust is slipping.",
+                    BoardPressureType.HighLegalRisk => "Legal exposure is rising.",
+                    BoardPressureType.WeakQuality => "Quality is underperforming.",
+                    BoardPressureType.StaffInstability => "Team stability is fragile.",
+                    BoardPressureType.LowDemand => "Demand needs a push.",
+                    _ => "Board is stable, push your edge."
+                }
+            };
+        }
+
+        private string GetBriefDetail(BoardPressureType pressure)
+        {
+            var venture = GameManager.Instance != null && GameManager.Instance.SelectedVenture != null
+                ? GameManager.Instance.SelectedVenture.ventureType
+                : VentureType.Diner;
+            var category = GameManager.Instance != null ? GameManager.Instance.ActiveTechCategoryProfile : null;
+            if (category != null)
+            {
+                return pressure switch
+                {
+                    BoardPressureType.CapacityShortfall => $"{category.displayName} traffic is beating delivery capacity. Backend and support must catch up.",
+                    BoardPressureType.LowCash => $"{category.displayName} spend is too hot. Paid growth and infra discipline matter now.",
+                    BoardPressureType.LowRating => $"{category.displayName} reviews are fragile. Fix trust before pushing more installs.",
+                    BoardPressureType.HighLegalRisk => $"{category.displayName} is carrying visible risk. Privacy, dark patterns, or unstable launches may cascade.",
+                    BoardPressureType.WeakQuality => $"{category.displayName} quality is lagging. Product reliability and core experience need help.",
+                    BoardPressureType.StaffInstability => $"{category.displayName} team flow is shaky. Burnout or rushed releases can snowball.",
+                    BoardPressureType.LowDemand => $"{category.displayName} discovery is too weak. ASO, creators, or targeted acquisition should lead.",
+                    _ => $"{category.displayName}: rating {snapshot.rating:0.0}, quality {snapshot.quality:0.0}, share {snapshot.marketShare:0.0}."
+                };
+            }
+
+            return venture switch
+            {
+                VentureType.FastFood => pressure switch
+                {
+                    BoardPressureType.CapacityShortfall => $"Demand {snapshot.demand:0.0} is outrunning kitchen and counter throughput.",
+                    BoardPressureType.LowCash => $"Cash is {snapshot.cash:0}. Delivery spend and wages are squeezing margin.",
+                    BoardPressureType.LowRating => $"Rating is {snapshot.rating:0.0}. Reviews and quality fixes should lead.",
+                    BoardPressureType.HighLegalRisk => $"Legal risk is {snapshot.legalRisk:0}. Fake reviews or hygiene shortcuts can cascade.",
+                    BoardPressureType.WeakQuality => $"Quality is {snapshot.quality:0.0}. Ingredient discipline and cleanup matter now.",
+                    BoardPressureType.StaffInstability => $"Staff stability is {snapshot.staffStability:0.0}. Rush fatigue will slow service.",
+                    BoardPressureType.LowDemand => $"Demand is only {snapshot.demand:0.0}. Local buzz and Google presence need help.",
+                    _ => $"Rating {snapshot.rating:0.0}, quality {snapshot.quality:0.0}, share {snapshot.marketShare:0.0}."
+                },
+                VentureType.Cafe => pressure switch
+                {
+                    BoardPressureType.CapacityShortfall => $"Demand {snapshot.demand:0.0} is overrunning the bar and floor flow.",
+                    BoardPressureType.LowCash => $"Cash is {snapshot.cash:0}. Premium beans and staffing are biting margin.",
+                    BoardPressureType.LowRating => $"Rating is {snapshot.rating:0.0}. Slow service or weak drinks are visible.",
+                    BoardPressureType.HighLegalRisk => $"Legal risk is {snapshot.legalRisk:0}. Shortcut ambience or complaints may escalate.",
+                    BoardPressureType.WeakQuality => $"Quality is {snapshot.quality:0.0}. Beans, milk, and consistency are trailing.",
+                    BoardPressureType.StaffInstability => $"Staff stability is {snapshot.staffStability:0.0}. Burnout can spill into reviews.",
+                    BoardPressureType.LowDemand => $"Demand is only {snapshot.demand:0.0}. Regulars and visual discovery need a push.",
+                    _ => $"Rating {snapshot.rating:0.0}, quality {snapshot.quality:0.0}, share {snapshot.marketShare:0.0}."
+                },
+                VentureType.ClothingStore => pressure switch
+                {
+                    BoardPressureType.CapacityShortfall => $"Demand {snapshot.demand:0.0} is outpacing floor conversion and stock handling.",
+                    BoardPressureType.LowCash => $"Cash is {snapshot.cash:0}. Discounting and return pressure are squeezing margin.",
+                    BoardPressureType.LowRating => $"Rating is {snapshot.rating:0.0}. Fit, returns, and brand trust need recovery.",
+                    BoardPressureType.HighLegalRisk => $"Legal risk is {snapshot.legalRisk:0}. Cheap fabric or shady claims can rebound.",
+                    BoardPressureType.WeakQuality => $"Quality is {snapshot.quality:0.0}. Fabric, fit, and atelier quality are behind.",
+                    BoardPressureType.StaffInstability => $"Staff stability is {snapshot.staffStability:0.0}. The sales floor is getting brittle.",
+                    BoardPressureType.LowDemand => $"Demand is only {snapshot.demand:0.0}. Vitrine storytelling and trend pull need help.",
+                    _ => $"Rating {snapshot.rating:0.0}, quality {snapshot.quality:0.0}, share {snapshot.marketShare:0.0}."
+                },
+                VentureType.GroceryStore => pressure switch
+                {
+                    BoardPressureType.CapacityShortfall => $"Demand {snapshot.demand:0.0} is beating shelf and checkout throughput.",
+                    BoardPressureType.LowCash => $"Cash is {snapshot.cash:0}. Thin margin and waste are active this turn.",
+                    BoardPressureType.LowRating => $"Rating is {snapshot.rating:0.0}. Freshness trust is too fragile right now.",
+                    BoardPressureType.HighLegalRisk => $"Legal risk is {snapshot.legalRisk:0}. SKT shortcuts or trust gaps can snowball.",
+                    BoardPressureType.WeakQuality => $"Quality is {snapshot.quality:0.0}. Freshness and shelf discipline are slipping.",
+                    BoardPressureType.StaffInstability => $"Staff stability is {snapshot.staffStability:0.0}. Empty shelves and slow lines can follow.",
+                    BoardPressureType.LowDemand => $"Demand is only {snapshot.demand:0.0}. Convenience and neighborhood loyalty need help.",
+                    _ => $"Rating {snapshot.rating:0.0}, quality {snapshot.quality:0.0}, share {snapshot.marketShare:0.0}."
+                },
+                _ => pressure switch
+                {
+                    BoardPressureType.CapacityShortfall => $"Demand {snapshot.demand:0.0} > capacity {snapshot.capacity:0.0}. Add staff or throughput.",
+                    BoardPressureType.LowCash => $"Cash is {snapshot.cash:0}. Margin discipline matters this turn.",
+                    BoardPressureType.LowRating => $"Rating is {snapshot.rating:0.0}. Recovery and quality upgrades now pay off.",
+                    BoardPressureType.HighLegalRisk => $"Legal risk is {snapshot.legalRisk:0}. Defensive reactions are valuable.",
+                    BoardPressureType.WeakQuality => $"Quality is {snapshot.quality:0.0}. Supplier and staff choices are lagging.",
+                    BoardPressureType.StaffInstability => $"Staff stability is {snapshot.staffStability:0.0}. Burnout will cascade if ignored.",
+                    BoardPressureType.LowDemand => $"Demand is only {snapshot.demand:0.0}. Marketing or discovery should lead.",
+                    _ => $"Rating {snapshot.rating:0.0}, quality {snapshot.quality:0.0}, share {snapshot.marketShare:0.0}."
+                }
+            };
+        }
+
+        private string BuildReportHeadline(float overload)
+        {
+            var venture = GameManager.Instance != null && GameManager.Instance.SelectedVenture != null
+                ? GameManager.Instance.SelectedVenture.ventureType
+                : VentureType.Diner;
+            var category = GameManager.Instance != null ? GameManager.Instance.ActiveTechCategoryProfile : null;
+            if (category != null)
+            {
+                if (netIncome < 0)
+                    return $"{category.displayName} burned runway this turn.";
+                if (overload > 0.25f)
+                    return $"{category.displayName} growth outran stability.";
+            }
+
+            if (venture == VentureType.FastFood && overload > 0.25f)
+                return "The rush outran your kitchen.";
+            if (venture == VentureType.Cafe && overload > 0.25f)
+                return "The shift lost pace under pressure.";
+            if (venture == VentureType.ClothingStore && netIncome < 0)
+                return "Discounting and returns ate the turn.";
+            if (venture == VentureType.GroceryStore && netIncome < 0)
+                return "Margin got squeezed by waste and convenience.";
+            if (netIncome < 0)
+                return "This turn burned cash.";
+            if (overload > 0.25f)
+                return "Growth outpaced the board.";
+            if (snapshot.marketShare > 55f)
+                return "You tightened your grip on the market.";
+            return "Board held together this turn.";
+        }
+
+        private bool TryBuildOpeningBrief(int currentTurn, out TurnBriefData brief)
+        {
+            brief = null;
+
+            var gm = GameManager.Instance;
+            var venture = gm != null ? gm.SelectedVenture : null;
+            if (venture == null || boardManager == null || currentTurn > 3)
+                return false;
+
+            int operationCount = boardManager.GetCardsInSlotType(SlotType.Operation).Count;
+            int staffCount = boardManager.GetCardsInSlotType(SlotType.Staff).Count;
+            int supplierCount = boardManager.GetCardsInSlotType(SlotType.Supplier).Count;
+            int marketingCount = boardManager.GetCardsInSlotType(SlotType.Marketing).Count;
+
+            string headline;
+            string detail;
+            string move;
+
+            switch (venture.ventureType)
+            {
+                case VentureType.FastFood:
+                    if (operationCount <= 1)
+                    {
+                        headline = "Open the floor before you chase volume.";
+                        detail = "The counter is live, but the rush still needs seating and service flow around the grill.";
+                        move = "Play Extra Tables first. Add a Line Cook or counter helper before heavy flyer demand.";
+                    }
+                    else if (staffCount == 0)
+                    {
+                        headline = "Put people on the line.";
+                        detail = "Your rush cannot feel real until the grill and front counter have actual labor behind them.";
+                        move = "Hire Line Cook or Front Counter Server now. Save big demand pushes until the queue feels stable.";
+                    }
+                    else if (supplierCount == 0)
+                    {
+                        headline = "Protect food quality before the reviews hit.";
+                        detail = "Ingredient trust and hygiene are what make a busy fast food board survive the first surge.";
+                        move = "Take Premium Butcher or Night Cleaner before stacking more marketing pressure.";
+                    }
+                    else if (marketingCount == 0)
+                    {
+                        headline = "Now the neighborhood should notice you.";
+                        detail = "Your floor is credible enough to start converting local attention into repeat foot traffic.";
+                        move = "Push Google Business or Flyer Team only after the board can absorb the next rush.";
+                    }
+                    else
+                    {
+                        return false;
+                    }
+                    break;
+
+                case VentureType.Cafe:
+                    if (operationCount <= 1)
+                    {
+                        headline = "Make the cafe feel open, not just named.";
+                        detail = "The espresso bar exists, but guests still need a room, a seat, and visible flow around the counter.";
+                        move = "Play Window Seating first. Then line up Senior Barista before you spend on buzz.";
+                    }
+                    else if (staffCount == 0)
+                    {
+                        headline = "The room needs a real shift behind it.";
+                        detail = "A cafe does not feel alive until the bar and floor have an actual operator holding consistency.";
+                        move = "Hire Senior Barista now. Floor Runner is the next stabilizer if service starts backing up.";
+                    }
+                    else if (supplierCount == 0)
+                    {
+                        headline = "Lock the taste before you chase the crowd.";
+                        detail = "Beans, milk, and drink consistency are what turn one-time curiosity into neighborhood loyalty.";
+                        move = "Play Specialty Beans or Milk Contract before you lean into Instagram or repeat traffic.";
+                    }
+                    else if (marketingCount == 0)
+                    {
+                        headline = "Now you can build the regular loop.";
+                        detail = "Service is credible enough to turn trust into Maps discovery, reels, and repeat morning visits.";
+                        move = "Use Maps Reviews first for trust, then Instagram Reels or Stamp Card once the floor still feels smooth.";
+                    }
+                    else
+                    {
+                        return false;
+                    }
+                    break;
+
+                case VentureType.TechApp:
+                    if (operationCount <= 1)
+                    {
+                        headline = "Ship the core before you buy growth.";
+                        detail = "The product is live, but the stack still needs more reliability before users arrive at scale.";
+                        move = "Play Backend Upgrade or a second product card before paid acquisition starts pulling installs.";
+                    }
+                    else if (staffCount == 0)
+                    {
+                        headline = "Put real builders behind the MVP.";
+                        detail = "The app still feels fragile until a developer or support layer turns the launch into a system.";
+                        move = "Hire Core Developer first. Support or PM follow once the product loop is real.";
+                    }
+                    else if (supplierCount == 0)
+                    {
+                        headline = "Stability economics come before growth economics.";
+                        detail = "Cloud, analytics, and payment infrastructure decide whether growth becomes retention or chaos.";
+                        move = "Take Cloud Credits or Export Pipeline before the biggest acquisition cards.";
+                    }
+                    else if (marketingCount == 0)
+                    {
+                        headline = "Now turn reliability into user growth.";
+                        detail = "You finally have enough product trust to scale discovery without instantly burning reviews.";
+                        move = "Lead with ASO Push. Add paid acquisition only if backend and rating still look safe.";
+                    }
+                    else
+                    {
+                        return false;
+                    }
+                    break;
+
+                case VentureType.ClothingStore:
+                    if (operationCount <= 1)
+                    {
+                        headline = "Dress the floor before you advertise the brand.";
+                        detail = "The storefront exists, but the customer still needs depth, fit confidence, and visible merchandise logic.";
+                        move = "Play Inventory Rail first. Then add fit support before forcing trend demand.";
+                    }
+                    else if (staffCount == 0)
+                    {
+                        headline = "Style needs staff, not only display.";
+                        detail = "A clothing board feels empty until a stylist or tailor can convert browsing into trust.";
+                        move = "Hire Floor Stylist first. Tailor becomes the next key stabilizer.";
+                    }
+                    else if (supplierCount == 0)
+                    {
+                        headline = "Protect fit and fabric before trend traffic.";
+                        detail = "Returns and weak materials are what make a promising clothing run collapse early.";
+                        move = "Play Reliable Atelier or Premium Fabric Mill before aggressive demand plays.";
+                    }
+                    else if (marketingCount == 0)
+                    {
+                        headline = "Now the collection is ready to be seen.";
+                        detail = "The board has enough fit confidence to turn display into higher-value browsing and conversion.";
+                        move = "Use Instagram Lookbook or Window Story Display once return pressure feels covered.";
+                    }
+                    else
+                    {
+                        return false;
+                    }
+                    break;
+
+                case VentureType.GroceryStore:
+                    if (operationCount <= 1)
+                    {
+                        headline = "Make the store function before you extend convenience.";
+                        detail = "Fresh shelves are live, but the basket still needs smoother checkout and a clearer trip flow.";
+                        move = "Play Checkout Upgrade first. Then add the first staff layer before growing convenience demand.";
+                    }
+                    else if (staffCount == 0)
+                    {
+                        headline = "Neighborhood trust starts with the people inside.";
+                        detail = "A grocery board does not feel dependable until the register and shelf rhythm have actual staff support.";
+                        move = "Hire Trusted Cashier first. Follow with stock or fresh-keeping support if lines stay messy.";
+                    }
+                    else if (supplierCount == 0)
+                    {
+                        headline = "Protect freshness before you widen reach.";
+                        detail = "Morning supply quality and spoilage discipline are what make repeat traffic stick in grocery.";
+                        move = "Take Morning Hal Route before you invest harder in convenience or late-night traffic.";
+                    }
+                    else if (marketingCount == 0)
+                    {
+                        headline = "Now convenience can become loyalty.";
+                        detail = "The store is credible enough to convert service reliability into repeat neighborhood demand.";
+                        move = "Use WhatsApp Orders or Late Night Sign once checkout and freshness still feel under control.";
+                    }
+                    else
+                    {
+                        return false;
+                    }
+                    break;
+
+                default:
+                    return false;
+            }
+
+            brief = new TurnBriefData
+            {
+                currentTurn = currentTurn,
+                pressure = currentPressure,
+                headline = headline,
+                detail = detail,
+                recommendedMove = move,
+                buildIdentity = GameClarityFormatter.GetBuildIdentity(gm)
+            };
+
+            return true;
+        }
+
+        private string GetRecommendedMove(BoardPressureType pressure)
+        {
+            return pressure switch
+            {
+                BoardPressureType.CapacityShortfall => "Play a Fix Capacity or staff card before adding more demand.",
+                BoardPressureType.LowDemand => "Play a Create Demand card only if your board can absorb the traffic.",
+                BoardPressureType.LowRating => "Play a Recover Rating or quality card before pushing harder.",
+                BoardPressureType.HighLegalRisk => "Play a Reduce Risk reaction and avoid another shortcut.",
+                BoardPressureType.LowCash => "Play an Improve Margin card or cut expensive pressure lanes.",
+                BoardPressureType.WeakQuality => "Play a supplier or quality-focused staff card.",
+                BoardPressureType.StaffInstability => "Stabilize the team before the next rush turn.",
+                _ => $"Lean into your build: {GameClarityFormatter.GetBuildIdentity(GameManager.Instance)}."
+            };
+        }
+
+        private string BuildPrimaryReason(float overload, int gross, int salaries, int upkeep, int tax)
+        {
+            if (overload > 0.25f)
+                return $"Demand beat capacity by {overload:0.0}, so trust took a hit.";
+
+            if (netIncome < 0 && salaries + upkeep > gross)
+                return $"Salaries and upkeep ({salaries + upkeep}) outpaced revenue {gross}.";
+
+            if (snapshot.rating < 3.4f)
+                return $"Low trust kept rating at {snapshot.rating:0.0}; recovery now has higher payoff.";
+
+            if (snapshot.cash < 120f)
+                return $"Cash fell to {snapshot.cash:0}; margin pressure is now your main fight.";
+
+            if (_rivalPressureImpact > 0.1f)
+                return $"Rival pressure ({_rivalPressureStyle}) slowed your share gain this turn.";
+
+            return $"Revenue {gross} covered salaries {salaries}, upkeep {upkeep}, and tax {tax}.";
+        }
+
+        private static void AppendCategoryReason(List<string> reasons)
+        {
+            var category = GameManager.Instance != null ? GameManager.Instance.ActiveTechCategoryProfile : null;
+            if (category == null || reasons == null)
+                return;
+
+            reasons.Add(category.scenarioNote);
         }
 
         private static string[] CollectActiveCrisisTags(IReadOnlyList<CardData> temp)

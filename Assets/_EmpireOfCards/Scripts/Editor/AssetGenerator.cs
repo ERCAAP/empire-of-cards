@@ -48,7 +48,9 @@ namespace EmpireOfCards.Editor
 
             GenerateGameBalance();
             var cards = GenerateAllCards();
+            GenerateStartingDeck(cards);
             GenerateMegaCorpRival();
+            GenerateMetaProgression();
 
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();

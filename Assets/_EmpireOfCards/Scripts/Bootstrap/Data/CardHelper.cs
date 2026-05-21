@@ -72,7 +72,7 @@ namespace EmpireOfCards.Bootstrap.Data
             card.ventureType = venture;
             card.targetSlotType = slotType;
             card.targetSubSlotId = subSlotId;
-            card.isGeneralCard = family == CardFamily.Neutral;
+            card.isGeneralCard = venture == VentureType.Diner;
             card.tempEffectDuration = 0;
             card.crisisTags = new string[0];
             card.solutionTags = new string[0];

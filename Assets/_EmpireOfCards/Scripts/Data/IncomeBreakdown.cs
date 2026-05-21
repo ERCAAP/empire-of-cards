@@ -65,7 +65,6 @@ namespace EmpireOfCards.Data
     [System.Serializable]
     public class RivalQueuedAction
     {
-        public RivalMove moveType;
         public string cardId;
         public string displayName;
         public string laneLabel;
