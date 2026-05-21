@@ -58,9 +58,10 @@ namespace EmpireOfCards.Gameplay
             rivalTerritoryCount = 0;
 
             GameManager gm = GameManager.Instance;
-            if (gm != null) gm.SetMarketBlocks(0, 0);
-
-            EventBus.MarketBlocksUpdated(0, 0);
+            if (gm != null)
+                gm.SetMarketBlocks(0, 0);
+            else
+                EventBus.MarketBlocksUpdated(0, 0);
         }
 
         // ----------------------------------------------------------------
@@ -120,9 +121,10 @@ namespace EmpireOfCards.Gameplay
 
             // Sync with GameManager
             GameManager gm = GameManager.Instance;
-            if (gm != null) gm.SetMarketBlocks(playerTerritoryCount, rivalTerritoryCount);
-
-            EventBus.MarketBlocksUpdated(playerTerritoryCount, rivalTerritoryCount);
+            if (gm != null)
+                gm.SetMarketBlocks(playerTerritoryCount, rivalTerritoryCount);
+            else
+                EventBus.MarketBlocksUpdated(playerTerritoryCount, rivalTerritoryCount);
 
             // Win/lose is checked via customer share in GameManager.EndCurrentTurn().
             // These blocks are visual-only: market share display on Board3D.

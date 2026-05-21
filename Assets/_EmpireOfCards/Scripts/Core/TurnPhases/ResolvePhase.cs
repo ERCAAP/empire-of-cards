@@ -28,7 +28,16 @@ namespace EmpireOfCards.Core.TurnPhases
         public ResolvePhase(TurnManager tm)
         {
             _turnManager = tm;
-            _steps = (ResolveStep[])Enum.GetValues(typeof(ResolveStep));
+            _steps = new[]
+            {
+                ResolveStep.BusinessProduce,
+                ResolveStep.SeasonCheck,
+                ResolveStep.IncomeCalculation,
+                ResolveStep.CustomerFlow,
+                ResolveStep.MarketShareCalculation,
+                ResolveStep.StaffTick,
+                ResolveStep.ChainReactionCheck
+            };
         }
 
         public void Enter()
@@ -99,23 +108,9 @@ namespace EmpireOfCards.Core.TurnPhases
                     }
                     break;
 
-                // 4b: Calculate total customers and market share block distribution
+                // 4b: Normalize the economy-resolved customer result before presentation.
                 case ResolveStep.CustomerFlow:
-                    if (gm.BoardManager != null)
-                        gm.SetPlayerCustomers(gm.BoardManager.CalculatePlayerCustomers());
-
-                    if (gm.RivalAI != null)
-                        gm.SetRivalCustomers(gm.RivalAI.RivalCustomers);
-
-                    // Update visual market share blocks (TerritoryManager is a visual adapter)
-                    if (gm.TerritoryManager != null)
-                    {
-                        int marketPool = gm.BalanceData != null
-                            ? gm.BalanceData.GetMarketPool(gm.CurrentTurn)
-                            : Constants.BASE_MARKET_CUSTOMERS;
-                        gm.TerritoryManager.CalculateMarketBlocks(
-                            gm.PlayerCustomers, gm.RivalCustomers, marketPool);
-                    }
+                    NormalizeCustomerShare(gm);
                     break;
 
                 // 4b.5: Season transition check
@@ -139,21 +134,15 @@ namespace EmpireOfCards.Core.TurnPhases
                 // 4b.6: Market share calculation
                 case ResolveStep.MarketShareCalculation:
                 {
-                    int totalMarket = Constants.TOTAL_MARKET_CUSTOMERS;
-                    int playerCustomers = gm.PlayerCustomers;
-                    int rivalCustomers = gm.RivalCustomers;
-
-                    if (playerCustomers + rivalCustomers > totalMarket)
+                    if (gm.TerritoryManager != null)
                     {
-                        float total = Mathf.Max(1f, playerCustomers + rivalCustomers);
-                        playerCustomers = Mathf.RoundToInt((playerCustomers / total) * totalMarket);
-                        rivalCustomers = totalMarket - playerCustomers;
+                        gm.TerritoryManager.CalculateMarketBlocks(
+                            gm.PlayerCustomers,
+                            gm.RivalCustomers,
+                            Constants.TOTAL_MARKET_CUSTOMERS);
                     }
 
-                    gm.SetPlayerCustomers(playerCustomers);
-                    gm.SetRivalCustomers(rivalCustomers);
-                    EventBus.MarketShareUpdated(playerCustomers, rivalCustomers);
-                    gm.SetMarketBlocks(Mathf.RoundToInt(playerCustomers / 10f), Mathf.RoundToInt(rivalCustomers / 10f));
+                    EventBus.MarketShareUpdated(gm.PlayerCustomers, gm.RivalCustomers);
                     break;
                 }
 
@@ -168,7 +157,6 @@ namespace EmpireOfCards.Core.TurnPhases
                             gm.SetPlayerCustomers(playerShare);
                             int rivalShare = Mathf.Clamp(Constants.TOTAL_MARKET_CUSTOMERS - playerShare, 0, Constants.TOTAL_MARKET_CUSTOMERS);
                             gm.SetRivalCustomers(rivalShare);
-                            gm.SetMarketBlocks(Mathf.RoundToInt(playerShare / 10f), Mathf.RoundToInt(rivalShare / 10f));
                         }
                     }
                     break;
@@ -191,6 +179,26 @@ namespace EmpireOfCards.Core.TurnPhases
                     }
                     break;
             }
+        }
+
+        private static void NormalizeCustomerShare(GameManager gm)
+        {
+            if (gm == null)
+                return;
+
+            int totalMarket = Constants.TOTAL_MARKET_CUSTOMERS;
+            int playerCustomers = Mathf.Max(0, gm.PlayerCustomers);
+            int rivalCustomers = Mathf.Max(0, gm.RivalCustomers);
+
+            if (playerCustomers + rivalCustomers > totalMarket)
+            {
+                float total = Mathf.Max(1f, playerCustomers + rivalCustomers);
+                playerCustomers = Mathf.RoundToInt((playerCustomers / total) * totalMarket);
+                rivalCustomers = totalMarket - playerCustomers;
+            }
+
+            gm.SetPlayerCustomers(playerCustomers);
+            gm.SetRivalCustomers(rivalCustomers);
         }
 
         public static float GetVentureSeasonMultiplier(VentureType venture, SeasonType season)

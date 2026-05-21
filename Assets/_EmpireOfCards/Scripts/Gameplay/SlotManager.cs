@@ -204,6 +204,24 @@ namespace EmpireOfCards.Gameplay
 
         public bool HasEmpty(SlotType slotType) => GetFirstEmptyIndex(slotType) >= 0;
 
+        public int FindCardIndex(SlotType slotType, CardData card)
+        {
+            if (card == null)
+                return -1;
+
+            var list = GetList(slotType);
+            if (list == null)
+                return -1;
+
+            for (int i = 0; i < list.Count; i++)
+            {
+                if (list[i] == card)
+                    return i;
+            }
+
+            return -1;
+        }
+
         public List<string> GetSlotIds(SlotType slotType)
         {
             var list = GetList(slotType);
@@ -250,8 +268,7 @@ namespace EmpireOfCards.Gameplay
             {
                 if (_tempEffectSlots[i] != null)
                 {
-                    EventBus.CardRemovedFromSlot(_tempEffectSlots[i], SlotType.TempEffect);
-                    _tempEffectSlots[i] = null;
+                    TryRemove(SlotType.TempEffect, i, out _);
                     return;
                 }
             }
@@ -265,10 +282,7 @@ namespace EmpireOfCards.Gameplay
             for (int i = 0; i < _tempEffectSlots.Count; i++)
             {
                 if (_tempEffectSlots[i] != null)
-                {
-                    EventBus.CardRemovedFromSlot(_tempEffectSlots[i], SlotType.TempEffect);
-                    _tempEffectSlots[i] = null;
-                }
+                    TryRemove(SlotType.TempEffect, i, out _);
             }
         }
 

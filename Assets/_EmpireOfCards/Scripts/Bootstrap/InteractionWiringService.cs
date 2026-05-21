@@ -69,7 +69,7 @@ namespace EmpireOfCards.Bootstrap
                         break;
 
                     case DropZoneType.StaffSlot:
-                        success = managers.boardManager.PlaceCardInSlot(card.CardData, SlotType.Staff, slot.SlotIndex, slot.ParentBusinessIndex >= 0 ? slot.ParentBusinessIndex : 0);
+                        success = managers.boardManager.PlaceCardInSlot(card.CardData, SlotType.Staff, slot.SlotIndex, slot.ParentBusinessIndex);
                         break;
 
                     case DropZoneType.MarketingSlot:

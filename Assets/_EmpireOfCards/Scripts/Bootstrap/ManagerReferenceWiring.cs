@@ -20,20 +20,16 @@ namespace EmpireOfCards.Bootstrap
                 data.balanceData,
                 m.turnManager, m.economyManager, m.deckManager, m.boardManager,
                 m.territoryManager, m.rivalAI,
-                m.shopManager, m.uiManager, m.audioManager, m.vfxManager, m.saveManager);
+                m.shopManager, m.uiManager, m.audioManager, m.vfxManager, m.saveManager,
+                m.slotManager, m.staffStateSystem, m.chainReactionSystem);
             m.gameManager.SetCardLookup(data.cardLookup);
 
             m.economyManager.Init(data.balanceData, m.boardManager, m.abilitySystem, m.slotManager);
             m.rivalAI.Init(data.rivalData);
 
             m.slotManager.Init();
-            m.gameManager.SetSlotManager(m.slotManager);
             m.boardManager.Init(m.slotManager);
-
-            m.gameManager.SetStaffStateSystem(m.staffStateSystem);
-
             m.chainReactionSystem.Init(m.boardManager, m.economyManager, m.staffStateSystem);
-            m.gameManager.SetChainReactionSystem(m.chainReactionSystem);
 
             m.shopManager.Init(data.shopPool, m.deckManager, m.economyManager);
             m.audioManager.Init(m.musicSourceA, m.musicSourceB, m.sfxSource);

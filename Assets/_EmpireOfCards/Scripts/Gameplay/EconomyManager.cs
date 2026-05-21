@@ -245,7 +245,6 @@ namespace EmpireOfCards.Gameplay
             EventBus.PlatformRatingChanged(snapshot.rating);
             EventBus.LegalRiskUpdated(Mathf.RoundToInt(snapshot.legalRisk));
             EventBus.CashBalanceChanged(Mathf.RoundToInt(snapshot.cash));
-            EventBus.MarketShareUpdated(Mathf.RoundToInt(snapshot.marketShare), gm.RivalCustomers);
             EventBus.OrganicCustomersGained(Mathf.RoundToInt(organicDemand * 4f));
             EventBus.IncomeBreakdownReported(BuildIncomeBreakdown(grossIncome, totalSalaries, upkeepCosts, taxAmount, netIncome));
             lastReport = BuildTurnReport(previousCash, previousRating, previousMarketShare, overload, grossIncome, totalSalaries, upkeepCosts, taxAmount);

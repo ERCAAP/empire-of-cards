@@ -118,21 +118,6 @@ namespace EmpireOfCards.Core
         public string CurrentRunSlotId => currentRunSlotId;
         public TechCategoryProfile ActiveTechCategoryProfile => TechCategoryCatalog.Find(runCategoryId);
 
-        public void SetSlotManager(SlotManager sm)
-        {
-            this.slotManager = sm;
-        }
-
-        public void SetStaffStateSystem(StaffStateSystem sss)
-        {
-            this.staffStateSystem = sss;
-        }
-
-        public void SetChainReactionSystem(ChainReactionSystem crs)
-        {
-            this.chainReactionSystem = crs;
-        }
-
         public void SetSelectedVenture(VentureData venture)
         {
             this.selectedVenture = venture;
@@ -176,7 +161,8 @@ namespace EmpireOfCards.Core
         public void Init(GameBalanceData balance, TurnManager tm,
             EconomyManager em, DeckManager dm, BoardManager bm,
             TerritoryManager ter, RivalAI ai, ShopManager shop,
-            UIManager ui, AudioManager audio, VFXManager vfx, SaveManager save)
+            UIManager ui, AudioManager audio, VFXManager vfx, SaveManager save,
+            SlotManager sm, StaffStateSystem sss, ChainReactionSystem crs)
         {
             this.balanceData = balance;
             this.turnManager = tm;
@@ -190,6 +176,9 @@ namespace EmpireOfCards.Core
             this.audioManager = audio;
             this.vfxManager = vfx;
             this.saveManager = save;
+            this.slotManager = sm;
+            this.staffStateSystem = sss;
+            this.chainReactionSystem = crs;
         }
 
         private void Awake()
