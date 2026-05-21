@@ -47,6 +47,10 @@ namespace EmpireOfCards.Bootstrap
                 m.uiManager.SetClarityPanel(hud.clarityPanel);
             if (hud.analyticsPanel != null)
                 m.uiManager.SetAnalyticsPanel(hud.analyticsPanel);
+            if (hud.boardGuidePanel != null)
+                m.uiManager.SetBoardGuidePanel(hud.boardGuidePanel);
+            if (hud.rivalIntentPanel != null)
+                m.uiManager.SetRivalIntentPanel(hud.rivalIntentPanel);
 
             hud.topBarUI.Init(hud.moneyText, hud.turnText, hud.companyTierText, hud.buildIdentityText, hud.pressureText);
             hud.actionBarUI.Init(hud.actionDotImages);

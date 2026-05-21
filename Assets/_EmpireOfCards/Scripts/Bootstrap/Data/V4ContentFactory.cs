@@ -534,14 +534,14 @@ namespace EmpireOfCards.Bootstrap.Data
         {
             return new BoardCameraProfile
             {
-                cameraPosition = new Vector3(xOffset, 14.8f, -9.2f),
-                cameraEuler = new Vector3(51f, 0f, 0f),
-                fieldOfView = 53f,
-                handAnchorPosition = new Vector3(0f, 0.98f, -3.92f),
-                handAnchorEuler = new Vector3(-9f, 0f, 0f),
-                handSpacing = 1.22f,
-                handFanAngle = 7f,
-                handVerticalArc = 0.10f
+                cameraPosition = new Vector3(xOffset, 16.6f, -4.6f),
+                cameraEuler = new Vector3(68.5f, 0f, 0f),
+                fieldOfView = 40f,
+                handAnchorPosition = new Vector3(0f, 0.84f, -3.06f),
+                handAnchorEuler = new Vector3(-2f, 0f, 0f),
+                handSpacing = 1.08f,
+                handFanAngle = 5.5f,
+                handVerticalArc = 0.08f
             };
         }
 

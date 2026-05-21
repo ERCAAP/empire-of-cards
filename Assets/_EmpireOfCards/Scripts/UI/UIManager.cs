@@ -28,6 +28,8 @@ namespace EmpireOfCards.UI
         [SerializeField] private GameOverScreen gameOverScreen;
         [SerializeField] private ClarityPanelUI clarityPanel;
         [SerializeField] private AnalyticsPanelUI analyticsPanel;
+        [SerializeField] private BoardGuidePanelUI boardGuidePanel;
+        [SerializeField] private RivalIntentPanelUI rivalIntentPanel;
 
         [Header("Neglect Warning")]
         [SerializeField] private TMP_Text neglectWarningText;
@@ -79,6 +81,16 @@ namespace EmpireOfCards.UI
         public void SetAnalyticsPanel(AnalyticsPanelUI panel)
         {
             analyticsPanel = panel;
+        }
+
+        public void SetBoardGuidePanel(BoardGuidePanelUI panel)
+        {
+            boardGuidePanel = panel;
+        }
+
+        public void SetRivalIntentPanel(RivalIntentPanelUI panel)
+        {
+            rivalIntentPanel = panel;
         }
 
         /// <summary>
@@ -157,6 +169,12 @@ namespace EmpireOfCards.UI
 
             if (actionBar != null)
                 actionBar.SetVisible(isPlayPhase);
+
+            boardGuidePanel?.Refresh(GameManager.Instance);
+            if (phase == TurnPhase.RivalPhase)
+                rivalIntentPanel?.BeginPhase(GameManager.Instance);
+            else
+                rivalIntentPanel?.SetIdle(GameManager.Instance);
         }
 
         private void HandleEventActivated(CardData eventCard)
@@ -215,6 +233,7 @@ namespace EmpireOfCards.UI
             if (topBar != null)
                 topBar.SetTargetMoney(newAmount);
             RefreshAnalytics();
+            RefreshContextPanels();
         }
 
         private void HandleTerritoryChanged(int player, int rival)
@@ -222,6 +241,7 @@ namespace EmpireOfCards.UI
             // TopBar or a dedicated territory widget can reflect this.
             // Kept intentionally thin -- panels subscribe themselves.
             RefreshAnalytics();
+            RefreshContextPanels();
         }
 
         private void HandleTurnStarted(int turnNumber)
@@ -229,6 +249,7 @@ namespace EmpireOfCards.UI
             if (topBar != null)
                 topBar.UpdateTurn(turnNumber, Constants.MAX_TURNS);
             RefreshAnalytics();
+            RefreshContextPanels();
         }
 
         private void HandleBusinessNeglected(int businessIndex, int neglectTurns)
@@ -262,6 +283,7 @@ namespace EmpireOfCards.UI
             topBar?.UpdateBuildIdentity(brief.buildIdentity);
             topBar?.UpdatePressureState(brief.pressure);
             RefreshAnalytics();
+            RefreshContextPanels();
         }
 
         private void HandleTurnReportGenerated(TurnReportData report)
@@ -282,12 +304,14 @@ namespace EmpireOfCards.UI
             if (GameManager.Instance != null && GameManager.Instance.EconomyManager != null)
                 topBar?.UpdatePressureState(GameManager.Instance.EconomyManager.CurrentPressure);
             RefreshAnalytics();
+            RefreshContextPanels();
         }
 
         private void HandleRivalActionQueued(RivalQueuedAction action)
         {
             if (rivalPopup != null && action != null)
                 rivalPopup.Show($"{action.displayName}  [{action.laneLabel}]", action.shortDescription);
+            rivalIntentPanel?.RevealAction(GameManager.Instance, action);
             RefreshAnalytics();
         }
 
@@ -295,24 +319,28 @@ namespace EmpireOfCards.UI
         {
             topBar?.UpdateBuildIdentity(GameClarityFormatter.GetBuildIdentity(GameManager.Instance));
             RefreshAnalytics();
+            RefreshContextPanels();
         }
 
         private void HandleBusinessPlaced(CardData card, int slotIndex)
         {
             topBar?.UpdateBuildIdentity(GameClarityFormatter.GetBuildIdentity(GameManager.Instance));
             RefreshAnalytics();
+            RefreshContextPanels();
         }
 
         private void HandleCardPlacedInSlot(CardData card, SlotType slotType)
         {
             topBar?.UpdateBuildIdentity(GameClarityFormatter.GetBuildIdentity(GameManager.Instance));
             RefreshAnalytics();
+            RefreshContextPanels();
         }
 
         private void HandleCardRemovedFromSlot(CardData card, SlotType slotType)
         {
             topBar?.UpdateBuildIdentity(GameClarityFormatter.GetBuildIdentity(GameManager.Instance));
             RefreshAnalytics();
+            RefreshContextPanels();
         }
 
         // ------------------------------------------------------------------
@@ -627,6 +655,7 @@ namespace EmpireOfCards.UI
                 actionBar.UpdateActions(gm.PlayerActions, gm.MaxActions);
 
             RefreshAnalytics();
+            RefreshContextPanels();
         }
 
         private void RefreshAnalytics()
@@ -634,6 +663,12 @@ namespace EmpireOfCards.UI
             analyticsPanel?.Refresh(GameManager.Instance);
             if (GameManager.Instance != null && GameManager.Instance.EconomyManager != null)
                 topBar?.UpdatePressureState(GameManager.Instance.EconomyManager.CurrentPressure);
+        }
+
+        private void RefreshContextPanels()
+        {
+            boardGuidePanel?.Refresh(GameManager.Instance);
+            rivalIntentPanel?.RefreshSnapshot(GameManager.Instance);
         }
 
         /// <summary>

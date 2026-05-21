@@ -6,7 +6,6 @@ using EmpireOfCards.Data;
 using EmpireOfCards.Gameplay;
 using EmpireOfCards.Presentation;
 using EmpireOfCards.UI.Cards;
-using EmpireOfCards.UI.Clarity;
 
 namespace EmpireOfCards.World
 {
@@ -28,15 +27,19 @@ namespace EmpireOfCards.World
 
         private readonly List<GameObject> _territoryBlocks = new List<GameObject>();
         private readonly List<MeshRenderer> _territoryRenderers = new List<MeshRenderer>();
-        private readonly List<GameObject> _rivalPrimarySlots = new List<GameObject>();
-        private readonly List<GameObject> _rivalSupportSlots = new List<GameObject>();
+        private readonly List<GameObject> _rivalOperationSlots = new List<GameObject>();
+        private readonly List<GameObject> _rivalStaffSlots = new List<GameObject>();
+        private readonly List<GameObject> _rivalMarketingSlots = new List<GameObject>();
+        private readonly List<GameObject> _rivalSupplierSlots = new List<GameObject>();
         private readonly List<GameObject> _rivalSignalSlots = new List<GameObject>();
         private readonly Dictionary<GameObject, GameObject> _rivalVisualsBySlot = new Dictionary<GameObject, GameObject>();
         private readonly Dictionary<string, GameObject> _themePropRoots = new Dictionary<string, GameObject>();
         private readonly Dictionary<string, MeshRenderer> _themePropBodies = new Dictionary<string, MeshRenderer>();
         private readonly Dictionary<string, TextMeshPro> _themePropLabels = new Dictionary<string, TextMeshPro>();
-        private int _rivalPrimaryCursor;
-        private int _rivalSupportCursor;
+        private int _rivalOperationCursor;
+        private int _rivalStaffCursor;
+        private int _rivalMarketingCursor;
+        private int _rivalSupplierCursor;
         private int _rivalSignalCursor;
         private VentureBoardThemeProfile _activeThemeProfile;
 
@@ -110,25 +113,25 @@ namespace EmpireOfCards.World
             var felt = CreateCube("ControlSurface", new Vector3(0f, 0.02f, 1.35f), new Vector3(15.0f, 0.05f, 13.1f), ControlDeskTheme.FeltSurface);
             Destroy(felt.GetComponent<Collider>());
 
-            CreateFramedPanel("PlayerBand", new Vector3(0f, 0.055f, -0.25f), new Vector3(13.8f, 0.05f, 6.0f), ControlDeskTheme.PlayerBand, ControlDeskTheme.SurfaceBorder);
-            CreateFramedPanel("MarketBand", new Vector3(0f, 0.06f, 3.55f), new Vector3(13.4f, 0.05f, 1.75f), ControlDeskTheme.MidBand, ControlDeskTheme.SurfaceBorder);
-            CreateFramedPanel("RivalBand", new Vector3(0f, 0.055f, 5.70f), new Vector3(13.4f, 0.05f, 2.20f), ControlDeskTheme.RivalBand, ControlDeskTheme.Darken(ControlDeskTheme.RivalLane, 0.2f));
-            CreateFramedPanel("HandDock", new Vector3(0f, 0.06f, -3.25f), new Vector3(10.6f, 0.05f, 1.95f), ControlDeskTheme.PanelSoft, ControlDeskTheme.SurfaceBorder);
+            CreateFramedPanel("PlayerBand", new Vector3(0f, 0.055f, -0.92f), new Vector3(13.9f, 0.05f, 5.45f), ControlDeskTheme.PlayerBand, ControlDeskTheme.SurfaceBorder);
+            CreateFramedPanel("MarketBand", new Vector3(0f, 0.06f, 2.75f), new Vector3(13.9f, 0.05f, 2.05f), ControlDeskTheme.MidBand, ControlDeskTheme.SurfaceBorder);
+            CreateFramedPanel("RivalBand", new Vector3(0f, 0.055f, 6.05f), new Vector3(13.9f, 0.05f, 4.45f), ControlDeskTheme.RivalBand, ControlDeskTheme.Darken(ControlDeskTheme.RivalLane, 0.2f));
+            CreateFramedPanel("HandDock", new Vector3(0f, 0.06f, -4.18f), new Vector3(11.2f, 0.05f, 1.62f), ControlDeskTheme.PanelSoft, ControlDeskTheme.SurfaceBorder);
         }
 
         private void BuildPlayerBands()
         {
-            CreateFramedPanel("OperationLane", new Vector3(0f, 0.07f, -1.45f), new Vector3(9.4f, 0.05f, 1.90f), ControlDeskTheme.OperationLane, ControlDeskTheme.Lighten(ControlDeskTheme.OperationLane, 0.2f));
-            CreateFramedPanel("StaffLane", new Vector3(0f, 0.075f, -0.15f), new Vector3(10.2f, 0.05f, 1.50f), ControlDeskTheme.StaffLane, ControlDeskTheme.Lighten(ControlDeskTheme.StaffLane, 0.2f));
-            CreateFramedPanel("MarketingLane", new Vector3(-2.70f, 0.08f, 1.15f), new Vector3(5.9f, 0.05f, 1.25f), ControlDeskTheme.MarketingLane, ControlDeskTheme.Lighten(ControlDeskTheme.MarketingLane, 0.15f));
-            CreateFramedPanel("SupplierLane", new Vector3(2.90f, 0.08f, 1.15f), new Vector3(4.2f, 0.05f, 1.25f), ControlDeskTheme.SupplierLane, ControlDeskTheme.Lighten(ControlDeskTheme.SupplierLane, 0.15f));
-            CreateFramedPanel("UtilityRail", new Vector3(6.10f, 0.075f, -0.50f), new Vector3(1.85f, 0.05f, 4.90f), ControlDeskTheme.UtilityLane, ControlDeskTheme.Lighten(ControlDeskTheme.UtilityLane, 0.15f));
+            CreateFramedPanel("OperationLane", new Vector3(-0.22f, 0.07f, -2.00f), new Vector3(10.55f, 0.05f, 1.22f), ControlDeskTheme.OperationLane, ControlDeskTheme.Lighten(ControlDeskTheme.OperationLane, 0.2f));
+            CreateFramedPanel("StaffLane", new Vector3(-0.22f, 0.075f, -0.60f), new Vector3(10.55f, 0.05f, 1.10f), ControlDeskTheme.StaffLane, ControlDeskTheme.Lighten(ControlDeskTheme.StaffLane, 0.2f));
+            CreateFramedPanel("MarketingLane", new Vector3(-2.55f, 0.08f, 0.85f), new Vector3(6.05f, 0.05f, 0.98f), ControlDeskTheme.MarketingLane, ControlDeskTheme.Lighten(ControlDeskTheme.MarketingLane, 0.15f));
+            CreateFramedPanel("SupplierLane", new Vector3(2.90f, 0.08f, 0.85f), new Vector3(4.45f, 0.05f, 0.98f), ControlDeskTheme.SupplierLane, ControlDeskTheme.Lighten(ControlDeskTheme.SupplierLane, 0.15f));
+            CreateFramedPanel("UtilityRail", new Vector3(6.52f, 0.075f, -1.00f), new Vector3(1.62f, 0.05f, 4.75f), ControlDeskTheme.UtilityLane, ControlDeskTheme.Lighten(ControlDeskTheme.UtilityLane, 0.15f));
 
             for (int i = 0; i < Constants.STARTING_OPERATION_SLOTS; i++)
             {
                 var slot = CreateBoardSlot($"OperationSlot_{i + 1:D2}",
-                    new Vector3((i - 1.5f) * 2.10f, 0.11f, -1.45f),
-                    new Vector3(1.92f, 0.08f, 1.28f),
+                    new Vector3(-2.90f + i * 1.90f, 0.11f, -2.00f),
+                    new Vector3(1.56f, 0.08f, 0.84f),
                     ControlDeskTheme.OperationSlot,
                     DropZoneType.OperationSlot, i);
 
@@ -140,8 +143,8 @@ namespace EmpireOfCards.World
             for (int i = 0; i < Constants.STARTING_STAFF_SLOTS; i++)
             {
                 var slot = CreateBoardSlot($"StaffSlot_{i + 1:D2}",
-                    new Vector3((i - 2f) * 1.72f, 0.115f, -0.15f),
-                    new Vector3(1.36f, 0.08f, 0.98f),
+                    new Vector3(-2.90f + i * 1.90f, 0.115f, -0.60f),
+                    new Vector3(1.56f, 0.08f, 0.76f),
                     ControlDeskTheme.StaffSlot,
                     DropZoneType.StaffSlot, i);
 
@@ -151,8 +154,8 @@ namespace EmpireOfCards.World
             for (int i = 0; i < Constants.STARTING_MARKETING_SLOTS; i++)
             {
                 var slot = CreateBoardSlot($"MarketingSlot_{i + 1:D2}",
-                    new Vector3(-4.35f + i * 1.78f, 0.12f, 1.15f),
-                    new Vector3(1.42f, 0.08f, 0.88f),
+                    new Vector3(-3.75f + i * 1.82f, 0.12f, 0.85f),
+                    new Vector3(1.54f, 0.08f, 0.76f),
                     ControlDeskTheme.MarketingSlot,
                     DropZoneType.MarketingSlot, i);
 
@@ -162,8 +165,8 @@ namespace EmpireOfCards.World
             for (int i = 0; i < Constants.STARTING_SUPPLIER_SLOTS; i++)
             {
                 var slot = CreateBoardSlot($"SupplierSlot_{i + 1:D2}",
-                    new Vector3(2.15f + i * 1.78f, 0.12f, 1.15f),
-                    new Vector3(1.42f, 0.08f, 0.88f),
+                    new Vector3(2.18f + i * 1.82f, 0.12f, 0.85f),
+                    new Vector3(1.54f, 0.08f, 0.76f),
                     ControlDeskTheme.SupplierSlot,
                     DropZoneType.SupplierSlot, i);
 
@@ -172,10 +175,10 @@ namespace EmpireOfCards.World
 
             for (int i = 0; i < Constants.STARTING_TEMP_EFFECT_SLOTS; i++)
             {
-                float z = 0.90f - i * 1.25f;
+                float z = 0.86f - i * 1.28f;
                 var slot = CreateBoardSlot($"TempEffectSlot_{i + 1:D2}",
-                    new Vector3(6.10f, 0.115f, z),
-                    new Vector3(1.25f, 0.08f, 0.80f),
+                    new Vector3(6.52f, 0.115f, z),
+                    new Vector3(1.06f, 0.08f, 0.78f),
                     ControlDeskTheme.EventSlot,
                     DropZoneType.TempEffectSlot, i);
 
@@ -183,14 +186,14 @@ namespace EmpireOfCards.World
             }
 
             _sellZone = CreateBoardSlot("SellZone",
-                new Vector3(6.10f, 0.115f, -1.55f),
-                new Vector3(1.25f, 0.08f, 1.05f),
+                new Vector3(6.52f, 0.115f, -2.74f),
+                new Vector3(1.06f, 0.08f, 0.92f),
                 ControlDeskTheme.UtilitySlot,
                 DropZoneType.SellZone, 0);
 
             _actionZone = CreateBoardSlot("ActionZone",
-                new Vector3(6.10f, 0.115f, -2.75f),
-                new Vector3(1.25f, 0.08f, 1.05f),
+                new Vector3(6.52f, 0.115f, -3.78f),
+                new Vector3(1.06f, 0.08f, 0.92f),
                 ControlDeskTheme.ActionSlot,
                 DropZoneType.ActionZone, 0);
 
@@ -199,14 +202,15 @@ namespace EmpireOfCards.World
 
         private void BuildMarketBand()
         {
-            CreateDivider("MarketDividerTop", new Vector3(0f, 0.095f, 2.92f), new Vector3(12.5f, 0.03f, 0.06f));
-            CreateDivider("MarketDividerBottom", new Vector3(0f, 0.095f, 4.18f), new Vector3(12.5f, 0.03f, 0.06f));
+            CreateFramedPanel("MarketContestTray", new Vector3(0f, 0.09f, 2.55f), new Vector3(10.9f, 0.03f, 1.34f), ControlDeskTheme.MarketLane, ControlDeskTheme.WithAlpha(ControlDeskTheme.TextMuted, 0.35f));
+            CreateDivider("MarketDividerTop", new Vector3(0f, 0.095f, 1.82f), new Vector3(12.8f, 0.03f, 0.06f));
+            CreateDivider("MarketDividerBottom", new Vector3(0f, 0.095f, 3.68f), new Vector3(12.8f, 0.03f, 0.06f));
 
             for (int i = 0; i < 10; i++)
             {
                 var terr = CreateCube($"CustomerBlock_{i + 1:D2}",
-                    new Vector3((i - 4.5f) * 1.0f, 0.13f, 3.55f),
-                    new Vector3(0.72f, 0.18f, 0.48f),
+                    new Vector3(-4.35f + i * 0.97f, 0.13f, 2.55f),
+                    new Vector3(0.62f, 0.18f, 0.42f),
                     ControlDeskTheme.NeutralBlock);
 
                 Destroy(terr.GetComponent<Collider>());
@@ -217,43 +221,80 @@ namespace EmpireOfCards.World
 
         private void BuildRivalBand()
         {
-            CreateFramedPanel("RivalOpsLane", new Vector3(0f, 0.08f, 5.95f), new Vector3(8.7f, 0.04f, 0.88f), ControlDeskTheme.RivalLane, ControlDeskTheme.Darken(ControlDeskTheme.RivalLane, 0.1f));
-            CreateFramedPanel("RivalSupportLane", new Vector3(0f, 0.08f, 5.10f), new Vector3(6.1f, 0.04f, 0.62f), ControlDeskTheme.Darken(ControlDeskTheme.RivalLane, 0.1f), ControlDeskTheme.Darken(ControlDeskTheme.RivalLane, 0.2f));
-            _rivalPrimarySlots.Clear();
-            _rivalSupportSlots.Clear();
+            Color rivalOpLane = ControlDeskTheme.Darken(ControlDeskTheme.RivalSlot, 0.18f);
+            Color rivalStaffLane = ControlDeskTheme.Darken(ControlDeskTheme.AccentRed, 0.42f);
+            Color rivalMarketingLane = new Color(0.33f, 0.13f, 0.16f);
+            Color rivalSupplierLane = new Color(0.39f, 0.17f, 0.14f);
+            Color rivalUtilityLane = new Color(0.46f, 0.19f, 0.15f);
+
+            CreateFramedPanel("RivalOperationLane", new Vector3(-0.22f, 0.08f, 7.12f), new Vector3(10.55f, 0.04f, 1.10f), rivalOpLane, ControlDeskTheme.Lighten(rivalOpLane, 0.18f));
+            CreateFramedPanel("RivalStaffLane", new Vector3(-0.22f, 0.08f, 5.75f), new Vector3(10.55f, 0.04f, 1.00f), rivalStaffLane, ControlDeskTheme.Lighten(rivalStaffLane, 0.16f));
+            CreateFramedPanel("RivalMarketingLane", new Vector3(-2.55f, 0.08f, 4.34f), new Vector3(6.05f, 0.04f, 0.96f), rivalMarketingLane, ControlDeskTheme.Lighten(rivalMarketingLane, 0.15f));
+            CreateFramedPanel("RivalSupplierLane", new Vector3(2.90f, 0.08f, 4.34f), new Vector3(4.45f, 0.04f, 0.96f), rivalSupplierLane, ControlDeskTheme.Lighten(rivalSupplierLane, 0.15f));
+            CreateFramedPanel("RivalSignalRail", new Vector3(6.52f, 0.08f, 5.73f), new Vector3(1.62f, 0.04f, 3.72f), rivalUtilityLane, ControlDeskTheme.Lighten(rivalUtilityLane, 0.15f));
+
+            _rivalOperationSlots.Clear();
+            _rivalStaffSlots.Clear();
+            _rivalMarketingSlots.Clear();
+            _rivalSupplierSlots.Clear();
             _rivalSignalSlots.Clear();
             _rivalVisualsBySlot.Clear();
-            _rivalPrimaryCursor = 0;
-            _rivalSupportCursor = 0;
+            _rivalOperationCursor = 0;
+            _rivalStaffCursor = 0;
+            _rivalMarketingCursor = 0;
+            _rivalSupplierCursor = 0;
             _rivalSignalCursor = 0;
 
             for (int i = 0; i < 4; i++)
             {
-                var rivalSlot = CreateCube($"RivalOp_{i + 1:D2}",
-                    new Vector3((i - 1.5f) * 1.95f, 0.11f, 5.95f),
-                    new Vector3(1.35f, 0.08f, 0.64f),
-                    ControlDeskTheme.RivalSlot);
+                var rivalSlot = CreateCube($"RivalOperation_{i + 1:D2}",
+                    new Vector3(-2.90f + i * 1.90f, 0.11f, 7.12f),
+                    new Vector3(1.56f, 0.08f, 0.78f),
+                    ControlDeskTheme.Darken(ControlDeskTheme.RivalSlot, 0.04f));
                 Destroy(rivalSlot.GetComponent<Collider>());
-                _rivalPrimarySlots.Add(rivalSlot);
+                _rivalOperationSlots.Add(rivalSlot);
+            }
+
+            for (int i = 0; i < 4; i++)
+            {
+                var rivalSupport = CreateCube($"RivalStaff_{i + 1:D2}",
+                    new Vector3(-2.90f + i * 1.90f, 0.11f, 5.75f),
+                    new Vector3(1.56f, 0.08f, 0.72f),
+                    ControlDeskTheme.Darken(ControlDeskTheme.AccentRed, 0.18f));
+                Destroy(rivalSupport.GetComponent<Collider>());
+                _rivalStaffSlots.Add(rivalSupport);
             }
 
             for (int i = 0; i < 3; i++)
             {
-                var rivalSupport = CreateCube($"RivalSupport_{i + 1:D2}",
-                    new Vector3((i - 1f) * 1.45f, 0.11f, 5.12f),
-                    new Vector3(0.92f, 0.08f, 0.44f),
-                    ControlDeskTheme.Darken(ControlDeskTheme.RivalSlot, 0.1f));
-                Destroy(rivalSupport.GetComponent<Collider>());
-                _rivalSupportSlots.Add(rivalSupport);
+                var rivalGrowth = CreateCube($"RivalMarketing_{i + 1:D2}",
+                    new Vector3(-3.75f + i * 1.82f, 0.11f, 4.34f),
+                    new Vector3(1.54f, 0.08f, 0.70f),
+                    ControlDeskTheme.Darken(new Color(0.69f, 0.26f, 0.30f), 0.12f));
+                Destroy(rivalGrowth.GetComponent<Collider>());
+                _rivalMarketingSlots.Add(rivalGrowth);
             }
 
-            var rivalEvent = CreateCube("RivalSignal",
-                new Vector3(5.55f, 0.11f, 5.55f),
-                new Vector3(1.40f, 0.08f, 1.00f),
-                ControlDeskTheme.AccentAmber);
-            rivalEvent.GetComponent<MeshRenderer>().material.color = ControlDeskTheme.WithAlpha(ControlDeskTheme.AccentAmber, 0.9f);
-            Destroy(rivalEvent.GetComponent<Collider>());
-            _rivalSignalSlots.Add(rivalEvent);
+            for (int i = 0; i < 2; i++)
+            {
+                var rivalSupply = CreateCube($"RivalSupplier_{i + 1:D2}",
+                    new Vector3(2.18f + i * 1.82f, 0.11f, 4.34f),
+                    new Vector3(1.54f, 0.08f, 0.70f),
+                    ControlDeskTheme.Darken(new Color(0.74f, 0.34f, 0.24f), 0.18f));
+                Destroy(rivalSupply.GetComponent<Collider>());
+                _rivalSupplierSlots.Add(rivalSupply);
+            }
+
+            for (int i = 0; i < 2; i++)
+            {
+                float z = 6.82f - i * 1.55f;
+                var rivalEvent = CreateCube($"RivalSignal_{i + 1:D2}",
+                    new Vector3(6.52f, 0.11f, z),
+                    new Vector3(1.04f, 0.08f, 1.00f),
+                    ControlDeskTheme.Darken(ControlDeskTheme.AccentAmber, 0.08f));
+                Destroy(rivalEvent.GetComponent<Collider>());
+                _rivalSignalSlots.Add(rivalEvent);
+            }
         }
 
         private SlotZone3D CreateBoardSlot(string slotName, Vector3 localPos, Vector3 localScale, Color color, DropZoneType zoneType, int slotIndex)
@@ -344,40 +385,41 @@ namespace EmpireOfCards.World
         {
             Quaternion flatText = Quaternion.Euler(90f, 0f, 0f);
 
-            _operationsHeader = CreateDeskText("OPERATIONS", new Vector3(-3.75f, 0.16f, -2.10f), flatText, 1.65f, ControlDeskTheme.Lighten(ControlDeskTheme.OperationSlot, 0.25f), TextAlignmentOptions.Left);
-            _staffHeader = CreateDeskText("STAFF", new Vector3(-4.20f, 0.16f, -0.78f), flatText, 1.45f, ControlDeskTheme.Lighten(ControlDeskTheme.StaffSlot, 0.25f), TextAlignmentOptions.Left);
-            _marketingHeader = CreateDeskText("MARKETING", new Vector3(-5.15f, 0.16f, 0.52f), flatText, 1.25f, ControlDeskTheme.Lighten(ControlDeskTheme.MarketingSlot, 0.22f), TextAlignmentOptions.Left);
-            _supplierHeader = CreateDeskText("SUPPLIERS", new Vector3(1.15f, 0.16f, 0.52f), flatText, 1.25f, ControlDeskTheme.Lighten(ControlDeskTheme.SupplierSlot, 0.22f), TextAlignmentOptions.Left);
+            _operationsHeader = CreateDeskText("OPERATIONS", new Vector3(-5.94f, 0.16f, -2.00f), flatText, 1.18f, ControlDeskTheme.Lighten(ControlDeskTheme.OperationSlot, 0.30f), TextAlignmentOptions.Left);
+            _staffHeader = CreateDeskText("TEAM", new Vector3(-5.94f, 0.16f, -0.60f), flatText, 1.12f, ControlDeskTheme.Lighten(ControlDeskTheme.StaffSlot, 0.30f), TextAlignmentOptions.Left);
+            _marketingHeader = CreateDeskText("GROWTH", new Vector3(-5.94f, 0.16f, 0.85f), flatText, 1.00f, ControlDeskTheme.Lighten(ControlDeskTheme.MarketingSlot, 0.28f), TextAlignmentOptions.Left);
+            _supplierHeader = CreateDeskText("SUPPLY", new Vector3(0.85f, 0.16f, 0.85f), flatText, 1.00f, ControlDeskTheme.Lighten(ControlDeskTheme.SupplierSlot, 0.28f), TextAlignmentOptions.Left);
             _operationsHeader.textWrappingMode = TextWrappingModes.Normal;
             _staffHeader.textWrappingMode = TextWrappingModes.Normal;
             _marketingHeader.textWrappingMode = TextWrappingModes.Normal;
             _supplierHeader.textWrappingMode = TextWrappingModes.Normal;
-            CreateDeskText("CONTROL", new Vector3(5.35f, 0.16f, 1.55f), flatText, 1.15f, ControlDeskTheme.Lighten(ControlDeskTheme.UtilitySlot, 0.18f), TextAlignmentOptions.Left);
-            CreateDeskText("SHARED MARKET", new Vector3(-5.45f, 0.16f, 2.95f), flatText, 1.20f, ControlDeskTheme.TextMuted, TextAlignmentOptions.Left);
-            CreateDeskText("RIVAL PRESSURE", new Vector3(-5.45f, 0.16f, 5.05f), flatText, 1.15f, ControlDeskTheme.Lighten(ControlDeskTheme.RivalSlot, 0.20f), TextAlignmentOptions.Left);
-            CreateDeskText("RIVAL BUILD", new Vector3(-5.25f, 0.16f, 6.32f), flatText, 0.92f, ControlDeskTheme.Lighten(ControlDeskTheme.RivalSlot, 0.28f), TextAlignmentOptions.Left);
-            CreateDeskText("RIVAL SUPPORT", new Vector3(-1.15f, 0.16f, 5.38f), flatText, 0.82f, ControlDeskTheme.TextMuted, TextAlignmentOptions.Left);
-            CreateDeskText("RIVAL SIGNAL", new Vector3(4.65f, 0.16f, 5.05f), flatText, 0.82f, ControlDeskTheme.TextMuted, TextAlignmentOptions.Left);
-            CreateDeskText("HAND", new Vector3(-3.95f, 0.16f, -3.95f), flatText, 1.10f, ControlDeskTheme.TextMuted, TextAlignmentOptions.Left);
-            CreateDeskText("PLAY", new Vector3(5.55f, 0.16f, -3.10f), flatText, 1.05f, ControlDeskTheme.Lighten(ControlDeskTheme.ActionSlot, 0.20f), TextAlignmentOptions.Center);
-            CreateDeskText("SELL", new Vector3(5.55f, 0.16f, -1.85f), flatText, 1.05f, ControlDeskTheme.Lighten(ControlDeskTheme.UtilitySlot, 0.22f), TextAlignmentOptions.Center);
-            CreateDeskText("EVENTS", new Vector3(5.55f, 0.16f, 1.45f), flatText, 1.00f, ControlDeskTheme.Lighten(ControlDeskTheme.EventSlot, 0.22f), TextAlignmentOptions.Center);
+            CreateDeskText("EVENTS", new Vector3(6.52f, 0.16f, 0.85f), flatText, 0.76f, ControlDeskTheme.Lighten(ControlDeskTheme.EventSlot, 0.22f), TextAlignmentOptions.Center);
+            CreateDeskText("SELL", new Vector3(6.52f, 0.16f, -2.74f), flatText, 0.88f, ControlDeskTheme.Lighten(ControlDeskTheme.UtilitySlot, 0.24f), TextAlignmentOptions.Center);
+            CreateDeskText("PLAY", new Vector3(6.52f, 0.16f, -3.78f), flatText, 0.88f, ControlDeskTheme.Lighten(ControlDeskTheme.ActionSlot, 0.24f), TextAlignmentOptions.Center);
+            CreateDeskText("SHARED MARKET", new Vector3(0f, 0.16f, 3.58f), flatText, 1.10f, ControlDeskTheme.Lighten(ControlDeskTheme.TextPrimary, 0.12f), TextAlignmentOptions.Center);
+            CreateDeskText("RIVAL BOARD", new Vector3(0f, 0.16f, 8.10f), flatText, 1.18f, ControlDeskTheme.Lighten(ControlDeskTheme.RivalSlot, 0.28f), TextAlignmentOptions.Center);
+            CreateDeskText("OPERATIONS", new Vector3(-5.94f, 0.16f, 7.12f), flatText, 0.92f, ControlDeskTheme.Lighten(ControlDeskTheme.RivalSlot, 0.22f), TextAlignmentOptions.Left);
+            CreateDeskText("TEAM", new Vector3(-5.94f, 0.16f, 5.75f), flatText, 0.88f, ControlDeskTheme.Lighten(ControlDeskTheme.RivalSlot, 0.18f), TextAlignmentOptions.Left);
+            CreateDeskText("GROWTH", new Vector3(-5.94f, 0.16f, 4.34f), flatText, 0.82f, ControlDeskTheme.Lighten(ControlDeskTheme.RivalSlot, 0.16f), TextAlignmentOptions.Left);
+            CreateDeskText("SUPPLY", new Vector3(0.85f, 0.16f, 4.34f), flatText, 0.82f, ControlDeskTheme.Lighten(ControlDeskTheme.RivalSlot, 0.16f), TextAlignmentOptions.Left);
+            CreateDeskText("SIGNAL", new Vector3(6.52f, 0.16f, 7.78f), flatText, 0.78f, ControlDeskTheme.TextMuted, TextAlignmentOptions.Center);
+            CreateDeskText("PLAYER BOARD", new Vector3(0f, 0.16f, -3.95f), flatText, 1.16f, ControlDeskTheme.Lighten(ControlDeskTheme.PlayerBlock, 0.12f), TextAlignmentOptions.Center);
 
-            _tierLabel = CreateDeskText("TRADER", new Vector3(-5.95f, 0.16f, -2.95f), flatText, 1.25f, ControlDeskTheme.MoneyGold, TextAlignmentOptions.Left);
-            _districtTrafficLabel = CreateDeskText("TRAFFIC WINDOW", new Vector3(-5.35f, 0.16f, 3.35f), flatText, 0.82f, ControlDeskTheme.AccentAmber, TextAlignmentOptions.Left);
-            _districtRatingLabel = CreateDeskText("TRUST LOOP", new Vector3(-1.35f, 0.16f, 3.35f), flatText, 0.82f, ControlDeskTheme.AccentBlue, TextAlignmentOptions.Left);
-            _districtPullLabel = CreateDeskText("MARKET PULL", new Vector3(2.65f, 0.16f, 3.35f), flatText, 0.82f, ControlDeskTheme.AccentGreen, TextAlignmentOptions.Left);
-            _rivalCardLabel = CreateDeskText("Last Card: Waiting", new Vector3(-5.35f, 0.16f, 5.35f), flatText, 0.80f, ControlDeskTheme.TextPrimary, TextAlignmentOptions.Left);
-            _rivalStyleLabel = CreateDeskText("Pressure: Balanced", new Vector3(-1.35f, 0.16f, 5.35f), flatText, 0.80f, ControlDeskTheme.TextMuted, TextAlignmentOptions.Left);
-            _rivalCrisisLabel = CreateDeskText("Crisis Read: Clean", new Vector3(2.65f, 0.16f, 5.35f), flatText, 0.80f, ControlDeskTheme.TextMuted, TextAlignmentOptions.Left);
+            _tierLabel = CreateDeskText("TRADER", new Vector3(-6.05f, 0.16f, -4.22f), flatText, 0.94f, ControlDeskTheme.MoneyGold, TextAlignmentOptions.Left);
+            _districtTrafficLabel = CreateDeskText("CUSTOMER FLOW", new Vector3(-3.45f, 0.16f, 3.20f), flatText, 0.50f, ControlDeskTheme.AccentAmber, TextAlignmentOptions.Center);
+            _districtRatingLabel = CreateDeskText("TRUST", new Vector3(0f, 0.16f, 3.20f), flatText, 0.50f, ControlDeskTheme.AccentBlue, TextAlignmentOptions.Center);
+            _districtPullLabel = CreateDeskText("PULL", new Vector3(3.45f, 0.16f, 3.20f), flatText, 0.50f, ControlDeskTheme.AccentGreen, TextAlignmentOptions.Center);
+            _rivalCardLabel = CreateDeskText("LAST CARD: WAITING", new Vector3(-3.90f, 0.16f, 3.98f), flatText, 0.48f, ControlDeskTheme.TextPrimary, TextAlignmentOptions.Center);
+            _rivalStyleLabel = CreateDeskText("PRESSURE: BALANCED", new Vector3(0f, 0.16f, 3.98f), flatText, 0.48f, ControlDeskTheme.TextMuted, TextAlignmentOptions.Center);
+            _rivalCrisisLabel = CreateDeskText("THREAT: WATCHING", new Vector3(3.90f, 0.16f, 3.98f), flatText, 0.48f, ControlDeskTheme.TextMuted, TextAlignmentOptions.Center);
         }
 
         private void BuildBusinessAnchor()
         {
-            _businessAnchorVisual = CreateCube("BusinessAnchor", new Vector3(-5.35f, 0.18f, -1.45f), new Vector3(1.05f, 0.55f, 1.05f), ControlDeskTheme.Darken(ControlDeskTheme.OperationSlot, 0.12f));
+            _businessAnchorVisual = CreateCube("BusinessAnchor", new Vector3(-5.35f, 0.18f, -2.62f), new Vector3(0.92f, 0.48f, 0.92f), ControlDeskTheme.Darken(ControlDeskTheme.OperationSlot, 0.12f));
             Destroy(_businessAnchorVisual.GetComponent<Collider>());
-            CreateCube("BusinessAnchorSign", new Vector3(-5.35f, 0.72f, -0.80f), new Vector3(1.55f, 0.22f, 0.12f), ControlDeskTheme.PanelLine).GetComponent<Collider>().enabled = false;
-            _businessAnchorLabel = CreateDeskText("NEW VENTURE", new Vector3(-5.35f, 0.79f, -0.80f), Quaternion.Euler(35f, 0f, 0f), 0.82f, ControlDeskTheme.TextPrimary, TextAlignmentOptions.Center);
+            CreateCube("BusinessAnchorSign", new Vector3(-5.35f, 0.66f, -3.18f), new Vector3(1.40f, 0.18f, 0.10f), ControlDeskTheme.PanelLine).GetComponent<Collider>().enabled = false;
+            _businessAnchorLabel = CreateDeskText("NEW VENTURE", new Vector3(-5.35f, 0.72f, -3.18f), Quaternion.Euler(35f, 0f, 0f), 0.68f, ControlDeskTheme.TextPrimary, TextAlignmentOptions.Center);
             _businessAnchorLabel.textWrappingMode = TextWrappingModes.Normal;
         }
 
@@ -394,8 +436,11 @@ namespace EmpireOfCards.World
             tmp.fontSize = fontSize;
             tmp.color = color;
             tmp.alignment = alignment;
+            tmp.fontStyle = FontStyles.Bold;
             tmp.textWrappingMode = TextWrappingModes.NoWrap;
             tmp.enableAutoSizing = false;
+            tmp.outlineWidth = 0.14f;
+            tmp.outlineColor = new Color(0f, 0f, 0f, 0.62f);
             return tmp;
         }
 
@@ -433,6 +478,7 @@ namespace EmpireOfCards.World
 
         private void HandleTurnStarted(int turnNumber)
         {
+            ResetRivalVisuals();
             ApplyVentureHeaders();
             UpdateBusinessAnchor();
             RefreshThemeProps();
@@ -565,30 +611,9 @@ namespace EmpireOfCards.World
             }
         }
 
-        private static string BuildHeader(string headerKey, string fallbackHeader, BoardSubSlotDefinition[] defs)
+        private static string BuildHeader(string headerKey, string fallbackHeader, BoardSubSlotDefinition[] _)
         {
-            string prefix = LocalizationManager.GetWithFallback(headerKey, fallbackHeader);
-            SlotType slotType = headerKey switch
-            {
-                "board.ops" => SlotType.Operation,
-                "board.staff" => SlotType.Staff,
-                "board.growth" => SlotType.Marketing,
-                "board.supply" => SlotType.Supplier,
-                _ => SlotType.Operation
-            };
-            string purpose = GameClarityFormatter.GetSlotPurposeTitle(slotType).ToUpperInvariant();
-            if (defs == null || defs.Length == 0)
-                return $"{prefix}\n{purpose}";
-
-            int count = Mathf.Min(defs.Length, 3);
-            string label = $"{prefix}  {purpose}\n";
-            for (int i = 0; i < count; i++)
-            {
-                if (i > 0) label += " / ";
-                string fallback = string.IsNullOrWhiteSpace(defs[i].fallbackLabel) ? defs[i].id : defs[i].fallbackLabel;
-                label += LocalizationManager.GetWithFallback(defs[i].labelKey, fallback).ToUpperInvariant();
-            }
-            return label;
+            return LocalizationManager.GetWithFallback(headerKey, fallbackHeader).ToUpperInvariant();
         }
 
         private static void ApplySlotVisuals(IReadOnlyList<SlotZone3D> zones, IReadOnlyList<CardData> cards)
@@ -615,10 +640,14 @@ namespace EmpireOfCards.World
             block.name = "Body";
             block.transform.SetParent(visualRoot.transform, false);
             block.transform.localPosition = Vector3.zero;
-            block.transform.localScale = targetSlot.name.Contains("RivalSupport")
-                ? new Vector3(0.68f, 0.18f, 0.34f)
-                : targetSlot.name.Contains("RivalSignal")
+            block.transform.localScale = targetSlot.name.Contains("RivalSignal")
                     ? new Vector3(1.06f, 0.18f, 0.74f)
+                    : targetSlot.name.Contains("RivalOperation")
+                        ? new Vector3(1.14f, 0.18f, 0.46f)
+                    : targetSlot.name.Contains("RivalStaff")
+                        ? new Vector3(0.90f, 0.18f, 0.34f)
+                    : targetSlot.name.Contains("RivalMarketing") || targetSlot.name.Contains("RivalSupplier")
+                        ? new Vector3(0.88f, 0.18f, 0.34f)
                     : new Vector3(0.96f, 0.18f, 0.46f);
             block.GetComponent<MeshRenderer>().material.color = GetRivalVisualColor(action);
             Destroy(block.GetComponent<Collider>());
@@ -631,7 +660,7 @@ namespace EmpireOfCards.World
 
             var tmp = labelGo.AddComponent<TextMeshPro>();
             tmp.text = BuildRivalVisualLabel(action);
-            tmp.fontSize = 4.6f;
+            tmp.fontSize = 5.3f;
             tmp.alignment = TextAlignmentOptions.Center;
             tmp.color = ControlDeskTheme.TextPrimary;
             tmp.textWrappingMode = TextWrappingModes.Normal;
@@ -648,11 +677,14 @@ namespace EmpireOfCards.World
                 return null;
 
             string lane = action.laneLabel ?? string.Empty;
-            if (lane.Contains("Price") || lane.Contains("Growth") || lane.Contains("Expansion"))
-                return NextRivalSlot(_rivalPrimarySlots, ref _rivalPrimaryCursor);
-
-            if (lane.Contains("Quality") || lane.Contains("Staff") || lane.Contains("Capital"))
-                return NextRivalSlot(_rivalSupportSlots, ref _rivalSupportCursor);
+            if (lane.Contains("Expansion"))
+                return NextRivalSlot(_rivalOperationSlots, ref _rivalOperationCursor);
+            if (lane.Contains("Price") || lane.Contains("Growth"))
+                return NextRivalSlot(_rivalMarketingSlots, ref _rivalMarketingCursor);
+            if (lane.Contains("Staff"))
+                return NextRivalSlot(_rivalStaffSlots, ref _rivalStaffCursor);
+            if (lane.Contains("Quality") || lane.Contains("Capital"))
+                return NextRivalSlot(_rivalSupplierSlots, ref _rivalSupplierCursor);
 
             return NextRivalSlot(_rivalSignalSlots, ref _rivalSignalCursor);
         }
@@ -671,15 +703,15 @@ namespace EmpireOfCards.World
         {
             string lane = action != null ? action.laneLabel ?? string.Empty : string.Empty;
             if (lane.Contains("Price") || lane.Contains("Growth"))
-                return ControlDeskTheme.Lighten(ControlDeskTheme.RivalSlot, 0.14f);
+                return ControlDeskTheme.Lighten(new Color(0.62f, 0.20f, 0.22f), 0.08f);
             if (lane.Contains("Quality"))
-                return ControlDeskTheme.Darken(ControlDeskTheme.AccentBlue, 0.05f);
+                return new Color(0.52f, 0.18f, 0.18f);
             if (lane.Contains("Staff"))
-                return ControlDeskTheme.Darken(ControlDeskTheme.AccentGreen, 0.10f);
+                return new Color(0.58f, 0.22f, 0.24f);
             if (lane.Contains("Capital"))
-                return ControlDeskTheme.AccentAmber;
+                return new Color(0.66f, 0.28f, 0.18f);
             if (lane.Contains("Risk"))
-                return ControlDeskTheme.AccentRed;
+                return ControlDeskTheme.Lighten(ControlDeskTheme.AccentRed, 0.04f);
             return ControlDeskTheme.RivalSlot;
         }
 
@@ -689,11 +721,34 @@ namespace EmpireOfCards.World
                 return string.Empty;
 
             string shortName = action.displayName;
-            if (shortName.Length > 16)
-                shortName = shortName.Substring(0, 16).TrimEnd();
+            if (shortName.Length > 20)
+                shortName = shortName.Substring(0, 20).TrimEnd();
 
             string lane = string.IsNullOrWhiteSpace(action.laneLabel) ? "PRESSURE" : action.laneLabel.ToUpperInvariant();
             return $"{shortName.ToUpperInvariant()}\n{lane}";
+        }
+
+        private void ResetRivalVisuals()
+        {
+            foreach (var kvp in _rivalVisualsBySlot)
+            {
+                if (kvp.Value != null)
+                    Destroy(kvp.Value);
+            }
+
+            _rivalVisualsBySlot.Clear();
+            _rivalOperationCursor = 0;
+            _rivalStaffCursor = 0;
+            _rivalMarketingCursor = 0;
+            _rivalSupplierCursor = 0;
+            _rivalSignalCursor = 0;
+
+            if (_rivalCardLabel != null)
+                _rivalCardLabel.text = "Last Card: Waiting";
+            if (_rivalStyleLabel != null)
+                _rivalStyleLabel.text = "Pressure: Waiting";
+            if (_rivalCrisisLabel != null)
+                _rivalCrisisLabel.text = "Threat: Watching";
         }
 
         private VentureBoardThemeProfile ResolveThemeProfile()

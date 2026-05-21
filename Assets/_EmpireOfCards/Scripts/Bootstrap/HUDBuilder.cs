@@ -43,17 +43,17 @@ namespace EmpireOfCards.Bootstrap
 
             var topBar = CreateUIPanel("TopBar", canvasGo.transform);
             SetAnchors(topBar, new Vector2(0, 1), new Vector2(1, 1), new Vector2(0.5f, 1));
-            topBar.sizeDelta = new Vector2(0, 180);
+            topBar.sizeDelta = new Vector2(0, 116);
             hud.topBarUI = topBar.gameObject.AddComponent<TopBarUI>();
 
-            var statusPanel = CreateShellPanel("StatusPanel", topBar, new Vector2(232, 84), ControlDeskTheme.Panel);
+            var statusPanel = CreateShellPanel("StatusPanel", topBar, new Vector2(214, 74), ControlDeskTheme.Panel);
             SetAnchors(statusPanel, new Vector2(0, 1), new Vector2(0, 1), new Vector2(0, 1));
-            statusPanel.anchoredPosition = new Vector2(30, -22);
+            statusPanel.anchoredPosition = new Vector2(24, -10);
 
-            var moneyObj = CreateTextElement("MoneyDisplay", statusPanel, "$500", 36);
+            var moneyObj = CreateTextElement("MoneyDisplay", statusPanel, "$500", 32);
             SetAnchors(moneyObj, new Vector2(0, 1), new Vector2(0, 1), new Vector2(0, 1));
-            moneyObj.anchoredPosition = new Vector2(18, -16);
-            moneyObj.sizeDelta = new Vector2(178, 40);
+            moneyObj.anchoredPosition = new Vector2(16, -14);
+            moneyObj.sizeDelta = new Vector2(164, 36);
             hud.moneyText = moneyObj.GetComponent<TMP_Text>();
             hud.moneyText.color = GoldColor;
             hud.moneyText.fontStyle = FontStyles.Bold;
@@ -61,7 +61,7 @@ namespace EmpireOfCards.Bootstrap
 
             var tierChip = CreateShellPanel("TierChip", statusPanel, new Vector2(112, 24), ControlDeskTheme.WithAlpha(ControlDeskTheme.PanelLine, 0.6f));
             SetAnchors(tierChip, new Vector2(0, 1), new Vector2(0, 1), new Vector2(0, 1));
-            tierChip.anchoredPosition = new Vector2(18, -56);
+            tierChip.anchoredPosition = new Vector2(16, -50);
 
             var tierText = CreateTextElement("CompanyTierText", tierChip, "TRADER", 13);
             tierText.anchorMin = Vector2.zero;
@@ -74,14 +74,14 @@ namespace EmpireOfCards.Bootstrap
 
             var fbiLabel = CreateTextElement("PressureLabel", statusPanel, string.Empty, 10);
             SetAnchors(fbiLabel, new Vector2(0, 1), new Vector2(0, 1), new Vector2(0, 1));
-            fbiLabel.anchoredPosition = new Vector2(182, -24);
+            fbiLabel.anchoredPosition = new Vector2(170, -22);
             fbiLabel.sizeDelta = new Vector2(24, 8);
             fbiLabel.GetComponent<TMP_Text>().alignment = TextAlignmentOptions.Left;
             fbiLabel.GetComponent<TMP_Text>().color = ControlDeskTheme.WithAlpha(ControlDeskTheme.TextMuted, 0.05f);
 
             var fbiBarBg = CreateShellPanel("FBIRiskBar", statusPanel, new Vector2(84, 5), ControlDeskTheme.WithAlpha(Color.black, 0.12f));
             SetAnchors(fbiBarBg, new Vector2(1, 1), new Vector2(1, 1), new Vector2(1, 1));
-            fbiBarBg.anchoredPosition = new Vector2(-16, -58);
+            fbiBarBg.anchoredPosition = new Vector2(-14, -50);
             RemoveOutline(fbiBarBg);
 
             var fbiBarFill = CreateUIPanel("Fill", fbiBarBg);
@@ -96,17 +96,17 @@ namespace EmpireOfCards.Bootstrap
             hud.fbiBarFillImg.fillAmount = 0f;
             hud.fbiBarFillImg.color = ControlDeskTheme.WithAlpha(ControlDeskTheme.AccentRed, 0.35f);
 
-            var runPanel = CreateShellPanel("RunPanel", topBar, new Vector2(280, 96), ControlDeskTheme.Panel);
+            var runPanel = CreateShellPanel("RunPanel", topBar, new Vector2(264, 84), ControlDeskTheme.Panel);
             SetAnchors(runPanel, new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(0.5f, 1));
-            runPanel.anchoredPosition = new Vector2(0, -22);
+            runPanel.anchoredPosition = new Vector2(0, -10);
 
             var runLabel = CreateTextElement("RunLabel", runPanel, Loc("hud.run_state", "RUN STATE"), 11);
             runLabel.anchoredPosition = new Vector2(0, -16);
             runLabel.sizeDelta = new Vector2(140, 18);
             runLabel.GetComponent<TMP_Text>().color = ControlDeskTheme.TextMuted;
 
-            var turnObj = CreateTextElement("TurnCounter", runPanel, "Turn 1", 28);
-            turnObj.anchoredPosition = new Vector2(0, -42);
+            var turnObj = CreateTextElement("TurnCounter", runPanel, "Turn 1", 26);
+            turnObj.anchoredPosition = new Vector2(0, -36);
             turnObj.sizeDelta = new Vector2(230, 34);
             hud.turnText = turnObj.GetComponent<TMP_Text>();
             hud.turnText.fontStyle = FontStyles.Bold;
@@ -114,7 +114,7 @@ namespace EmpireOfCards.Bootstrap
 
             var seasonPanel = CreateUIPanel("SeasonPanel", runPanel);
             SetAnchors(seasonPanel, new Vector2(0.5f, 0), new Vector2(0.5f, 0), new Vector2(0.5f, 0));
-            seasonPanel.anchoredPosition = new Vector2(0, 16);
+            seasonPanel.anchoredPosition = new Vector2(0, 12);
             seasonPanel.sizeDelta = new Vector2(220, 28);
 
             var seasonNameRt = CreateTextElement("SeasonName", seasonPanel, "SPRING", 18);
@@ -136,7 +136,7 @@ namespace EmpireOfCards.Bootstrap
 
             var buildChip = CreateShellPanel("BuildChip", runPanel, new Vector2(224, 24), ControlDeskTheme.WithAlpha(ControlDeskTheme.PanelLine, 0.6f));
             SetAnchors(buildChip, new Vector2(0.5f, 0), new Vector2(0.5f, 0), new Vector2(0.5f, 0));
-            buildChip.anchoredPosition = new Vector2(0, 36);
+            buildChip.anchoredPosition = new Vector2(0, 30);
             var buildRt = CreateTextElement("BuildIdentityText", buildChip, "BUILD · Balanced Board", 11);
             buildRt.anchorMin = Vector2.zero;
             buildRt.anchorMax = Vector2.one;
@@ -149,7 +149,7 @@ namespace EmpireOfCards.Bootstrap
 
             var pressureChip = CreateShellPanel("PressureChip", runPanel, new Vector2(224, 22), ControlDeskTheme.WithAlpha(ControlDeskTheme.PanelSoft, 0.76f));
             SetAnchors(pressureChip, new Vector2(0.5f, 0), new Vector2(0.5f, 0), new Vector2(0.5f, 0));
-            pressureChip.anchoredPosition = new Vector2(0, 58);
+            pressureChip.anchoredPosition = new Vector2(0, 50);
             var pressureRt = CreateTextElement("PressureText", pressureChip, "PRESSURE · Board Stable", 10);
             pressureRt.anchorMin = Vector2.zero;
             pressureRt.anchorMax = Vector2.one;
@@ -160,13 +160,13 @@ namespace EmpireOfCards.Bootstrap
             pressureTmp.fontStyle = FontStyles.Bold;
             hud.pressureText = pressureTmp;
 
-            var metricsPanel = CreateShellPanel("MetricsPanel", topBar, new Vector2(360, 98), ControlDeskTheme.Panel);
+            var metricsPanel = CreateShellPanel("MetricsPanel", topBar, new Vector2(332, 84), ControlDeskTheme.Panel);
             SetAnchors(metricsPanel, new Vector2(1, 1), new Vector2(1, 1), new Vector2(1, 1));
-            metricsPanel.anchoredPosition = new Vector2(-30, -22);
+            metricsPanel.anchoredPosition = new Vector2(-24, -10);
 
             var platformRatingPanel = CreateShellPanel("PlatformRatingPanel", metricsPanel, new Vector2(156, 64), ControlDeskTheme.PanelSoft);
             SetAnchors(platformRatingPanel, new Vector2(0, 0.5f), new Vector2(0, 0.5f), new Vector2(0, 0.5f));
-            platformRatingPanel.anchoredPosition = new Vector2(18, -6);
+            platformRatingPanel.anchoredPosition = new Vector2(18, -2);
 
             var platformLabelRt = CreateTextElement("PlatformLabel", platformRatingPanel, Loc("hud.rating", "RATING"), 12);
             platformLabelRt.anchoredPosition = new Vector2(0, 16);
@@ -200,7 +200,7 @@ namespace EmpireOfCards.Bootstrap
 
             var legalRiskPanel = CreateShellPanel("LegalRiskPanel", metricsPanel, new Vector2(156, 64), ControlDeskTheme.PanelSoft);
             SetAnchors(legalRiskPanel, new Vector2(1, 0.5f), new Vector2(1, 0.5f), new Vector2(1, 0.5f));
-            legalRiskPanel.anchoredPosition = new Vector2(-18, -6);
+            legalRiskPanel.anchoredPosition = new Vector2(-18, -2);
 
             var legalLabelRt = CreateTextElement("LegalLabel", legalRiskPanel, Loc("hud.legal_risk", "LEGAL RISK"), 12);
             legalLabelRt.anchoredPosition = new Vector2(0, 16);
@@ -234,8 +234,8 @@ namespace EmpireOfCards.Bootstrap
 
             var marketBarPanel = CreateUIPanel("CustomerMarketPanel", canvasGo.transform);
             SetAnchors(marketBarPanel, new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(0.5f, 1));
-            marketBarPanel.anchoredPosition = new Vector2(0, -122);
-            marketBarPanel.sizeDelta = new Vector2(440, 34);
+            marketBarPanel.anchoredPosition = new Vector2(0, -76);
+            marketBarPanel.sizeDelta = new Vector2(404, 30);
             StylePanel(marketBarPanel, ControlDeskTheme.WithAlpha(ControlDeskTheme.PanelSoft, 0.8f));
 
             var marketLabelRt = CreateTextElement("MarketLabel", marketBarPanel, Loc("hud.market_share", "MARKET"), 11);
@@ -278,19 +278,19 @@ namespace EmpireOfCards.Bootstrap
 
             var neglectWarning = CreateTextElement("NeglectWarning", topBar, "", 19);
             SetAnchors(neglectWarning, new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(0.5f, 1));
-            neglectWarning.anchoredPosition = new Vector2(0, -134);
+            neglectWarning.anchoredPosition = new Vector2(0, -86);
             neglectWarning.sizeDelta = new Vector2(580, 28);
             var neglectTmp = neglectWarning.GetComponent<TMP_Text>();
             neglectTmp.color = ControlDeskTheme.AccentAmber;
             neglectTmp.fontStyle = FontStyles.Bold;
             hud.neglectWarningText = neglectTmp;
 
-            var flowPanel = CreateShellPanel("TurnFlowPanel", canvasGo.transform, new Vector2(520, 64), ControlDeskTheme.WithAlpha(ControlDeskTheme.Panel, 0.82f));
+            var flowPanel = CreateShellPanel("TurnFlowPanel", canvasGo.transform, new Vector2(500, 56), ControlDeskTheme.WithAlpha(ControlDeskTheme.Panel, 0.80f));
             SetAnchors(flowPanel, new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(0.5f, 1));
-            flowPanel.anchoredPosition = new Vector2(0, -142);
+            flowPanel.anchoredPosition = new Vector2(0, -92);
 
             var briefRt = CreateTextElement("TurnBriefText", flowPanel, "BRIEF", 14);
-            briefRt.anchoredPosition = new Vector2(0, 12);
+            briefRt.anchoredPosition = new Vector2(0, 10);
             briefRt.sizeDelta = new Vector2(486, 22);
             var briefTmp = briefRt.GetComponent<TMP_Text>();
             briefTmp.alignment = TextAlignmentOptions.MidlineLeft;
@@ -302,7 +302,7 @@ namespace EmpireOfCards.Bootstrap
             hud.turnBriefText = briefTmp;
 
             var reportRt = CreateTextElement("TurnReportText", flowPanel, "REPORT", 11);
-            reportRt.anchoredPosition = new Vector2(0, -12);
+            reportRt.anchoredPosition = new Vector2(0, -10);
             reportRt.sizeDelta = new Vector2(486, 18);
             var reportTmp = reportRt.GetComponent<TMP_Text>();
             reportTmp.alignment = TextAlignmentOptions.MidlineLeft;
@@ -380,10 +380,99 @@ namespace EmpireOfCards.Bootstrap
                 rivalHeaderTmp,
                 rivalBodyTmp,
                 analyticsFooterTmp);
+            analyticsPanel.gameObject.SetActive(false);
+
+            var boardGuidePanel = CreateShellPanel("BoardGuidePanel", canvasGo.transform, new Vector2(320, 252), ControlDeskTheme.WithAlpha(ControlDeskTheme.Panel, 0.94f));
+            SetAnchors(boardGuidePanel, new Vector2(0, 1), new Vector2(0, 1), new Vector2(0, 1));
+            boardGuidePanel.anchoredPosition = new Vector2(22, -146);
+            var boardGuideUi = boardGuidePanel.gameObject.AddComponent<BoardGuidePanelUI>();
+            hud.boardGuidePanel = boardGuideUi;
+
+            var guideTitle = CreateTextElement("BoardGuideTitle", boardGuidePanel, "BOARD GUIDE", 16);
+            guideTitle.anchoredPosition = new Vector2(0, 96);
+            guideTitle.sizeDelta = new Vector2(276, 20);
+            var guideTitleTmp = guideTitle.GetComponent<TMP_Text>();
+            guideTitleTmp.fontStyle = FontStyles.Bold;
+            guideTitleTmp.color = ControlDeskTheme.AccentAmber;
+
+            var guideVenture = CreateTextElement("BoardGuideVenture", boardGuidePanel, "", 11);
+            guideVenture.anchoredPosition = new Vector2(0, 74);
+            guideVenture.sizeDelta = new Vector2(276, 18);
+            var guideVentureTmp = guideVenture.GetComponent<TMP_Text>();
+            guideVentureTmp.color = ControlDeskTheme.TextMuted;
+            guideVentureTmp.enableAutoSizing = true;
+            guideVentureTmp.fontSizeMin = 10;
+            guideVentureTmp.fontSizeMax = 11;
+
+            var guideOps = CreateTextElement("BoardGuideOps", boardGuidePanel, "", 12);
+            guideOps.anchoredPosition = new Vector2(0, 40);
+            guideOps.sizeDelta = new Vector2(276, 42);
+            var guideOpsTmp = guideOps.GetComponent<TMP_Text>();
+            guideOpsTmp.alignment = TextAlignmentOptions.TopLeft;
+            guideOpsTmp.enableAutoSizing = true;
+            guideOpsTmp.fontSizeMin = 9;
+            guideOpsTmp.fontSizeMax = 12;
+
+            var guideStaff = CreateTextElement("BoardGuideStaff", boardGuidePanel, "", 12);
+            guideStaff.anchoredPosition = new Vector2(0, 4);
+            guideStaff.sizeDelta = new Vector2(276, 42);
+            var guideStaffTmp = guideStaff.GetComponent<TMP_Text>();
+            guideStaffTmp.alignment = TextAlignmentOptions.TopLeft;
+            guideStaffTmp.enableAutoSizing = true;
+            guideStaffTmp.fontSizeMin = 9;
+            guideStaffTmp.fontSizeMax = 12;
+
+            var guideGrowth = CreateTextElement("BoardGuideGrowth", boardGuidePanel, "", 12);
+            guideGrowth.anchoredPosition = new Vector2(0, -32);
+            guideGrowth.sizeDelta = new Vector2(276, 42);
+            var guideGrowthTmp = guideGrowth.GetComponent<TMP_Text>();
+            guideGrowthTmp.alignment = TextAlignmentOptions.TopLeft;
+            guideGrowthTmp.enableAutoSizing = true;
+            guideGrowthTmp.fontSizeMin = 9;
+            guideGrowthTmp.fontSizeMax = 12;
+
+            var guideSupply = CreateTextElement("BoardGuideSupply", boardGuidePanel, "", 12);
+            guideSupply.anchoredPosition = new Vector2(0, -68);
+            guideSupply.sizeDelta = new Vector2(276, 42);
+            var guideSupplyTmp = guideSupply.GetComponent<TMP_Text>();
+            guideSupplyTmp.alignment = TextAlignmentOptions.TopLeft;
+            guideSupplyTmp.enableAutoSizing = true;
+            guideSupplyTmp.fontSizeMin = 9;
+            guideSupplyTmp.fontSizeMax = 12;
+
+            var guideTemp = CreateTextElement("BoardGuideTemp", boardGuidePanel, "", 12);
+            guideTemp.anchoredPosition = new Vector2(0, -104);
+            guideTemp.sizeDelta = new Vector2(276, 42);
+            var guideTempTmp = guideTemp.GetComponent<TMP_Text>();
+            guideTempTmp.alignment = TextAlignmentOptions.TopLeft;
+            guideTempTmp.enableAutoSizing = true;
+            guideTempTmp.fontSizeMin = 9;
+            guideTempTmp.fontSizeMax = 12;
+
+            var guideFooter = CreateTextElement("BoardGuideFooter", boardGuidePanel, "", 11);
+            guideFooter.anchoredPosition = new Vector2(0, -146);
+            guideFooter.sizeDelta = new Vector2(276, 36);
+            var guideFooterTmp = guideFooter.GetComponent<TMP_Text>();
+            guideFooterTmp.color = ControlDeskTheme.TextMuted;
+            guideFooterTmp.alignment = TextAlignmentOptions.TopLeft;
+            guideFooterTmp.enableAutoSizing = true;
+            guideFooterTmp.fontSizeMin = 9;
+            guideFooterTmp.fontSizeMax = 11;
+
+            boardGuideUi.Init(
+                guideTitleTmp,
+                guideVentureTmp,
+                guideOpsTmp,
+                guideStaffTmp,
+                guideGrowthTmp,
+                guideSupplyTmp,
+                guideTempTmp,
+                guideFooterTmp);
+            boardGuidePanel.gameObject.SetActive(false);
 
             var clarityPanel = CreateShellPanel("ClarityPanel", canvasGo.transform, new Vector2(360, 118), ControlDeskTheme.WithAlpha(ControlDeskTheme.Panel, 0.93f));
             SetAnchors(clarityPanel, new Vector2(0, 0), new Vector2(0, 0), new Vector2(0, 0));
-            clarityPanel.anchoredPosition = new Vector2(214, 112);
+            clarityPanel.anchoredPosition = new Vector2(202, 102);
             var clarityUi = clarityPanel.gameObject.AddComponent<ClarityPanelUI>();
             hud.clarityPanel = clarityUi;
 
@@ -426,9 +515,9 @@ namespace EmpireOfCards.Bootstrap
 
             clarityUi.Init(clarityTitleTmp, claritySubtitleTmp, clarityBodyTmp, clarityFooterTmp);
 
-            var actionBar = CreateShellPanel("ActionBar", canvasGo.transform, new Vector2(250, 54), ControlDeskTheme.WithAlpha(ControlDeskTheme.Panel, 0.92f));
+            var actionBar = CreateShellPanel("ActionBar", canvasGo.transform, new Vector2(236, 48), ControlDeskTheme.WithAlpha(ControlDeskTheme.Panel, 0.92f));
             SetAnchors(actionBar, new Vector2(0.5f, 0), new Vector2(0.5f, 0), new Vector2(0.5f, 0));
-            actionBar.anchoredPosition = new Vector2(0, 108);
+            actionBar.anchoredPosition = new Vector2(0, 96);
             hud.actionBarUI = actionBar.gameObject.AddComponent<ActionBarUI>();
 
             hud.actionDotImages = new Image[5];
@@ -442,9 +531,9 @@ namespace EmpireOfCards.Bootstrap
                 if (i >= 3) dot.gameObject.SetActive(false);
             }
 
-            var utilityPanel = CreateShellPanel("UtilityPanel", canvasGo.transform, new Vector2(164, 110), ControlDeskTheme.WithAlpha(ControlDeskTheme.Panel, 0.92f));
+            var utilityPanel = CreateShellPanel("UtilityPanel", canvasGo.transform, new Vector2(152, 100), ControlDeskTheme.WithAlpha(ControlDeskTheme.Panel, 0.90f));
             SetAnchors(utilityPanel, new Vector2(0, 0), new Vector2(0, 0), new Vector2(0, 0));
-            utilityPanel.anchoredPosition = new Vector2(24, 24);
+            utilityPanel.anchoredPosition = new Vector2(20, 20);
 
             var shopBtn = CreateButton("ShopButton", utilityPanel, "SHOP");
             SetAnchors(shopBtn, new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(0.5f, 1));
@@ -461,9 +550,9 @@ namespace EmpireOfCards.Bootstrap
 
             var endTurnBtn = CreateButton("EndTurnButton", canvasGo.transform, "END TURN");
             SetAnchors(endTurnBtn, new Vector2(1, 0), new Vector2(1, 0), new Vector2(1, 0));
-            endTurnBtn.anchoredPosition = new Vector2(-24, 24);
-            endTurnBtn.sizeDelta = new Vector2(176, 56);
-            endTurnBtn.GetComponentInChildren<TMP_Text>().fontSize = 22;
+            endTurnBtn.anchoredPosition = new Vector2(-20, 20);
+            endTurnBtn.sizeDelta = new Vector2(164, 52);
+            endTurnBtn.GetComponentInChildren<TMP_Text>().fontSize = 20;
             endTurnBtn.GetComponentInChildren<TMP_Text>().fontStyle = FontStyles.Bold;
             StyleButton(endTurnBtn, ControlDeskTheme.WithAlpha(ControlDeskTheme.AccentAmber, 0.92f));
             hud.endTurnButton = endTurnBtn.GetComponent<Button>();
@@ -655,6 +744,61 @@ namespace EmpireOfCards.Bootstrap
             rivalMoodTmp.fontStyle = FontStyles.Bold;
             rivalMoodTmp.color = ControlDeskTheme.AccentAmber;
             hud.rivalPopup.SetMoodIconReference(rivalMoodTmp);
+
+            var rivalIntentPanel = CreateShellPanel("RivalIntentPanel", canvasGo.transform, new Vector2(316, 146), ControlDeskTheme.WithAlpha(ControlDeskTheme.Panel, 0.94f));
+            SetAnchors(rivalIntentPanel, new Vector2(1f, 1f), new Vector2(1f, 1f), new Vector2(1f, 1f));
+            rivalIntentPanel.anchoredPosition = new Vector2(-22, -520);
+            var rivalIntentUi = rivalIntentPanel.gameObject.AddComponent<RivalIntentPanelUI>();
+            hud.rivalIntentPanel = rivalIntentUi;
+
+            var rivalIntentTitle = CreateTextElement("RivalIntentTitle", rivalIntentPanel, "RIVAL INTENT", 16);
+            rivalIntentTitle.anchoredPosition = new Vector2(0, 50);
+            rivalIntentTitle.sizeDelta = new Vector2(274, 18);
+            var rivalIntentTitleTmp = rivalIntentTitle.GetComponent<TMP_Text>();
+            rivalIntentTitleTmp.fontStyle = FontStyles.Bold;
+            rivalIntentTitleTmp.color = ControlDeskTheme.AccentAmber;
+
+            var rivalIntentStatus = CreateTextElement("RivalIntentStatus", rivalIntentPanel, "", 11);
+            rivalIntentStatus.anchoredPosition = new Vector2(0, 32);
+            rivalIntentStatus.sizeDelta = new Vector2(274, 16);
+            var rivalIntentStatusTmp = rivalIntentStatus.GetComponent<TMP_Text>();
+            rivalIntentStatusTmp.color = ControlDeskTheme.TextMuted;
+
+            var rivalIntentCurrent = CreateTextElement("RivalIntentCurrent", rivalIntentPanel, "", 14);
+            rivalIntentCurrent.anchoredPosition = new Vector2(0, -2);
+            rivalIntentCurrent.sizeDelta = new Vector2(274, 42);
+            var rivalIntentCurrentTmp = rivalIntentCurrent.GetComponent<TMP_Text>();
+            rivalIntentCurrentTmp.alignment = TextAlignmentOptions.Center;
+            rivalIntentCurrentTmp.fontStyle = FontStyles.Bold;
+            rivalIntentCurrentTmp.enableAutoSizing = true;
+            rivalIntentCurrentTmp.fontSizeMin = 11;
+            rivalIntentCurrentTmp.fontSizeMax = 14;
+
+            var rivalIntentQueue = CreateTextElement("RivalIntentQueue", rivalIntentPanel, "", 11);
+            rivalIntentQueue.anchoredPosition = new Vector2(0, -40);
+            rivalIntentQueue.sizeDelta = new Vector2(274, 30);
+            var rivalIntentQueueTmp = rivalIntentQueue.GetComponent<TMP_Text>();
+            rivalIntentQueueTmp.alignment = TextAlignmentOptions.Center;
+            rivalIntentQueueTmp.enableAutoSizing = true;
+            rivalIntentQueueTmp.fontSizeMin = 9;
+            rivalIntentQueueTmp.fontSizeMax = 11;
+
+            var rivalIntentFooter = CreateTextElement("RivalIntentFooter", rivalIntentPanel, "", 10);
+            rivalIntentFooter.anchoredPosition = new Vector2(0, -60);
+            rivalIntentFooter.sizeDelta = new Vector2(274, 16);
+            var rivalIntentFooterTmp = rivalIntentFooter.GetComponent<TMP_Text>();
+            rivalIntentFooterTmp.color = ControlDeskTheme.TextMuted;
+            rivalIntentFooterTmp.enableAutoSizing = true;
+            rivalIntentFooterTmp.fontSizeMin = 9;
+            rivalIntentFooterTmp.fontSizeMax = 10;
+
+            rivalIntentUi.Init(
+                rivalIntentTitleTmp,
+                rivalIntentStatusTmp,
+                rivalIntentCurrentTmp,
+                rivalIntentQueueTmp,
+                rivalIntentFooterTmp);
+            rivalIntentPanel.gameObject.SetActive(false);
 
             // ============================================================
             // SCORE & GAMEOVER OVERLAYS (hidden by default)
@@ -928,6 +1072,8 @@ namespace EmpireOfCards.Bootstrap
         public TMP_Text turnReportText;
         public ClarityPanelUI clarityPanel;
         public AnalyticsPanelUI analyticsPanel;
+        public BoardGuidePanelUI boardGuidePanel;
+        public RivalIntentPanelUI rivalIntentPanel;
 
         // ActionBar sub-elements
         public Image[] actionDotImages;

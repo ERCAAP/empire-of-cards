@@ -35,11 +35,11 @@ namespace EmpireOfCards.Bootstrap
             }
 
             cam.orthographic = false;
-            cam.fieldOfView = 53f;
+            cam.fieldOfView = 40f;
             cam.nearClipPlane = 0.3f;
             cam.farClipPlane = 50f;
-            cam.transform.position = new Vector3(0f, 14.8f, -9.2f);
-            cam.transform.rotation = Quaternion.Euler(51f, 0f, 0f);
+            cam.transform.position = new Vector3(0f, 16.6f, -4.6f);
+            cam.transform.rotation = Quaternion.Euler(68.5f, 0f, 0f);
             cam.backgroundColor = ControlDeskTheme.SceneBackground;
             cam.clearFlags = CameraClearFlags.SolidColor;
 
@@ -69,8 +69,8 @@ namespace EmpireOfCards.Bootstrap
         private static Hand3D Build3DHand(CardFactory cardFactory)
         {
             var handAnchor = new GameObject("HandAnchor");
-            handAnchor.transform.position = new Vector3(0f, 0.98f, -3.92f);
-            handAnchor.transform.rotation = Quaternion.Euler(-9f, 0f, 0f);
+            handAnchor.transform.position = new Vector3(0f, 0.84f, -3.06f);
+            handAnchor.transform.rotation = Quaternion.Euler(-2f, 0f, 0f);
 
             var handGo = new GameObject("Hand3D");
             handGo.transform.SetParent(handAnchor.transform);
