@@ -3,6 +3,7 @@ using UnityEngine;
 using EmpireOfCards.Core;
 using EmpireOfCards.Data;
 using EmpireOfCards.Gameplay.Economy;
+using EmpireOfCards.UI.Clarity;
 
 namespace EmpireOfCards.Gameplay
 {
@@ -350,7 +351,9 @@ namespace EmpireOfCards.Gameplay
                 currentTurn = currentTurn,
                 pressure = currentPressure,
                 headline = GetBriefHeadline(currentPressure),
-                detail = GetBriefDetail(currentPressure)
+                detail = GetBriefDetail(currentPressure),
+                recommendedMove = GetRecommendedMove(currentPressure),
+                buildIdentity = GameClarityFormatter.GetBuildIdentity(GameManager.Instance)
             };
 
             EventBus.TurnBriefGenerated(currentBrief);
@@ -498,6 +501,8 @@ namespace EmpireOfCards.Gameplay
             {
                 headline = BuildReportHeadline(overload),
                 summary = $"Net {(netIncome >= 0 ? "+" : "")}{netIncome} | Rating {(snapshot.rating - previousRating >= 0f ? "+" : "")}{(snapshot.rating - previousRating):0.0} | Share {(snapshot.marketShare - previousMarketShare >= 0f ? "+" : "")}{(snapshot.marketShare - previousMarketShare):0.0}",
+                primaryReason = BuildPrimaryReason(overload, gross, salaries, upkeep, tax),
+                buildIdentity = GameClarityFormatter.GetBuildIdentity(GameManager.Instance),
                 netIncome = netIncome,
                 ratingDelta = snapshot.rating - previousRating,
                 marketShareDelta = snapshot.marketShare - previousMarketShare
@@ -730,6 +735,41 @@ namespace EmpireOfCards.Gameplay
             if (snapshot.marketShare > 55f)
                 return "You tightened your grip on the market.";
             return "Board held together this turn.";
+        }
+
+        private string GetRecommendedMove(BoardPressureType pressure)
+        {
+            return pressure switch
+            {
+                BoardPressureType.CapacityShortfall => "Play a Fix Capacity or staff card before adding more demand.",
+                BoardPressureType.LowDemand => "Play a Create Demand card only if your board can absorb the traffic.",
+                BoardPressureType.LowRating => "Play a Recover Rating or quality card before pushing harder.",
+                BoardPressureType.HighLegalRisk => "Play a Reduce Risk reaction and avoid another shortcut.",
+                BoardPressureType.LowCash => "Play an Improve Margin card or cut expensive pressure lanes.",
+                BoardPressureType.WeakQuality => "Play a supplier or quality-focused staff card.",
+                BoardPressureType.StaffInstability => "Stabilize the team before the next rush turn.",
+                _ => $"Lean into your build: {GameClarityFormatter.GetBuildIdentity(GameManager.Instance)}."
+            };
+        }
+
+        private string BuildPrimaryReason(float overload, int gross, int salaries, int upkeep, int tax)
+        {
+            if (overload > 0.25f)
+                return $"Demand beat capacity by {overload:0.0}, so trust took a hit.";
+
+            if (netIncome < 0 && salaries + upkeep > gross)
+                return $"Salaries and upkeep ({salaries + upkeep}) outpaced revenue {gross}.";
+
+            if (snapshot.rating < 3.4f)
+                return $"Low trust kept rating at {snapshot.rating:0.0}; recovery now has higher payoff.";
+
+            if (snapshot.cash < 120f)
+                return $"Cash fell to {snapshot.cash:0}; margin pressure is now your main fight.";
+
+            if (_rivalPressureImpact > 0.1f)
+                return $"Rival pressure ({_rivalPressureStyle}) slowed your share gain this turn.";
+
+            return $"Revenue {gross} covered salaries {salaries}, upkeep {upkeep}, and tax {tax}.";
         }
 
         private static void AppendCategoryReason(List<string> reasons)

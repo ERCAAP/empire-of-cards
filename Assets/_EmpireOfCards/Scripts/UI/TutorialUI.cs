@@ -124,12 +124,12 @@ namespace EmpireOfCards.UI
             //  FLOATING TIP PANEL (bottom-center, smaller)
             // ============================================================
             var tipPanel = CreatePanel("TipPanel", rootGo.transform,
-                new Vector2(780, 210), new Color(0.08f, 0.09f, 0.13f, 0.96f));
+                new Vector2(620, 168), new Color(0.08f, 0.09f, 0.13f, 0.94f));
             var tipPanelRT = tipPanel.GetComponent<RectTransform>();
             tipPanelRT.anchorMin = new Vector2(0.5f, 0f);
             tipPanelRT.anchorMax = new Vector2(0.5f, 0f);
             tipPanelRT.pivot = new Vector2(0.5f, 0f);
-            tipPanelRT.anchoredPosition = new Vector2(0, 34);
+            tipPanelRT.anchoredPosition = new Vector2(-260, 26);
             AddPanelChrome(tipPanel.transform, "ONBOARDING", new Color(0.98f, 0.69f, 0.22f, 1f));
 
             // Tip text
@@ -138,11 +138,14 @@ namespace EmpireOfCards.UI
             var tipTextRT = tipTextGo.GetComponent<RectTransform>();
             tipTextRT.anchorMin = new Vector2(0f, 0.22f);
             tipTextRT.anchorMax = new Vector2(1f, 1f);
-            tipTextRT.offsetMin = new Vector2(32, 10);
-            tipTextRT.offsetMax = new Vector2(-32, -22);
+            tipTextRT.offsetMin = new Vector2(26, 8);
+            tipTextRT.offsetMax = new Vector2(-26, -20);
             var tipTextTMP = tipTextGo.GetComponent<TMP_Text>();
             tipTextTMP.textWrappingMode = TextWrappingModes.Normal;
-            tipTextTMP.lineSpacing = 3f;
+            tipTextTMP.lineSpacing = 2f;
+            tipTextTMP.enableAutoSizing = true;
+            tipTextTMP.fontSizeMin = 16;
+            tipTextTMP.fontSizeMax = 21;
 
             // Tip button
             var tipBtnGo = CreateButton("TipButton", tipPanel.transform,
@@ -239,6 +242,7 @@ namespace EmpireOfCards.UI
         {
             gameObject.SetActive(true);
             _overlayImage.color = new Color(0f, 0f, 0f, 0.75f);
+            _overlayImage.raycastTarget = true;
 
             _fullScreenPanel.gameObject.SetActive(true);
             _tipPanel.gameObject.SetActive(false);
@@ -257,7 +261,8 @@ namespace EmpireOfCards.UI
         public void ShowTip(string message, string buttonLabel = "Got it")
         {
             gameObject.SetActive(true);
-            _overlayImage.color = new Color(0f, 0f, 0f, 0.4f); // Lighter overlay for tips
+            _overlayImage.color = new Color(0f, 0f, 0f, 0.16f);
+            _overlayImage.raycastTarget = false;
 
             _fullScreenPanel.gameObject.SetActive(false);
             _tipPanel.gameObject.SetActive(true);

@@ -542,7 +542,7 @@ namespace EmpireOfCards.Core
                     arrow3DDirection = Vector3.down,
                     arrowColor = COLOR_CYAN,
                     buttonLabel = "Got it",
-                    pauseGame = true
+                    pauseGame = false
                 },
 
                 // ============================================================
@@ -552,10 +552,11 @@ namespace EmpireOfCards.Core
                 {
                     stepId = "your_cards",
                     locKey = "tutorial.step3",
-                    message = "These are your cards \u2014 your weapons.\n" +
-                              "Each turn you draw options and spend actions to build, react,\n" +
-                              "or pressure the market. Some cards stay on the board.\n" +
-                              "Some are short-term responses.",
+                    message = "These are your decision cards.\n" +
+                              "Read them in this order:\n" +
+                              "role tag -> why play this -> projected effect.\n" +
+                              "If a card says Create Demand, Build Capacity, Recover Rating,\n" +
+                              "or Improve Margin, that is its job this turn.",
                     trigger = TutorialTrigger.Manual,
                     displayMode = TutorialDisplayMode.FloatingTip,
                     indicator = TutorialIndicator.Arrow3D,
@@ -563,7 +564,7 @@ namespace EmpireOfCards.Core
                     arrow3DDirection = Vector3.down,
                     arrowColor = COLOR_CYAN,
                     buttonLabel = "Got it",
-                    pauseGame = true
+                    pauseGame = false
                 },
 
                 // ============================================================
@@ -573,16 +574,16 @@ namespace EmpireOfCards.Core
                 {
                     stepId = "card_colors",
                     locKey = "tutorial.step4",
-                    message = "BLUE cards are Businesses \u2014 they make money.\n" +
-                              "Setup cards build capacity.\n" +
-                              "Growth cards create demand.\n" +
-                              "Risk cards spike power but raise danger.\n" +
-                              "Reaction cards repair trust, quality, or stability.",
+                    message = "Card family tells you intent.\n" +
+                              "Setup = build capacity.\n" +
+                              "Growth = create demand.\n" +
+                              "Risk = short-term spike, future danger.\n" +
+                              "Reaction = recover trust, quality, stability, or risk.",
                     trigger = TutorialTrigger.Manual,
                     displayMode = TutorialDisplayMode.FloatingTip,
                     indicator = TutorialIndicator.CardGlow,
                     buttonLabel = "Got it",
-                    pauseGame = true
+                    pauseGame = false
                 },
 
                 // ============================================================
@@ -600,7 +601,7 @@ namespace EmpireOfCards.Core
                     arrow3DDirection = Vector3.down,
                     arrowColor = COLOR_GOLD,
                     buttonLabel = "Continue",
-                    pauseGame = true
+                    pauseGame = false
                 },
 
                 // ============================================================
@@ -611,10 +612,11 @@ namespace EmpireOfCards.Core
                     stepId = "business_placed",
                     locKey = "tutorial.step6",
                     message = "Watch the main loop:\n" +
-                              "Marketing raises demand.\n" +
-                              "Operations and staff raise capacity.\n" +
+                              "Operations build capacity.\n" +
+                              "Staff keeps service stable.\n" +
+                              "Marketing creates traffic.\n" +
                               "Suppliers improve quality or margin.\n" +
-                              "If demand beats capacity, rating falls and organic traffic slows.",
+                              "If demand beats capacity, rating falls.",
                     trigger = TutorialTrigger.Manual,
                     displayMode = TutorialDisplayMode.FloatingTip,
                     indicator = TutorialIndicator.Arrow3D,
@@ -622,7 +624,7 @@ namespace EmpireOfCards.Core
                     arrow3DDirection = Vector3.down,
                     arrowColor = COLOR_GREEN,
                     buttonLabel = "Got it",
-                    pauseGame = true
+                    pauseGame = false
                 },
 
                 // ============================================================
@@ -642,7 +644,7 @@ namespace EmpireOfCards.Core
                     arrow2DScreenPos = SCREEN_ACTION_DOTS,
                     arrow2DDirection = Vector2.up,
                     buttonLabel = "Or what?",
-                    pauseGame = true
+                    pauseGame = false
                 },
 
                 // ============================================================
@@ -689,10 +691,10 @@ namespace EmpireOfCards.Core
                 {
                     stepId = "money_update",
                     locKey = "tutorial.step10",
-                    message = "Resolve phase compares demand, capacity, quality,\n" +
-                              "rating, upkeep, and risk.\n" +
+                    message = "Resolve phase asks one thing:\n" +
+                              "Did your board absorb the pressure you created?\n" +
                               "Good sequencing becomes profit.\n" +
-                              "Bad sequencing becomes pressure.",
+                              "Bad sequencing becomes overload, trust loss, or margin pain.",
                     trigger = TutorialTrigger.OnResolvePhase,
                     displayMode = TutorialDisplayMode.FloatingTip,
                     indicator = TutorialIndicator.None,
@@ -708,16 +710,17 @@ namespace EmpireOfCards.Core
                 {
                     stepId = "megacorp_turn",
                     locKey = "tutorial.step11",
-                    message = "Turn report: check why your money, rating,\n" +
-                              "and market share changed.\n" +
-                              "If trust slips or overload hits, the report tells you why.",
+                    message = "Turn report tells you why the turn moved.\n" +
+                              "Read it as:\n" +
+                              "biggest problem -> result -> why.\n" +
+                              "If trust slips or overload hits, your next move is already implied.",
                     trigger = TutorialTrigger.OnTurnEnd,
                     displayMode = TutorialDisplayMode.FloatingTip,
                     indicator = TutorialIndicator.Arrow2D,
                     arrow2DScreenPos = SCREEN_MONEY,
                     arrow2DDirection = Vector2.left,
                     buttonLabel = "Understood",
-                    pauseGame = true
+                    pauseGame = false
                 },
 
                 // ============================================================
@@ -728,16 +731,16 @@ namespace EmpireOfCards.Core
                     stepId = "the_shop",
                     locKey = "tutorial.step12",
                     message = "Need a different answer? Open SHOP.\n" +
-                              "Buy cost gets a card into your economy.\n" +
-                              "Play cost activates it.\n" +
-                              "Upkeep and salary are what you carry every turn.",
+                              "Buy cost gets the card.\n" +
+                              "Play cost fires it this turn.\n" +
+                              "Upkeep or salary is what you keep paying every turn.",
                     trigger = TutorialTrigger.Immediate,
                     displayMode = TutorialDisplayMode.FloatingTip,
                     indicator = TutorialIndicator.Arrow2D,
                     arrow2DScreenPos = SCREEN_SHOP,
                     arrow2DDirection = Vector2.left,
                     buttonLabel = "Got it",
-                    pauseGame = true
+                    pauseGame = false
                 },
 
                 // ============================================================

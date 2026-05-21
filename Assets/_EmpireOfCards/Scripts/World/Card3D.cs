@@ -4,6 +4,7 @@ using DG.Tweening;
 using EmpireOfCards.Data;
 using EmpireOfCards.Core;
 using EmpireOfCards.Presentation;
+using EmpireOfCards.UI.Clarity;
 
 namespace EmpireOfCards.World
 {
@@ -109,10 +110,10 @@ namespace EmpireOfCards.World
 
             if (_nameText != null) _nameText.text = _cardData.cardName;
             if (_costText != null) _costText.text = BuildCostChip(_cardData);
-            if (_descText != null) _descText.text = _cardData.description ?? "";
+            if (_descText != null) _descText.text = GameClarityFormatter.BuildCardFrontSummary(_cardData);
 
             if (_statsText != null)
-                _statsText.text = BuildEconomicSummary(_cardData);
+                _statsText.text = $"{GameClarityFormatter.BuildProjectedDeltaLine(_cardData)}\n{GameClarityFormatter.BuildCostSummary(_cardData)}";
         }
 
         public void SetHovered(bool hovered)
@@ -159,7 +160,7 @@ namespace EmpireOfCards.World
             _targetPos = pos;
             _targetRot = rot;
             _isInHand = true;
-            _baseScale = Vector3.one * 1.08f;
+            _baseScale = Vector3.one * 1.18f;
             _targetScale = _isHovered ? _baseScale * 1.18f : _baseScale;
         }
 
@@ -206,77 +207,14 @@ namespace EmpireOfCards.World
                 });
         }
 
-        /// <summary>
-        /// Returns a player-friendly label for action effect types.
-        /// </summary>
-        private static string GetActionLabel(ActionEffectType effect)
-        {
-            return effect switch
-            {
-                ActionEffectType.AddCustomersToRandom   => "Instant: +Customers",
-                ActionEffectType.AddMoneyInstant        => "Instant: +Money",
-                ActionEffectType.MultiplyAllCustomers   => "Instant: x2 Customers",
-                ActionEffectType.CloseRivalWeakestBusiness => "Attack: Close Rival",
-                ActionEffectType.AddCustomersWithFBI    => "Risky: +Customers",
-                ActionEffectType.StealCustomersHalfIncome => "Trade: Steal Cust.",
-                ActionEffectType.DisableRivalOneTurn    => "Sabotage: Stun Rival",
-                ActionEffectType.MoneyNowPayLater       => "Loan: +Money Now",
-                ActionEffectType.DrawAndPlayEmployee    => "Instant: Free Hire",
-                ActionEffectType.SacrificeBusiness      => "Sell: 2x Value",
-                _                                       => "Action"
-            };
-        }
-
-        /// <summary>
-        /// Returns a player-friendly label for upgrade effect types.
-        /// </summary>
-        private static string GetUpgradeLabel(UpgradeEffectType effect)
-        {
-            return effect switch
-            {
-                UpgradeEffectType.IncomePercentSingle         => "Boost: +10% Income",
-                UpgradeEffectType.IncomePercentWithSlotLoss   => "Boost: +30%, -1 Slot",
-                UpgradeEffectType.GlobalCustomerPerTurn        => "All: +Cust./Turn",
-                UpgradeEffectType.GlobalCustomerFlat           => "All: +Customers",
-                UpgradeEffectType.ReduceFBIRisk                => "Safety: -25% FBI",
-                UpgradeEffectType.ExtraAction                  => "Bonus: +1 Action",
-                _                                              => "Upgrade"
-            };
-        }
-
         private static string BuildCostChip(CardData card)
         {
             if (card == null)
                 return string.Empty;
 
-            string buy = $"B {Mathf.Max(0, card.buyCost)}";
-            string play = card.playCost > 0 ? $" | P {card.playCost}" : string.Empty;
+            string buy = $"BUY {Mathf.Max(0, card.buyCost)}";
+            string play = card.playCost > 0 ? $" / PLAY {card.playCost}" : string.Empty;
             return buy + play;
-        }
-
-        private static string BuildEconomicSummary(CardData card)
-        {
-            if (card == null)
-                return string.Empty;
-
-            string upkeep = card.upkeepCostPerTurn > 0f
-                ? $"U {card.upkeepCostPerTurn:0}"
-                : card.salaryPerTurn > 0 ? $"U {card.salaryPerTurn}" : "U 0";
-
-            return card.cardType switch
-            {
-                CardType.Business => $"Demand {card.demandDelta:0.0} | Cap {card.capacityDelta:0.0} | {upkeep}",
-                CardType.Employee => $"Cap {card.capacityDelta:0.0} | Qual {card.qualityDelta:0.0} | {upkeep}",
-                CardType.Action => $"{GetActionLabel(card.actionEffectType)} | P {card.playCost}",
-                CardType.Upgrade when card.targetSlotType == SlotType.Marketing => $"Demand {card.demandDelta:0.0} | Rate {card.ratingDeltaPerTurn:+0.0;-0.0;0.0} | {upkeep}",
-                CardType.Upgrade when card.targetSlotType == SlotType.Supplier => $"Qual {card.qualityDelta:0.0} | Cash {card.cashDeltaPerTurn:+0.0;-0.0;0.0} | {upkeep}",
-                CardType.Upgrade when card.targetSlotType == SlotType.TempEffect => $"Temp {Mathf.Max(1, card.tempEffectDuration)}t | Rate {card.ratingDeltaPerTurn:+0.0;-0.0;0.0} | P {card.playCost}",
-                CardType.Upgrade => $"{GetUpgradeLabel(card.upgradeEffectType)} | {upkeep}",
-                CardType.Event => card.eventDuration > 1
-                    ? $"Crisis {card.eventDuration} turns"
-                    : "Crisis 1 turn",
-                _ => upkeep
-            };
         }
     }
 }

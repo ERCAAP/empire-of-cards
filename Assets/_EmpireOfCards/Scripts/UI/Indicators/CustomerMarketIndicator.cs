@@ -18,6 +18,12 @@ namespace EmpireOfCards.UI.Indicators
         private RectTransform _trackBg;
 
         private float _trackWidth;
+        private float _displayedPlayerPct;
+        private float _displayedRivalPct;
+        private float _targetPlayerPct;
+        private float _targetRivalPct;
+        private int _playerCount;
+        private int _rivalCount;
 
         public void Init(Image playerFill, Image rivalFill, TMP_Text scoreText, RectTransform trackBg)
         {
@@ -37,6 +43,21 @@ namespace EmpireOfCards.UI.Indicators
         private void OnMarketShareChanged(int playerCount, int rivalCount)
             => Refresh(playerCount, rivalCount);
 
+        private void Update()
+        {
+            _displayedPlayerPct = Mathf.Lerp(_displayedPlayerPct, _targetPlayerPct, Time.deltaTime * 8f);
+            _displayedRivalPct = Mathf.Lerp(_displayedRivalPct, _targetRivalPct, Time.deltaTime * 8f);
+
+            if (_playerFill != null)
+                _playerFill.rectTransform.sizeDelta = new Vector2(_trackWidth * _displayedPlayerPct, _playerFill.rectTransform.sizeDelta.y);
+
+            if (_rivalFill != null)
+                _rivalFill.rectTransform.sizeDelta = new Vector2(_trackWidth * _displayedRivalPct, _rivalFill.rectTransform.sizeDelta.y);
+
+            if (_scoreText != null)
+                _scoreText.text = $"{_playerCount} / {_rivalCount}";
+        }
+
         private void Refresh(int playerCount, int rivalCount)
         {
             int total = Constants.TOTAL_MARKET_CUSTOMERS;
@@ -45,23 +66,10 @@ namespace EmpireOfCards.UI.Indicators
             playerCount = Mathf.Clamp(playerCount, 0, total);
             rivalCount  = Mathf.Clamp(rivalCount,  0, total - playerCount);
 
-            float playerPct = playerCount / (float)total;
-            float rivalPct  = rivalCount  / (float)total;
-
-            if (_playerFill != null)
-            {
-                _playerFill.rectTransform.sizeDelta =
-                    new Vector2(_trackWidth * playerPct, _playerFill.rectTransform.sizeDelta.y);
-            }
-
-            if (_rivalFill != null)
-            {
-                _rivalFill.rectTransform.sizeDelta =
-                    new Vector2(_trackWidth * rivalPct, _rivalFill.rectTransform.sizeDelta.y);
-            }
-
-            if (_scoreText != null)
-                _scoreText.text = $"{playerCount} / {rivalCount}";
+            _playerCount = playerCount;
+            _rivalCount = rivalCount;
+            _targetPlayerPct = playerCount / (float)total;
+            _targetRivalPct = rivalCount / (float)total;
         }
     }
 }

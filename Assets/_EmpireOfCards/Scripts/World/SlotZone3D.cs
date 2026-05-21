@@ -2,6 +2,8 @@ using UnityEngine;
 using EmpireOfCards.Core;
 using EmpireOfCards.Data;
 using EmpireOfCards.UI.Cards;
+using TMPro;
+using EmpireOfCards.Presentation;
 
 namespace EmpireOfCards.World
 {
@@ -22,6 +24,10 @@ namespace EmpireOfCards.World
         private Color _validHighlightColor = new Color(0.2f, 0.9f, 0.3f, 1f);
         private Color _invalidHighlightColor = new Color(0.9f, 0.2f, 0.2f, 1f);
         private GameObject _buildingVisual;
+        private TextMeshPro _previewLabel;
+        private bool _placementFlashActive;
+        private float _placementFlashTimer;
+        private const float PlacementFlashDuration = 0.22f;
 
         public DropZoneType ZoneType => zoneType;
         public int SlotIndex => slotIndex;
@@ -38,13 +44,26 @@ namespace EmpireOfCards.World
                 _occupiedColor = _baseColor;
             }
             _pulseColor = new Color(0.2f, 0.9f, 0.3f, 0.5f);
+            CreatePreviewLabel();
         }
 
         private void Update()
         {
+            if (_placementFlashActive && _renderer != null)
+            {
+                _placementFlashTimer -= Time.deltaTime;
+                float t = Mathf.Clamp01(_placementFlashTimer / PlacementFlashDuration);
+                _renderer.material.color = Color.Lerp(_occupiedColor, ControlDeskTheme.Lighten(_occupiedColor, 0.35f), t);
+                if (_placementFlashTimer <= 0f)
+                {
+                    _placementFlashActive = false;
+                    _renderer.material.color = _isOccupied ? _occupiedColor : _baseColor;
+                }
+                return;
+            }
+
             if (!_isPulsing || _renderer == null) return;
 
-            // Oscillate alpha between 0.3 and 0.7 at 1.5 Hz
             float alpha = 0.5f + 0.2f * Mathf.Sin(Time.time * 1.5f * 2f * Mathf.PI);
             Color c = _pulseColor;
             c.a = alpha;
@@ -163,12 +182,15 @@ namespace EmpireOfCards.World
 
             if (_renderer != null)
                 _renderer.material.color = _occupiedColor;
+
+            TriggerPlacementFlash();
         }
 
         public void RemoveCard()
         {
             _isOccupied = false;
             _placedCard = null;
+            ClearPreview();
 
             if (_buildingVisual != null)
             {
@@ -184,6 +206,7 @@ namespace EmpireOfCards.World
         {
             _isOccupied = data != null;
             _placedCard = null;
+            ClearPreview();
 
             if (_buildingVisual != null)
             {
@@ -263,11 +286,59 @@ namespace EmpireOfCards.World
             }
         }
 
+        public void ShowPreview(string text, bool valid)
+        {
+            if (_previewLabel == null)
+                return;
+
+            _previewLabel.gameObject.SetActive(!string.IsNullOrWhiteSpace(text));
+            if (!_previewLabel.gameObject.activeSelf)
+                return;
+
+            _previewLabel.text = text;
+            if (!valid)
+                _previewLabel.color = new Color(1f, 0.58f, 0.58f);
+            else if (text != null && text.Contains("Risk +"))
+                _previewLabel.color = new Color(1f, 0.84f, 0.52f);
+            else
+                _previewLabel.color = new Color(0.62f, 1f, 0.72f);
+        }
+
+        public void ClearPreview()
+        {
+            if (_previewLabel != null)
+                _previewLabel.gameObject.SetActive(false);
+        }
+
         public void RuntimeInit(DropZoneType type, int slot, int parentBiz = -1)
         {
             zoneType = type;
             slotIndex = slot;
             parentBusinessIndex = parentBiz;
+        }
+
+        private void CreatePreviewLabel()
+        {
+            var go = new GameObject("PreviewLabel");
+            go.transform.SetParent(transform, false);
+            go.transform.localPosition = new Vector3(0f, 0.42f, 0f);
+            go.transform.localRotation = Quaternion.Euler(90f, 0f, 0f);
+            go.transform.localScale = Vector3.one * 0.055f;
+
+            _previewLabel = go.AddComponent<TextMeshPro>();
+            _previewLabel.fontSize = 4.8f;
+            _previewLabel.alignment = TextAlignmentOptions.Center;
+            _previewLabel.textWrappingMode = TextWrappingModes.Normal;
+            _previewLabel.overflowMode = TextOverflowModes.Overflow;
+            _previewLabel.outlineWidth = 0.15f;
+            _previewLabel.outlineColor = new Color(0f, 0f, 0f, 0.7f);
+            _previewLabel.gameObject.SetActive(false);
+        }
+
+        private void TriggerPlacementFlash()
+        {
+            _placementFlashActive = true;
+            _placementFlashTimer = PlacementFlashDuration;
         }
     }
 }

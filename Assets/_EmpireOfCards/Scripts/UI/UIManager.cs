@@ -5,6 +5,8 @@ using UnityEngine.UI;
 using TMPro;
 using EmpireOfCards.Core;
 using EmpireOfCards.Data;
+using EmpireOfCards.World;
+using EmpireOfCards.UI.Clarity;
 
 namespace EmpireOfCards.UI
 {
@@ -25,6 +27,8 @@ namespace EmpireOfCards.UI
         [SerializeField] private RivalPopup rivalPopup;
         [SerializeField] private ScoreScreen scoreScreen;
         [SerializeField] private GameOverScreen gameOverScreen;
+        [SerializeField] private ClarityPanelUI clarityPanel;
+        [SerializeField] private AnalyticsPanelUI analyticsPanel;
 
         [Header("Neglect Warning")]
         [SerializeField] private TMP_Text neglectWarningText;
@@ -69,6 +73,16 @@ namespace EmpireOfCards.UI
             this.gameOverScreen = gameOver;
         }
 
+        public void SetClarityPanel(ClarityPanelUI panel)
+        {
+            clarityPanel = panel;
+        }
+
+        public void SetAnalyticsPanel(AnalyticsPanelUI panel)
+        {
+            analyticsPanel = panel;
+        }
+
         /// <summary>
         /// Sets the neglect warning TMP_Text reference.
         /// Called by WiringService after Init().
@@ -103,6 +117,11 @@ namespace EmpireOfCards.UI
             EventBus.OnTurnBriefGenerated += HandleTurnBriefGenerated;
             EventBus.OnTurnReportGenerated += HandleTurnReportGenerated;
             EventBus.OnRivalActionQueued += HandleRivalActionQueued;
+            EventBus.OnBusinessPlaced += HandleBusinessPlaced;
+            EventBus.OnEmployeePlaced += HandleBoardChanged;
+            EventBus.OnUpgradePlaced += HandleBoardChanged;
+            EventBus.OnCardPlacedInSlot += HandleCardPlacedInSlot;
+            EventBus.OnCardRemovedFromSlot += HandleCardRemovedFromSlot;
         }
 
         private void OnDisable()
@@ -124,6 +143,11 @@ namespace EmpireOfCards.UI
             EventBus.OnTurnBriefGenerated -= HandleTurnBriefGenerated;
             EventBus.OnTurnReportGenerated -= HandleTurnReportGenerated;
             EventBus.OnRivalActionQueued -= HandleRivalActionQueued;
+            EventBus.OnBusinessPlaced -= HandleBusinessPlaced;
+            EventBus.OnEmployeePlaced -= HandleBoardChanged;
+            EventBus.OnUpgradePlaced -= HandleBoardChanged;
+            EventBus.OnCardPlacedInSlot -= HandleCardPlacedInSlot;
+            EventBus.OnCardRemovedFromSlot -= HandleCardRemovedFromSlot;
         }
 
         // ------------------------------------------------------------------
@@ -202,24 +226,28 @@ namespace EmpireOfCards.UI
         {
             if (topBar != null)
                 topBar.SetTargetMoney(newAmount);
+            RefreshAnalytics();
         }
 
         private void HandleTerritoryChanged(int player, int rival)
         {
             // TopBar or a dedicated territory widget can reflect this.
             // Kept intentionally thin -- panels subscribe themselves.
+            RefreshAnalytics();
         }
 
         private void HandleFBIRiskChanged(float risk)
         {
             if (topBar != null)
                 topBar.UpdateFBIRisk(risk);
+            RefreshAnalytics();
         }
 
         private void HandleTurnStarted(int turnNumber)
         {
             if (topBar != null)
                 topBar.UpdateTurn(turnNumber, Constants.MAX_TURNS);
+            RefreshAnalytics();
         }
 
         private void HandleBusinessNeglected(int businessIndex, int neglectTurns)
@@ -246,23 +274,64 @@ namespace EmpireOfCards.UI
         private void HandleTurnBriefGenerated(TurnBriefData brief)
         {
             if (turnBriefText == null || brief == null) return;
-            turnBriefText.text = $"BRIEF  {brief.headline}\n{brief.detail}";
+            string move = string.IsNullOrWhiteSpace(brief.recommendedMove) ? brief.detail : brief.recommendedMove;
+            turnBriefText.text = $"PROBLEM  {brief.headline}";
+            if (turnReportText != null)
+                turnReportText.text = $"NEXT MOVE  {move}";
+            topBar?.UpdateBuildIdentity(brief.buildIdentity);
+            topBar?.UpdatePressureState(brief.pressure);
+            RefreshAnalytics();
         }
 
         private void HandleTurnReportGenerated(TurnReportData report)
         {
             if (turnReportText == null || report == null) return;
-
-            string reasons = report.reasons != null && report.reasons.Count > 0
-                ? report.reasons[0]
-                : report.summary;
-            turnReportText.text = $"REPORT  {report.headline}\n{reasons}";
+            string reasons = report.primaryReason;
+            if (string.IsNullOrWhiteSpace(reasons))
+            {
+                reasons = report.reasons != null && report.reasons.Count > 0
+                    ? report.reasons[0]
+                    : report.summary;
+            }
+            if (turnBriefText != null)
+                turnBriefText.text = $"RESULT  {report.headline}";
+            turnReportText.text = $"WHY  {reasons}";
+            if (!string.IsNullOrWhiteSpace(report.buildIdentity))
+                topBar?.UpdateBuildIdentity(report.buildIdentity);
+            if (GameManager.Instance != null && GameManager.Instance.EconomyManager != null)
+                topBar?.UpdatePressureState(GameManager.Instance.EconomyManager.CurrentPressure);
+            RefreshAnalytics();
         }
 
         private void HandleRivalActionQueued(RivalQueuedAction action)
         {
             if (rivalPopup != null && action != null)
                 rivalPopup.Show($"{action.displayName}  [{action.laneLabel}]", action.shortDescription);
+            RefreshAnalytics();
+        }
+
+        private void HandleBoardChanged(CardData card, int businessIndex)
+        {
+            topBar?.UpdateBuildIdentity(GameClarityFormatter.GetBuildIdentity(GameManager.Instance));
+            RefreshAnalytics();
+        }
+
+        private void HandleBusinessPlaced(CardData card, int slotIndex)
+        {
+            topBar?.UpdateBuildIdentity(GameClarityFormatter.GetBuildIdentity(GameManager.Instance));
+            RefreshAnalytics();
+        }
+
+        private void HandleCardPlacedInSlot(CardData card, SlotType slotType)
+        {
+            topBar?.UpdateBuildIdentity(GameClarityFormatter.GetBuildIdentity(GameManager.Instance));
+            RefreshAnalytics();
+        }
+
+        private void HandleCardRemovedFromSlot(CardData card, SlotType slotType)
+        {
+            topBar?.UpdateBuildIdentity(GameClarityFormatter.GetBuildIdentity(GameManager.Instance));
+            RefreshAnalytics();
         }
 
         // ------------------------------------------------------------------
@@ -520,6 +589,29 @@ namespace EmpireOfCards.UI
             OnShopToggled?.Invoke(true);
         }
 
+        public void ShowCardClarity(CardData card)
+        {
+            if (clarityPanel == null || card == null)
+                return;
+
+            string buildIdentity = GameClarityFormatter.GetBuildIdentity(GameManager.Instance);
+            clarityPanel.ShowCard(card, buildIdentity);
+        }
+
+        public void ShowSlotClarity(CardData card, SlotZone3D slot, bool valid)
+        {
+            if (clarityPanel == null || card == null || slot == null)
+                return;
+
+            string buildIdentity = GameClarityFormatter.GetBuildIdentity(GameManager.Instance);
+            clarityPanel.ShowSlotPreview(card, slot, valid, buildIdentity);
+        }
+
+        public void HideClarity()
+        {
+            clarityPanel?.Hide();
+        }
+
         /// <summary>
         /// Closes the shop panel and fires the toggle event.
         /// </summary>
@@ -546,10 +638,22 @@ namespace EmpireOfCards.UI
                 topBar.SetTargetMoney(gm.PlayerMoney);
                 topBar.UpdateTurn(gm.CurrentTurn, gm.MaxTurns);
                 topBar.UpdateFBIRisk(gm.FBIRisk);
+                topBar.UpdateBuildIdentity(GameClarityFormatter.GetBuildIdentity(gm));
+                if (gm.EconomyManager != null)
+                    topBar.UpdatePressureState(gm.EconomyManager.CurrentPressure);
             }
 
             if (actionBar != null)
                 actionBar.UpdateActions(gm.PlayerActions, gm.MaxActions);
+
+            RefreshAnalytics();
+        }
+
+        private void RefreshAnalytics()
+        {
+            analyticsPanel?.Refresh(GameManager.Instance);
+            if (GameManager.Instance != null && GameManager.Instance.EconomyManager != null)
+                topBar?.UpdatePressureState(GameManager.Instance.EconomyManager.CurrentPressure);
         }
 
         /// <summary>

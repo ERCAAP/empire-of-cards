@@ -3,6 +3,7 @@ using UnityEngine.UI;
 using TMPro;
 using EmpireOfCards.Core;
 using EmpireOfCards.Data;
+using EmpireOfCards.UI.Clarity;
 
 namespace EmpireOfCards.UI.Cards
 {
@@ -81,13 +82,16 @@ namespace EmpireOfCards.UI.Cards
 
             // Name and description
             if (nameText != null)
-                nameText.text = data.cardName;
+            {
+                string roleHex = ColorUtility.ToHtmlStringRGB(GameClarityFormatter.GetRoleTone(data));
+                nameText.text = $"{data.cardName}\n<size=72%><color=#{roleHex}>{GameClarityFormatter.GetRoleLabel(data)}</color></size>";
+            }
 
             if (descriptionText != null)
-                descriptionText.text = data.description;
+                descriptionText.text = $"{GameClarityFormatter.BuildCardFrontSummary(data)}\n{GameClarityFormatter.GetProblemSolved(data)}";
 
             if (costText != null)
-                costText.text = BuildCostLine(data);
+                costText.text = GameClarityFormatter.BuildCostSummary(data);
 
             // Icon
             if (cardIcon != null && data.icon != null)
@@ -158,6 +162,9 @@ namespace EmpireOfCards.UI.Cards
             if (tooltipText != null)
             {
                 string tip = $"<b>{data.cardName}</b>\n{data.description}";
+                tip += $"\n\n<b>{GameClarityFormatter.GetRoleLabel(data)}</b>";
+                tip += $"\n{GameClarityFormatter.GetWhyPlayThis(data)}";
+                tip += $"\n{GameClarityFormatter.BuildProjectedDeltaLine(data)}";
 
                 if (data.tags != null && data.tags.Length > 0)
                 {
@@ -221,26 +228,7 @@ namespace EmpireOfCards.UI.Cards
 
         private string BuildStatsLine(CardData card)
         {
-            switch (card.cardType)
-            {
-                case CardType.Business:
-                    return $"Demand {card.demandDelta:0.0}  Cap {card.capacityDelta:0.0}  Upkeep {card.upkeepCostPerTurn:0}";
-
-                case CardType.Employee:
-                    return $"Salary {card.salaryPerTurn}/turn  Stability {card.staffStabilityDelta:+0.0;-0.0;0.0}";
-
-                case CardType.Action:
-                    return $"Play {card.playCost}  Effect {card.actionValue}";
-
-                case CardType.Upgrade:
-                    return $"Play {card.playCost}  Upkeep {card.upkeepCostPerTurn:0}";
-
-                case CardType.Event:
-                    return $"Duration: {card.eventDuration} turns";
-
-                default:
-                    return "";
-            }
+            return GameClarityFormatter.BuildProjectedDeltaLine(card);
         }
 
         private string BuildCostLine(CardData card)
@@ -248,9 +236,7 @@ namespace EmpireOfCards.UI.Cards
             if (card == null)
                 return string.Empty;
 
-            string buy = $"Buy ${card.buyCost}";
-            string play = card.playCost > 0 ? $" | Play ${card.playCost}" : string.Empty;
-            return buy + play;
+            return GameClarityFormatter.BuildCostSummary(card);
         }
     }
 }

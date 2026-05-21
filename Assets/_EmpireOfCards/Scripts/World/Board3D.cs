@@ -6,6 +6,7 @@ using EmpireOfCards.Data;
 using EmpireOfCards.Gameplay;
 using EmpireOfCards.Presentation;
 using EmpireOfCards.UI.Cards;
+using EmpireOfCards.UI.Clarity;
 
 namespace EmpireOfCards.World
 {
@@ -92,7 +93,7 @@ namespace EmpireOfCards.World
             CreateFramedPanel("PlayerBand", new Vector3(0f, 0.055f, -0.25f), new Vector3(13.8f, 0.05f, 6.0f), ControlDeskTheme.PlayerBand, ControlDeskTheme.SurfaceBorder);
             CreateFramedPanel("MarketBand", new Vector3(0f, 0.06f, 3.55f), new Vector3(13.4f, 0.05f, 1.75f), ControlDeskTheme.MidBand, ControlDeskTheme.SurfaceBorder);
             CreateFramedPanel("RivalBand", new Vector3(0f, 0.055f, 5.70f), new Vector3(13.4f, 0.05f, 2.20f), ControlDeskTheme.RivalBand, ControlDeskTheme.Darken(ControlDeskTheme.RivalLane, 0.2f));
-            CreateFramedPanel("HandDock", new Vector3(0f, 0.06f, -3.25f), new Vector3(9.0f, 0.05f, 1.65f), ControlDeskTheme.PanelSoft, ControlDeskTheme.SurfaceBorder);
+            CreateFramedPanel("HandDock", new Vector3(0f, 0.06f, -3.25f), new Vector3(10.6f, 0.05f, 1.95f), ControlDeskTheme.PanelSoft, ControlDeskTheme.SurfaceBorder);
         }
 
         private void BuildPlayerBands()
@@ -307,6 +308,10 @@ namespace EmpireOfCards.World
             _staffHeader = CreateDeskText("STAFF", new Vector3(-4.20f, 0.16f, -0.78f), flatText, 1.45f, ControlDeskTheme.Lighten(ControlDeskTheme.StaffSlot, 0.25f), TextAlignmentOptions.Left);
             _marketingHeader = CreateDeskText("MARKETING", new Vector3(-5.15f, 0.16f, 0.52f), flatText, 1.25f, ControlDeskTheme.Lighten(ControlDeskTheme.MarketingSlot, 0.22f), TextAlignmentOptions.Left);
             _supplierHeader = CreateDeskText("SUPPLIERS", new Vector3(1.15f, 0.16f, 0.52f), flatText, 1.25f, ControlDeskTheme.Lighten(ControlDeskTheme.SupplierSlot, 0.22f), TextAlignmentOptions.Left);
+            _operationsHeader.textWrappingMode = TextWrappingModes.Normal;
+            _staffHeader.textWrappingMode = TextWrappingModes.Normal;
+            _marketingHeader.textWrappingMode = TextWrappingModes.Normal;
+            _supplierHeader.textWrappingMode = TextWrappingModes.Normal;
             CreateDeskText("CONTROL", new Vector3(5.35f, 0.16f, 1.55f), flatText, 1.15f, ControlDeskTheme.Lighten(ControlDeskTheme.UtilitySlot, 0.18f), TextAlignmentOptions.Left);
             CreateDeskText("SHARED MARKET", new Vector3(-5.45f, 0.16f, 2.95f), flatText, 1.20f, ControlDeskTheme.TextMuted, TextAlignmentOptions.Left);
             CreateDeskText("RIVAL PRESSURE", new Vector3(-5.45f, 0.16f, 5.05f), flatText, 1.15f, ControlDeskTheme.Lighten(ControlDeskTheme.RivalSlot, 0.20f), TextAlignmentOptions.Left);
@@ -316,9 +321,9 @@ namespace EmpireOfCards.World
             CreateDeskText("EVENTS", new Vector3(5.55f, 0.16f, 1.45f), flatText, 1.00f, ControlDeskTheme.Lighten(ControlDeskTheme.EventSlot, 0.22f), TextAlignmentOptions.Center);
 
             _tierLabel = CreateDeskText("TRADER", new Vector3(-5.95f, 0.16f, -2.95f), flatText, 1.25f, ControlDeskTheme.MoneyGold, TextAlignmentOptions.Left);
-            _districtTrafficLabel = CreateDeskText("Traffic / Visibility: Stable", new Vector3(-5.35f, 0.16f, 3.35f), flatText, 0.82f, ControlDeskTheme.AccentAmber, TextAlignmentOptions.Left);
-            _districtRatingLabel = CreateDeskText("Word of Mouth: Neutral", new Vector3(-1.35f, 0.16f, 3.35f), flatText, 0.82f, ControlDeskTheme.AccentBlue, TextAlignmentOptions.Left);
-            _districtPullLabel = CreateDeskText("Market Pull: Balanced", new Vector3(2.65f, 0.16f, 3.35f), flatText, 0.82f, ControlDeskTheme.AccentGreen, TextAlignmentOptions.Left);
+            _districtTrafficLabel = CreateDeskText("TRAFFIC WINDOW", new Vector3(-5.35f, 0.16f, 3.35f), flatText, 0.82f, ControlDeskTheme.AccentAmber, TextAlignmentOptions.Left);
+            _districtRatingLabel = CreateDeskText("TRUST LOOP", new Vector3(-1.35f, 0.16f, 3.35f), flatText, 0.82f, ControlDeskTheme.AccentBlue, TextAlignmentOptions.Left);
+            _districtPullLabel = CreateDeskText("MARKET PULL", new Vector3(2.65f, 0.16f, 3.35f), flatText, 0.82f, ControlDeskTheme.AccentGreen, TextAlignmentOptions.Left);
             _rivalCardLabel = CreateDeskText("Last Card: Waiting", new Vector3(-5.35f, 0.16f, 5.35f), flatText, 0.80f, ControlDeskTheme.TextPrimary, TextAlignmentOptions.Left);
             _rivalStyleLabel = CreateDeskText("Pressure: Balanced", new Vector3(-1.35f, 0.16f, 5.35f), flatText, 0.80f, ControlDeskTheme.TextMuted, TextAlignmentOptions.Left);
             _rivalCrisisLabel = CreateDeskText("Crisis Read: Clean", new Vector3(2.65f, 0.16f, 5.35f), flatText, 0.80f, ControlDeskTheme.TextMuted, TextAlignmentOptions.Left);
@@ -436,17 +441,16 @@ namespace EmpireOfCards.World
             if (brief == null) return;
 
             if (_districtTrafficLabel != null)
-                _districtTrafficLabel.text = $"Traffic / Visibility: {brief.headline}";
+                _districtTrafficLabel.text = "TRAFFIC WINDOW";
             if (_districtRatingLabel != null)
-                _districtRatingLabel.text = $"Word of Mouth: {brief.detail}";
+                _districtRatingLabel.text = "TRUST LOOP";
+            if (_districtPullLabel != null)
+                _districtPullLabel.text = "MARKET PULL";
         }
 
         private void HandleTurnReport(TurnReportData report)
         {
             if (report == null) return;
-
-            if (_districtPullLabel != null)
-                _districtPullLabel.text = $"Market Pull: {report.summary}";
         }
 
         private void HandleRivalActionQueued(RivalQueuedAction action)
@@ -512,11 +516,20 @@ namespace EmpireOfCards.World
         private static string BuildHeader(string headerKey, string fallbackHeader, BoardSubSlotDefinition[] defs)
         {
             string prefix = LocalizationManager.GetWithFallback(headerKey, fallbackHeader);
+            SlotType slotType = headerKey switch
+            {
+                "board.ops" => SlotType.Operation,
+                "board.staff" => SlotType.Staff,
+                "board.growth" => SlotType.Marketing,
+                "board.supply" => SlotType.Supplier,
+                _ => SlotType.Operation
+            };
+            string purpose = GameClarityFormatter.GetSlotPurposeTitle(slotType).ToUpperInvariant();
             if (defs == null || defs.Length == 0)
-                return prefix;
+                return $"{prefix}\n{purpose}";
 
             int count = Mathf.Min(defs.Length, 3);
-            string label = prefix + ": ";
+            string label = $"{prefix}  {purpose}\n";
             for (int i = 0; i < count; i++)
             {
                 if (i > 0) label += " / ";

@@ -3,6 +3,7 @@ using UnityEngine.UI;
 using TMPro;
 using DG.Tweening;
 using EmpireOfCards.Core;
+using EmpireOfCards.UI.Clarity;
 
 namespace EmpireOfCards.UI
 {
@@ -32,6 +33,8 @@ namespace EmpireOfCards.UI
         [Header("Turn")]
         [SerializeField] private TMP_Text turnText;
         [SerializeField] private TMP_Text companyTierText;
+        [SerializeField] private TMP_Text buildIdentityText;
+        [SerializeField] private TMP_Text pressureText;
 
         [Header("FBI Risk")]
         [SerializeField] private Image fbiBarFill;
@@ -57,16 +60,22 @@ namespace EmpireOfCards.UI
         /// Assigns all sub-element references without reflection.
         /// Called by WiringService during bootstrap.
         /// </summary>
-        public void Init(TMP_Text money, TMP_Text turn, Image fbiFill, TMP_Text fbiText, TMP_Text tier = null)
+        public void Init(TMP_Text money, TMP_Text turn, Image fbiFill, TMP_Text fbiText, TMP_Text tier = null, TMP_Text buildIdentity = null, TMP_Text pressure = null)
         {
             this.moneyText = money;
             this.turnText = turn;
             this.fbiBarFill = fbiFill;
             this.fbiRiskText = fbiText;
             this.companyTierText = tier;
+            this.buildIdentityText = buildIdentity;
+            this.pressureText = pressure;
 
             if (companyTierText != null)
                 companyTierText.text = CompanyTier.Trader.ToString().ToUpperInvariant();
+            if (buildIdentityText != null)
+                buildIdentityText.text = "BUILD · Balanced Board";
+            if (pressureText != null)
+                pressureText.text = "PRESSURE · Board Stable";
         }
 
         // ------------------------------------------------------------------
@@ -214,9 +223,9 @@ namespace EmpireOfCards.UI
             if (turnText == null) return;
 
             if (current >= Constants.SOFT_CAP_TURN)
-                turnText.text = LocalizationManager.Get("ui.turn_softcap", current);
+                turnText.text = $"Turn {current}/{max}  WARNING";
             else
-                turnText.text = LocalizationManager.Get("ui.turn_current", current);
+                turnText.text = $"Turn {current}/{max}";
         }
 
         /// <summary>
@@ -225,6 +234,42 @@ namespace EmpireOfCards.UI
         public void UpdateFBIRisk(float risk)
         {
             targetFBI = Mathf.Clamp01(risk);
+        }
+
+        public void UpdateBuildIdentity(string buildIdentity)
+        {
+            if (buildIdentityText == null)
+                return;
+
+            string value = string.IsNullOrWhiteSpace(buildIdentity) ? "Balanced Board" : buildIdentity;
+            buildIdentityText.text = $"BUILD · {value}";
+        }
+
+        public void UpdatePressureState(BoardPressureType pressure)
+        {
+            if (pressureText == null)
+                return;
+
+            string label = GameClarityFormatter.GetPressureLabel(pressure);
+            if (pressure == BoardPressureType.None)
+            {
+                pressureText.text = "PRESSURE · Board Stable";
+                pressureText.color = new Color(0.74f, 0.77f, 0.70f);
+                return;
+            }
+
+            pressureText.text = $"PRESSURE · {label}";
+            pressureText.color = pressure switch
+            {
+                BoardPressureType.HighLegalRisk => new Color(0.95f, 0.34f, 0.30f),
+                BoardPressureType.LowCash => new Color(0.98f, 0.66f, 0.26f),
+                BoardPressureType.LowRating => new Color(0.98f, 0.66f, 0.26f),
+                BoardPressureType.CapacityShortfall => new Color(0.34f, 0.73f, 1.00f),
+                BoardPressureType.WeakQuality => new Color(0.98f, 0.66f, 0.26f),
+                BoardPressureType.LowDemand => new Color(0.76f, 0.65f, 0.98f),
+                BoardPressureType.StaffInstability => new Color(0.98f, 0.66f, 0.26f),
+                _ => Color.white
+            };
         }
 
         // ------------------------------------------------------------------

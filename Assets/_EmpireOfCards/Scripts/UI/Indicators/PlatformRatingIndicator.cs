@@ -13,6 +13,8 @@ namespace EmpireOfCards.UI.Indicators
     {
         private Image _barFill;
         private TMP_Text _valueText;
+        private float _displayedRating = Constants.PLATFORM_RATING_DEFAULT;
+        private float _targetRating = Constants.PLATFORM_RATING_DEFAULT;
 
         // Bar dimensions — full width of the background track in pixels
         private const float BAR_FULL_WIDTH = 140f;
@@ -31,7 +33,16 @@ namespace EmpireOfCards.UI.Indicators
         private void OnEnable()  => EventBus.OnPlatformRatingChanged += OnRatingChanged;
         private void OnDisable() => EventBus.OnPlatformRatingChanged -= OnRatingChanged;
 
-        private void OnRatingChanged(float rating) => Refresh(rating);
+        private void OnRatingChanged(float rating)
+        {
+            _targetRating = rating;
+        }
+
+        private void Update()
+        {
+            _displayedRating = Mathf.Lerp(_displayedRating, _targetRating, Time.deltaTime * 8f);
+            Refresh(_displayedRating);
+        }
 
         private void Refresh(float rating)
         {

@@ -5,6 +5,7 @@ using EmpireOfCards.Core;
 using EmpireOfCards.Gameplay;
 using EmpireOfCards.Gameplay.Staff;
 using EmpireOfCards.UI.Cards;
+using EmpireOfCards.UI.Clarity;
 using EmpireOfCards.World;
 
 namespace EmpireOfCards.Bootstrap
@@ -108,9 +109,13 @@ namespace EmpireOfCards.Bootstrap
                 m.uiManager.SetNeglectWarningText(hud.neglectWarningText);
             if (hud.turnBriefText != null || hud.turnReportText != null)
                 m.uiManager.SetFlowTexts(hud.turnBriefText, hud.turnReportText);
+            if (hud.clarityPanel != null)
+                m.uiManager.SetClarityPanel(hud.clarityPanel);
+            if (hud.analyticsPanel != null)
+                m.uiManager.SetAnalyticsPanel(hud.analyticsPanel);
 
             // === TopBarUI: TMP_Text and Image sub-elements ===
-            hud.topBarUI.Init(hud.moneyText, hud.turnText, hud.fbiBarFillImg, null, hud.companyTierText);
+            hud.topBarUI.Init(hud.moneyText, hud.turnText, hud.fbiBarFillImg, null, hud.companyTierText, hud.buildIdentityText, hud.pressureText);
 
             // === ActionBarUI: action dot Image[] ===
             hud.actionBarUI.Init(hud.actionDotImages);
@@ -179,6 +184,42 @@ namespace EmpireOfCards.Bootstrap
 
         private static void Wire3DInteraction(InputManager3D inputManager3D, Hand3D hand3D)
         {
+            inputManager3D.OnCardHoverEnter += card =>
+            {
+                var ui = GameManager.Instance != null ? GameManager.Instance.UIManager : null;
+                ui?.ShowCardClarity(card != null ? card.CardData : null);
+            };
+
+            inputManager3D.OnCardHoverExit += _ =>
+            {
+                var input = GameManager.Instance != null ? GameManager.Instance.UIManager : null;
+                input?.HideClarity();
+            };
+
+            inputManager3D.OnDragSlotHoverChanged += (card, slot, valid) =>
+            {
+                var ui = GameManager.Instance != null ? GameManager.Instance.UIManager : null;
+                if (ui == null)
+                    return;
+
+                if (card == null || slot == null)
+                {
+                    ui.HideClarity();
+                }
+                else
+                {
+                    ui.ShowSlotClarity(card.CardData, slot, valid);
+                    slot.ShowPreview(GameClarityFormatter.BuildProjectedDeltaLine(card.CardData), valid);
+                }
+
+                var allSlots = Object.FindObjectsByType<SlotZone3D>(FindObjectsSortMode.None);
+                foreach (var zone in allSlots)
+                {
+                    if (zone != null && zone != slot)
+                        zone.ClearPreview();
+                }
+            };
+
             // --- Card drop -> BoardManager placement ---
             inputManager3D.OnCardDropped += (card, slot) =>
             {

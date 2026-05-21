@@ -43,6 +43,8 @@ namespace EmpireOfCards.Data
     {
         public string headline;
         public string detail;
+        public string recommendedMove;
+        public string buildIdentity;
         public BoardPressureType pressure;
         public int currentTurn;
     }
@@ -52,6 +54,8 @@ namespace EmpireOfCards.Data
     {
         public string headline;
         public string summary;
+        public string primaryReason;
+        public string buildIdentity;
         public int netIncome;
         public float ratingDelta;
         public float marketShareDelta;

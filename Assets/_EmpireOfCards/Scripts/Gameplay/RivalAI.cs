@@ -43,7 +43,11 @@ namespace EmpireOfCards.Gameplay
         public int RivalMoney => rivalMoney;
         public int RivalCustomers => rivalCustomers;
         public int RivalIncome => rivalIncome;
+        public float RivalRating => rivalRating;
+        public float RivalQuality => rivalQuality;
+        public float RivalPressure => rivalPressure;
         public IReadOnlyList<RivalBusiness> RivalBusinesses => rivalBusinesses;
+        public string RivalDisplayName => rivalBusinesses.Count > 0 ? rivalBusinesses[0].name : "Rival";
         public string CurrentMood => "focused";
         public string MoodIcon => "!";
         public RivalData Data => data;

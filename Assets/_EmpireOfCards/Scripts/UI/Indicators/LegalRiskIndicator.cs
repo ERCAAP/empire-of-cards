@@ -14,6 +14,8 @@ namespace EmpireOfCards.UI.Indicators
     {
         private Image   _barFill;
         private TMP_Text _valueText;
+        private float _displayedRisk = Constants.LEGAL_RISK_MIN;
+        private float _targetRisk = Constants.LEGAL_RISK_MIN;
 
         private const float BAR_FULL_WIDTH = 140f;
 
@@ -31,7 +33,16 @@ namespace EmpireOfCards.UI.Indicators
         private void OnEnable()  => EventBus.OnLegalRiskChanged += OnRiskChanged;
         private void OnDisable() => EventBus.OnLegalRiskChanged -= OnRiskChanged;
 
-        private void OnRiskChanged(int score) => Refresh(score);
+        private void OnRiskChanged(int score)
+        {
+            _targetRisk = score;
+        }
+
+        private void Update()
+        {
+            _displayedRisk = Mathf.Lerp(_displayedRisk, _targetRisk, Time.deltaTime * 8f);
+            Refresh(Mathf.RoundToInt(_displayedRisk));
+        }
 
         private void Refresh(int score)
         {

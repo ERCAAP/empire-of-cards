@@ -204,7 +204,12 @@ namespace EmpireOfCards.UI
                 bool canAfford = playerMoney >= price;
 
                 if (i < buyButtons.Length && buyButtons[i] != null)
+                {
                     buyButtons[i].interactable = canAfford;
+                    var label = buyButtons[i].GetComponentInChildren<TMP_Text>();
+                    if (label != null)
+                        label.text = canAfford ? "BUY" : "SHORT";
+                }
 
                 if (i < priceTexts.Length && priceTexts[i] != null)
                     priceTexts[i].color = canAfford ? affordableColor : unaffordableColor;

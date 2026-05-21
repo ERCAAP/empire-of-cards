@@ -31,6 +31,7 @@ namespace EmpireOfCards.Core
         public event Action<Card3D, SlotZone3D> OnCardDropped;
         public event Action<Card3D> OnCardReturnedToHand;
         public event Action<Card3D> OnAbilityUsed;
+        public event Action<Card3D, SlotZone3D, bool> OnDragSlotHoverChanged;
 
         public bool InputEnabled { get => _inputEnabled; set => _inputEnabled = value; }
         public Card3D DraggedCard => _draggedCard;
@@ -164,6 +165,7 @@ namespace EmpireOfCards.Core
                         _hoveredSlot = slot;
                         bool valid = _hoveredSlot.CanAccept(_draggedCard.CardData);
                         _hoveredSlot.SetHighlight(true, valid);
+                        OnDragSlotHoverChanged?.Invoke(_draggedCard, _hoveredSlot, valid);
                     }
                 }
                 else if (_hoveredSlot != null)
@@ -171,6 +173,7 @@ namespace EmpireOfCards.Core
                     _hoveredSlot.SetHighlight(false);
                     if (_hoveredSlot.CanAccept(_draggedCard.CardData))
                         _hoveredSlot.SetPulse(true);
+                    OnDragSlotHoverChanged?.Invoke(_draggedCard, null, false);
                     _hoveredSlot = null;
                 }
             }
@@ -179,6 +182,7 @@ namespace EmpireOfCards.Core
                 _hoveredSlot.SetHighlight(false);
                 if (_hoveredSlot.CanAccept(_draggedCard.CardData))
                     _hoveredSlot.SetPulse(true);
+                OnDragSlotHoverChanged?.Invoke(_draggedCard, null, false);
                 _hoveredSlot = null;
             }
         }
@@ -266,6 +270,7 @@ namespace EmpireOfCards.Core
             _isDragging = false;
             _draggedCard = null;
             _hoveredSlot = null;
+            OnDragSlotHoverChanged?.Invoke(null, null, false);
         }
 
         public void SetCamera(Camera cam) { mainCamera = cam; }
