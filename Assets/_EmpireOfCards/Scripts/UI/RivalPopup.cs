@@ -44,10 +44,16 @@ namespace EmpireOfCards.UI
         private void Awake()
         {
             if (canvasGroup != null)
+            {
                 canvasGroup.alpha = 0f;
+                canvasGroup.blocksRaycasts = false;
+                canvasGroup.interactable = false;
+            }
 
             if (moodIconText != null)
                 moodIconText.gameObject.SetActive(false);
+
+            gameObject.SetActive(false);
         }
 
         private void Update()
@@ -94,6 +100,8 @@ namespace EmpireOfCards.UI
         /// </summary>
         public void Show(string action, string taunt)
         {
+            gameObject.SetActive(true);
+
             // Hide mood icon when showing action/taunt
             if (moodIconText != null)
                 moodIconText.gameObject.SetActive(false);
@@ -122,6 +130,7 @@ namespace EmpireOfCards.UI
         public void ShowMoodIcon(string moodIcon)
         {
             if (string.IsNullOrEmpty(moodIcon)) return;
+            gameObject.SetActive(true);
 
             // Hide action/taunt texts during mood display
             if (actionText != null)
@@ -147,6 +156,7 @@ namespace EmpireOfCards.UI
         public void ShowStrategyComment(string comment)
         {
             if (string.IsNullOrEmpty(comment)) return;
+            gameObject.SetActive(true);
 
             if (moodIconText != null)
                 moodIconText.gameObject.SetActive(false);
@@ -205,13 +215,18 @@ namespace EmpireOfCards.UI
             if (t >= 1f)
             {
                 if (canvasGroup != null)
+                {
                     canvasGroup.alpha = 0f;
+                    canvasGroup.blocksRaycasts = false;
+                    canvasGroup.interactable = false;
+                }
 
                 // Clean up mood icon after fade
                 if (moodIconText != null)
                     moodIconText.gameObject.SetActive(false);
 
                 state = State.Idle;
+                gameObject.SetActive(false);
             }
         }
     }

@@ -39,10 +39,16 @@ namespace EmpireOfCards.UI
                 cardRect = eventCardUI.GetComponent<RectTransform>();
 
             if (canvasGroup != null)
+            {
                 canvasGroup.alpha = 0f;
+                canvasGroup.blocksRaycasts = false;
+                canvasGroup.interactable = false;
+            }
 
             if (glowEffect != null)
                 glowEffect.SetActive(false);
+
+            gameObject.SetActive(false);
         }
 
         private void Update()
@@ -80,11 +86,17 @@ namespace EmpireOfCards.UI
         /// </summary>
         public void Show(CardData eventCard)
         {
+            gameObject.SetActive(true);
+
             if (eventCardUI != null)
                 eventCardUI.SetupCard(eventCard);
 
             if (canvasGroup != null)
+            {
                 canvasGroup.alpha = 1f;
+                canvasGroup.blocksRaycasts = false;
+                canvasGroup.interactable = false;
+            }
 
             if (cardRect != null)
                 cardOriginalScale = cardRect.localScale;
@@ -177,9 +189,14 @@ namespace EmpireOfCards.UI
             if (t >= 1f)
             {
                 if (canvasGroup != null)
+                {
                     canvasGroup.alpha = 0f;
+                    canvasGroup.blocksRaycasts = false;
+                    canvasGroup.interactable = false;
+                }
 
                 state = State.Idle;
+                gameObject.SetActive(false);
             }
         }
     }

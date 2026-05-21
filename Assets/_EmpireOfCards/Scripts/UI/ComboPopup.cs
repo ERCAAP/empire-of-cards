@@ -40,7 +40,13 @@ namespace EmpireOfCards.UI
             rectTransform = GetComponent<RectTransform>();
 
             if (canvasGroup != null)
+            {
                 canvasGroup.alpha = 0f;
+                canvasGroup.blocksRaycasts = false;
+                canvasGroup.interactable = false;
+            }
+
+            gameObject.SetActive(false);
         }
 
         private void Update()
@@ -83,6 +89,8 @@ namespace EmpireOfCards.UI
         /// </summary>
         public void Show(string text, Color color)
         {
+            gameObject.SetActive(true);
+
             if (comboText != null)
             {
                 comboText.text = text;
@@ -139,10 +147,15 @@ namespace EmpireOfCards.UI
             if (t >= 1f)
             {
                 if (canvasGroup != null)
+                {
                     canvasGroup.alpha = 0f;
+                    canvasGroup.blocksRaycasts = false;
+                    canvasGroup.interactable = false;
+                }
 
                 rectTransform.localPosition = startPosition;
                 state = State.Idle;
+                gameObject.SetActive(false);
             }
         }
     }

@@ -48,7 +48,13 @@ namespace EmpireOfCards.UI
         {
             rectTransform = GetComponent<RectTransform>();
             if (canvasGroup != null)
+            {
                 canvasGroup.alpha = 0f;
+                canvasGroup.blocksRaycasts = false;
+                canvasGroup.interactable = false;
+            }
+
+            gameObject.SetActive(false);
         }
 
         private void OnEnable()
@@ -96,8 +102,13 @@ namespace EmpireOfCards.UI
                     if (ft >= 1f)
                     {
                         if (canvasGroup != null)
+                        {
                             canvasGroup.alpha = 0f;
+                            canvasGroup.blocksRaycasts = false;
+                            canvasGroup.interactable = false;
+                        }
                         state = State.Idle;
+                        gameObject.SetActive(false);
                     }
                     break;
             }
@@ -105,6 +116,7 @@ namespace EmpireOfCards.UI
 
         private void HandleTierChanged(CompanyTier newTier)
         {
+            gameObject.SetActive(true);
             int idx = (int)newTier;
 
             if (tierText != null)
@@ -117,7 +129,11 @@ namespace EmpireOfCards.UI
                 subtitleText.text = TierSubtitles[idx];
 
             if (canvasGroup != null)
+            {
                 canvasGroup.alpha = 1f;
+                canvasGroup.blocksRaycasts = false;
+                canvasGroup.interactable = false;
+            }
 
             rectTransform.localScale = Vector3.one * punchScale;
             state = State.Punch;
