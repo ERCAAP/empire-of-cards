@@ -39,6 +39,8 @@ namespace EmpireOfCards.Gameplay
         [SerializeField] private string lastPressureStyle;
 
         private readonly List<RivalQueuedAction> _queuedActions = new List<RivalQueuedAction>();
+        private IRivalSectorController _sectorController;
+        private RivalRuntimeState _runtimeState = new RivalRuntimeState();
 
         public int RivalMoney => rivalMoney;
         public int RivalCustomers => rivalCustomers;
@@ -69,6 +71,15 @@ namespace EmpireOfCards.Gameplay
         public void Initialize(VentureType playerVenture)
         {
             activeVenture = playerVenture;
+            _sectorController = RivalSectorControllerFactory.Create(playerVenture);
+            _runtimeState = new RivalRuntimeState
+            {
+                escalationLevel = 0,
+                campaignsLaunched = 0,
+                pressureBank = 0f,
+                activePlan = "opening",
+                lastResolvedTurn = 0
+            };
             rivalMoney = data != null ? data.startingMoney : 450;
             rivalIncome = 60;
             rivalCustomers = 32;
@@ -144,9 +155,14 @@ namespace EmpireOfCards.Gameplay
                 lastPressureStyle = _queuedActions[_queuedActions.Count - 1].shortDescription;
             }
 
+            _runtimeState.lastResolvedTurn = gm.CurrentTurn;
+            _runtimeState.pressureBank = rivalPressure;
+            if (!string.IsNullOrWhiteSpace(lastLaneLabel))
+                _runtimeState.activePlan = lastLaneLabel;
+
             gm.EconomyManager?.RegisterRivalPressure(rivalPressure, lastPressureStyle);
             EventBus.RivalActed(_queuedActions.Count > 0 ? DescribeAction(_queuedActions[_queuedActions.Count - 1]) : "Rival adapts.");
-            EventBus.RivalMoodChanged(lastPressureStyle);
+            EventBus.RivalMoodChanged(_queuedActions.Count > 0 ? _queuedActions[_queuedActions.Count - 1].moodIcon : "!");
         }
 
         public void RespondToPoach_Accept() { }
@@ -207,6 +223,25 @@ namespace EmpireOfCards.Gameplay
             rivalPressure = 0f;
             rivalMomentumCustomers = 0f;
             _queuedActions.Clear();
+            _runtimeState = new RivalRuntimeState();
+        }
+
+        public RivalRuntimeState CaptureState()
+        {
+            return new RivalRuntimeState
+            {
+                escalationLevel = _runtimeState.escalationLevel,
+                campaignsLaunched = _runtimeState.campaignsLaunched,
+                pressureBank = rivalPressure,
+                activePlan = _runtimeState.activePlan,
+                lastResolvedTurn = _runtimeState.lastResolvedTurn
+            };
+        }
+
+        public void RestoreState(RivalRuntimeState state)
+        {
+            _runtimeState = state ?? new RivalRuntimeState();
+            rivalPressure = _runtimeState.pressureBank;
         }
 
         public List<RivalQueuedAction> BuildQueuedActions(float playerShare, int currentTurn)
@@ -216,18 +251,25 @@ namespace EmpireOfCards.Gameplay
 
             RivalMove primaryMove = DecideMove(playerShare, currentTurn);
             _queuedActions.Add(BuildAction(primaryMove));
+            _runtimeState.campaignsLaunched++;
 
-            if (currentTurn >= 8 || playerShare >= 46f)
+            if (currentTurn >= 6 || playerShare >= 46f || _runtimeState.escalationLevel >= 2)
             {
                 RivalMove secondaryMove = ChooseSecondaryMove(primaryMove, currentTurn);
                 _queuedActions.Add(BuildAction(secondaryMove));
             }
+
+            if (currentTurn >= 4 || playerShare >= 50f)
+                _runtimeState.escalationLevel = Mathf.Clamp(_runtimeState.escalationLevel + 1, 0, 5);
 
             return _queuedActions;
         }
 
         private RivalMove DecideMove(float playerShare, int currentTurn)
         {
+            if (_sectorController != null)
+                return _sectorController.DecidePrimaryMove(BuildSectorContext(playerShare, currentTurn));
+
             if (playerShare >= 58f)
                 return RivalMove.MarketingBlitz;
             if (playerShare >= 50f)
@@ -245,6 +287,13 @@ namespace EmpireOfCards.Gameplay
 
         private RivalMove ChooseSecondaryMove(RivalMove primaryMove, int currentTurn)
         {
+            if (_sectorController != null)
+                return _sectorController.DecideSecondaryMove(primaryMove, BuildSectorContext(
+                    GameManager.Instance != null && GameManager.Instance.EconomyManager != null && GameManager.Instance.EconomyManager.Snapshot != null
+                        ? GameManager.Instance.EconomyManager.Snapshot.marketShare
+                        : 0f,
+                    currentTurn));
+
             if (primaryMove == RivalMove.MarketingBlitz)
                 return activeVenture == VentureType.TechApp ? RivalMove.QualityImprove : RivalMove.PriceWar;
             if (primaryMove == RivalMove.PriceWar)
@@ -258,7 +307,7 @@ namespace EmpireOfCards.Gameplay
 
         private RivalQueuedAction BuildAction(RivalMove move)
         {
-            string lane = move switch
+            string lane = _sectorController != null ? _sectorController.GetLaneLabel(move) : move switch
             {
                 RivalMove.MarketingBlitz => "Growth Lane",
                 RivalMove.PriceWar => "Price Lane",
@@ -340,6 +389,13 @@ namespace EmpireOfCards.Gameplay
 
         private string GetMoveDescription(RivalMove move)
         {
+            if (_sectorController != null)
+                return _sectorController.GetMoveDescription(move, BuildSectorContext(
+                    GameManager.Instance != null && GameManager.Instance.EconomyManager != null && GameManager.Instance.EconomyManager.Snapshot != null
+                        ? GameManager.Instance.EconomyManager.Snapshot.marketShare
+                        : 0f,
+                    GameManager.Instance != null ? GameManager.Instance.CurrentTurn : 1));
+
             var techCategory = GameManager.Instance != null ? GameManager.Instance.ActiveTechCategoryProfile : null;
             if (activeVenture == VentureType.TechApp && techCategory != null)
             {
@@ -428,6 +484,13 @@ namespace EmpireOfCards.Gameplay
 
         private string GetMoveCardName(RivalMove move)
         {
+            if (_sectorController != null)
+                return _sectorController.GetMoveCardName(move, BuildSectorContext(
+                    GameManager.Instance != null && GameManager.Instance.EconomyManager != null && GameManager.Instance.EconomyManager.Snapshot != null
+                        ? GameManager.Instance.EconomyManager.Snapshot.marketShare
+                        : 0f,
+                    GameManager.Instance != null ? GameManager.Instance.CurrentTurn : 1));
+
             var techCategory = GameManager.Instance != null ? GameManager.Instance.ActiveTechCategoryProfile : null;
             if (activeVenture == VentureType.TechApp && techCategory != null)
             {
@@ -519,6 +582,9 @@ namespace EmpireOfCards.Gameplay
 
         private string GetMoveMood(RivalMove move)
         {
+            if (_sectorController != null)
+                return _sectorController.GetMoveMood(move);
+
             return move switch
             {
                 RivalMove.PriceWar => "$",
@@ -534,6 +600,13 @@ namespace EmpireOfCards.Gameplay
 
         private float GetPressureDelta(RivalMove move)
         {
+            if (_sectorController != null)
+                return _sectorController.GetPressureDelta(move, BuildSectorContext(
+                    GameManager.Instance != null && GameManager.Instance.EconomyManager != null && GameManager.Instance.EconomyManager.Snapshot != null
+                        ? GameManager.Instance.EconomyManager.Snapshot.marketShare
+                        : 0f,
+                    GameManager.Instance != null ? GameManager.Instance.CurrentTurn : 1));
+
             return move switch
             {
                 RivalMove.PriceWar => 4.5f,
@@ -544,6 +617,26 @@ namespace EmpireOfCards.Gameplay
                 RivalMove.OpenBranch => 3.4f,
                 RivalMove.Sabotage => 2.1f,
                 _ => 1f
+            };
+        }
+
+        private RivalSectorContext BuildSectorContext(float playerShare, int currentTurn)
+        {
+            var gm = GameManager.Instance;
+            return new RivalSectorContext
+            {
+                ventureType = activeVenture,
+                playerShare = playerShare,
+                currentTurn = currentTurn,
+                rivalRating = rivalRating,
+                rivalQuality = rivalQuality,
+                rivalPressure = rivalPressure,
+                businessCount = gm != null && gm.BoardManager != null ? gm.BoardManager.GetActiveBusinessCount() : 0,
+                employeeCount = totalRivalEmployees,
+                playerPressure = gm != null && gm.EconomyManager != null ? gm.EconomyManager.CurrentPressure : BoardPressureType.None,
+                playerSnapshot = gm != null && gm.EconomyManager != null ? gm.EconomyManager.Snapshot : null,
+                rivalState = _runtimeState,
+                runCategoryLabel = gm != null ? gm.RunCategoryLabel : null
             };
         }
     }

@@ -101,6 +101,12 @@ namespace EmpireOfCards.UI
         public void Show(string action, string taunt)
         {
             gameObject.SetActive(true);
+            if (canvasGroup != null)
+            {
+                canvasGroup.alpha = 0f;
+                canvasGroup.blocksRaycasts = false;
+                canvasGroup.interactable = false;
+            }
 
             // Hide mood icon when showing action/taunt
             if (moodIconText != null)
@@ -131,6 +137,12 @@ namespace EmpireOfCards.UI
         {
             if (string.IsNullOrEmpty(moodIcon)) return;
             gameObject.SetActive(true);
+            if (canvasGroup != null)
+            {
+                canvasGroup.alpha = 0f;
+                canvasGroup.blocksRaycasts = false;
+                canvasGroup.interactable = false;
+            }
 
             // Hide action/taunt texts during mood display
             if (actionText != null)
@@ -157,6 +169,12 @@ namespace EmpireOfCards.UI
         {
             if (string.IsNullOrEmpty(comment)) return;
             gameObject.SetActive(true);
+            if (canvasGroup != null)
+            {
+                canvasGroup.alpha = 0f;
+                canvasGroup.blocksRaycasts = false;
+                canvasGroup.interactable = false;
+            }
 
             if (moodIconText != null)
                 moodIconText.gameObject.SetActive(false);

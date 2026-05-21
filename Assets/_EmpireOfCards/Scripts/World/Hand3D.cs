@@ -121,6 +121,24 @@ namespace EmpireOfCards.World
             LayoutHand();
         }
 
+        public void ApplyPresentationProfile(BoardCameraProfile profile)
+        {
+            if (profile == null)
+                return;
+
+            cardSpacing = profile.handSpacing;
+            fanAngle = profile.handFanAngle;
+            verticalArc = profile.handVerticalArc;
+
+            if (handAnchor != null)
+            {
+                handAnchor.position = profile.handAnchorPosition;
+                handAnchor.rotation = Quaternion.Euler(profile.handAnchorEuler);
+            }
+
+            LayoutHand();
+        }
+
         public void ClearHand()
         {
             foreach (var c in _cards)
@@ -143,7 +161,7 @@ namespace EmpireOfCards.World
             int count = handCards.Count;
             if (count == 0) return;
 
-            float spacing = count >= 6 ? 1.02f : cardSpacing;
+            float spacing = count >= 6 ? Mathf.Max(0.98f, cardSpacing - 0.10f) : cardSpacing;
             float totalWidth = (count - 1) * spacing;
             float startX = -totalWidth / 2f;
 

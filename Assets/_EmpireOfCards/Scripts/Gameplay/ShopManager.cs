@@ -25,7 +25,6 @@ namespace EmpireOfCards.Gameplay
         [Header("References")]
         [SerializeField] private DeckManager deckManager;
         [SerializeField] private EconomyManager economyManager;
-        [SerializeField] private ComboSystem comboSystem;
 
         // --- Venture Bias ---
         private CardTag _biasTag = CardTag.Basic;
@@ -54,12 +53,11 @@ namespace EmpireOfCards.Gameplay
         /// Assigns all dependencies without reflection.
         /// Called by WiringService during bootstrap.
         /// </summary>
-        public void Init(CardData[] pool, DeckManager deck, EconomyManager econ, ComboSystem combo)
+        public void Init(CardData[] pool, DeckManager deck, EconomyManager econ)
         {
             this.shopPool = pool;
             this.deckManager = deck;
             this.economyManager = econ;
-            this.comboSystem = combo;
         }
 
         // ----------------------------------------------------------------
@@ -153,15 +151,7 @@ namespace EmpireOfCards.Gameplay
         {
             currentShopCards.Clear();
 
-            // Apply combo discount if any
-            if (comboSystem != null)
-            {
-                activeDiscount = comboSystem.GetShopDiscount();
-            }
-            else
-            {
-                activeDiscount = 0f;
-            }
+            activeDiscount = 0f;
 
             if (shopPool == null || shopPool.Length == 0)
             {

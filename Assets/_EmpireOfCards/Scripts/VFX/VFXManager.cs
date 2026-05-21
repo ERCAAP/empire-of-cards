@@ -91,17 +91,8 @@ namespace EmpireOfCards.VFX
             // Card play
             EventBus.OnCardPlayed += OnCardPlayed;
 
-            // Combo
-            EventBus.OnComboTriggered += OnComboTriggered;
-
             // Economy
             EventBus.OnIncomeReceived += OnIncomeReceived;
-
-            // Company tier
-            EventBus.OnCompanyTierChanged += OnCompanyTierChanged;
-
-            // FBI
-            EventBus.OnFBIRaid += OnFBIRaid;
         }
 
         private void OnDisable()
@@ -109,10 +100,7 @@ namespace EmpireOfCards.VFX
             EventBus.OnBusinessPlaced -= OnBusinessPlaced;
             EventBus.OnEmployeePlaced -= OnEmployeePlaced;
             EventBus.OnCardPlayed -= OnCardPlayed;
-            EventBus.OnComboTriggered -= OnComboTriggered;
             EventBus.OnIncomeReceived -= OnIncomeReceived;
-            EventBus.OnCompanyTierChanged -= OnCompanyTierChanged;
-            EventBus.OnFBIRaid -= OnFBIRaid;
         }
 
         private void Update()
@@ -205,37 +193,11 @@ namespace EmpireOfCards.VFX
             SpawnCardPoofEffect(pos);
         }
 
-        private void OnComboTriggered(ComboData combo)
-        {
-            // Use combo glow color if available, otherwise gold
-            Color color = combo != null ? combo.glowColor : new Color(1f, 0.85f, 0.2f);
-            float shakeIntensity = combo != null ? combo.screenShakeIntensity : 0.2f;
-            float shakeDuration = combo != null ? combo.screenShakeDuration : 0.3f;
-
-            SpawnComboEffect(Vector3.up * 0.5f, color);
-            PlayScreenShake(shakeIntensity, shakeDuration);
-        }
-
         private void OnIncomeReceived(int amount)
         {
             // Spawn income particles; more particles for larger amounts
             Vector3 pos = new Vector3(0f, 1.5f, -1.5f);
             SpawnIncomeEffect(pos, amount);
-        }
-
-        private void OnCompanyTierChanged(CompanyTier newTier)
-        {
-            Vector3 pos = new Vector3(0f, 1.0f, -1.5f);
-            SpawnTierUpEffect(pos);
-            PlayScreenShake(0.3f, 0.5f);
-        }
-
-        private void OnFBIRaid(int penalty)
-        {
-            Vector3 pos = new Vector3(0f, 1.0f, -1.5f);
-            SpawnFBIRaidEffect(pos);
-            PlayScreenFlash(new Color(1f, 0f, 0f, 0.4f), 0.5f);
-            PlayScreenShake(0.5f, 0.8f);
         }
 
         // ------------------------------------------------------------------

@@ -1,54 +1,36 @@
+using TMPro;
 using UnityEngine;
+using EmpireOfCards.Core;
 using EmpireOfCards.Data;
-using EmpireOfCards.UI.Cards;
+using EmpireOfCards.UI.Clarity;
 
 namespace EmpireOfCards.UI
 {
     /// <summary>
-    /// Event card reveal popup. Card flip animation, glow, hold, then fade.
-    /// All animation driven by Update() polling -- no coroutines.
+    /// Lightweight top-banner event notification.
+    /// Intentionally non-blocking: no modal card reveal, no center-screen panel.
     /// </summary>
     public class EventPopup : MonoBehaviour
     {
         [Header("References")]
-        [SerializeField] private CardUI eventCardUI;
+        [SerializeField] private TMP_Text titleText;
+        [SerializeField] private TMP_Text detailText;
+        [SerializeField] private TMP_Text contextText;
         [SerializeField] private CanvasGroup canvasGroup;
-        [SerializeField] private GameObject glowEffect;
 
         [Header("Timing")]
-        [SerializeField] private float flipDuration = 0.4f;
-        [SerializeField] private float glowPulseDuration = 0.6f;
-        [SerializeField] private float holdDuration = 3f;
+        [SerializeField] private float fadeInDuration = 0.18f;
+        [SerializeField] private float holdDuration = 2.8f;
         [SerializeField] private float fadeOutDuration = 0.5f;
 
-        // State machine
-        private enum State { Idle, FlipClose, FlipOpen, GlowPulse, Hold, FadeOut }
+        private enum State { Idle, FadeIn, Hold, FadeOut }
 
         private State state = State.Idle;
         private float stateTimer;
-        private RectTransform cardRect;
-        private Vector3 cardOriginalScale;
-
-        // ------------------------------------------------------------------
-        // Lifecycle
-        // ------------------------------------------------------------------
 
         private void Awake()
         {
-            if (eventCardUI != null)
-                cardRect = eventCardUI.GetComponent<RectTransform>();
-
-            if (canvasGroup != null)
-            {
-                canvasGroup.alpha = 0f;
-                canvasGroup.blocksRaycasts = false;
-                canvasGroup.interactable = false;
-            }
-
-            if (glowEffect != null)
-                glowEffect.SetActive(false);
-
-            gameObject.SetActive(false);
+            HideImmediate();
         }
 
         private void Update()
@@ -60,111 +42,72 @@ namespace EmpireOfCards.UI
 
             switch (state)
             {
-                case State.FlipClose: UpdateFlipClose(); break;
-                case State.FlipOpen:  UpdateFlipOpen();  break;
-                case State.GlowPulse: UpdateGlowPulse(); break;
+                case State.FadeIn: UpdateFadeIn(); break;
                 case State.Hold:      UpdateHold();      break;
                 case State.FadeOut:   UpdateFadeOut();   break;
             }
         }
 
-        // ------------------------------------------------------------------
-        // Public
-        // ------------------------------------------------------------------
-
-        /// <summary>
-        /// Assigns UI element references at runtime.
-        /// Called by HUDBuilder after creating child elements.
-        /// </summary>
-        public void SetReferences(CanvasGroup cg)
+        public void SetReferences(CanvasGroup cg, TMP_Text title, TMP_Text detail, TMP_Text context)
         {
             canvasGroup = cg;
+            titleText = title;
+            detailText = detail;
+            contextText = context;
         }
 
-        /// <summary>
-        /// Shows the event card with a flip animation followed by a glow pulse.
-        /// </summary>
         public void Show(CardData eventCard)
         {
+            if (eventCard == null)
+            {
+                HideImmediate();
+                return;
+            }
+
+            string title = string.IsNullOrWhiteSpace(eventCard.cardName) ? "EVENT" : eventCard.cardName.ToUpperInvariant();
+            string detail = !string.IsNullOrWhiteSpace(eventCard.description)
+                ? eventCard.description
+                : GameClarityFormatter.BuildCardFrontSummary(eventCard);
+            string context = BuildContextLine(eventCard);
+
+            if (string.IsNullOrWhiteSpace(title) && string.IsNullOrWhiteSpace(detail))
+            {
+                HideImmediate();
+                return;
+            }
+
             gameObject.SetActive(true);
 
-            if (eventCardUI != null)
-                eventCardUI.SetupCard(eventCard);
+            if (titleText != null)
+                titleText.text = title;
+            if (detailText != null)
+                detailText.text = detail;
+            if (contextText != null)
+            {
+                contextText.text = context;
+                contextText.gameObject.SetActive(!string.IsNullOrWhiteSpace(context));
+            }
 
             if (canvasGroup != null)
             {
-                canvasGroup.alpha = 1f;
+                canvasGroup.alpha = 0f;
                 canvasGroup.blocksRaycasts = false;
                 canvasGroup.interactable = false;
             }
 
-            if (cardRect != null)
-                cardOriginalScale = cardRect.localScale;
-
-            if (glowEffect != null)
-                glowEffect.SetActive(false);
-
-            state = State.FlipClose;
+            state = State.FadeIn;
             stateTimer = 0f;
         }
 
-        // ------------------------------------------------------------------
-        // State updates
-        // ------------------------------------------------------------------
-
-        private void UpdateFlipClose()
+        private void UpdateFadeIn()
         {
-            float halfFlip = flipDuration * 0.5f;
-            float t = Mathf.Clamp01(stateTimer / halfFlip);
-
-            if (cardRect != null)
-            {
-                cardRect.localScale = new Vector3(
-                    Mathf.Lerp(cardOriginalScale.x, 0f, t),
-                    cardOriginalScale.y,
-                    cardOriginalScale.z);
-            }
-
+            float t = Mathf.Clamp01(stateTimer / fadeInDuration);
+            if (canvasGroup != null)
+                canvasGroup.alpha = t;
             if (t >= 1f)
             {
-                state = State.FlipOpen;
-                stateTimer = 0f;
-            }
-        }
-
-        private void UpdateFlipOpen()
-        {
-            float halfFlip = flipDuration * 0.5f;
-            float t = Mathf.Clamp01(stateTimer / halfFlip);
-
-            if (cardRect != null)
-            {
-                cardRect.localScale = new Vector3(
-                    Mathf.Lerp(0f, cardOriginalScale.x, t),
-                    cardOriginalScale.y,
-                    cardOriginalScale.z);
-            }
-
-            if (t >= 1f)
-            {
-                if (cardRect != null)
-                    cardRect.localScale = cardOriginalScale;
-
-                if (glowEffect != null)
-                    glowEffect.SetActive(true);
-
-                state = State.GlowPulse;
-                stateTimer = 0f;
-            }
-        }
-
-        private void UpdateGlowPulse()
-        {
-            if (stateTimer >= glowPulseDuration)
-            {
-                if (glowEffect != null)
-                    glowEffect.SetActive(false);
-
+                if (canvasGroup != null)
+                    canvasGroup.alpha = 1f;
                 state = State.Hold;
                 stateTimer = 0f;
             }
@@ -187,17 +130,39 @@ namespace EmpireOfCards.UI
                 canvasGroup.alpha = 1f - t;
 
             if (t >= 1f)
-            {
-                if (canvasGroup != null)
-                {
-                    canvasGroup.alpha = 0f;
-                    canvasGroup.blocksRaycasts = false;
-                    canvasGroup.interactable = false;
-                }
+                HideImmediate();
+        }
 
-                state = State.Idle;
-                gameObject.SetActive(false);
+        private void HideImmediate()
+        {
+            if (canvasGroup != null)
+            {
+                canvasGroup.alpha = 0f;
+                canvasGroup.blocksRaycasts = false;
+                canvasGroup.interactable = false;
             }
+
+            state = State.Idle;
+            gameObject.SetActive(false);
+        }
+
+        private static string BuildContextLine(CardData eventCard)
+        {
+            if (eventCard == null)
+                return string.Empty;
+
+            string slot = eventCard.targetSlotType switch
+            {
+                SlotType.Operation => "OPERATIONS HIT",
+                SlotType.Staff => "STAFF HIT",
+                SlotType.Marketing => "GROWTH HIT",
+                SlotType.Supplier => "SUPPLY HIT",
+                SlotType.TempEffect => "BOARD PRESSURE",
+                _ => "BOARD PRESSURE"
+            };
+
+            string duration = eventCard.eventDuration > 0 ? $" · {eventCard.eventDuration} TURN" : string.Empty;
+            return $"{slot}{duration}";
         }
     }
 }

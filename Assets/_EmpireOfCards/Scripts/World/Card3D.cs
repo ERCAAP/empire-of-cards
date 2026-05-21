@@ -160,7 +160,7 @@ namespace EmpireOfCards.World
             _targetPos = pos;
             _targetRot = rot;
             _isInHand = true;
-            _baseScale = Vector3.one * 1.18f;
+            _baseScale = Vector3.one * 1.22f;
             _targetScale = _isHovered ? _baseScale * 1.18f : _baseScale;
         }
 

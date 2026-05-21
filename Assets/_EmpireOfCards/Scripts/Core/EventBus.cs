@@ -28,20 +28,9 @@ namespace EmpireOfCards.Core
         public static event Action<CardData> OnActionExecuted;
         #endregion
 
-        #region Combo Events
-        public static event Action<ComboData> OnComboTriggered;
-        public static event Action<ComboData> OnComboDeactivated;
-        #endregion
-
         #region World Events
         public static event Action<CardData> OnEventActivated;             // event card
         public static event Action<CardData> OnEventExpired;
-        #endregion
-
-        #region FBI Events
-        public static event Action<int> OnFBIRaid;                         // penalty amount
-        public static event Action OnFBIRaidAvoided;
-        public static event Action<float> OnFBIRiskChanged;                // new risk value
         #endregion
 
         #region Business Lifecycle Events
@@ -127,10 +116,6 @@ namespace EmpireOfCards.Core
         public static event Action<RivalQueuedAction> OnRivalActionQueued; // lane/card preview
         #endregion
 
-        #region Company Tier Events
-        public static event Action<CompanyTier> OnCompanyTierChanged;      // new tier
-        #endregion
-
         #region Staff State Events (GDD Section 6)
         public static event Action<CardData, int, int, int, int> OnStaffStateUpdated; // card, moral, fatigue, loyalty, xp
         public static event Action<CardData, int> OnStaffLeveledUp;                    // card, newLevel
@@ -162,20 +147,9 @@ namespace EmpireOfCards.Core
         public static void ActionExecuted(CardData card) => OnActionExecuted?.Invoke(card);
         #endregion
 
-        #region Combo Invoke Helpers
-        public static void ComboTriggered(ComboData combo) => OnComboTriggered?.Invoke(combo);
-        public static void ComboDeactivated(ComboData combo) => OnComboDeactivated?.Invoke(combo);
-        #endregion
-
         #region World Event Invoke Helpers
         public static void EventActivated(CardData card) => OnEventActivated?.Invoke(card);
         public static void EventExpired(CardData card) => OnEventExpired?.Invoke(card);
-        #endregion
-
-        #region FBI Invoke Helpers
-        public static void FBIRaidOccurred(int penalty) => OnFBIRaid?.Invoke(penalty);
-        public static void FBIRaidWasAvoided() => OnFBIRaidAvoided?.Invoke();
-        public static void FBIRiskUpdated(float risk) => OnFBIRiskChanged?.Invoke(risk);
         #endregion
 
         #region Business Lifecycle Invoke Helpers
@@ -261,10 +235,6 @@ namespace EmpireOfCards.Core
         public static void RivalActionQueued(RivalQueuedAction action) => OnRivalActionQueued?.Invoke(action);
         #endregion
 
-        #region Company Tier Invoke Helpers
-        public static void CompanyTierChanged(CompanyTier tier) => OnCompanyTierChanged?.Invoke(tier);
-        #endregion
-
         #region Staff State Invoke Helpers
         public static void StaffStateUpdated(CardData card, int moral, int fatigue, int loyalty, int xp) => OnStaffStateUpdated?.Invoke(card, moral, fatigue, loyalty, xp);
         public static void StaffLeveledUp(CardData card, int level) => OnStaffLeveledUp?.Invoke(card, level);
@@ -303,11 +273,6 @@ namespace EmpireOfCards.Core
         public static void OrganicCustomersGained(int count) => OnOrganicCustomersGained?.Invoke(count);
         #endregion
 
-        #region Location Invoke Helpers (GDD 10.1)
-        public static event Action<int, int> OnLocationChanged;
-        public static void LocationChanged(int passiveCustomers, int rent) => OnLocationChanged?.Invoke(passiveCustomers, rent);
-        #endregion
-
         #region Rating Recovery Invoke Helpers (GDD 8.4)
         public static event Action<float> OnRatingRecoveryApplied;
         public static void RatingRecoveryApplied(float delta) => OnRatingRecoveryApplied?.Invoke(delta);
@@ -335,18 +300,9 @@ namespace EmpireOfCards.Core
             OnUpgradePlaced = null;
             OnActionExecuted = null;
 
-            // Combo
-            OnComboTriggered = null;
-            OnComboDeactivated = null;
-
             // World events
             OnEventActivated = null;
             OnEventExpired = null;
-
-            // FBI
-            OnFBIRaid = null;
-            OnFBIRaidAvoided = null;
-            OnFBIRiskChanged = null;
 
             // Business lifecycle
             OnBusinessClosed = null;
@@ -418,9 +374,6 @@ namespace EmpireOfCards.Core
             OnRivalStrategyComment = null;
             OnRivalActionQueued = null;
 
-            // Company Tier
-            OnCompanyTierChanged = null;
-
             // Staff State
             OnStaffStateUpdated = null;
             OnStaffLeveledUp = null;
@@ -445,9 +398,6 @@ namespace EmpireOfCards.Core
             // Customer Loyalty
             OnLoyaltyScoreChanged = null;
             OnOrganicCustomersGained = null;
-
-            // Location
-            OnLocationChanged = null;
 
             // Rating Recovery
             OnRatingRecoveryApplied = null;

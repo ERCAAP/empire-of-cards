@@ -21,8 +21,7 @@ namespace EmpireOfCards.UI
         [SerializeField] private TopBarUI topBar;
         [SerializeField] private ActionBarUI actionBar;
         [SerializeField] private ShopPanel shopPanel;
-        // HandUI removed -- Hand3D replaces it in 3D mode
-        [SerializeField] private ComboPopup comboPopup;
+        // Hand is managed by Hand3D in 3D mode
         [SerializeField] private EventPopup eventPopup;
         [SerializeField] private RivalPopup rivalPopup;
         [SerializeField] private ScoreScreen scoreScreen;
@@ -60,13 +59,12 @@ namespace EmpireOfCards.UI
         /// Called by WiringService during bootstrap.
         /// </summary>
         public void Init(TopBarUI top, ActionBarUI action, ShopPanel shop,
-            ComboPopup combo, EventPopup eventP, RivalPopup rival,
+            EventPopup eventP, RivalPopup rival,
             ScoreScreen score, GameOverScreen gameOver)
         {
             this.topBar = top;
             this.actionBar = action;
             this.shopPanel = shop;
-            this.comboPopup = combo;
             this.eventPopup = eventP;
             this.rivalPopup = rival;
             this.scoreScreen = score;
@@ -101,14 +99,12 @@ namespace EmpireOfCards.UI
         private void OnEnable()
         {
             EventBus.OnPhaseStarted += HandlePhaseStarted;
-            EventBus.OnComboTriggered += HandleComboTriggered;
             EventBus.OnEventActivated += HandleEventActivated;
             EventBus.OnRivalAction += HandleRivalAction;
             EventBus.OnRivalTaunt += HandleRivalTaunt;
             EventBus.OnGameOver += HandleGameOver;
             EventBus.OnMoneyChanged += HandleMoneyChanged;
             EventBus.OnMarketBlocksChanged += HandleTerritoryChanged;
-            EventBus.OnFBIRiskChanged += HandleFBIRiskChanged;
             EventBus.OnTurnStarted += HandleTurnStarted;
             EventBus.OnBusinessNeglected += HandleBusinessNeglected;
             EventBus.OnIncomeBreakdown += HandleIncomeBreakdown;
@@ -127,14 +123,12 @@ namespace EmpireOfCards.UI
         private void OnDisable()
         {
             EventBus.OnPhaseStarted -= HandlePhaseStarted;
-            EventBus.OnComboTriggered -= HandleComboTriggered;
             EventBus.OnEventActivated -= HandleEventActivated;
             EventBus.OnRivalAction -= HandleRivalAction;
             EventBus.OnRivalTaunt -= HandleRivalTaunt;
             EventBus.OnGameOver -= HandleGameOver;
             EventBus.OnMoneyChanged -= HandleMoneyChanged;
             EventBus.OnMarketBlocksChanged -= HandleTerritoryChanged;
-            EventBus.OnFBIRiskChanged -= HandleFBIRiskChanged;
             EventBus.OnTurnStarted -= HandleTurnStarted;
             EventBus.OnBusinessNeglected -= HandleBusinessNeglected;
             EventBus.OnIncomeBreakdown -= HandleIncomeBreakdown;
@@ -163,12 +157,6 @@ namespace EmpireOfCards.UI
 
             if (actionBar != null)
                 actionBar.SetVisible(isPlayPhase);
-        }
-
-        private void HandleComboTriggered(ComboData combo)
-        {
-            if (comboPopup != null)
-                comboPopup.Show(combo.displayText, combo.glowColor);
         }
 
         private void HandleEventActivated(CardData eventCard)
@@ -233,13 +221,6 @@ namespace EmpireOfCards.UI
         {
             // TopBar or a dedicated territory widget can reflect this.
             // Kept intentionally thin -- panels subscribe themselves.
-            RefreshAnalytics();
-        }
-
-        private void HandleFBIRiskChanged(float risk)
-        {
-            if (topBar != null)
-                topBar.UpdateFBIRisk(risk);
             RefreshAnalytics();
         }
 
@@ -637,7 +618,6 @@ namespace EmpireOfCards.UI
             {
                 topBar.SetTargetMoney(gm.PlayerMoney);
                 topBar.UpdateTurn(gm.CurrentTurn, gm.MaxTurns);
-                topBar.UpdateFBIRisk(gm.FBIRisk);
                 topBar.UpdateBuildIdentity(GameClarityFormatter.GetBuildIdentity(gm));
                 if (gm.EconomyManager != null)
                     topBar.UpdatePressureState(gm.EconomyManager.CurrentPressure);

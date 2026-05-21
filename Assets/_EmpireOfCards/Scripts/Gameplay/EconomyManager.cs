@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using EmpireOfCards.Core;
+using EmpireOfCards.Core.TurnPhases;
 using EmpireOfCards.Data;
 using EmpireOfCards.Gameplay.Economy;
 using EmpireOfCards.UI.Clarity;
@@ -14,7 +15,6 @@ namespace EmpireOfCards.Gameplay
 
         [Header("References")]
         [SerializeField] private BoardManager boardManager;
-        [SerializeField] private ComboSystem comboSystem;
         private SlotManager slotManager;
 
         [Header("Turn Summary")]
@@ -36,9 +36,10 @@ namespace EmpireOfCards.Gameplay
         private SalarySystem salarySystem;
         private InsuranceSystem insuranceSystem;
         private CreditSystem creditSystem;
-        private InflationSystem inflationSystem;
         private StockSystem stockSystem;
         private TaxPeriodSystem taxPeriodSystem;
+
+        private InsuranceType _currentInsuranceType = InsuranceType.Uninsured;
 
         private float _investorDebtPercent;
         private int _investorDebtTurns;
@@ -57,7 +58,6 @@ namespace EmpireOfCards.Gameplay
         public SalarySystem SalarySystem => salarySystem;
         public InsuranceSystem InsuranceSystem => insuranceSystem;
         public CreditSystem CreditSystem => creditSystem;
-        public InflationSystem InflationSystem => inflationSystem;
         public StockSystem StockSystem => stockSystem;
         public TaxPeriodSystem TaxPeriodSystem => taxPeriodSystem;
         public VentureBoardSnapshot Snapshot => snapshot;
@@ -67,19 +67,17 @@ namespace EmpireOfCards.Gameplay
         public float RivalPressureImpact => _rivalPressureImpact;
         public string RivalPressureStyle => _rivalPressureStyle;
 
-        public void Init(GameBalanceData balance, BoardManager board, ComboSystem combo,
+        public void Init(GameBalanceData balance, BoardManager board,
             AbilitySystem ability = null, SlotManager slots = null)
         {
             balanceData = balance;
             boardManager = board;
-            comboSystem = combo;
             abilitySystem = ability;
             slotManager = slots;
 
             salarySystem = new SalarySystem();
             insuranceSystem = new InsuranceSystem();
             creditSystem = new CreditSystem();
-            inflationSystem = new InflationSystem();
             stockSystem = new StockSystem();
             taxPeriodSystem = new TaxPeriodSystem();
         }
@@ -163,6 +161,17 @@ namespace EmpireOfCards.Gameplay
                 Sum(temp, c => c.legalRiskDeltaPerTurn),
                 0f, Constants.LEGAL_RISK_MAX);
 
+            // --- Economy subsystem effects (modify snapshot before rating/income) ---
+            float ssStability = snapshot.staffStability;
+            float ssLegalRisk = snapshot.legalRisk;
+            float ssQuality = snapshot.quality;
+            ApplySalaryEffects(ref ssStability);
+            ApplyInsuranceEffects(ref ssLegalRisk, staff.Count);
+            ApplyStockEffects(ref ssQuality, suppliers.Count > 0);
+            snapshot.staffStability = ssStability;
+            snapshot.legalRisk = ssLegalRisk;
+            snapshot.quality = ssQuality;
+
             float servedDemand = Mathf.Min(snapshot.demand, snapshot.capacity);
             float overload = Mathf.Max(0f, snapshot.demand - snapshot.capacity);
             float ratingDelta = ((snapshot.quality - 5f) * _activeProfile.qualityToRatingWeight)
@@ -187,13 +196,25 @@ namespace EmpireOfCards.Gameplay
                 _investorDebtTurns--;
             }
 
+            // Apply season multiplier to gross income (GDD Section 14)
+            float seasonMultiplier = GetCurrentSeasonMultiplier(gm);
+            grossIncome = Mathf.RoundToInt(grossIncome * seasonMultiplier);
+
             totalSalaries = Mathf.RoundToInt(Sum(staff, c => Mathf.Max(0f, c.upkeepCostPerTurn > 0f ? c.upkeepCostPerTurn : c.salaryPerTurn)));
             int upkeepCosts = Mathf.RoundToInt(
                 Sum(marketing, c => c.upkeepCostPerTurn) +
                 Sum(suppliers, c => c.upkeepCostPerTurn) +
                 Sum(temp, c => c.upkeepCostPerTurn));
             taxAmount = grossIncome > 0 ? Mathf.RoundToInt(grossIncome * (_activeProfile.ventureType == VentureType.TechApp ? 0.08f : 0.10f)) : 0;
-            netIncome = grossIncome - totalSalaries - upkeepCosts - taxAmount;
+
+            // --- Credit + Tax subsystem effects (modify expenses) ---
+            int subsystemExpenses = 0;
+            float taxLegalRisk = snapshot.legalRisk;
+            ApplyCreditEffects(ref subsystemExpenses);
+            ApplyTaxEffects(ref taxLegalRisk, ref subsystemExpenses, gm.CurrentTurn);
+            snapshot.legalRisk = taxLegalRisk;
+
+            netIncome = grossIncome - totalSalaries - upkeepCosts - taxAmount - subsystemExpenses;
 
             if (abilitySystem != null && abilitySystem.IncomeMultiplier != 1f)
                 netIncome = Mathf.RoundToInt(netIncome * abilitySystem.IncomeMultiplier);
@@ -264,24 +285,27 @@ namespace EmpireOfCards.Gameplay
             return salarySystem.ProcessSalary(choice, totalSalaries, CashBalance);
         }
 
-        public bool CanTakeCredit(CreditType type) => true;
+        public bool CanTakeCredit(CreditType type) => creditSystem != null && creditSystem.CanTakeCredit(type);
 
         public void TakeCredit(CreditType type)
         {
-            int amount = type switch
-            {
-                CreditType.SmallBusiness => 100,
-                CreditType.Medium => 180,
-                CreditType.LargeInvestment => 280,
-                CreditType.Emergency => 140,
-                _ => 100
-            };
+            if (creditSystem == null)
+                creditSystem = new CreditSystem();
+
+            int amount = creditSystem.GetCreditAmount(type);
+            creditSystem.TakeCredit(type);
             snapshot.cash += amount;
-            EventBus.CreditTaken(type, amount);
             EventBus.CashBalanceChanged(Mathf.RoundToInt(snapshot.cash));
         }
 
-        public int GetTotalCreditDebt() => 0;
+        public int GetTotalCreditDebt() => creditSystem != null ? creditSystem.TotalDebt : 0;
+
+        public void SetInsuranceType(InsuranceType type)
+        {
+            _currentInsuranceType = type;
+        }
+
+        public InsuranceType CurrentInsuranceType => _currentInsuranceType;
 
         public int GetSellPrice(CardData card)
         {
@@ -346,6 +370,30 @@ namespace EmpireOfCards.Gameplay
 
         public TurnBriefData GenerateTurnBrief(int currentTurn)
         {
+            var runtime = GameManager.Instance != null ? GameManager.Instance.ActiveVentureRuntime : null;
+            TurnScriptBeat beat = runtime != null ? runtime.GetBeatForTurn(currentTurn) : null;
+            if (beat != null)
+            {
+                currentBrief = new TurnBriefData
+                {
+                    currentTurn = currentTurn,
+                    pressure = currentPressure,
+                    headline = beat.headline,
+                    detail = beat.detail,
+                    recommendedMove = beat.recommendedMove,
+                    buildIdentity = GameClarityFormatter.GetBuildIdentity(GameManager.Instance)
+                };
+                EventBus.TurnBriefGenerated(currentBrief);
+                return currentBrief;
+            }
+
+            if (TryBuildOpeningBrief(currentTurn, out var openingBrief))
+            {
+                currentBrief = openingBrief;
+                EventBus.TurnBriefGenerated(currentBrief);
+                return currentBrief;
+            }
+
             currentBrief = new TurnBriefData
             {
                 currentTurn = currentTurn,
@@ -373,6 +421,10 @@ namespace EmpireOfCards.Gameplay
             currentPressure = BoardPressureType.None;
             _rivalPressureImpact = 0f;
             _rivalPressureStyle = "balanced";
+            _currentInsuranceType = InsuranceType.Uninsured;
+            salarySystem?.Reset();
+            creditSystem?.Reset();
+            taxPeriodSystem?.Reset();
             if (_activeProfile != null)
                 SetActiveProfile(_activeProfile);
         }
@@ -387,6 +439,15 @@ namespace EmpireOfCards.Gameplay
             EventBus.LegalRiskUpdated(Mathf.RoundToInt(snapshot.legalRisk));
             EventBus.CashBalanceChanged(Mathf.RoundToInt(snapshot.cash));
             UpdatePressure(Mathf.Max(0f, snapshot.demand - snapshot.capacity), 0, 0);
+        }
+
+        private float GetCurrentSeasonMultiplier(GameManager gm)
+        {
+            int currentTurn = gm.CurrentTurn;
+            int seasonIndex = Mathf.Clamp((currentTurn - 1) / Constants.TURNS_PER_SEASON, 0, 4);
+            SeasonType season = (SeasonType)seasonIndex;
+            VentureType venture = _activeProfile != null ? _activeProfile.ventureType : VentureType.FastFood;
+            return ResolvePhase.GetVentureSeasonMultiplier(venture, season);
         }
 
         private void UpdateDerivedMetrics(float servedDemand, float overload, int supplierCount, int marketingCount, IReadOnlyList<CardData> temp)
@@ -737,6 +798,198 @@ namespace EmpireOfCards.Gameplay
             return "Board held together this turn.";
         }
 
+        private bool TryBuildOpeningBrief(int currentTurn, out TurnBriefData brief)
+        {
+            brief = null;
+
+            var gm = GameManager.Instance;
+            var venture = gm != null ? gm.SelectedVenture : null;
+            if (venture == null || boardManager == null || currentTurn > 3)
+                return false;
+
+            int operationCount = boardManager.GetCardsInSlotType(SlotType.Operation).Count;
+            int staffCount = boardManager.GetCardsInSlotType(SlotType.Staff).Count;
+            int supplierCount = boardManager.GetCardsInSlotType(SlotType.Supplier).Count;
+            int marketingCount = boardManager.GetCardsInSlotType(SlotType.Marketing).Count;
+
+            string headline;
+            string detail;
+            string move;
+
+            switch (venture.ventureType)
+            {
+                case VentureType.FastFood:
+                    if (operationCount <= 1)
+                    {
+                        headline = "Open the floor before you chase volume.";
+                        detail = "The counter is live, but the rush still needs seating and service flow around the grill.";
+                        move = "Play Extra Tables first. Add a Line Cook or counter helper before heavy flyer demand.";
+                    }
+                    else if (staffCount == 0)
+                    {
+                        headline = "Put people on the line.";
+                        detail = "Your rush cannot feel real until the grill and front counter have actual labor behind them.";
+                        move = "Hire Line Cook or Front Counter Server now. Save big demand pushes until the queue feels stable.";
+                    }
+                    else if (supplierCount == 0)
+                    {
+                        headline = "Protect food quality before the reviews hit.";
+                        detail = "Ingredient trust and hygiene are what make a busy fast food board survive the first surge.";
+                        move = "Take Premium Butcher or Night Cleaner before stacking more marketing pressure.";
+                    }
+                    else if (marketingCount == 0)
+                    {
+                        headline = "Now the neighborhood should notice you.";
+                        detail = "Your floor is credible enough to start converting local attention into repeat foot traffic.";
+                        move = "Push Google Business or Flyer Team only after the board can absorb the next rush.";
+                    }
+                    else
+                    {
+                        return false;
+                    }
+                    break;
+
+                case VentureType.Cafe:
+                    if (operationCount <= 1)
+                    {
+                        headline = "Make the cafe feel open, not just named.";
+                        detail = "The espresso bar exists, but guests still need a room, a seat, and visible flow around the counter.";
+                        move = "Play Window Seating first. Then line up Senior Barista before you spend on buzz.";
+                    }
+                    else if (staffCount == 0)
+                    {
+                        headline = "The room needs a real shift behind it.";
+                        detail = "A cafe does not feel alive until the bar and floor have an actual operator holding consistency.";
+                        move = "Hire Senior Barista now. Floor Runner is the next stabilizer if service starts backing up.";
+                    }
+                    else if (supplierCount == 0)
+                    {
+                        headline = "Lock the taste before you chase the crowd.";
+                        detail = "Beans, milk, and drink consistency are what turn one-time curiosity into neighborhood loyalty.";
+                        move = "Play Specialty Beans or Milk Contract before you lean into Instagram or repeat traffic.";
+                    }
+                    else if (marketingCount == 0)
+                    {
+                        headline = "Now you can build the regular loop.";
+                        detail = "Service is credible enough to turn trust into Maps discovery, reels, and repeat morning visits.";
+                        move = "Use Maps Reviews first for trust, then Instagram Reels or Stamp Card once the floor still feels smooth.";
+                    }
+                    else
+                    {
+                        return false;
+                    }
+                    break;
+
+                case VentureType.TechApp:
+                    if (operationCount <= 1)
+                    {
+                        headline = "Ship the core before you buy growth.";
+                        detail = "The product is live, but the stack still needs more reliability before users arrive at scale.";
+                        move = "Play Backend Upgrade or a second product card before paid acquisition starts pulling installs.";
+                    }
+                    else if (staffCount == 0)
+                    {
+                        headline = "Put real builders behind the MVP.";
+                        detail = "The app still feels fragile until a developer or support layer turns the launch into a system.";
+                        move = "Hire Core Developer first. Support or PM follow once the product loop is real.";
+                    }
+                    else if (supplierCount == 0)
+                    {
+                        headline = "Stability economics come before growth economics.";
+                        detail = "Cloud, analytics, and payment infrastructure decide whether growth becomes retention or chaos.";
+                        move = "Take Cloud Credits or Export Pipeline before the biggest acquisition cards.";
+                    }
+                    else if (marketingCount == 0)
+                    {
+                        headline = "Now turn reliability into user growth.";
+                        detail = "You finally have enough product trust to scale discovery without instantly burning reviews.";
+                        move = "Lead with ASO Push. Add paid acquisition only if backend and rating still look safe.";
+                    }
+                    else
+                    {
+                        return false;
+                    }
+                    break;
+
+                case VentureType.ClothingStore:
+                    if (operationCount <= 1)
+                    {
+                        headline = "Dress the floor before you advertise the brand.";
+                        detail = "The storefront exists, but the customer still needs depth, fit confidence, and visible merchandise logic.";
+                        move = "Play Inventory Rail first. Then add fit support before forcing trend demand.";
+                    }
+                    else if (staffCount == 0)
+                    {
+                        headline = "Style needs staff, not only display.";
+                        detail = "A clothing board feels empty until a stylist or tailor can convert browsing into trust.";
+                        move = "Hire Floor Stylist first. Tailor becomes the next key stabilizer.";
+                    }
+                    else if (supplierCount == 0)
+                    {
+                        headline = "Protect fit and fabric before trend traffic.";
+                        detail = "Returns and weak materials are what make a promising clothing run collapse early.";
+                        move = "Play Reliable Atelier or Premium Fabric Mill before aggressive demand plays.";
+                    }
+                    else if (marketingCount == 0)
+                    {
+                        headline = "Now the collection is ready to be seen.";
+                        detail = "The board has enough fit confidence to turn display into higher-value browsing and conversion.";
+                        move = "Use Instagram Lookbook or Window Story Display once return pressure feels covered.";
+                    }
+                    else
+                    {
+                        return false;
+                    }
+                    break;
+
+                case VentureType.GroceryStore:
+                    if (operationCount <= 1)
+                    {
+                        headline = "Make the store function before you extend convenience.";
+                        detail = "Fresh shelves are live, but the basket still needs smoother checkout and a clearer trip flow.";
+                        move = "Play Checkout Upgrade first. Then add the first staff layer before growing convenience demand.";
+                    }
+                    else if (staffCount == 0)
+                    {
+                        headline = "Neighborhood trust starts with the people inside.";
+                        detail = "A grocery board does not feel dependable until the register and shelf rhythm have actual staff support.";
+                        move = "Hire Trusted Cashier first. Follow with stock or fresh-keeping support if lines stay messy.";
+                    }
+                    else if (supplierCount == 0)
+                    {
+                        headline = "Protect freshness before you widen reach.";
+                        detail = "Morning supply quality and spoilage discipline are what make repeat traffic stick in grocery.";
+                        move = "Take Morning Hal Route before you invest harder in convenience or late-night traffic.";
+                    }
+                    else if (marketingCount == 0)
+                    {
+                        headline = "Now convenience can become loyalty.";
+                        detail = "The store is credible enough to convert service reliability into repeat neighborhood demand.";
+                        move = "Use WhatsApp Orders or Late Night Sign once checkout and freshness still feel under control.";
+                    }
+                    else
+                    {
+                        return false;
+                    }
+                    break;
+
+                default:
+                    return false;
+            }
+
+            brief = new TurnBriefData
+            {
+                currentTurn = currentTurn,
+                pressure = currentPressure,
+                headline = headline,
+                detail = detail,
+                recommendedMove = move,
+                buildIdentity = GameClarityFormatter.GetBuildIdentity(gm)
+            };
+
+            return true;
+        }
+
         private string GetRecommendedMove(BoardPressureType pressure)
         {
             return pressure switch
@@ -798,6 +1051,82 @@ namespace EmpireOfCards.Gameplay
             var result = new string[tags.Count];
             tags.CopyTo(result);
             return result;
+        }
+
+        // ---------------------------------------------------------------
+        // Economy Subsystem Effects (called during ProcessEndOfTurn)
+        // ---------------------------------------------------------------
+
+        private void ApplySalaryEffects(ref float staffStability)
+        {
+            if (salarySystem == null) return;
+
+            var choice = salarySystem.LastChoice;
+            if (choice == SalaryChoice.Delay)
+            {
+                // -0.5 staff stability per consecutive delayed turn
+                float penalty = salarySystem.ConsecutiveDelayTurns * 0.5f;
+                staffStability -= penalty;
+            }
+            else if (choice == SalaryChoice.PartialPay)
+            {
+                // -0.2 staff stability for partial pay
+                staffStability -= 0.2f;
+            }
+
+            staffStability = Mathf.Clamp(staffStability, 0f, 10f);
+        }
+
+        private void ApplyInsuranceEffects(ref float legalRisk, int staffCount)
+        {
+            if (insuranceSystem == null || staffCount <= 0) return;
+
+            int riskPerStaff = insuranceSystem.GetLegalRiskPerTurn(_currentInsuranceType);
+            legalRisk += riskPerStaff * staffCount;
+            legalRisk = Mathf.Clamp(legalRisk, 0f, Constants.LEGAL_RISK_MAX);
+        }
+
+        private void ApplyCreditEffects(ref int expenses)
+        {
+            if (creditSystem == null || creditSystem.ActiveCreditCount <= 0) return;
+
+            int interestPayment = creditSystem.TickCredits();
+            expenses += interestPayment;
+        }
+
+        private void ApplyStockEffects(ref float quality, bool hasSupplier)
+        {
+            if (stockSystem == null || _activeProfile == null) return;
+
+            var venture = _activeProfile.ventureType;
+            if (venture != VentureType.FastFood && venture != VentureType.Cafe && venture != VentureType.GroceryStore)
+                return;
+
+            // Low quality + no supplier = spoilage penalty
+            if (quality < 3.0f && !hasSupplier)
+            {
+                quality -= 0.3f;
+                quality = Mathf.Max(0f, quality);
+            }
+        }
+
+        private void ApplyTaxEffects(ref float legalRisk, ref int expenses, int currentTurn)
+        {
+            if (taxPeriodSystem == null) return;
+
+            // Track this turn's profit for period accumulation
+            taxPeriodSystem.TrackProfit(netIncome);
+
+            // Tick existing tax debt (interest + audit check)
+            if (taxPeriodSystem.HasTaxDebt)
+            {
+                int debtInterest = taxPeriodSystem.TickTaxDebt();
+                expenses += debtInterest;
+
+                // +5 legal risk per turn with unpaid tax debt
+                legalRisk += 5f;
+                legalRisk = Mathf.Clamp(legalRisk, 0f, Constants.LEGAL_RISK_MAX);
+            }
         }
 
         private void UpdateCashCrisis()

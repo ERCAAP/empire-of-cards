@@ -33,22 +33,6 @@ namespace EmpireOfCards.Gameplay
         public List<string> GetHandIds() => ToIds(hand);
         public List<string> GetDiscardPileIds() => ToIds(discardPile);
 
-        public void InitializeDeck(DeckPresetData preset)
-        {
-            Reset();
-            if (preset == null) return;
-
-            foreach (DeckEntry entry in preset.cards)
-            {
-                if (entry.card == null) continue;
-                for (int i = 0; i < entry.count; i++)
-                    drawPile.Add(entry.card);
-            }
-
-            ShuffleDeck();
-            redrawsRemaining = redrawsPerTurn;
-        }
-
         public void InitializeDeck(VentureDeckProfile profile, Dictionary<string, CardData> lookup)
         {
             Reset();
@@ -196,6 +180,7 @@ namespace EmpireOfCards.Gameplay
 
         public List<CardData> DrawFirstTurnHand()
         {
+            PrepareOpeningSequenceCards(handSize);
             PullCardBySlotTypeToFront(SlotType.Operation, 0);
             PullCardBySlotTypeToFront(SlotType.Staff, 1);
             return DrawCards(handSize);
@@ -245,6 +230,43 @@ namespace EmpireOfCards.Gameplay
             }
         }
 
+        private void PrepareOpeningSequenceCards(int maxCards)
+        {
+            var gm = GameManager.Instance;
+            var sequence = gm != null && gm.ActiveVentureRuntime != null
+                ? gm.ActiveVentureRuntime.GetPriorityCardIdsForTurn(Mathf.Max(1, gm.CurrentTurn))
+                : gm != null && gm.SelectedVenture != null
+                    ? gm.SelectedVenture.openingSequenceCardIds
+                    : null;
+
+            if (sequence == null || sequence.Length == 0 || drawPile.Count == 0)
+                return;
+
+            int count = Mathf.Min(maxCards, sequence.Length);
+            for (int i = 0; i < count; i++)
+                PullCardByIdToFront(sequence[i], i);
+        }
+
+        private void PullCardByIdToFront(string cardId, int insertAt)
+        {
+            if (string.IsNullOrWhiteSpace(cardId))
+                return;
+
+            for (int i = insertAt; i < drawPile.Count; i++)
+            {
+                if (drawPile[i] == null || drawPile[i].cardId != cardId)
+                    continue;
+
+                if (i == insertAt)
+                    return;
+
+                var card = drawPile[i];
+                drawPile.RemoveAt(i);
+                drawPile.Insert(insertAt, card);
+                return;
+            }
+        }
+
         private void RecycleDiscardPile()
         {
             if (discardPile.Count == 0)
@@ -270,11 +292,20 @@ namespace EmpireOfCards.Gameplay
                 : currentTurn < 16
                     ? _activeDeckProfile.midPoolCardIds
                     : _activeDeckProfile.latePoolCardIds;
+            BoardPressureType pressure = gm != null && gm.EconomyManager != null
+                ? gm.EconomyManager.CurrentPressure
+                : BoardPressureType.None;
 
             var generated = new List<CardData>();
             var combinedIds = new List<string>();
             if (basePool != null) combinedIds.AddRange(basePool);
             if (_activeDeckProfile.neutralCardIds != null) combinedIds.AddRange(_activeDeckProfile.neutralCardIds);
+            if (gm != null && gm.ActiveVentureRuntime != null)
+            {
+                string[] runtimePool = gm.ActiveVentureRuntime.GetPoolCardIds(currentTurn, pressure);
+                if (runtimePool != null && runtimePool.Length > 0)
+                    combinedIds.AddRange(runtimePool);
+            }
             AppendTechCategoryPoolIds(currentTurn, combinedIds);
             if (combinedIds.Count == 0) return;
 

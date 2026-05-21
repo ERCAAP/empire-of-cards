@@ -1,5 +1,4 @@
 using UnityEngine;
-using UnityEngine.UI;
 using TMPro;
 using DG.Tweening;
 using EmpireOfCards.Core;
@@ -36,19 +35,9 @@ namespace EmpireOfCards.UI
         [SerializeField] private TMP_Text buildIdentityText;
         [SerializeField] private TMP_Text pressureText;
 
-        [Header("FBI Risk")]
-        [SerializeField] private Image fbiBarFill;
-        [SerializeField] private TMP_Text fbiRiskText;
-        [SerializeField] private Color fbiColorLow = Color.green;
-        [SerializeField] private Color fbiColorMid = Color.yellow;
-        [SerializeField] private Color fbiColorHigh = Color.red;
-        [SerializeField] private float fbiLerpSpeed = 5f;
-
         // Runtime
         private float displayedMoney;
         private float targetMoney;
-        private float displayedFBI;
-        private float targetFBI;
 
         // Money personality state
         private int _previousMoney;
@@ -60,18 +49,16 @@ namespace EmpireOfCards.UI
         /// Assigns all sub-element references without reflection.
         /// Called by WiringService during bootstrap.
         /// </summary>
-        public void Init(TMP_Text money, TMP_Text turn, Image fbiFill, TMP_Text fbiText, TMP_Text tier = null, TMP_Text buildIdentity = null, TMP_Text pressure = null)
+        public void Init(TMP_Text money, TMP_Text turn, TMP_Text tier = null, TMP_Text buildIdentity = null, TMP_Text pressure = null)
         {
             this.moneyText = money;
             this.turnText = turn;
-            this.fbiBarFill = fbiFill;
-            this.fbiRiskText = fbiText;
             this.companyTierText = tier;
             this.buildIdentityText = buildIdentity;
             this.pressureText = pressure;
 
             if (companyTierText != null)
-                companyTierText.text = CompanyTier.Trader.ToString().ToUpperInvariant();
+                companyTierText.text = "TRADER";
             if (buildIdentityText != null)
                 buildIdentityText.text = "BUILD · Balanced Board";
             if (pressureText != null)
@@ -86,16 +73,12 @@ namespace EmpireOfCards.UI
         {
             EventBus.OnMoneyChanged += OnMoneyChanged;
             EventBus.OnTurnStarted += OnTurnStarted;
-            EventBus.OnFBIRiskChanged += OnFBIRiskChanged;
-            EventBus.OnCompanyTierChanged += OnCompanyTierChanged;
         }
 
         private void OnDisable()
         {
             EventBus.OnMoneyChanged -= OnMoneyChanged;
             EventBus.OnTurnStarted -= OnTurnStarted;
-            EventBus.OnFBIRiskChanged -= OnFBIRiskChanged;
-            EventBus.OnCompanyTierChanged -= OnCompanyTierChanged;
         }
 
         private void Update()
@@ -115,21 +98,6 @@ namespace EmpireOfCards.UI
             // --- Money color personality ---
             if (moneyText != null)
                 moneyText.color = GetMoneyColor();
-
-            // Lerp FBI bar fill and color
-            if (!Mathf.Approximately(displayedFBI, targetFBI))
-            {
-                displayedFBI = Mathf.MoveTowards(displayedFBI, targetFBI, fbiLerpSpeed * Time.deltaTime);
-
-                if (fbiBarFill != null)
-                {
-                    fbiBarFill.fillAmount = displayedFBI;
-                    fbiBarFill.color = GetFBIColor(displayedFBI);
-                }
-
-                if (fbiRiskText != null)
-                    fbiRiskText.text = $"FBI Risk: {Mathf.RoundToInt(displayedFBI * 100f)}%";
-            }
         }
 
         // ------------------------------------------------------------------
@@ -176,17 +144,6 @@ namespace EmpireOfCards.UI
             UpdateTurn(turnNumber, Constants.MAX_TURNS);
         }
 
-        private void OnFBIRiskChanged(float risk)
-        {
-            UpdateFBIRisk(risk);
-        }
-
-        private void OnCompanyTierChanged(CompanyTier tier)
-        {
-            if (companyTierText != null)
-                companyTierText.text = tier.ToString().ToUpperInvariant();
-        }
-
         // ------------------------------------------------------------------
         // Public setters (also called by UIManager.UpdateAllUI)
         // ------------------------------------------------------------------
@@ -226,14 +183,6 @@ namespace EmpireOfCards.UI
                 turnText.text = $"Turn {current}/{max}  WARNING";
             else
                 turnText.text = $"Turn {current}/{max}";
-        }
-
-        /// <summary>
-        /// Sets the target FBI risk. The bar lerps toward it in Update().
-        /// </summary>
-        public void UpdateFBIRisk(float risk)
-        {
-            targetFBI = Mathf.Clamp01(risk);
         }
 
         public void UpdateBuildIdentity(string buildIdentity)
@@ -315,13 +264,5 @@ namespace EmpireOfCards.UI
             return moneyColorNormal;
         }
 
-        private Color GetFBIColor(float t)
-        {
-            // 0..0.5 -> green..yellow, 0.5..1 -> yellow..red
-            if (t < 0.5f)
-                return Color.Lerp(fbiColorLow, fbiColorMid, t * 2f);
-            else
-                return Color.Lerp(fbiColorMid, fbiColorHigh, (t - 0.5f) * 2f);
-        }
     }
 }

@@ -220,7 +220,7 @@ namespace EmpireOfCards.Gameplay.Staff
         }
 
         // ----------------------------------------------------------------
-        // Modifier Queries (used by EconomyManager / IncomeCalculator)
+        // Modifier Queries (used by EconomyManager)
         // ----------------------------------------------------------------
 
         public StaffState GetState(CardData card)

@@ -122,13 +122,73 @@ namespace EmpireOfCards.Bootstrap.Data
             foreach (var card in allCards)
                 byId[card.cardId] = card;
 
+            var themeProfiles = CreateThemeProfiles();
+            var progressionArcs = CreateProgressionArcs();
+            var eventChains = CreateEventChains();
+            var playbooks = CreatePlaybooks(themeProfiles, progressionArcs, eventChains);
+
             return new[]
             {
-                CreateVenture(VentureType.FastFood, "Fast Food", "High traffic, high pressure. Win by balancing growth and kitchen capacity.", "Fast local scaling with review risk.", byId["FF01"], boardProfiles[0], deckProfiles[0], economyProfiles[0]),
-                CreateVenture(VentureType.Cafe, "Cafe", "Loyalty and quality driven. Build social proof and neighborhood habits.", "Premium quality and sticky regulars.", byId["CF01"], boardProfiles[1], deckProfiles[1], economyProfiles[1]),
-                CreateVenture(VentureType.TechApp, "Tech App", "Slow start, explosive upside. Stability and rating matter before scale.", "Product, growth, and retention balancing act.", byId["TC01"], boardProfiles[2], deckProfiles[2], economyProfiles[2]),
-                CreateVenture(VentureType.ClothingStore, "Clothing Store", "Seasonal demand, inventory pressure, visual merchandising wars.", "Trend and stock management duel.", byId["CL01"], boardProfiles[3], deckProfiles[3], economyProfiles[3]),
-                CreateVenture(VentureType.GroceryStore, "Grocery Store", "Low margin, repeat traffic, spoilage and neighborhood loyalty.", "Stable demand with tight operational margins.", byId["GR01"], boardProfiles[4], deckProfiles[4], economyProfiles[4])
+                CreateVenture(
+                    VentureType.FastFood,
+                    "Fast Food",
+                    "High traffic, high pressure. Win by balancing growth and kitchen capacity.",
+                    "Fast local scaling with review risk.",
+                    "Open the counter, add seating, lock kitchen flow, then push local buzz without breaking the line.",
+                    "Turn 1: expand service flow.\nTurn 2: add kitchen or hygiene support.\nTurn 3: push flyers or Google once the rush is absorbable.",
+                    new[] { "FF02", "FF03", "FF04", "FF06", "FF05", "FF10", "FF11", "FF14" },
+                    playbooks[0],
+                    progressionArcs[0],
+                    themeProfiles[0],
+                    byId["FF01"], boardProfiles[0], deckProfiles[0], economyProfiles[0]),
+                CreateVenture(
+                    VentureType.Cafe,
+                    "Cafe",
+                    "Loyalty and quality driven. Build social proof and neighborhood habits.",
+                    "Premium quality and sticky regulars.",
+                    "Open the room, seat guests, hire the barista, then lock beans and reviews before chasing social demand.",
+                    "Turn 1: add seating and bar rhythm.\nTurn 2: stabilize beans, milk, and floor flow.\nTurn 3: push Maps, reels, and regular loyalty once service feels real.",
+                    new[] { "CF02", "CF03", "CF04", "CF06", "CF05", "CF10", "CF11", "CF12" },
+                    playbooks[1],
+                    progressionArcs[1],
+                    themeProfiles[1],
+                    byId["CF01"], boardProfiles[1], deckProfiles[1], economyProfiles[1]),
+                CreateVenture(
+                    VentureType.TechApp,
+                    "Tech App",
+                    "Slow start, explosive upside. Stability and rating matter before scale.",
+                    "Product, growth, and retention balancing act.",
+                    "Ship the first working product, harden backend, and only then spend to acquire users at scale.",
+                    "Turn 1: stabilize the core product.\nTurn 2: reinforce backend and cloud reliability.\nTurn 3: turn on acquisition once reviews and uptime are safe.",
+                    new[] { "TC02", "TC03", "TC04", "TC05", "TC06", "TC11", "TC13", "TC14" },
+                    playbooks[2],
+                    progressionArcs[2],
+                    themeProfiles[2],
+                    byId["TC01"], boardProfiles[2], deckProfiles[2], economyProfiles[2]),
+                CreateVenture(
+                    VentureType.ClothingStore,
+                    "Clothing Store",
+                    "Seasonal demand, inventory pressure, visual merchandising wars.",
+                    "Trend and stock management duel.",
+                    "Dress the storefront, widen inventory, add fit support, then market the look once returns are under control.",
+                    "Turn 1: improve display and floor conversion.\nTurn 2: secure fit and fabric quality.\nTurn 3: advertise the collection only after the return risk is covered.",
+                    new[] { "CL02", "CL03", "CL04", "CL05", "CL06", "CL10", "CL11", "CL12" },
+                    playbooks[3],
+                    progressionArcs[3],
+                    themeProfiles[3],
+                    byId["CL01"], boardProfiles[3], deckProfiles[3], economyProfiles[3]),
+                CreateVenture(
+                    VentureType.GroceryStore,
+                    "Grocery Store",
+                    "Low margin, repeat traffic, spoilage and neighborhood loyalty.",
+                    "Stable demand with tight operational margins.",
+                    "Open the shelf, smooth checkout, secure morning supply, then lean into convenience and repeat orders.",
+                    "Turn 1: remove checkout friction.\nTurn 2: protect freshness and spoilage.\nTurn 3: add WhatsApp or late-night convenience once basics are stable.",
+                    new[] { "GR02", "GR03", "GR04", "GR05", "GR06", "GR10", "GR11", "GR15" },
+                    playbooks[4],
+                    progressionArcs[4],
+                    themeProfiles[4],
+                    byId["GR01"], boardProfiles[4], deckProfiles[4], economyProfiles[4])
             };
         }
 
@@ -137,6 +197,12 @@ namespace EmpireOfCards.Bootstrap.Data
             string name,
             string description,
             string playstyle,
+            string openingFantasy,
+            string openingPlanSummary,
+            string[] openingSequenceCardIds,
+            VenturePlaybook playbook,
+            VentureProgressionArc progressionArc,
+            VentureBoardThemeProfile themeProfile,
             CardData startingCard,
             VentureBoardProfile boardProfile,
             VentureDeckProfile deckProfile,
@@ -147,12 +213,18 @@ namespace EmpireOfCards.Bootstrap.Data
             venture.ventureName = name;
             venture.description = description;
             venture.playstyleSummary = playstyle;
+            venture.openingFantasy = openingFantasy;
+            venture.openingPlanSummary = openingPlanSummary;
+            venture.openingSequenceCardIds = openingSequenceCardIds;
             venture.requiresCustomName = true;
             venture.requiresRunCategorySelection = type == VentureType.TechApp;
             venture.startingBusiness = startingCard;
             venture.boardProfile = boardProfile;
             venture.deckProfile = deckProfile;
             venture.economyProfile = economyProfile;
+            venture.playbook = playbook;
+            venture.progressionArc = progressionArc;
+            venture.themeProfile = themeProfile;
             venture.name = $"Venture_{type}";
             return venture;
         }
@@ -246,6 +318,306 @@ namespace EmpireOfCards.Bootstrap.Data
             };
             profile.name = $"DeckProfile_{type}";
             return profile;
+        }
+
+        private static VenturePlaybook[] CreatePlaybooks(
+            VentureBoardThemeProfile[] themeProfiles,
+            VentureProgressionArc[] progressionArcs,
+            VentureEventChain[] eventChains)
+        {
+            return new[]
+            {
+                CreatePlaybook(VentureType.FastFood, "Rush, seating, kitchen rhythm, and review protection decide whether traffic turns into profit.", "Queue pressure, hygiene, local buzz, and margin discipline carry the lane.", new[] { "Queue Pressure", "Kitchen Throughput", "Review Heat", "Staff Fatigue" }, new[] { "FF02", "FF03", "FF04", "FF06", "FF05", "FF10", "FF11", "FF14" }, progressionArcs[0], themeProfiles[0], eventChains[0]),
+                CreatePlaybook(VentureType.Cafe, "The room, the bar, the beans, and the regular loop must click before social demand matters.", "Bar flow, drink consistency, ambience, and neighborhood trust drive the run.", new[] { "Bar Throughput", "Bean Quality", "Ambience", "Regular Loyalty" }, new[] { "CF02", "CF03", "CF04", "CF06", "CF05", "CF10", "CF11", "CF12" }, progressionArcs[1], themeProfiles[1], eventChains[1]),
+                CreatePlaybook(VentureType.TechApp, "Product reliability, growth efficiency, and trust compound only if backend survives scale.", "CAC, retention, stability, infra burn, and reviews define the app war.", new[] { "CAC", "Retention", "Stability", "Infra Burn" }, new[] { "TC02", "TC03", "TC04", "TC05", "TC06", "TC11", "TC13", "TC14" }, progressionArcs[2], themeProfiles[2], eventChains[2]),
+                CreatePlaybook(VentureType.ClothingStore, "Display, inventory confidence, fit trust, and trend timing all need to land together.", "Footfall, conversion, return pressure, and fabric trust decide the season.", new[] { "Footfall", "Conversion", "Fit Trust", "Return Pressure" }, new[] { "CL02", "CL03", "CL04", "CL05", "CL06", "CL10", "CL11", "CL12" }, progressionArcs[3], themeProfiles[3], eventChains[3]),
+                CreatePlaybook(VentureType.GroceryStore, "Freshness, checkout flow, and neighborhood convenience must feel dependable before you widen demand.", "Spoilage, basket size, shelf fill, and local trust shape the store.", new[] { "Freshness", "Checkout Delay", "Shelf Fill", "Neighborhood Loyalty" }, new[] { "GR02", "GR03", "GR04", "GR05", "GR06", "GR10", "GR11", "GR15" }, progressionArcs[4], themeProfiles[4], eventChains[4])
+            };
+        }
+
+        private static VenturePlaybook CreatePlaybook(
+            VentureType type,
+            string fantasy,
+            string economy,
+            string[] metrics,
+            string[] openingSequence,
+            VentureProgressionArc arc,
+            VentureBoardThemeProfile theme,
+            VentureEventChain eventChain)
+        {
+            var playbook = ScriptableObject.CreateInstance<VenturePlaybook>();
+            playbook.ventureType = type;
+            playbook.fantasySummary = fantasy;
+            playbook.economySummary = economy;
+            playbook.primaryMetrics = metrics;
+            playbook.openingSequenceCardIds = openingSequence;
+            playbook.progressionArc = arc;
+            playbook.themeProfile = theme;
+            playbook.eventChain = eventChain;
+            playbook.name = $"Playbook_{type}";
+            return playbook;
+        }
+
+        private static VentureProgressionArc[] CreateProgressionArcs()
+        {
+            return new[]
+            {
+                CreateProgressionArc(VentureType.FastFood,
+                    CreateOpeningBeats(
+                        ("ff_open_counter", 1, "Open the floor before you chase volume.", "The counter is live, but the rush still needs seating and visible service flow around the grill.", "Play Extra Tables first. Add kitchen support before flyer demand.", new[] { "FF02", "FF03", "FF10" }, new[] { "ff_tables" }),
+                        ("ff_staff_line", 2, "Put people on the line.", "A real rush needs labor behind the counter, not only a sign and a grill.", "Hire Line Cook or Front Counter Server now.", new[] { "FF03", "FF10", "FF11" }, new[] { "ff_line" }),
+                        ("ff_quality_lock", 3, "Protect food quality before the reviews hit.", "Ingredient trust and hygiene are the first real multiplier in this lane.", "Take Premium Butcher or Night Cleaner before stacking growth.", new[] { "FF04", "FF11", "FF14" }, new[] { "ff_quality" }),
+                        ("ff_local_buzz", 5, "Now the neighborhood should notice you.", "The board can start absorbing traffic once the line stops wobbling.", "Use Google Business or Flyer Team only if capacity still holds.", new[] { "FF05", "FF06", "NT01" }, new[] { "ff_buzz" })),
+                    new[] { "FF02", "FF03", "FF10", "FF11", "FF04" },
+                    new[] { "FF04", "FF11", "FF06", "NT02", "FF14" },
+                    new[] { "FF05", "FF06", "FF10", "NT01", "NT05" },
+                    new[] { "FF09", "FF12", "FF13", "NT03" },
+                    new[] { "FF08", "FF14", "NT03", "NT04" },
+                    new[] { "FF06", "FF10", "FF11", "NT05" }),
+                CreateProgressionArc(VentureType.Cafe,
+                    CreateOpeningBeats(
+                        ("cf_room_open", 1, "Make the cafe feel open, not just named.", "The espresso bar exists, but guests still need a room, a seat, and visible flow around the counter.", "Play Window Seating first. Then line up Senior Barista.", new[] { "CF02", "CF03", "CF10" }, new[] { "cf_tables" }),
+                        ("cf_shift_real", 2, "The room needs a real shift behind it.", "A cafe does not feel alive until the bar and floor have an actual operator holding consistency.", "Hire Senior Barista now. Floor Runner is the next stabilizer.", new[] { "CF03", "CF10", "NT04" }, new[] { "cf_barista" }),
+                        ("cf_taste_lock", 3, "Lock the taste before you chase the crowd.", "Beans, milk, and drink consistency are what turn one-time curiosity into loyalty.", "Play Specialty Beans or Milk Contract before Instagram.", new[] { "CF04", "CF11", "CF08" }, new[] { "cf_beans" }),
+                        ("cf_regular_loop", 5, "Now you can build the regular loop.", "Service is credible enough to convert trust into discovery, reels, and repeat mornings.", "Use Maps Reviews first, then Reels or Stamp Card.", new[] { "CF06", "CF05", "CF12" }, new[] { "cf_regulars" })),
+                    new[] { "CF02", "CF03", "CF10", "CF04", "CF11" },
+                    new[] { "CF04", "CF11", "CF06", "CF08", "NT02" },
+                    new[] { "CF05", "CF06", "CF12", "NT01", "NT05" },
+                    new[] { "CF09", "CF13", "CF14", "NT03" },
+                    new[] { "CF08", "CF15", "NT03", "NT04" },
+                    new[] { "CF12", "CF05", "CF06", "NT05" }),
+                CreateProgressionArc(VentureType.TechApp,
+                    CreateOpeningBeats(
+                        ("tc_core_stable", 1, "Ship the core before you buy growth.", "The product is live, but the stack still needs more reliability before users arrive at scale.", "Play Backend Upgrade or a second product card first.", new[] { "TC02", "TC03", "TC11" }, new[] { "tc_stack" }),
+                        ("tc_build_team", 2, "Put real builders behind the MVP.", "The app still feels fragile until a developer or support layer turns the launch into a system.", "Hire Core Developer first. Support follows once the loop is real.", new[] { "TC03", "TC14", "NT04" }, new[] { "tc_team" }),
+                        ("tc_infra_cost", 3, "Stability economics come before growth economics.", "Cloud, analytics, and payment infrastructure decide whether growth becomes retention or chaos.", "Take Cloud Credits or Export Pipeline before the biggest acquisition cards.", new[] { "TC04", "TC11", "TC08" }, new[] { "tc_infra" }),
+                        ("tc_growth_switch", 5, "Now turn reliability into user growth.", "You finally have enough product trust to scale discovery without instantly burning reviews.", "Lead with ASO Push. Add paid acquisition only if rating still looks safe.", new[] { "TC05", "TC06", "TC13" }, new[] { "tc_growth" })),
+                    new[] { "TC02", "TC03", "TC04", "TC11", "TC14" },
+                    new[] { "TC04", "TC11", "TC08", "NT02", "NT04" },
+                    new[] { "TC05", "TC06", "TC13", "TC16", "TC22" },
+                    new[] { "TC09", "TC12", "TC18", "TC21", "TC24", "TC27" },
+                    new[] { "TC08", "TC17", "NT03", "NT04" },
+                    new[] { "TC16", "TC20", "TC22", "NT05" }),
+                CreateProgressionArc(VentureType.ClothingStore,
+                    CreateOpeningBeats(
+                        ("cl_floor_ready", 1, "Dress the floor before you advertise the brand.", "The storefront exists, but customers still need depth, fit confidence, and visible merchandise logic.", "Play Inventory Rail first. Then add fit support.", new[] { "CL02", "CL03", "CL10" }, new[] { "cl_display" }),
+                        ("cl_style_staff", 2, "Style needs staff, not only display.", "A clothing board feels empty until a stylist or tailor can convert browsing into trust.", "Hire Floor Stylist first. Tailor is the next stabilizer.", new[] { "CL03", "CL10", "NT04" }, new[] { "cl_team" }),
+                        ("cl_fit_lock", 3, "Protect fit and fabric before trend traffic.", "Returns and weak materials are what make a promising fashion run collapse early.", "Play Reliable Atelier or Premium Fabric Mill before aggressive demand.", new[] { "CL04", "CL11", "CL15" }, new[] { "cl_fit" }),
+                        ("cl_story_push", 5, "Now the collection is ready to be seen.", "The board has enough fit confidence to turn display into conversion and trend pull.", "Use Lookbook or Window Story Display once return pressure feels covered.", new[] { "CL05", "CL12", "CL06" }, new[] { "cl_story" })),
+                    new[] { "CL02", "CL03", "CL10", "CL04", "CL11" },
+                    new[] { "CL04", "CL11", "CL08", "CL15", "NT02" },
+                    new[] { "CL05", "CL12", "CL06", "NT01", "NT05" },
+                    new[] { "CL09", "CL13", "CL14", "NT03" },
+                    new[] { "CL08", "CL15", "NT03", "NT04" },
+                    new[] { "CL12", "CL11", "CL05", "NT05" }),
+                CreateProgressionArc(VentureType.GroceryStore,
+                    CreateOpeningBeats(
+                        ("gr_checkout_first", 1, "Make the store function before you extend convenience.", "Fresh shelves are live, but the basket still needs smoother checkout and a clearer trip flow.", "Play Checkout Upgrade first. Then add staff before widening demand.", new[] { "GR02", "GR03", "GR10" }, new[] { "gr_checkout" }),
+                        ("gr_staff_trust", 2, "Neighborhood trust starts with the people inside.", "A grocery board does not feel dependable until the register and shelf rhythm have actual support.", "Hire Trusted Cashier first. Stocker follows if lines stay messy.", new[] { "GR03", "GR10", "NT04" }, new[] { "gr_staff" }),
+                        ("gr_fresh_lock", 3, "Protect freshness before you widen reach.", "Morning supply quality and spoilage discipline are what make repeat traffic stick in grocery.", "Take Morning Hal Route or Cold Chain Dairy before new convenience demand.", new[] { "GR04", "GR11", "GR15" }, new[] { "gr_fresh" }),
+                        ("gr_convenience", 5, "Now convenience can become loyalty.", "The store is credible enough to convert reliability into repeat neighborhood demand.", "Use WhatsApp Orders or Late Night Sign once checkout still feels under control.", new[] { "GR05", "GR06", "GR12" }, new[] { "gr_loyalty" })),
+                    new[] { "GR02", "GR03", "GR10", "GR04", "GR11" },
+                    new[] { "GR04", "GR11", "GR15", "NT02", "NT04" },
+                    new[] { "GR05", "GR06", "GR12", "NT01", "NT05" },
+                    new[] { "GR09", "GR13", "GR14", "NT03" },
+                    new[] { "GR08", "GR15", "NT03", "NT04" },
+                    new[] { "GR12", "GR06", "GR05", "NT05" })
+            };
+        }
+
+        private static VentureProgressionArc CreateProgressionArc(
+            VentureType type,
+            TurnScriptBeat[] beats,
+            string[] openingPool,
+            string[] stabilizePool,
+            string[] scalePool,
+            string[] crisisPool,
+            string[] recoverPool,
+            string[] latePool)
+        {
+            var arc = ScriptableObject.CreateInstance<VentureProgressionArc>();
+            arc.ventureType = type;
+            arc.openingBeats = beats;
+            arc.openingPoolCardIds = openingPool;
+            arc.stabilizePoolCardIds = stabilizePool;
+            arc.scalePoolCardIds = scalePool;
+            arc.crisisPoolCardIds = crisisPool;
+            arc.recoverPoolCardIds = recoverPool;
+            arc.latePoolCardIds = latePool;
+            arc.name = $"ProgressionArc_{type}";
+            return arc;
+        }
+
+        private static TurnScriptBeat[] CreateOpeningBeats(params (string id, int turn, string headline, string detail, string move, string[] cards, string[] props)[] raw)
+        {
+            var beats = new TurnScriptBeat[raw.Length];
+            for (int i = 0; i < raw.Length; i++)
+            {
+                beats[i] = new TurnScriptBeat
+                {
+                    beatId = raw[i].id,
+                    turnNumber = raw[i].turn,
+                    headline = raw[i].headline,
+                    detail = raw[i].detail,
+                    recommendedMove = raw[i].move,
+                    priorityCardIds = raw[i].cards,
+                    highlightPropIds = raw[i].props
+                };
+            }
+
+            return beats;
+        }
+
+        private static VentureBoardThemeProfile[] CreateThemeProfiles()
+        {
+            return new[]
+            {
+                CreateThemeProfile(VentureType.FastFood, "RUSH WINDOW", "REVIEW LOOP", "LOCAL PULL", CreateCameraProfile(-0.02f), new[]
+                {
+                    MakeProp("ff_tables", "FF02", SlotType.Operation, new Vector3(-1.90f, 0.26f, -1.20f), new Vector3(0.72f, 0.18f, 0.48f), new Color(0.33f, 0.20f, 0.14f), new Color(0.86f, 0.44f, 0.16f), "TABLES"),
+                    MakeProp("ff_line", "FF03", SlotType.Staff, new Vector3(-0.40f, 0.26f, -0.10f), new Vector3(0.50f, 0.34f, 0.42f), new Color(0.22f, 0.22f, 0.22f), new Color(0.95f, 0.70f, 0.34f), "LINE"),
+                    MakeProp("ff_quality", "FF04", SlotType.Supplier, new Vector3(2.35f, 0.26f, 1.05f), new Vector3(0.58f, 0.30f, 0.48f), new Color(0.25f, 0.16f, 0.15f), new Color(0.74f, 0.38f, 0.20f), "QUALITY"),
+                    MakeProp("ff_buzz", "FF06", SlotType.Marketing, new Vector3(-4.25f, 0.26f, 1.10f), new Vector3(0.48f, 0.42f, 0.24f), new Color(0.15f, 0.20f, 0.22f), new Color(0.25f, 0.62f, 0.92f), "BUZZ")
+                }),
+                CreateThemeProfile(VentureType.Cafe, "MORNING RUSH", "REGULAR LOOP", "NEIGHBORHOOD PULL", CreateCameraProfile(0.00f), new[]
+                {
+                    MakeProp("cf_tables", "CF02", SlotType.Operation, new Vector3(-1.90f, 0.26f, -1.20f), new Vector3(0.70f, 0.16f, 0.52f), new Color(0.28f, 0.18f, 0.12f), new Color(0.73f, 0.52f, 0.28f), "TABLES"),
+                    MakeProp("cf_barista", "CF03", SlotType.Staff, new Vector3(-0.48f, 0.28f, -0.08f), new Vector3(0.44f, 0.38f, 0.40f), new Color(0.18f, 0.18f, 0.18f), new Color(0.92f, 0.79f, 0.54f), "BAR"),
+                    MakeProp("cf_beans", "CF04", SlotType.Supplier, new Vector3(2.35f, 0.26f, 1.08f), new Vector3(0.54f, 0.34f, 0.48f), new Color(0.22f, 0.15f, 0.10f), new Color(0.64f, 0.40f, 0.18f), "BEANS"),
+                    MakeProp("cf_regulars", "CF12", SlotType.Marketing, new Vector3(-4.18f, 0.28f, 1.14f), new Vector3(0.46f, 0.44f, 0.24f), new Color(0.14f, 0.18f, 0.22f), new Color(0.34f, 0.74f, 0.48f), "REGULARS")
+                }),
+                CreateThemeProfile(VentureType.TechApp, "USER FLOW", "TRUST LOOP", "CHANNEL PULL", CreateCameraProfile(0.08f), new[]
+                {
+                    MakeProp("tc_stack", "TC02", SlotType.Operation, new Vector3(-1.70f, 0.28f, -1.18f), new Vector3(0.60f, 0.44f, 0.32f), new Color(0.14f, 0.20f, 0.28f), new Color(0.24f, 0.58f, 0.94f), "STACK"),
+                    MakeProp("tc_team", "TC03", SlotType.Staff, new Vector3(-0.10f, 0.28f, -0.10f), new Vector3(0.44f, 0.34f, 0.34f), new Color(0.18f, 0.18f, 0.20f), new Color(0.72f, 0.88f, 1.00f), "TEAM"),
+                    MakeProp("tc_infra", "TC04", SlotType.Supplier, new Vector3(2.30f, 0.28f, 1.08f), new Vector3(0.58f, 0.44f, 0.30f), new Color(0.12f, 0.18f, 0.26f), new Color(0.32f, 0.70f, 1.00f), "INFRA"),
+                    MakeProp("tc_growth", "TC05", SlotType.Marketing, new Vector3(-4.18f, 0.28f, 1.10f), new Vector3(0.44f, 0.52f, 0.24f), new Color(0.10f, 0.16f, 0.22f), new Color(0.22f, 0.90f, 0.88f), "GROWTH")
+                }),
+                CreateThemeProfile(VentureType.ClothingStore, "FOOTFALL", "FIT TRUST", "TREND PULL", CreateCameraProfile(0.03f), new[]
+                {
+                    MakeProp("cl_display", "CL02", SlotType.Operation, new Vector3(-1.95f, 0.26f, -1.20f), new Vector3(0.76f, 0.34f, 0.26f), new Color(0.24f, 0.15f, 0.20f), new Color(0.88f, 0.38f, 0.60f), "DISPLAY"),
+                    MakeProp("cl_team", "CL03", SlotType.Staff, new Vector3(-0.20f, 0.28f, -0.10f), new Vector3(0.44f, 0.38f, 0.34f), new Color(0.20f, 0.16f, 0.18f), new Color(1.00f, 0.76f, 0.84f), "STYLE"),
+                    MakeProp("cl_fit", "CL04", SlotType.Supplier, new Vector3(2.30f, 0.28f, 1.08f), new Vector3(0.54f, 0.40f, 0.30f), new Color(0.22f, 0.14f, 0.18f), new Color(0.76f, 0.34f, 0.50f), "FIT"),
+                    MakeProp("cl_story", "CL12", SlotType.Marketing, new Vector3(-4.18f, 0.28f, 1.10f), new Vector3(0.46f, 0.46f, 0.22f), new Color(0.18f, 0.14f, 0.20f), new Color(0.94f, 0.50f, 0.74f), "LOOK")
+                }),
+                CreateThemeProfile(VentureType.GroceryStore, "BASKET FLOW", "FRESH TRUST", "LOCAL PULL", CreateCameraProfile(-0.03f), new[]
+                {
+                    MakeProp("gr_checkout", "GR02", SlotType.Operation, new Vector3(-1.90f, 0.26f, -1.22f), new Vector3(0.80f, 0.18f, 0.26f), new Color(0.16f, 0.20f, 0.14f), new Color(0.42f, 0.80f, 0.34f), "CHECKOUT"),
+                    MakeProp("gr_staff", "GR03", SlotType.Staff, new Vector3(-0.16f, 0.28f, -0.10f), new Vector3(0.42f, 0.38f, 0.32f), new Color(0.18f, 0.20f, 0.16f), new Color(0.86f, 0.95f, 0.70f), "STAFF"),
+                    MakeProp("gr_fresh", "GR04", SlotType.Supplier, new Vector3(2.30f, 0.28f, 1.08f), new Vector3(0.62f, 0.30f, 0.44f), new Color(0.16f, 0.22f, 0.16f), new Color(0.34f, 0.72f, 0.30f), "FRESH"),
+                    MakeProp("gr_loyalty", "GR05", SlotType.Marketing, new Vector3(-4.20f, 0.28f, 1.10f), new Vector3(0.46f, 0.42f, 0.22f), new Color(0.14f, 0.18f, 0.12f), new Color(0.44f, 0.84f, 0.42f), "LOCAL")
+                })
+            };
+        }
+
+        private static VentureBoardThemeProfile CreateThemeProfile(
+            VentureType type,
+            string marketLabel,
+            string trustLabel,
+            string pullLabel,
+            BoardCameraProfile cameraProfile,
+            VentureBoardProp[] props)
+        {
+            var theme = ScriptableObject.CreateInstance<VentureBoardThemeProfile>();
+            theme.ventureType = type;
+            theme.marketFocusLabel = marketLabel;
+            theme.trustFocusLabel = trustLabel;
+            theme.pullFocusLabel = pullLabel;
+            theme.rivalPressureLabel = "RIVAL PRESSURE";
+            theme.cameraProfile = cameraProfile;
+            theme.props = props;
+            theme.name = $"Theme_{type}";
+            return theme;
+        }
+
+        private static BoardCameraProfile CreateCameraProfile(float xOffset)
+        {
+            return new BoardCameraProfile
+            {
+                cameraPosition = new Vector3(xOffset, 14.8f, -9.2f),
+                cameraEuler = new Vector3(51f, 0f, 0f),
+                fieldOfView = 53f,
+                handAnchorPosition = new Vector3(0f, 0.98f, -3.92f),
+                handAnchorEuler = new Vector3(-9f, 0f, 0f),
+                handSpacing = 1.22f,
+                handFanAngle = 7f,
+                handVerticalArc = 0.10f
+            };
+        }
+
+        private static VentureBoardProp MakeProp(string propId, string triggerCardId, SlotType slotType, Vector3 pos, Vector3 scale, Color idle, Color active, string label)
+        {
+            return new VentureBoardProp
+            {
+                propId = propId,
+                triggerCardId = triggerCardId,
+                slotType = slotType,
+                localPosition = pos,
+                localScale = scale,
+                idleColor = idle,
+                activeColor = active,
+                label = label
+            };
+        }
+
+        private static VentureEventChain[] CreateEventChains()
+        {
+            return new[]
+            {
+                CreateEventChain(VentureType.FastFood, new[]
+                {
+                    MakeEventWindow("ff_opening_friction", 3, 5, BoardPressureType.CapacityShortfall, "Opening friction", "Rush traffic is exposing kitchen and queue limits.", "FF09", "FF12"),
+                    MakeEventWindow("ff_margin_squeeze", 6, 9, BoardPressureType.LowCash, "Margin squeeze", "Delivery fees and quality pressure are starting to bite.", "FF13", "FF09"),
+                    MakeEventWindow("ff_reputation_risk", 10, 16, BoardPressureType.LowRating, "Reputation risk", "Weak cleanup or service wobble can now spiral publicly.", "FF12", "FF09")
+                }),
+                CreateEventChain(VentureType.Cafe, new[]
+                {
+                    MakeEventWindow("cf_opening_friction", 3, 5, BoardPressureType.CapacityShortfall, "Opening friction", "The first real rush exposes a weak floor and slow drink handoff.", "CF14", "CF09"),
+                    MakeEventWindow("cf_quality_break", 6, 9, BoardPressureType.WeakQuality, "Quality break", "Supply inconsistency starts leaking into guest trust.", "CF13", "CF14"),
+                    MakeEventWindow("cf_staff_crack", 10, 16, BoardPressureType.StaffInstability, "Shift crack", "Burnout and complaints turn into public pressure.", "CF09", "CF14")
+                }),
+                CreateEventChain(VentureType.TechApp, new[]
+                {
+                    MakeEventWindow("tc_opening_friction", 3, 5, BoardPressureType.LowRating, "Opening friction", "Early users are already stress-testing the core experience.", "TC09", "TC12"),
+                    MakeEventWindow("tc_scale_shock", 6, 9, BoardPressureType.CapacityShortfall, "Scale shock", "Growth is exposing backend, infra, or trust weak spots.", "TC21", "TC24", "TC18"),
+                    MakeEventWindow("tc_late_crisis", 10, 16, BoardPressureType.HighLegalRisk, "Trust crisis", "The product is big enough now that trust failures become expensive.", "TC18", "TC27", "TC15")
+                }),
+                CreateEventChain(VentureType.ClothingStore, new[]
+                {
+                    MakeEventWindow("cl_opening_friction", 3, 5, BoardPressureType.LowDemand, "Opening friction", "The floor looks promising, but stock and season bets are still fragile.", "CL09", "CL14"),
+                    MakeEventWindow("cl_fit_risk", 6, 9, BoardPressureType.WeakQuality, "Fit risk", "Returns and quality claims are starting to define the brand.", "CL13", "CL14"),
+                    MakeEventWindow("cl_margin_risk", 10, 16, BoardPressureType.LowCash, "Margin risk", "Wrong inventory timing is now turning into balance-sheet pressure.", "CL09", "CL13")
+                }),
+                CreateEventChain(VentureType.GroceryStore, new[]
+                {
+                    MakeEventWindow("gr_opening_friction", 3, 5, BoardPressureType.CapacityShortfall, "Opening friction", "Checkout and shelf rhythm are under pressure from repeat trips.", "GR13", "GR09"),
+                    MakeEventWindow("gr_freshness_risk", 6, 9, BoardPressureType.WeakQuality, "Freshness risk", "Spoilage and cold-chain discipline are becoming visible to regulars.", "GR09", "GR14"),
+                    MakeEventWindow("gr_trust_drop", 10, 16, BoardPressureType.LowRating, "Neighborhood trust drop", "Local rumor and empty shelf pain can now flip baskets toward the rival.", "GR14", "GR13")
+                })
+            };
+        }
+
+        private static VentureEventChain CreateEventChain(VentureType type, VentureEventWindow[] windows)
+        {
+            var chain = ScriptableObject.CreateInstance<VentureEventChain>();
+            chain.ventureType = type;
+            chain.windows = windows;
+            chain.name = $"EventChain_{type}";
+            return chain;
+        }
+
+        private static VentureEventWindow MakeEventWindow(string windowId, int turnStart, int turnEnd, BoardPressureType pressure, string title, string detail, params string[] cardIds)
+        {
+            return new VentureEventWindow
+            {
+                windowId = windowId,
+                turnStart = turnStart,
+                turnEnd = turnEnd,
+                requiredPressure = pressure,
+                title = title,
+                detail = detail,
+                preferredEventCardIds = cardIds
+            };
         }
 
         private static BoardSubSlotDefinition[] ToSubSlots((string id, string label)[] input)

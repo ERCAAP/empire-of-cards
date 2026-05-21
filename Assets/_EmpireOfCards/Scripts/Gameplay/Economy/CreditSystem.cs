@@ -33,16 +33,13 @@ namespace EmpireOfCards.Gameplay.Economy
             }
         }
 
-        public bool CanTakeCredit(CreditType type, CompanyTier currentTier)
+        public bool CanTakeCredit(CreditType type)
         {
             switch (type)
             {
                 case CreditType.SmallBusiness:
-                    return currentTier >= CompanyTier.Trader;
                 case CreditType.Medium:
-                    return currentTier >= CompanyTier.Entrepreneur;
                 case CreditType.LargeInvestment:
-                    return currentTier >= CompanyTier.Corporation;
                 case CreditType.Emergency:
                     return true;
                 default:

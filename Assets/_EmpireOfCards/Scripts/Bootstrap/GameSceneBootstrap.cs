@@ -52,7 +52,7 @@ namespace EmpireOfCards.Bootstrap
             var hud = HUDBuilder.Build();
             WiringService.WireAll(data, managers, scene.Board3D, scene.CardFactory, scene.Hand3D, hud, scene.MainCamera);
 
-            _runLaunchCoordinator = new RunLaunchCoordinator(managers.gameManager, managers.saveManager, scene.Board3D);
+            _runLaunchCoordinator = new RunLaunchCoordinator(managers.gameManager, managers.saveManager, scene.Board3D, scene.MainCamera, scene.Hand3D);
             _ventureSelectionUI = hud.ventureSelectionUI;
             _ventures = data.ventures;
             _techCategories = TechCategoryCatalog.CreateDefaults();
@@ -472,7 +472,7 @@ namespace EmpireOfCards.Bootstrap
             if (venture == null)
                 return "The run name appears on the board sign and in your save file.";
 
-            return venture.ventureType switch
+            string body = venture.ventureType switch
             {
                 VentureType.TechApp => "You will manage backend stability, growth spend, reviews, churn, and security shocks. After naming the app, choose whether you compete through creative tooling, health habits, lifestyle loops, AI features, or mobile-game style growth.",
                 VentureType.FastFood => "Think beyond a logo. Garson flow, komi support, kitchen speed, store cleaning, pest control, Google reviews, delivery pressure, and meat quality all feed your first 10 turns.",
@@ -481,6 +481,11 @@ namespace EmpireOfCards.Bootstrap
                 VentureType.GroceryStore => "A grocery name should feel local because repeat traffic depends on trust, freshness, shelf discipline, late-night convenience, and neighborhood service reliability.",
                 _ => "The name becomes the identity of this run."
             };
+
+            if (!string.IsNullOrWhiteSpace(venture.openingFantasy))
+                body += $"\n\nOpening flow: {venture.openingFantasy}";
+
+            return body;
         }
 
         private static string GetTechCategoryName(TechCategoryProfile profile)

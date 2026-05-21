@@ -30,14 +30,16 @@ namespace EmpireOfCards.Core
         Franchise, Luxury, Consulting, Defensive, Scaling
     }
 
-    // 5-phase turn system from GDD Section 4
+    // 7-phase turn system from GDD v4 Section 9.1
     public enum TurnPhase
     {
-        EventPhase,     // Step 1: Event triggers (1 every 3 turns)
-        DrawPhase,      // Step 2: Draw 5 cards, 1 redraw
-        PlayPhase,      // Step 3: 3 actions - play card or use ability
-        ResolvePhase,   // Step 4: Board resolves - income, customers, combo, FBI
-        RivalPhase      // Step 5: Rival AI plays
+        DrawPhase,              // Step 1: Draw cards
+        PlanningPhase,          // Step 2: Player reviews board state
+        PlayPhase,              // Step 3: Player spends actions
+        ResolvePhase,           // Step 4: Board resolves - income, customers, staff, chains
+        CrisisReactionPhase,    // Step 5: Crises fire after resolve
+        RivalPhase,             // Step 6: Rival AI plays
+        MarketUpdatePhase       // Step 7: Final market recalculation, season update
     }
 
     public enum GameState
@@ -59,14 +61,6 @@ namespace EmpireOfCards.Core
         Economic        // The Cartel (post-MVP)
     }
 
-    public enum ComboTier
-    {
-        Easy,       // 2 cards, discovered early
-        Medium,     // 2-3 cards or event-dependent
-        Hard,       // 3+ cards
-        Automatic   // Triggers automatically when conditions met (Monopoly)
-    }
-
     // Resolve phase sub-steps from GDD Section 4.2 Step 4
     public enum ResolveStep
     {
@@ -74,12 +68,9 @@ namespace EmpireOfCards.Core
         CustomerFlow,           // 4b: Customers flow / territory
         SeasonCheck,            // 4b.5: Season transition check
         MarketShareCalculation, // 4b.6: Market share calculation
-        ComboCheck,             // 4c: Combo check
-        TierCheck,              // 4c.5: Company tier evaluation
         IncomeCalculation,      // 4d: Income calculated
-        DeteriorationCheck,     // 4e: Deterioration check (FBI, closure, leaving)
-        StaffTick,              // 4f: Staff moral/fatigue/loyalty/XP tick (GDD 6.1)
-        ChainReactionCheck      // 4g: Chain reaction evaluation (GDD 11)
+        StaffTick,              // 4e: Staff moral/fatigue/loyalty/XP tick (GDD 6.1)
+        ChainReactionCheck      // 4f: Chain reaction evaluation (GDD 11)
     }
 
     // Employee active ability types from GDD Section 3.2
@@ -163,13 +154,7 @@ namespace EmpireOfCards.Core
         Cafe,           // Coffee shop — loyalty-driven, barista-dependent
         TechApp,        // Mobile/web app — platform fees, viral potential
         ClothingStore,  // Retail fashion — seasonal cycles, trend-sensitive
-        GroceryStore,   // Neighborhood market — spoilage risk, veresiye system
-
-        // Legacy (v1 starters — kept for save compatibility)
-        Diner,
-        TechStartup,
-        AdAgency,
-        BlackMarket
+        GroceryStore    // Neighborhood market — spoilage risk, veresiye system
     }
 
     // 5 slot types replacing the old single-business-slot system (GDD v3.0 Section 4)
@@ -243,15 +228,6 @@ namespace EmpireOfCards.Core
         SeekInvestment,     // Gain extra income this turn
         OpenBranch,         // Add a slot (increases rival capacity)
         Sabotage            // Target player's highest-income slot
-    }
-
-    // Company Tier progression (GDD Section 1.6)
-    public enum CompanyTier
-    {
-        Trader,         // Tier 1: Default start
-        Entrepreneur,   // Tier 2: 20+ customers + 1+ combo
-        Corporation,    // Tier 3: 45+ customers + 2+ combos + 75% operation occupancy
-        Conglomerate    // Tier 4: 60+ customers + 3+ combos
     }
 
     // Salary payment choice (GDD Section 5.5)

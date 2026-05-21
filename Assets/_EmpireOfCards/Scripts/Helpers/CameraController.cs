@@ -186,7 +186,7 @@ namespace EmpireOfCards.Helpers
                     ActivateCamera(rivalCamera);
                     break;
                 default:
-                    // EventPhase, DrawPhase, or any other -> default overview
+                    // DrawPhase, PlanningPhase, CrisisReactionPhase, MarketUpdatePhase, or any other -> default overview
                     ActivateCamera(playCamera);
                     break;
             }

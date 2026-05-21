@@ -54,7 +54,8 @@ namespace EmpireOfCards.Gameplay
                     break;
 
                 case ActionEffectType.AddCustomersWithFBI:
-                    ResolveAddCustomersWithFBI(gm, card);
+                    // FBI system removed; resolve as customer-only effect
+                    ResolveAddCustomersToRandom(gm, card);
                     break;
 
                 case ActionEffectType.StealCustomersHalfIncome:
@@ -64,8 +65,6 @@ namespace EmpireOfCards.Gameplay
                 case ActionEffectType.DisableRivalOneTurn:
                     if (gm.RivalAI != null)
                         gm.RivalAI.DisableProductionOneTurn();
-                    if (gm.FBISystem != null)
-                        gm.FBISystem.AddRisk(card.actionFBIRisk);
                     break;
 
                 case ActionEffectType.MoneyNowPayLater:
@@ -147,19 +146,6 @@ namespace EmpireOfCards.Gameplay
                 if (bonusCustomers > 0)
                     gm.BoardManager.AddCustomersAttracted(i, bonusCustomers);
             }
-        }
-
-        /// <summary>
-        /// Fake Reviews: +actionValue customers to a random business, add FBI risk.
-        /// </summary>
-        private void ResolveAddCustomersWithFBI(GameManager gm, CardData card)
-        {
-            // Add customers to a random active business
-            ResolveAddCustomersToRandom(gm, card);
-
-            // Add FBI risk
-            if (gm.FBISystem != null)
-                gm.FBISystem.AddRisk(card.actionFBIRisk);
         }
 
         /// <summary>

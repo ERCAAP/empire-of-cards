@@ -112,10 +112,6 @@ namespace EmpireOfCards.Core
         public const float MIN_TAX_RATE = 0.03f;        // 2 accountants
         #endregion
 
-        #region FBI (GDD Section 9.3)
-        public const int FBI_RAID_PENALTY = 300;
-        #endregion
-
         #region Market Share Visual Blocks (GDD v3.0)
         public const int MARKET_VISUAL_BLOCKS = 10;
         #endregion
@@ -151,19 +147,6 @@ namespace EmpireOfCards.Core
 
         #region Employee Leaving (GDD Section 4.2)
         public const int EMPLOYEE_LEAVE_TURN_THRESHOLD = 8; // Employee working 8+ turns
-        #endregion
-
-        #region Company Tier (GDD Section 1.6 — customer-based v3.0)
-        public const int TIER_ENTREPRENEUR_CUSTOMERS = 20;
-        public const int TIER_ENTREPRENEUR_COMBOS = 1;
-        public const int TIER_CORPORATION_CUSTOMERS = 45;
-        public const int TIER_CORPORATION_COMBOS = 2;
-        public const float TIER_CORPORATION_OPERATION_OCCUPANCY = 0.75f;
-        public const int TIER_CONGLOMERATE_CUSTOMERS = 60;
-        public const int TIER_CONGLOMERATE_COMBOS = 3;
-        public const int TIER_SCORE_ENTREPRENEUR = 200;
-        public const int TIER_SCORE_CORPORATION = 500;
-        public const int TIER_SCORE_CONGLOMERATE = 1000;
         #endregion
 
         #region First Venture (GDD Section 1.5)
@@ -305,15 +288,5 @@ namespace EmpireOfCards.Core
         public const float STOCK_CLOTHING_SEASON_LOSS = 0.25f;
         #endregion
 
-        #region Location System (GDD Section 10.1-10.3)
-        public const int LOCATION_TRAFFIC_REMOTE = 0;
-        public const int LOCATION_RENT_REMOTE = 20;
-        public const int LOCATION_TRAFFIC_SIDE = 2;
-        public const int LOCATION_RENT_SIDE = 50;
-        public const int LOCATION_TRAFFIC_MAIN = 5;
-        public const int LOCATION_RENT_MAIN = 100;
-        public const int LOCATION_TRAFFIC_MALL = 8;
-        public const int LOCATION_RENT_MALL = 180;
-        #endregion
     }
 }

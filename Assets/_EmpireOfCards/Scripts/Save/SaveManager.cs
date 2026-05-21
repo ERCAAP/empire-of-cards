@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
 using EmpireOfCards.Core;
+using EmpireOfCards.Data;
 
 namespace EmpireOfCards.Save
 {
@@ -12,6 +13,7 @@ namespace EmpireOfCards.Save
     [Serializable]
     public class SaveData
     {
+        public int saveVersion = 2;
         public int totalXP;
         public int currentAscension;
         public int runsPlayed;
@@ -27,6 +29,7 @@ namespace EmpireOfCards.Save
     [Serializable]
     public class RunSaveData
     {
+        public int saveVersion = 2;
         public string slotId;
         public string runName;
         public string runCategoryId;
@@ -53,6 +56,10 @@ namespace EmpireOfCards.Save
         public List<string> marketingSlotIds = new List<string>();
         public List<string> supplierSlotIds = new List<string>();
         public List<string> tempEffectSlotIds = new List<string>();
+        public VentureRuntimeState ventureRuntimeState;
+        public OpeningArcState openingArcState;
+        public EventChainState eventChainState;
+        public RivalRuntimeState rivalState;
 
         public bool HasData()
         {
@@ -68,6 +75,7 @@ namespace EmpireOfCards.Save
     public class SaveManager : MonoBehaviour
     {
         public static SaveManager Instance { get; private set; }
+        public const int CurrentRunSaveVersion = 2;
 
         [SerializeField] private string saveFileName = "empire_save.json";
 
@@ -153,6 +161,7 @@ namespace EmpireOfCards.Save
             }
 
             cachedData = data;
+            cachedData.saveVersion = CurrentRunSaveVersion;
 
             try
             {
@@ -294,6 +303,7 @@ namespace EmpireOfCards.Save
                 : slotId;
 
             runData.slotId = resolvedSlotId;
+            runData.saveVersion = CurrentRunSaveVersion;
             runData.savedAtUnixSeconds = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
 
             int existingIndex = cachedData.runs.FindIndex(run => run != null && run.slotId == resolvedSlotId);
@@ -400,10 +410,6 @@ namespace EmpireOfCards.Save
             score += gm.PlayerCustomers * Constants.SCORE_CUSTOMER_SHARE;
             score += gm.PlayerMoney * Constants.SCORE_MONEY;
 
-            // Active combos score (GDD Section 10.3)
-            if (gm.ComboSystem != null)
-                score += gm.ComboSystem.ActiveCombos.Count * Constants.SCORE_COMBO;
-
             // Active businesses score (GDD Section 10.3)
             if (gm.BoardManager != null)
                 score += gm.BoardManager.GetActiveBusinessCount() * Constants.SCORE_BUSINESS;
@@ -433,9 +439,18 @@ namespace EmpireOfCards.Save
 
             if (data.unlockedCardIds == null)
                 data.unlockedCardIds = new List<string>();
+            data.saveVersion = CurrentRunSaveVersion;
 
             if (data.runs == null)
                 data.runs = new List<RunSaveData>();
+
+            if (data.activeRun != null && data.activeRun.HasData())
+            {
+                if (data.activeRun.saveVersion != CurrentRunSaveVersion)
+                {
+                    data.activeRun = null;
+                }
+            }
 
             if (data.activeRun != null && data.activeRun.HasData())
             {
@@ -453,6 +468,12 @@ namespace EmpireOfCards.Save
             {
                 RunSaveData run = data.runs[i];
                 if (run == null || !run.HasData())
+                {
+                    data.runs.RemoveAt(i);
+                    continue;
+                }
+
+                if (run.saveVersion != CurrentRunSaveVersion)
                 {
                     data.runs.RemoveAt(i);
                     continue;

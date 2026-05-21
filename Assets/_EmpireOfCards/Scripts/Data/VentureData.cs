@@ -8,6 +8,8 @@ namespace EmpireOfCards.Data
         public EmpireOfCards.Core.VentureType ventureType;
         public string ventureName;
         [TextArea] public string description;
+        [TextArea] public string openingFantasy;
+        [TextArea] public string openingPlanSummary;
         public bool requiresCustomName = true;
         public bool requiresRunCategorySelection;
         public CardData startingBusiness;        // null for KaranlikPazar
@@ -17,6 +19,10 @@ namespace EmpireOfCards.Data
         public VentureBoardProfile boardProfile;
         public VentureDeckProfile deckProfile;
         public VentureEconomyProfile economyProfile;
+        public VenturePlaybook playbook;
+        public VentureProgressionArc progressionArc;
+        public VentureBoardThemeProfile themeProfile;
         [TextArea] public string playstyleSummary;
+        public string[] openingSequenceCardIds;
     }
 }

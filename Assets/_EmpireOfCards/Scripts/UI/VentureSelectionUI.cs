@@ -139,12 +139,12 @@ namespace EmpireOfCards.UI
 
                 if (i == _selectedIndex)
                 {
-                    ventureCardImages[i].color = SelectedColor;
+                    ventureCardImages[i].color = Color.Lerp(SelectedColor, GetAccentForIndex(i), 0.35f);
                     ventureCards[i].localScale = Vector3.one * 1.05f;
                 }
                 else
                 {
-                    ventureCardImages[i].color = NormalColor;
+                    ventureCardImages[i].color = Color.Lerp(NormalColor, GetAccentForIndex(i), 0.08f);
                     ventureCards[i].localScale = Vector3.one;
                 }
             }
@@ -181,16 +181,20 @@ namespace EmpireOfCards.UI
 
             string descKey = $"venture.{GetKeySuffix(venture.ventureType)}.desc";
             string playstyleKey = $"venture.{GetKeySuffix(venture.ventureType)}.playstyle";
-            string rule = LocalizationManager.GetWithFallback("venture.same_sector_rule", "Rival starts in the same sector.");
 
             string desc = LocalizationManager.GetWithFallback(descKey, venture.description);
             string playstyle = LocalizationManager.GetWithFallback(playstyleKey, venture.playstyleSummary);
+            string opening = venture.openingFantasy;
+            string openingPlan = venture.openingPlanSummary;
 
             if (!string.IsNullOrWhiteSpace(playstyle))
                 desc += $"\n{playstyle}";
 
-            if (!string.IsNullOrWhiteSpace(rule))
-                desc += $"\n{rule}";
+            if (!string.IsNullOrWhiteSpace(opening))
+                desc += $"\nOpen with: {opening}";
+
+            if (!string.IsNullOrWhiteSpace(openingPlan))
+                desc += $"\nPlan: {GetFirstPlanLine(openingPlan)}";
 
             return desc;
         }
@@ -206,6 +210,30 @@ namespace EmpireOfCards.UI
                 VentureType.GroceryStore => "grocery_store",
                 _ => "fast_food"
             };
+        }
+
+        private static Color GetAccentForIndex(int index)
+        {
+            if (index < 0 || index >= VentureAccents.Length)
+                return Color.white;
+
+            return VentureAccents[index];
+        }
+
+        private static string GetFirstPlanLine(string raw)
+        {
+            if (string.IsNullOrWhiteSpace(raw))
+                return string.Empty;
+
+            string[] lines = raw.Split('\n');
+            for (int i = 0; i < lines.Length; i++)
+            {
+                string trimmed = lines[i].Trim();
+                if (!string.IsNullOrWhiteSpace(trimmed))
+                    return trimmed;
+            }
+
+            return raw.Trim();
         }
     }
 }

@@ -3,15 +3,14 @@ using UnityEngine;
 using EmpireOfCards.Core.StateMachine;
 using EmpireOfCards.Data;
 using EmpireOfCards.Gameplay;
-using EmpireOfCards.Gameplay.Staff;
 
 namespace EmpireOfCards.Core.TurnPhases
 {
     /// <summary>
     /// Turn phase 4: System calculates everything step by step (GDD Section 4.1, Step 4).
     /// Sub-steps: 4a BusinessProduce -> 4b CustomerFlow -> 4b.5 SeasonCheck
-    ///         -> 4b.6 MarketShareCalculation -> 4c ComboCheck -> 4c.5 TierCheck
-    ///         -> 4d IncomeCalculation -> 4e DeteriorationCheck
+    ///         -> 4b.6 MarketShareCalculation -> 4d IncomeCalculation
+    ///         -> 4e StaffTick -> 4f ChainReactionCheck
     /// Each step has a cinematic delay tuned for readability and drama.
     /// </summary>
     public class ResolvePhase : IState
@@ -22,9 +21,6 @@ namespace EmpireOfCards.Core.TurnPhases
         private float _stepTimer;
         private float _currentStepDelay;
         private bool _stepExecuted;
-
-        // Track whether tier changed this resolve for variable delay
-        private bool _tierChangedThisResolve;
 
         // Track current season for season change detection
         private SeasonType _lastSeason;
@@ -41,7 +37,6 @@ namespace EmpireOfCards.Core.TurnPhases
             _stepTimer = 0f;
             _stepExecuted = false;
             _currentStepDelay = 0f;
-            _tierChangedThisResolve = false;
         }
 
         public void Tick()
@@ -76,10 +71,7 @@ namespace EmpireOfCards.Core.TurnPhases
                 ResolveStep.CustomerFlow           => 0.6f,
                 ResolveStep.SeasonCheck            => 0.4f,
                 ResolveStep.MarketShareCalculation => 0.5f,
-                ResolveStep.ComboCheck             => 1.0f,
-                ResolveStep.TierCheck              => _tierChangedThisResolve ? 1.5f : 0.3f,
                 ResolveStep.IncomeCalculation      => 0.8f,
-                ResolveStep.DeteriorationCheck     => 0.5f,
                 ResolveStep.StaffTick              => 0.4f,
                 ResolveStep.ChainReactionCheck     => 0.4f,
                 _                                  => 0.5f
@@ -165,36 +157,6 @@ namespace EmpireOfCards.Core.TurnPhases
                     break;
                 }
 
-                // 4c: Check and trigger combos
-                case ResolveStep.ComboCheck:
-                    if (gm.ComboSystem != null && gm.BoardManager != null)
-                    {
-                        int activeBizCount = gm.BoardManager.GetActiveBusinessCount();
-                        int totalMarket = gm.BalanceData != null
-                            ? gm.BalanceData.GetMarketPool(gm.CurrentTurn)
-                            : Constants.BASE_MARKET_CUSTOMERS;
-                        float marketShare = totalMarket > 0
-                            ? ((float)gm.PlayerCustomers / totalMarket) * 100f
-                            : 0f;
-
-                        gm.ComboSystem.CheckCombos(
-                            gm.PlayerMoney,
-                            gm.PlayerMarketBlocks,
-                            activeBizCount,
-                            marketShare);
-                    }
-                    break;
-
-                // 4c.5: Evaluate Company Tier (GDD Section 1.6) - customer-based
-                case ResolveStep.TierCheck:
-                    if (gm.CompanyTierSystem != null)
-                    {
-                        CompanyTier tierBefore = gm.CompanyTierSystem.CurrentTier;
-                        gm.CompanyTierSystem.EvaluateTier(gm.PlayerCustomers);
-                        _tierChangedThisResolve = gm.CompanyTierSystem.CurrentTier != tierBefore;
-                    }
-                    break;
-
                 // 4d: Calculate and apply income, salaries, tax
                 case ResolveStep.IncomeCalculation:
                     if (gm.EconomyManager != null)
@@ -211,16 +173,7 @@ namespace EmpireOfCards.Core.TurnPhases
                     }
                     break;
 
-                // 4e: FBI check, platform rating decay, business closure countdown
-                case ResolveStep.DeteriorationCheck:
-                    if (gm.FBISystem != null)
-                    {
-                        gm.FBISystem.AccumulateRiskFromBoard();
-                        gm.FBISystem.CheckForRaid();
-                    }
-                    break;
-
-                // 4f: Staff moral/fatigue/loyalty/XP tick (GDD 6.1, 6.4)
+                // 4e: Staff moral/fatigue/loyalty/XP tick (GDD 6.1, 6.4)
                 case ResolveStep.StaffTick:
                     if (gm.StaffStateSystem != null)
                     {
@@ -290,38 +243,6 @@ namespace EmpireOfCards.Core.TurnPhases
                 default:
                     return 1f;
             }
-        }
-
-        private static float GetSeasonMultiplier(SeasonType season)
-        {
-            return season switch
-            {
-                SeasonType.Spring        => Constants.SEASON_MULTIPLIER_SPRING,
-                SeasonType.Summer        => Constants.SEASON_MULTIPLIER_SUMMER,
-                SeasonType.Autumn        => Constants.SEASON_MULTIPLIER_AUTUMN,
-                SeasonType.Winter        => Constants.SEASON_MULTIPLIER_WINTER,
-                SeasonType.RamadanSeason => Constants.SEASON_MULTIPLIER_RAMADAN,
-                _                        => 1.0f
-            };
-        }
-
-        private static bool HasMarketingEmployee(BoardManager board)
-        {
-            var businesses = board.PlayerBusinesses;
-            for (int i = 0; i < businesses.Count; i++)
-            {
-                if (businesses[i].isClosed) continue;
-                foreach (var emp in businesses[i].employees)
-                {
-                    if (emp == null) continue;
-                    if (emp.tags == null) continue;
-                    foreach (var tag in emp.tags)
-                    {
-                        if (tag == CardTag.Marketing) return true;
-                    }
-                }
-            }
-            return false;
         }
 
         public void Exit() { }

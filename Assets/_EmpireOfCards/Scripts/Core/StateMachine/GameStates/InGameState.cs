@@ -4,8 +4,8 @@ namespace EmpireOfCards.Core.GameStates
 {
     /// <summary>
     /// The main gameplay state. TurnManager handles turn/phase flow internally.
-    /// Tick polls win/lose conditions every frame so the game can end
-    /// the moment a threshold is crossed — no event subscription needed.
+    /// Win/lose checks are handled exclusively by GameManager.EndCurrentTurn()
+    /// at the end of each turn to avoid double-triggering GameOverState.
     /// </summary>
     public class InGameState : IState
     {
@@ -13,38 +13,12 @@ namespace EmpireOfCards.Core.GameStates
         {
             var gm = GameManager.Instance;
             gm.SetGameState(GameState.Playing);
-
-            // TurnManager is already running; ensure game flag is on
-            if (!gm.GameIsRunning)
-                return;
         }
 
         public void Tick()
         {
-            var gm = GameManager.Instance;
-            if (gm == null || !gm.GameIsRunning)
-                return;
-
-            int winCustomers = Constants.WIN_CUSTOMER_SHARE;
-            bool dominationActive = gm.CurrentTurn >= Constants.DOMINATION_CHECK_START_TURN;
-
-            if (dominationActive && WinLoseChecker.CheckWin(gm.PlayerCustomers, winCustomers))
-            {
-                gm.EndRun(true);
-                return;
-            }
-
-            if (gm.PlayerMoney <= 0)
-            {
-                gm.EndRun(false);
-                return;
-            }
-
-            if (dominationActive && gm.RivalCustomers >= winCustomers)
-            {
-                gm.EndRun(false);
-                return;
-            }
+            // State machine and TurnManager drive game flow.
+            // Win/lose evaluation happens only in GameManager.EndCurrentTurn().
         }
 
         public void Exit()

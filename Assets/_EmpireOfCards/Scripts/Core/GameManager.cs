@@ -9,6 +9,7 @@ using EmpireOfCards.Audio;
 using EmpireOfCards.VFX;
 using EmpireOfCards.Save;
 using EmpireOfCards.Gameplay.Staff;
+using EmpireOfCards.Gameplay.Venture;
 using System.Collections.Generic;
 
 namespace EmpireOfCards.Core
@@ -37,24 +38,19 @@ namespace EmpireOfCards.Core
 
         [Header("=== Balance Data ===")]
         [SerializeField] private GameBalanceData balanceData;
-        [SerializeField] private DeckPresetData startingDeck;
 
         [Header("=== Manager References ===")]
         [SerializeField] private TurnManager turnManager;
         [SerializeField] private EconomyManager economyManager;
         [SerializeField] private DeckManager deckManager;
         [SerializeField] private BoardManager boardManager;
-        [SerializeField] private ComboSystem comboSystem;
         [SerializeField] private TerritoryManager territoryManager;
-        [SerializeField] private FBISystem fbiSystem;
         [SerializeField] private RivalAI rivalAI;
         [SerializeField] private ShopManager shopManager;
         [SerializeField] private UIManager uiManager;
         [SerializeField] private AudioManager audioManager;
         [SerializeField] private VFXManager vfxManager;
         [SerializeField] private SaveManager saveManager;
-        [SerializeField] private MetaProgressionSystem metaProgressionSystem;
-        [SerializeField] private CompanyTierSystem companyTierSystem;
         [SerializeField] private SlotManager slotManager;
         [SerializeField] private StaffStateSystem staffStateSystem;
         [SerializeField] private ChainReactionSystem chainReactionSystem;
@@ -70,6 +66,7 @@ namespace EmpireOfCards.Core
         [SerializeField] private string currentRunSlotId;
 
         private Dictionary<string, CardData> _cardLookup;
+        private IVentureRuntime activeVentureRuntime;
 
         // === Extracted Sub-Objects (prefer these over backward-compat properties) ===
         public PlayerResources Resources => resources;
@@ -93,22 +90,17 @@ namespace EmpireOfCards.Core
 
         // === Data & Manager Accessors ===
         public GameBalanceData BalanceData => balanceData;
-        public DeckPresetData StartingDeck => startingDeck;
         public TurnManager TurnManager => turnManager;
         public EconomyManager EconomyManager => economyManager;
         public DeckManager DeckManager => deckManager;
         public BoardManager BoardManager => boardManager;
-        public ComboSystem ComboSystem => comboSystem;
         public TerritoryManager TerritoryManager => territoryManager;
-        public FBISystem FBISystem => fbiSystem;
         public RivalAI RivalAI => rivalAI;
         public ShopManager ShopManager => shopManager;
         public UIManager UIManager => uiManager;
         public AudioManager AudioManager => audioManager;
         public VFXManager VFXManager => vfxManager;
         public SaveManager SaveManager => saveManager;
-        public MetaProgressionSystem MetaProgressionSystem => metaProgressionSystem;
-        public CompanyTierSystem CompanyTierSystem => companyTierSystem;
         public SlotManager SlotManager => slotManager;
         public StaffStateSystem StaffStateSystem => staffStateSystem;
         public ChainReactionSystem ChainReactionSystem => chainReactionSystem;
@@ -116,6 +108,7 @@ namespace EmpireOfCards.Core
         public VentureDeckProfile ActiveDeckProfile => activeDeckProfile;
         public VentureEconomyProfile ActiveEconomyProfile => activeEconomyProfile;
         public VentureData SelectedVenture => selectedVenture;
+        public IVentureRuntime ActiveVentureRuntime => activeVentureRuntime;
         public IReadOnlyDictionary<string, CardData> CardLookup => _cardLookup;
         public string RunDisplayName => string.IsNullOrWhiteSpace(runDisplayName)
             ? (selectedVenture != null ? selectedVenture.ventureName : "New Venture")
@@ -124,19 +117,6 @@ namespace EmpireOfCards.Core
         public string RunCategoryLabel => runCategoryLabel;
         public string CurrentRunSlotId => currentRunSlotId;
         public TechCategoryProfile ActiveTechCategoryProfile => TechCategoryCatalog.Find(runCategoryId);
-
-        /// <summary>
-        /// Assigns the MetaProgressionSystem. Called by WiringService after bootstrap.
-        /// </summary>
-        public void SetMetaProgressionSystem(MetaProgressionSystem mps)
-        {
-            this.metaProgressionSystem = mps;
-        }
-
-        public void SetCompanyTierSystem(CompanyTierSystem cts)
-        {
-            this.companyTierSystem = cts;
-        }
 
         public void SetSlotManager(SlotManager sm)
         {
@@ -162,6 +142,7 @@ namespace EmpireOfCards.Core
             runDisplayName = venture != null ? venture.ventureName : "New Venture";
             runCategoryId = null;
             runCategoryLabel = null;
+            RefreshActiveVentureRuntime();
         }
 
         public void SetRunDisplayName(string displayName)
@@ -185,26 +166,24 @@ namespace EmpireOfCards.Core
         public void SetCardLookup(Dictionary<string, CardData> lookup)
         {
             _cardLookup = lookup;
+            RefreshActiveVentureRuntime();
         }
 
         /// <summary>
         /// Assigns all manager dependencies without reflection.
         /// Called by WiringService during bootstrap.
         /// </summary>
-        public void Init(GameBalanceData balance, DeckPresetData deck, TurnManager tm,
-            EconomyManager em, DeckManager dm, BoardManager bm, ComboSystem cs,
-            TerritoryManager ter, FBISystem fbi, RivalAI ai, ShopManager shop,
+        public void Init(GameBalanceData balance, TurnManager tm,
+            EconomyManager em, DeckManager dm, BoardManager bm,
+            TerritoryManager ter, RivalAI ai, ShopManager shop,
             UIManager ui, AudioManager audio, VFXManager vfx, SaveManager save)
         {
             this.balanceData = balance;
-            this.startingDeck = deck;
             this.turnManager = tm;
             this.economyManager = em;
             this.deckManager = dm;
             this.boardManager = bm;
-            this.comboSystem = cs;
             this.territoryManager = ter;
-            this.fbiSystem = fbi;
             this.rivalAI = ai;
             this.shopManager = shop;
             this.uiManager = ui;
@@ -231,6 +210,16 @@ namespace EmpireOfCards.Core
             SetGameState(GameState.MainMenu);
         }
 
+        private void OnEnable()
+        {
+            EventBus.OnCardPlacedInSlot += HandleCardPlacedInSlot;
+        }
+
+        private void OnDisable()
+        {
+            EventBus.OnCardPlacedInSlot -= HandleCardPlacedInSlot;
+        }
+
         private void Update()
         {
             _gameStateMachine?.Tick();
@@ -245,13 +234,6 @@ namespace EmpireOfCards.Core
 
             currentTurn = 0;
             gameIsRunning = true;
-
-            // Apply meta-progression ascension modifiers before resource reset
-            if (metaProgressionSystem != null && saveManager != null)
-            {
-                var saveData = saveManager.Load();
-                metaProgressionSystem.ApplyAscension(saveData.currentAscension, balanceData);
-            }
 
             // Reset extracted resource state
             resources.Reset(balanceData);
@@ -294,8 +276,6 @@ namespace EmpireOfCards.Core
             {
                 if (activeDeckProfile != null && _cardLookup != null)
                     deckManager.InitializeDeck(activeDeckProfile, _cardLookup);
-                else if (startingDeck != null)
-                    deckManager.InitializeDeck(startingDeck);
             }
 
             if (selectedVenture != null)
@@ -322,12 +302,11 @@ namespace EmpireOfCards.Core
                 }
                 shopManager.RefreshShop();
             }
-            if (companyTierSystem != null)
-                companyTierSystem.Reset();
             if (staffStateSystem != null)
                 staffStateSystem.Reset();
             if (chainReactionSystem != null)
                 chainReactionSystem.Reset();
+            WinLoseChecker.Reset();
 
             // Fire initial events so UI updates
             EventBus.MoneyUpdated(resources.Money);
@@ -344,6 +323,7 @@ namespace EmpireOfCards.Core
         public void StartNextTurn()
         {
             currentTurn++;
+            activeVentureRuntime?.OnTurnStarted(currentTurn);
             EventBus.TurnStarted(currentTurn);
             if (economyManager != null)
                 economyManager.GenerateTurnBrief(currentTurn);
@@ -405,6 +385,10 @@ namespace EmpireOfCards.Core
             else
                 economyManager?.SyncCashFromResources(resources.Money);
 
+            activeVentureRuntime?.RestoreState(runData.ventureRuntimeState, runData.openingArcState, runData.eventChainState);
+            activeVentureRuntime?.OnTurnStarted(currentTurn);
+            rivalAI?.RestoreState(runData.rivalState);
+
             EventBus.MoneyUpdated(resources.Money);
             EventBus.TurnStarted(currentTurn);
             turnManager?.ResumePlayPhase(currentTurn);
@@ -427,16 +411,30 @@ namespace EmpireOfCards.Core
                 return;
             }
 
+            // 1. Bankruptcy — always active
             if (resources.Money <= 0)
             {
                 EndRun(false);
                 return;
             }
 
+            // 4. Rival domination — only after domination turn threshold
             if (dominationActive && rivalCustomers >= winCustomers)
             {
                 EndRun(false);
                 return;
+            }
+
+            // GDD 13.3 extended loss conditions: reputation collapse + legal disaster
+            if (economyManager != null && economyManager.Snapshot != null)
+            {
+                if (WinLoseChecker.CheckExtendedLose(
+                    economyManager.Snapshot.rating,
+                    economyManager.Snapshot.legalRisk))
+                {
+                    EndRun(false);
+                    return;
+                }
             }
 
             if (currentTurn >= MaxTurns)
@@ -543,6 +541,7 @@ namespace EmpireOfCards.Core
         {
             return new RunSaveData
             {
+                saveVersion = SaveManager.CurrentRunSaveVersion,
                 slotId = currentRunSlotId,
                 runName = RunDisplayName,
                 runCategoryId = runCategoryId,
@@ -567,8 +566,22 @@ namespace EmpireOfCards.Core
                 staffSlotIds = slotManager != null ? slotManager.GetSlotIds(SlotType.Staff) : new List<string>(),
                 marketingSlotIds = slotManager != null ? slotManager.GetSlotIds(SlotType.Marketing) : new List<string>(),
                 supplierSlotIds = slotManager != null ? slotManager.GetSlotIds(SlotType.Supplier) : new List<string>(),
-                tempEffectSlotIds = slotManager != null ? slotManager.GetSlotIds(SlotType.TempEffect) : new List<string>()
+                tempEffectSlotIds = slotManager != null ? slotManager.GetSlotIds(SlotType.TempEffect) : new List<string>(),
+                ventureRuntimeState = activeVentureRuntime != null ? activeVentureRuntime.CaptureRuntimeState() : null,
+                openingArcState = activeVentureRuntime != null ? activeVentureRuntime.CaptureOpeningArcState() : null,
+                eventChainState = activeVentureRuntime != null ? activeVentureRuntime.CaptureEventChainState() : null,
+                rivalState = rivalAI != null ? rivalAI.CaptureState() : null
             };
+        }
+
+        private void HandleCardPlacedInSlot(CardData card, SlotType slotType)
+        {
+            activeVentureRuntime?.RegisterCardPlayed(card, slotType);
+        }
+
+        private void RefreshActiveVentureRuntime()
+        {
+            activeVentureRuntime = VentureRuntimeFactory.Create(selectedVenture, _cardLookup);
         }
 
         private List<CardData> ResolveCards(IList<string> ids)

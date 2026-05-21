@@ -19,10 +19,13 @@ namespace EmpireOfCards.Core
         [SerializeField] private bool isTurnActive;
 
         [Header("=== Phase Timing ===")]
-        [SerializeField] private float eventPhaseMinDuration = 2f;
         [SerializeField] private float drawPhaseMinDuration = 1f;
+        [SerializeField] private float planningPhaseMinDuration = 1.5f;
         [SerializeField] private float resolveStepDelay = 0.5f;
+        [SerializeField] private float crisisPhaseMinDuration = 2f;
+        [SerializeField] private float crisisPhaseNoCrisisDuration = 0.5f;
         [SerializeField] private float rivalPhaseMinDuration = 2f;
+        [SerializeField] private float marketUpdateMinDuration = 1f;
 
         // Play phase control
         private bool _playerEndedPlayPhase;
@@ -43,10 +46,13 @@ namespace EmpireOfCards.Core
         // Properties exposed for external phase handlers
         public IReadOnlyList<CardData> EventDeck => _eventDeck;
         public int CurrentTurnNumber => currentTurn;
-        public float EventPhaseMinDuration => eventPhaseMinDuration;
         public float DrawPhaseMinDuration => drawPhaseMinDuration;
+        public float PlanningPhaseMinDuration => planningPhaseMinDuration;
         public float ResolveStepDelay => resolveStepDelay;
+        public float CrisisPhaseMinDuration => crisisPhaseMinDuration;
+        public float CrisisPhaseNoCrisisDuration => crisisPhaseNoCrisisDuration;
         public float RivalPhaseMinDuration => rivalPhaseMinDuration;
+        public float MarketUpdateMinDuration => marketUpdateMinDuration;
         public bool PlayerEndedPlayPhase => _playerEndedPlayPhase;
 
         private void Awake()
@@ -65,7 +71,7 @@ namespace EmpireOfCards.Core
 
         /// <summary>
         /// Starts a new turn. Resets actions, ticks active event duration,
-        /// then enters the EventPhase.
+        /// then enters the DrawPhase (GDD v4 Section 9.1).
         /// </summary>
         public void BeginTurn(int turnNumber)
         {
@@ -86,8 +92,8 @@ namespace EmpireOfCards.Core
                 }
             }
 
-            // Start with event phase (GDD turn flow step 1)
-            TransitionToPhase(TurnPhase.EventPhase);
+            // GDD v4: turn starts with DrawPhase
+            TransitionToPhase(TurnPhase.DrawPhase);
         }
 
         public void ResumePlayPhase(int turnNumber)
@@ -127,12 +133,13 @@ namespace EmpireOfCards.Core
             if (eventCard != null)
             {
                 GameManager.Instance?.BoardManager?.SetActiveEvent(eventCard);
+                GameManager.Instance?.ActiveVentureRuntime?.RegisterEventFired(eventCard, currentTurn);
                 EventBus.EventActivated(eventCard);
             }
         }
 
         /// <summary>
-        /// Populates the event deck used by EventPhase to draw random events.
+        /// Populates the event deck used by CrisisReactionPhase to draw random events.
         /// Called by WiringService during bootstrap.
         /// </summary>
         public void SetEventDeck(List<CardData> events)
@@ -185,11 +192,13 @@ namespace EmpireOfCards.Core
 
             IState newState = phase switch
             {
-                TurnPhase.EventPhase => new TurnPhases.EventPhase(this),
                 TurnPhase.DrawPhase => new TurnPhases.DrawPhase(this),
+                TurnPhase.PlanningPhase => new TurnPhases.PlanningPhase(this),
                 TurnPhase.PlayPhase => new TurnPhases.PlayPhase(this),
                 TurnPhase.ResolvePhase => new TurnPhases.ResolvePhase(this),
+                TurnPhase.CrisisReactionPhase => new TurnPhases.CrisisReactionPhase(this),
                 TurnPhase.RivalPhase => new TurnPhases.RivalPhase(this),
+                TurnPhase.MarketUpdatePhase => new TurnPhases.MarketUpdatePhase(this),
                 _ => null
             };
 
@@ -211,21 +220,29 @@ namespace EmpireOfCards.Core
         {
             EventBus.PhaseEnded(currentPhase);
 
+            // GDD v4 Section 9.1 phase order:
+            // Draw -> Planning -> Play -> Resolve -> CrisisReaction -> Rival -> MarketUpdate
             switch (currentPhase)
             {
-                case TurnPhase.EventPhase:
-                    TransitionToPhase(TurnPhase.DrawPhase);
-                    break;
                 case TurnPhase.DrawPhase:
+                    TransitionToPhase(TurnPhase.PlanningPhase);
+                    break;
+                case TurnPhase.PlanningPhase:
                     TransitionToPhase(TurnPhase.PlayPhase);
                     break;
                 case TurnPhase.PlayPhase:
-                    TransitionToPhase(TurnPhase.RivalPhase);
-                    break;
-                case TurnPhase.RivalPhase:
                     TransitionToPhase(TurnPhase.ResolvePhase);
                     break;
                 case TurnPhase.ResolvePhase:
+                    TransitionToPhase(TurnPhase.CrisisReactionPhase);
+                    break;
+                case TurnPhase.CrisisReactionPhase:
+                    TransitionToPhase(TurnPhase.RivalPhase);
+                    break;
+                case TurnPhase.RivalPhase:
+                    TransitionToPhase(TurnPhase.MarketUpdatePhase);
+                    break;
+                case TurnPhase.MarketUpdatePhase:
                     FinishTurn();
                     break;
             }

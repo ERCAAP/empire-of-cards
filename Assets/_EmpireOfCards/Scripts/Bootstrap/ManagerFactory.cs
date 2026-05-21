@@ -51,20 +51,10 @@ namespace EmpireOfCards.Bootstrap
             bmGo.transform.SetParent(gmGo.transform);
             b.boardManager = bmGo.AddComponent<BoardManager>();
 
-            // --- ComboSystem ---
-            var csGo = new GameObject("ComboSystem");
-            csGo.transform.SetParent(gmGo.transform);
-            b.comboSystem = csGo.AddComponent<ComboSystem>();
-
             // --- TerritoryManager ---
             var terGo = new GameObject("TerritoryManager");
             terGo.transform.SetParent(gmGo.transform);
             b.territoryManager = terGo.AddComponent<TerritoryManager>();
-
-            // --- FBISystem ---
-            var fbiGo = new GameObject("FBISystem");
-            fbiGo.transform.SetParent(gmGo.transform);
-            b.fbiSystem = fbiGo.AddComponent<FBISystem>();
 
             // --- RivalAI ---
             var aiGo = new GameObject("RivalAI");
@@ -110,16 +100,6 @@ namespace EmpireOfCards.Bootstrap
             var lvlGo = new GameObject("[LevelManager]");
             b.levelManager = lvlGo.AddComponent<LevelManager>();
 
-            // --- MetaProgressionSystem ---
-            var metaGo = new GameObject("MetaProgressionSystem");
-            metaGo.transform.SetParent(gmGo.transform);
-            b.metaProgressionSystem = metaGo.AddComponent<MetaProgressionSystem>();
-
-            // --- CompanyTierSystem ---
-            var ctsGo = new GameObject("CompanyTierSystem");
-            ctsGo.transform.SetParent(gmGo.transform);
-            b.companyTierSystem = ctsGo.AddComponent<CompanyTierSystem>();
-
             // --- ActionCardResolver ---
             var acrGo = new GameObject("ActionCardResolver");
             acrGo.transform.SetParent(gmGo.transform);
@@ -157,9 +137,7 @@ namespace EmpireOfCards.Bootstrap
         public EconomyManager economyManager;
         public DeckManager deckManager;
         public BoardManager boardManager;
-        public ComboSystem comboSystem;
         public TerritoryManager territoryManager;
-        public FBISystem fbiSystem;
         public RivalAI rivalAI;
         public ShopManager shopManager;
         public UIManager uiManager; // Set later by HUDBuilder
@@ -169,8 +147,6 @@ namespace EmpireOfCards.Bootstrap
         public InputManager3D inputManager3D;
         public AbilitySystem abilitySystem;
         public LevelManager levelManager;
-        public MetaProgressionSystem metaProgressionSystem;
-        public CompanyTierSystem companyTierSystem;
         public ActionCardResolver actionCardResolver;
         public SlotManager slotManager;
         public StaffStateSystem staffStateSystem;

@@ -24,8 +24,7 @@ namespace EmpireOfCards.Audio
     {
         Empty,      // 0-1 businesses: quiet, ticking clock
         Growing,    // 2 businesses: light activity hum
-        Busy,       // 3+ businesses: bustling marketplace
-        Thriving    // 3+ businesses + combos: energetic layer
+        Busy        // 3+ businesses: bustling marketplace
     }
 
     /// <summary>
@@ -38,8 +37,7 @@ namespace EmpireOfCards.Audio
     ///
     /// Expected Sound IDs:
     ///   card_place, card_draw, coin_ching, coin_cascade,
-    ///   combo_trigger, negative_buzz, button_click, turn_bell,
-    ///   fbi_siren, level_up
+    ///   negative_buzz, button_click, turn_bell, level_up
     /// </summary>
     public class AudioManager : MonoBehaviour
     {
@@ -70,7 +68,6 @@ namespace EmpireOfCards.Audio
         [SerializeField] private AudioClip ambientEmpty;
         [SerializeField] private AudioClip ambientGrowing;
         [SerializeField] private AudioClip ambientBusy;
-        [SerializeField] private AudioClip ambientThriving;
         [SerializeField] private float ambientFadeDuration = 1f;
 
         // Crossfade state (Update-driven, no coroutine)
@@ -87,7 +84,6 @@ namespace EmpireOfCards.Audio
         // Ambient state tracking
         private AmbientState _currentAmbientState = AmbientState.Empty;
         private int _trackedBusinessCount;
-        private int _trackedComboCount;
 
         /// <summary>
         /// Assigns all dependencies without reflection.
@@ -124,15 +120,11 @@ namespace EmpireOfCards.Audio
             EventBus.OnCardPlayed += OnCardPlayed;
             EventBus.OnCardDrawn += OnCardDrawn;
             EventBus.OnIncomeReceived += OnIncomeReceived;
-            EventBus.OnComboTriggered += OnComboTriggered;
-            EventBus.OnFBIRaid += OnFBIRaid;
             EventBus.OnTurnStarted += OnTurnStarted;
             EventBus.OnBusinessClosed += OnBusinessClosed;
 
             // Ambient state tracking
             EventBus.OnBusinessPlaced += OnBusinessPlacedAmbient;
-            EventBus.OnComboTriggered += OnComboTriggeredAmbient;
-            EventBus.OnComboDeactivated += OnComboDeactivatedAmbient;
         }
 
         private void OnDisable()
@@ -140,15 +132,11 @@ namespace EmpireOfCards.Audio
             EventBus.OnCardPlayed -= OnCardPlayed;
             EventBus.OnCardDrawn -= OnCardDrawn;
             EventBus.OnIncomeReceived -= OnIncomeReceived;
-            EventBus.OnComboTriggered -= OnComboTriggered;
-            EventBus.OnFBIRaid -= OnFBIRaid;
             EventBus.OnTurnStarted -= OnTurnStarted;
             EventBus.OnBusinessClosed -= OnBusinessClosed;
 
             // Ambient state tracking
             EventBus.OnBusinessPlaced -= OnBusinessPlacedAmbient;
-            EventBus.OnComboTriggered -= OnComboTriggeredAmbient;
-            EventBus.OnComboDeactivated -= OnComboDeactivatedAmbient;
         }
 
         private void Update()
@@ -203,16 +191,6 @@ namespace EmpireOfCards.Audio
             PlaySFX("coin_ching");
         }
 
-        private void OnComboTriggered(ComboData combo)
-        {
-            PlaySFX("combo_trigger");
-        }
-
-        private void OnFBIRaid(int penalty)
-        {
-            PlaySFX("fbi_siren");
-        }
-
         private void OnTurnStarted(int turnNumber)
         {
             PlaySFX("turn_bell");
@@ -238,18 +216,6 @@ namespace EmpireOfCards.Audio
         private void OnBusinessPlacedAmbient(CardData card, int slotIndex)
         {
             _trackedBusinessCount++;
-            RefreshAmbientState();
-        }
-
-        private void OnComboTriggeredAmbient(ComboData combo)
-        {
-            _trackedComboCount++;
-            RefreshAmbientState();
-        }
-
-        private void OnComboDeactivatedAmbient(ComboData combo)
-        {
-            _trackedComboCount = Mathf.Max(0, _trackedComboCount - 1);
             RefreshAmbientState();
         }
 
@@ -387,13 +353,11 @@ namespace EmpireOfCards.Audio
         /// if the state has changed. Called automatically from event callbacks.
         /// Can also be called externally to force a re-evaluation.
         /// </summary>
-        public void UpdateAmbientState(int businessCount, int comboCount)
+        public void UpdateAmbientState(int businessCount)
         {
             AmbientState newState;
 
-            if (businessCount >= 3 && comboCount > 0)
-                newState = AmbientState.Thriving;
-            else if (businessCount >= 3)
+            if (businessCount >= 3)
                 newState = AmbientState.Busy;
             else if (businessCount >= 2)
                 newState = AmbientState.Growing;
@@ -406,7 +370,7 @@ namespace EmpireOfCards.Audio
             AmbientState previous = _currentAmbientState;
             _currentAmbientState = newState;
 
-            Debug.Log($"[AudioManager] Ambient state: {newState} ({businessCount} businesses, {comboCount} combos)");
+            Debug.Log($"[AudioManager] Ambient state: {newState} ({businessCount} businesses)");
 
             // TODO: Wire actual audio clips here. When clips are assigned,
             // crossfade between ambient layers using ambientFadeDuration.
@@ -424,7 +388,7 @@ namespace EmpireOfCards.Audio
         /// </summary>
         private void RefreshAmbientState()
         {
-            UpdateAmbientState(_trackedBusinessCount, _trackedComboCount);
+            UpdateAmbientState(_trackedBusinessCount);
         }
 
         /// <summary>
@@ -439,7 +403,6 @@ namespace EmpireOfCards.Audio
                 AmbientState.Empty    => ambientEmpty,
                 AmbientState.Growing  => ambientGrowing,
                 AmbientState.Busy     => ambientBusy,
-                AmbientState.Thriving => ambientThriving,
                 _                     => null
             };
 

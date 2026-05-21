@@ -32,9 +32,13 @@ namespace EmpireOfCards.World
         private readonly List<GameObject> _rivalSupportSlots = new List<GameObject>();
         private readonly List<GameObject> _rivalSignalSlots = new List<GameObject>();
         private readonly Dictionary<GameObject, GameObject> _rivalVisualsBySlot = new Dictionary<GameObject, GameObject>();
+        private readonly Dictionary<string, GameObject> _themePropRoots = new Dictionary<string, GameObject>();
+        private readonly Dictionary<string, MeshRenderer> _themePropBodies = new Dictionary<string, MeshRenderer>();
+        private readonly Dictionary<string, TextMeshPro> _themePropLabels = new Dictionary<string, TextMeshPro>();
         private int _rivalPrimaryCursor;
         private int _rivalSupportCursor;
         private int _rivalSignalCursor;
+        private VentureBoardThemeProfile _activeThemeProfile;
 
         private SlotZone3D _sellZone;
         private SlotZone3D _actionZone;
@@ -82,6 +86,8 @@ namespace EmpireOfCards.World
             ApplySlotVisuals(_supplierSlots, slotManager.SupplierSlots);
             ApplySlotVisuals(_tempEffectSlots, slotManager.TempEffectSlots);
             UpdateBusinessAnchor();
+            EnsureThemeProps(ResolveThemeProfile());
+            RefreshThemeProps();
         }
 
         public void BuildBoard()
@@ -393,18 +399,8 @@ namespace EmpireOfCards.World
             return tmp;
         }
 
-        private static readonly string[] TierNames = { "TRADER", "ENTREPRENEUR", "CORPORATION", "CONGLOMERATE" };
-        private static readonly Color[] TierColors =
-        {
-            ControlDeskTheme.MoneyGold,
-            ControlDeskTheme.AccentGreen,
-            ControlDeskTheme.AccentBlue,
-            ControlDeskTheme.AccentAmber
-        };
-
         private void OnEnable()
         {
-            EventBus.OnCompanyTierChanged += HandleTierChanged;
             EventBus.OnBusinessNeglected += HandleBusinessNeglected;
             EventBus.OnEmployeePlaced += HandleSlotRefresh;
             EventBus.OnUpgradePlaced += HandleSlotRefresh;
@@ -414,12 +410,13 @@ namespace EmpireOfCards.World
             EventBus.OnTurnBriefGenerated += HandleTurnBrief;
             EventBus.OnTurnReportGenerated += HandleTurnReport;
             EventBus.OnRivalActionQueued += HandleRivalActionQueued;
+            EventBus.OnCardPlacedInSlot += HandleCardPlacedInSlot;
+            EventBus.OnCardRemovedFromSlot += HandleCardRemovedFromSlot;
             LocalizationManager.OnLanguageChanged += ApplyVentureHeaders;
         }
 
         private void OnDisable()
         {
-            EventBus.OnCompanyTierChanged -= HandleTierChanged;
             EventBus.OnBusinessNeglected -= HandleBusinessNeglected;
             EventBus.OnEmployeePlaced -= HandleSlotRefresh;
             EventBus.OnUpgradePlaced -= HandleSlotRefresh;
@@ -429,6 +426,8 @@ namespace EmpireOfCards.World
             EventBus.OnTurnBriefGenerated -= HandleTurnBrief;
             EventBus.OnTurnReportGenerated -= HandleTurnReport;
             EventBus.OnRivalActionQueued -= HandleRivalActionQueued;
+            EventBus.OnCardPlacedInSlot -= HandleCardPlacedInSlot;
+            EventBus.OnCardRemovedFromSlot -= HandleCardRemovedFromSlot;
             LocalizationManager.OnLanguageChanged -= ApplyVentureHeaders;
         }
 
@@ -436,20 +435,12 @@ namespace EmpireOfCards.World
         {
             ApplyVentureHeaders();
             UpdateBusinessAnchor();
+            RefreshThemeProps();
         }
 
         private void HandleTerritoryChanged(int playerCount, int rivalCount)
         {
             UpdateTerritoryVisuals(playerCount, rivalCount);
-        }
-
-        private void HandleTierChanged(CompanyTier newTier)
-        {
-            if (_tierLabel == null) return;
-
-            int index = (int)newTier;
-            _tierLabel.text = TierNames[index];
-            _tierLabel.color = TierColors[index];
         }
 
         private void HandleBusinessNeglected(int businessIndex, int neglectTurns)
@@ -471,18 +462,30 @@ namespace EmpireOfCards.World
             var renderer = _businessSlotRenderers[businessIndex];
             if (renderer != null)
                 renderer.material.color = ControlDeskTheme.OperationSlot;
+            RefreshThemeProps();
+        }
+
+        private void HandleCardPlacedInSlot(CardData card, SlotType slotType)
+        {
+            RefreshThemeProps();
+        }
+
+        private void HandleCardRemovedFromSlot(CardData card, SlotType slotType)
+        {
+            RefreshThemeProps();
         }
 
         private void HandleTurnBrief(TurnBriefData brief)
         {
             if (brief == null) return;
+            var theme = ResolveThemeProfile();
 
             if (_districtTrafficLabel != null)
-                _districtTrafficLabel.text = "TRAFFIC WINDOW";
+                _districtTrafficLabel.text = theme != null ? theme.marketFocusLabel : "TRAFFIC WINDOW";
             if (_districtRatingLabel != null)
-                _districtRatingLabel.text = "TRUST LOOP";
+                _districtRatingLabel.text = theme != null ? theme.trustFocusLabel : "TRUST LOOP";
             if (_districtPullLabel != null)
-                _districtPullLabel.text = "MARKET PULL";
+                _districtPullLabel.text = theme != null ? theme.pullFocusLabel : "MARKET PULL";
         }
 
         private void HandleTurnReport(TurnReportData report)
@@ -507,6 +510,7 @@ namespace EmpireOfCards.World
         private void ApplyVentureHeaders()
         {
             var profile = gameManager != null ? gameManager.ActiveBoardProfile : null;
+            var theme = ResolveThemeProfile();
             if (_operationsHeader != null)
                 _operationsHeader.text = BuildHeader("board.ops", "OPS", profile != null ? profile.operationSubSlots : null);
             if (_staffHeader != null)
@@ -515,6 +519,15 @@ namespace EmpireOfCards.World
                 _marketingHeader.text = BuildHeader("board.growth", "GROWTH", profile != null ? profile.marketingSubSlots : null);
             if (_supplierHeader != null)
                 _supplierHeader.text = BuildHeader("board.supply", "SUPPLY", profile != null ? profile.supplierSubSlots : null);
+            if (_districtTrafficLabel != null)
+                _districtTrafficLabel.text = theme != null ? theme.marketFocusLabel : "TRAFFIC WINDOW";
+            if (_districtRatingLabel != null)
+                _districtRatingLabel.text = theme != null ? theme.trustFocusLabel : "TRUST LOOP";
+            if (_districtPullLabel != null)
+                _districtPullLabel.text = theme != null ? theme.pullFocusLabel : "MARKET PULL";
+            if (_rivalCrisisLabel != null && theme != null && !string.IsNullOrWhiteSpace(theme.rivalPressureLabel))
+                _rivalCrisisLabel.text = theme.rivalPressureLabel;
+            EnsureThemeProps(theme);
             UpdateBusinessAnchor();
         }
 
@@ -681,6 +694,130 @@ namespace EmpireOfCards.World
 
             string lane = string.IsNullOrWhiteSpace(action.laneLabel) ? "PRESSURE" : action.laneLabel.ToUpperInvariant();
             return $"{shortName.ToUpperInvariant()}\n{lane}";
+        }
+
+        private VentureBoardThemeProfile ResolveThemeProfile()
+        {
+            if (gameManager != null && gameManager.ActiveVentureRuntime != null && gameManager.ActiveVentureRuntime.BoardTheme != null)
+                return gameManager.ActiveVentureRuntime.BoardTheme;
+
+            if (gameManager != null && gameManager.SelectedVenture != null)
+                return gameManager.SelectedVenture.themeProfile;
+
+            return null;
+        }
+
+        private void EnsureThemeProps(VentureBoardThemeProfile theme)
+        {
+            if (_activeThemeProfile == theme && _themePropRoots.Count > 0)
+            {
+                RefreshThemeProps();
+                return;
+            }
+
+            ClearThemeProps();
+            _activeThemeProfile = theme;
+
+            if (theme == null || theme.props == null)
+                return;
+
+            for (int i = 0; i < theme.props.Length; i++)
+                CreateThemeProp(theme.props[i]);
+
+            RefreshThemeProps();
+        }
+
+        private void ClearThemeProps()
+        {
+            foreach (var kvp in _themePropRoots)
+            {
+                if (kvp.Value != null)
+                    Destroy(kvp.Value);
+            }
+
+            _themePropRoots.Clear();
+            _themePropBodies.Clear();
+            _themePropLabels.Clear();
+        }
+
+        private void CreateThemeProp(VentureBoardProp prop)
+        {
+            if (prop == null || string.IsNullOrWhiteSpace(prop.propId))
+                return;
+
+            var root = new GameObject($"ThemeProp_{prop.propId}");
+            root.transform.SetParent(transform, false);
+            root.transform.localPosition = prop.localPosition;
+            root.transform.localRotation = Quaternion.identity;
+
+            var body = CreateCube("Body", Vector3.zero, prop.localScale, prop.idleColor);
+            body.transform.SetParent(root.transform, false);
+            Destroy(body.GetComponent<Collider>());
+
+            var label = CreateDeskText(string.IsNullOrWhiteSpace(prop.label) ? prop.propId.ToUpperInvariant() : prop.label, new Vector3(0f, prop.localScale.y * 0.65f + 0.16f, 0f), Quaternion.Euler(60f, 0f, 0f), 0.62f, ControlDeskTheme.TextMuted, TextAlignmentOptions.Center);
+            label.transform.SetParent(root.transform, false);
+            label.enableAutoSizing = true;
+            label.fontSizeMin = 0.38f;
+            label.fontSizeMax = 0.74f;
+
+            _themePropRoots[prop.propId] = root;
+            _themePropBodies[prop.propId] = body.GetComponent<MeshRenderer>();
+            _themePropLabels[prop.propId] = label;
+        }
+
+        private void RefreshThemeProps()
+        {
+            if (_activeThemeProfile == null || _activeThemeProfile.props == null || slotManager == null)
+                return;
+
+            for (int i = 0; i < _activeThemeProfile.props.Length; i++)
+            {
+                VentureBoardProp prop = _activeThemeProfile.props[i];
+                if (prop == null || string.IsNullOrWhiteSpace(prop.propId))
+                    continue;
+
+                bool isActive = IsCardPresent(prop.triggerCardId);
+
+                if (_themePropBodies.TryGetValue(prop.propId, out var body) && body != null)
+                {
+                    body.material.color = isActive ? prop.activeColor : prop.idleColor;
+                    body.transform.localScale = isActive ? prop.localScale * 1.08f : prop.localScale;
+                }
+
+                if (_themePropLabels.TryGetValue(prop.propId, out var label) && label != null)
+                {
+                    label.color = isActive ? ControlDeskTheme.TextPrimary : ControlDeskTheme.TextMuted;
+                    label.text = isActive
+                        ? $"{(string.IsNullOrWhiteSpace(prop.label) ? prop.propId.ToUpperInvariant() : prop.label)} LIVE"
+                        : string.IsNullOrWhiteSpace(prop.label) ? prop.propId.ToUpperInvariant() : prop.label;
+                }
+            }
+        }
+
+        private bool IsCardPresent(string cardId)
+        {
+            if (string.IsNullOrWhiteSpace(cardId))
+                return false;
+
+            return ContainsCard(slotManager.OperationSlots, cardId)
+                || ContainsCard(slotManager.StaffSlots, cardId)
+                || ContainsCard(slotManager.MarketingSlots, cardId)
+                || ContainsCard(slotManager.SupplierSlots, cardId)
+                || ContainsCard(slotManager.TempEffectSlots, cardId);
+        }
+
+        private static bool ContainsCard(IReadOnlyList<CardData> cards, string cardId)
+        {
+            if (cards == null)
+                return false;
+
+            for (int i = 0; i < cards.Count; i++)
+            {
+                if (cards[i] != null && cards[i].cardId == cardId)
+                    return true;
+            }
+
+            return false;
         }
     }
 }

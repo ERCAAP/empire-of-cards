@@ -7,7 +7,7 @@ using EmpireOfCards.Bootstrap.Data;
 namespace EmpireOfCards.Bootstrap
 {
     /// <summary>
-    /// Thin orchestrator that delegates card/combo/balance creation
+    /// Thin orchestrator that delegates card/balance creation
     /// to focused definition classes in Bootstrap.Data.
     /// </summary>
     public static class CardDataFactory
@@ -21,10 +21,8 @@ namespace EmpireOfCards.Bootstrap
             var deckProfiles = V4ContentFactory.CreateDeckProfiles();
             var economyProfiles = V4ContentFactory.CreateEconomyProfiles();
 
-            // Combos, balance, deck, rival, shop
-            var combos  = new ComboData[0];
+            // Balance, rival, shop
             var balance = BalanceDefs.CreateBalance();
-            var deck    = BalanceDefs.CreateDeck(allCards);
             var rival   = BalanceDefs.CreateRival();
             var shop = new List<CardData>();
             foreach (var card in allCards)
@@ -34,8 +32,6 @@ namespace EmpireOfCards.Bootstrap
                 shop.Add(card);
             }
 
-            var meta = BalanceDefs.CreateMetaProgression();
-
             var ventures = V4ContentFactory.CreateVentures(allCards, boardProfiles, deckProfiles, economyProfiles);
 
             var lookup = CardHelper.EndSession();
@@ -43,13 +39,10 @@ namespace EmpireOfCards.Bootstrap
             var bundle = new GameDataBundle
             {
                 allCards    = allCards,
-                combos      = combos,
                 balanceData = balance,
-                startingDeck = deck,
                 rivalData   = rival,
                 shopPool    = shop.ToArray(),
                 cardLookup  = lookup,
-                metaProgressionData = meta,
                 ventures    = ventures,
                 boardProfiles = boardProfiles,
                 deckProfiles = deckProfiles,
@@ -57,26 +50,10 @@ namespace EmpireOfCards.Bootstrap
             };
 
             Debug.Log($"[CardDataFactory] Data created: {bundle.allCards.Length} cards, " +
-                      $"{bundle.combos.Length} combos, shop pool: {bundle.shopPool.Length} cards, " +
+                      $"shop pool: {bundle.shopPool.Length} cards, " +
                       $"{bundle.ventures.Length} ventures.");
 
             return bundle;
-        }
-
-        private static CardData[] Combine(params CardData[][] groups)
-        {
-            int total = 0;
-            for (int i = 0; i < groups.Length; i++) total += groups[i].Length;
-
-            var result = new CardData[total];
-            int idx = 0;
-            for (int i = 0; i < groups.Length; i++)
-            {
-                var g = groups[i];
-                for (int j = 0; j < g.Length; j++)
-                    result[idx++] = g[j];
-            }
-            return result;
         }
     }
 
@@ -88,11 +65,8 @@ namespace EmpireOfCards.Bootstrap
         public CardData[] allCards;
         public CardData[] shopPool;
         public GameBalanceData balanceData;
-        public DeckPresetData startingDeck;
         public RivalData rivalData;
-        public ComboData[] combos;
         public Dictionary<string, CardData> cardLookup;
-        public MetaProgressionData metaProgressionData;
         public VentureData[] ventures;
         public VentureBoardProfile[] boardProfiles;
         public VentureDeckProfile[] deckProfiles;

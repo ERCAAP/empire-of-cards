@@ -17,21 +17,14 @@ namespace EmpireOfCards.Bootstrap
             UnityEngine.Camera mainCamera)
         {
             m.gameManager.Init(
-                data.balanceData, data.startingDeck,
+                data.balanceData,
                 m.turnManager, m.economyManager, m.deckManager, m.boardManager,
-                m.comboSystem, m.territoryManager, m.fbiSystem, m.rivalAI,
+                m.territoryManager, m.rivalAI,
                 m.shopManager, m.uiManager, m.audioManager, m.vfxManager, m.saveManager);
             m.gameManager.SetCardLookup(data.cardLookup);
 
-            m.economyManager.Init(data.balanceData, m.boardManager, m.comboSystem, m.abilitySystem, m.slotManager);
-            m.comboSystem.Init(data.combos, m.boardManager);
-            m.fbiSystem.Init(data.balanceData, m.boardManager, m.comboSystem);
+            m.economyManager.Init(data.balanceData, m.boardManager, m.abilitySystem, m.slotManager);
             m.rivalAI.Init(data.rivalData);
-            m.metaProgressionSystem.Init(data.metaProgressionData);
-            m.gameManager.SetMetaProgressionSystem(m.metaProgressionSystem);
-
-            m.companyTierSystem.Init(m.boardManager, m.comboSystem);
-            m.gameManager.SetCompanyTierSystem(m.companyTierSystem);
 
             m.slotManager.Init();
             m.gameManager.SetSlotManager(m.slotManager);
@@ -42,12 +35,12 @@ namespace EmpireOfCards.Bootstrap
             m.chainReactionSystem.Init(m.boardManager, m.economyManager, m.staffStateSystem);
             m.gameManager.SetChainReactionSystem(m.chainReactionSystem);
 
-            m.shopManager.Init(data.shopPool, m.deckManager, m.economyManager, m.comboSystem);
+            m.shopManager.Init(data.shopPool, m.deckManager, m.economyManager);
             m.audioManager.Init(m.musicSourceA, m.musicSourceB, m.sfxSource);
 
             m.uiManager.Init(
                 hud.topBarUI, hud.actionBarUI, hud.shopPanel,
-                hud.comboPopup, hud.eventPopup, hud.rivalPopup,
+                hud.eventPopup, hud.rivalPopup,
                 hud.scoreScreen, hud.gameOverScreen);
 
             if (hud.neglectWarningText != null)
@@ -59,7 +52,7 @@ namespace EmpireOfCards.Bootstrap
             if (hud.analyticsPanel != null)
                 m.uiManager.SetAnalyticsPanel(hud.analyticsPanel);
 
-            hud.topBarUI.Init(hud.moneyText, hud.turnText, hud.fbiBarFillImg, null, hud.companyTierText, hud.buildIdentityText, hud.pressureText);
+            hud.topBarUI.Init(hud.moneyText, hud.turnText, hud.companyTierText, hud.buildIdentityText, hud.pressureText);
             hud.actionBarUI.Init(hud.actionDotImages);
             hud.shopPanel.Init(m.shopManager);
 

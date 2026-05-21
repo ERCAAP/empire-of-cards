@@ -13,6 +13,27 @@ namespace EmpireOfCards.Gameplay.Economy
 
     public class SalarySystem
     {
+        private SalaryChoice _lastChoice = SalaryChoice.PayOnTime;
+        private int _consecutiveDelayTurns;
+
+        public SalaryChoice LastChoice => _lastChoice;
+        public int ConsecutiveDelayTurns => _consecutiveDelayTurns;
+
+        public void TrackChoice(SalaryChoice choice)
+        {
+            _lastChoice = choice;
+            if (choice == SalaryChoice.Delay)
+                _consecutiveDelayTurns++;
+            else
+                _consecutiveDelayTurns = 0;
+        }
+
+        public void Reset()
+        {
+            _lastChoice = SalaryChoice.PayOnTime;
+            _consecutiveDelayTurns = 0;
+        }
+
         public SalaryResult ProcessSalary(SalaryChoice choice, int totalSalaries, int playerMoney)
         {
             var result = new SalaryResult();
@@ -54,6 +75,7 @@ namespace EmpireOfCards.Gameplay.Economy
                 result.amountPaid = playerMoney;
             }
 
+            TrackChoice(choice);
             EventBus.SalaryPaid(choice, result.amountPaid);
 
             return result;
