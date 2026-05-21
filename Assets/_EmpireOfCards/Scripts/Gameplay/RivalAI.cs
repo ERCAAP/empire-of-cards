@@ -322,11 +322,12 @@ namespace EmpireOfCards.Gameplay
 
         private string GetRivalName(VentureType venture)
         {
+            var techCategory = GameManager.Instance != null ? GameManager.Instance.ActiveTechCategoryProfile : null;
             return venture switch
             {
                 VentureType.FastFood => "Rival Kitchen",
                 VentureType.Cafe => "Rival Cafe",
-                VentureType.TechApp => "Rival App",
+                VentureType.TechApp => techCategory != null && !string.IsNullOrWhiteSpace(techCategory.rivalName) ? techCategory.rivalName : "Rival App",
                 VentureType.ClothingStore => "Rival Boutique",
                 VentureType.GroceryStore => "Rival Market",
                 _ => "Rival Co."
@@ -335,6 +336,74 @@ namespace EmpireOfCards.Gameplay
 
         private string GetMoveDescription(RivalMove move)
         {
+            var techCategory = GameManager.Instance != null ? GameManager.Instance.ActiveTechCategoryProfile : null;
+            if (activeVenture == VentureType.TechApp && techCategory != null)
+            {
+                return move switch
+                {
+                    RivalMove.PriceWar => $"{techCategory.displayName} rival is undercutting acquisition efficiency and install conversion.",
+                    RivalMove.MarketingBlitz => $"{techCategory.displayName} rival is buying visibility, creators, and review momentum.",
+                    RivalMove.QualityImprove => $"{techCategory.displayName} rival is tightening product quality and trust.",
+                    RivalMove.StaffPoach => $"{techCategory.displayName} rival is competing for scarce product talent.",
+                    RivalMove.SeekInvestment => $"{techCategory.displayName} rival secured capital to keep burning aggressively.",
+                    RivalMove.OpenBranch => $"{techCategory.displayName} rival is widening footprint across a new channel.",
+                    RivalMove.Sabotage => $"{techCategory.displayName} rival is pressuring your weakest operational layer.",
+                    _ => "Rival app adapts."
+                };
+            }
+
+            if (activeVenture == VentureType.FastFood)
+            {
+                return move switch
+                {
+                    RivalMove.PriceWar => "Rival is undercutting combo prices and stealing rush-hour baskets.",
+                    RivalMove.MarketingBlitz => "Rival is pushing delivery apps, flyers, and Google review momentum.",
+                    RivalMove.QualityImprove => "Rival is tightening kitchen quality and speed.",
+                    RivalMove.StaffPoach => "Rival is grabbing the cleaner crew and counter staff first.",
+                    RivalMove.OpenBranch => "Rival is opening another traffic-capturing counter nearby.",
+                    _ => "Rival kitchen is adapting."
+                };
+            }
+
+            if (activeVenture == VentureType.Cafe)
+            {
+                return move switch
+                {
+                    RivalMove.PriceWar => "Rival is discounting drinks to break your morning routine hold.",
+                    RivalMove.MarketingBlitz => "Rival is leaning on Maps, Reels, and neighborhood buzz.",
+                    RivalMove.QualityImprove => "Rival is improving bean quality and drink consistency.",
+                    RivalMove.StaffPoach => "Rival is fishing for baristas and floor talent.",
+                    RivalMove.OpenBranch => "Rival is widening its footprint in the local coffee circuit.",
+                    _ => "Rival cafe is adapting."
+                };
+            }
+
+            if (activeVenture == VentureType.ClothingStore)
+            {
+                return move switch
+                {
+                    RivalMove.PriceWar => "Rival is discounting hard to clear stock and drag your margin down.",
+                    RivalMove.MarketingBlitz => "Rival is pushing storefront visuals and social fashion traffic.",
+                    RivalMove.QualityImprove => "Rival is investing in fit, tailoring, and fabric trust.",
+                    RivalMove.StaffPoach => "Rival is targeting stylists and tailoring talent.",
+                    RivalMove.OpenBranch => "Rival is expanding its fashion footprint into your lane.",
+                    _ => "Rival boutique is adapting."
+                };
+            }
+
+            if (activeVenture == VentureType.GroceryStore)
+            {
+                return move switch
+                {
+                    RivalMove.PriceWar => "Rival is cutting staple prices to win neighborhood baskets.",
+                    RivalMove.MarketingBlitz => "Rival is pushing convenience, WhatsApp orders, and late-night pull.",
+                    RivalMove.QualityImprove => "Rival is stabilizing freshness and checkout trust.",
+                    RivalMove.StaffPoach => "Rival is pulling reliable cashiers and stockers off the block.",
+                    RivalMove.OpenBranch => "Rival is stretching into another local convenience pocket.",
+                    _ => "Rival market is adapting."
+                };
+            }
+
             return move switch
             {
                 RivalMove.PriceWar => "Rival cuts price to drag demand away.",
@@ -355,6 +424,82 @@ namespace EmpireOfCards.Gameplay
 
         private string GetMoveCardName(RivalMove move)
         {
+            var techCategory = GameManager.Instance != null ? GameManager.Instance.ActiveTechCategoryProfile : null;
+            if (activeVenture == VentureType.TechApp && techCategory != null)
+            {
+                return move switch
+                {
+                    RivalMove.PriceWar => "Acquisition Undercut",
+                    RivalMove.MarketingBlitz => "Channel Surge",
+                    RivalMove.QualityImprove => "Product Reliability Pass",
+                    RivalMove.StaffPoach => "Talent Poach",
+                    RivalMove.SeekInvestment => "Growth Round",
+                    RivalMove.OpenBranch => "Platform Expansion",
+                    RivalMove.Sabotage => "Trust Disruption",
+                    _ => "Pressure Shift"
+                };
+            }
+
+            if (activeVenture == VentureType.FastFood)
+            {
+                return move switch
+                {
+                    RivalMove.PriceWar => "Combo Price Slash",
+                    RivalMove.MarketingBlitz => "Delivery Blitz",
+                    RivalMove.QualityImprove => "Kitchen Tune-Up",
+                    RivalMove.StaffPoach => "Counter Staff Poach",
+                    RivalMove.SeekInvestment => "Expansion Cash",
+                    RivalMove.OpenBranch => "Street Corner Lease",
+                    RivalMove.Sabotage => "Queue Disruption",
+                    _ => "Pressure Shift"
+                };
+            }
+
+            if (activeVenture == VentureType.Cafe)
+            {
+                return move switch
+                {
+                    RivalMove.PriceWar => "Morning Discount Push",
+                    RivalMove.MarketingBlitz => "Neighborhood Buzz",
+                    RivalMove.QualityImprove => "Bean Quality Pass",
+                    RivalMove.StaffPoach => "Barista Poach",
+                    RivalMove.SeekInvestment => "Roastery Credit",
+                    RivalMove.OpenBranch => "Second Corner Lease",
+                    RivalMove.Sabotage => "Rush-Hour Disruption",
+                    _ => "Pressure Shift"
+                };
+            }
+
+            if (activeVenture == VentureType.ClothingStore)
+            {
+                return move switch
+                {
+                    RivalMove.PriceWar => "Clearance Drop",
+                    RivalMove.MarketingBlitz => "Lookbook Surge",
+                    RivalMove.QualityImprove => "Fit & Fabric Pass",
+                    RivalMove.StaffPoach => "Stylist Poach",
+                    RivalMove.SeekInvestment => "Seasonal Credit",
+                    RivalMove.OpenBranch => "Mall Pop-Up",
+                    RivalMove.Sabotage => "Return Pressure Spike",
+                    _ => "Pressure Shift"
+                };
+            }
+
+            if (activeVenture == VentureType.GroceryStore)
+            {
+                return move switch
+                {
+                    RivalMove.PriceWar => "Staple Basket Cut",
+                    RivalMove.MarketingBlitz => "Convenience Push",
+                    RivalMove.QualityImprove => "Freshness Pass",
+                    RivalMove.StaffPoach => "Cashier Poach",
+                    RivalMove.SeekInvestment => "Distributor Credit",
+                    RivalMove.OpenBranch => "Neighborhood Annex",
+                    RivalMove.Sabotage => "Shelf Panic",
+                    _ => "Pressure Shift"
+                };
+            }
+
             return move switch
             {
                 RivalMove.PriceWar => "Price Drop Campaign",

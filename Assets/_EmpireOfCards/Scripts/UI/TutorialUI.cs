@@ -85,28 +85,30 @@ namespace EmpireOfCards.UI
             StretchFill(rootRT);
 
             var overlayImg = rootGo.AddComponent<Image>();
-            overlayImg.color = new Color(0f, 0f, 0f, 0.75f);
+            overlayImg.color = new Color(0f, 0f, 0f, 0.70f);
             overlayImg.raycastTarget = true;
 
             // ============================================================
             //  FULL-SCREEN STORY PANEL (centered, large)
             // ============================================================
             var fsPanel = CreatePanel("FullScreenPanel", rootGo.transform,
-                new Vector2(800, 360), new Color(0.06f, 0.06f, 0.1f, 0.97f));
+                new Vector2(860, 390), new Color(0.07f, 0.08f, 0.12f, 0.98f));
             var fsPanelRT = fsPanel.GetComponent<RectTransform>();
             CenterAnchor(fsPanelRT);
+            AddPanelChrome(fsPanel.transform, "RUN BRIEFING", new Color(0.22f, 0.62f, 0.92f, 1f));
 
             // Story text
             var fsTextGo = CreateTMPText("FullScreenText", fsPanel.transform,
                 "", 24, TextAlignmentOptions.Center, Color.white);
             var fsTextRT = fsTextGo.GetComponent<RectTransform>();
-            fsTextRT.anchorMin = new Vector2(0f, 0.2f);
+            fsTextRT.anchorMin = new Vector2(0f, 0.18f);
             fsTextRT.anchorMax = new Vector2(1f, 1f);
-            fsTextRT.offsetMin = new Vector2(40, 10);
-            fsTextRT.offsetMax = new Vector2(-40, -20);
+            fsTextRT.offsetMin = new Vector2(52, 14);
+            fsTextRT.offsetMax = new Vector2(-52, -36);
             var fsTextTMP = fsTextGo.GetComponent<TMP_Text>();
             fsTextTMP.textWrappingMode = TextWrappingModes.Normal;
             fsTextTMP.overflowMode = TextOverflowModes.Ellipsis;
+            fsTextTMP.lineSpacing = 4f;
 
             // Story button ("Begin" / "Got it")
             var fsBtnGo = CreateButton("FullScreenButton", fsPanel.transform,
@@ -122,33 +124,35 @@ namespace EmpireOfCards.UI
             //  FLOATING TIP PANEL (bottom-center, smaller)
             // ============================================================
             var tipPanel = CreatePanel("TipPanel", rootGo.transform,
-                new Vector2(720, 180), new Color(0.08f, 0.08f, 0.12f, 0.95f));
+                new Vector2(780, 210), new Color(0.08f, 0.09f, 0.13f, 0.96f));
             var tipPanelRT = tipPanel.GetComponent<RectTransform>();
             tipPanelRT.anchorMin = new Vector2(0.5f, 0f);
             tipPanelRT.anchorMax = new Vector2(0.5f, 0f);
             tipPanelRT.pivot = new Vector2(0.5f, 0f);
-            tipPanelRT.anchoredPosition = new Vector2(0, 30);
+            tipPanelRT.anchoredPosition = new Vector2(0, 34);
+            AddPanelChrome(tipPanel.transform, "ONBOARDING", new Color(0.98f, 0.69f, 0.22f, 1f));
 
             // Tip text
             var tipTextGo = CreateTMPText("TipText", tipPanel.transform,
-                "", 20, TextAlignmentOptions.Center, Color.white);
+                "", 21, TextAlignmentOptions.Center, Color.white);
             var tipTextRT = tipTextGo.GetComponent<RectTransform>();
-            tipTextRT.anchorMin = new Vector2(0f, 0.25f);
+            tipTextRT.anchorMin = new Vector2(0f, 0.22f);
             tipTextRT.anchorMax = new Vector2(1f, 1f);
-            tipTextRT.offsetMin = new Vector2(25, 5);
-            tipTextRT.offsetMax = new Vector2(-25, -10);
+            tipTextRT.offsetMin = new Vector2(32, 10);
+            tipTextRT.offsetMax = new Vector2(-32, -22);
             var tipTextTMP = tipTextGo.GetComponent<TMP_Text>();
             tipTextTMP.textWrappingMode = TextWrappingModes.Normal;
+            tipTextTMP.lineSpacing = 3f;
 
             // Tip button
             var tipBtnGo = CreateButton("TipButton", tipPanel.transform,
                 "Got it", new Color(0.18f, 0.55f, 0.32f));
             var tipBtnRT = tipBtnGo.GetComponent<RectTransform>();
-            tipBtnRT.anchorMin = new Vector2(0.5f, 0f);
-            tipBtnRT.anchorMax = new Vector2(0.5f, 0f);
-            tipBtnRT.pivot = new Vector2(0.5f, 0f);
-            tipBtnRT.anchoredPosition = new Vector2(0, 8);
-            tipBtnRT.sizeDelta = new Vector2(140, 40);
+            tipBtnRT.anchorMin = new Vector2(1f, 0f);
+            tipBtnRT.anchorMax = new Vector2(1f, 0f);
+            tipBtnRT.pivot = new Vector2(1f, 0f);
+            tipBtnRT.anchoredPosition = new Vector2(-24, 14);
+            tipBtnRT.sizeDelta = new Vector2(170, 44);
 
             // ============================================================
             //  2D ARROW INDICATOR (movable, rotatable)
@@ -161,7 +165,7 @@ namespace EmpireOfCards.UI
             arrowRT.anchorMax = new Vector2(0.5f, 0.5f);
 
             var arrowTMP = arrowGo.AddComponent<TextMeshProUGUI>();
-            arrowTMP.text = "-->"; // Right-pointing triangle by default
+            arrowTMP.text = "-->";
             arrowTMP.fontSize = 42;
             arrowTMP.alignment = TextAlignmentOptions.Center;
             arrowTMP.color = new Color(1f, 0.85f, 0.2f); // Gold
@@ -398,6 +402,12 @@ namespace EmpireOfCards.UI
             rt.sizeDelta = size;
             var img = go.AddComponent<Image>();
             img.color = bgColor;
+            var outline = go.AddComponent<Outline>();
+            outline.effectColor = new Color(0.95f, 0.75f, 0.25f, 0.18f);
+            outline.effectDistance = new Vector2(2f, -2f);
+            var shadow = go.AddComponent<Shadow>();
+            shadow.effectColor = new Color(0f, 0f, 0f, 0.35f);
+            shadow.effectDistance = new Vector2(0f, -8f);
             return go;
         }
 
@@ -453,6 +463,35 @@ namespace EmpireOfCards.UI
             rt.anchorMin = new Vector2(0.5f, 0.5f);
             rt.anchorMax = new Vector2(0.5f, 0.5f);
             rt.pivot = new Vector2(0.5f, 0.5f);
+        }
+
+        private static void AddPanelChrome(Transform parent, string label, Color accentColor)
+        {
+            var accentGo = new GameObject("Accent");
+            accentGo.transform.SetParent(parent, false);
+            var accentRt = accentGo.AddComponent<RectTransform>();
+            accentRt.anchorMin = new Vector2(0f, 1f);
+            accentRt.anchorMax = new Vector2(1f, 1f);
+            accentRt.pivot = new Vector2(0.5f, 1f);
+            accentRt.anchoredPosition = Vector2.zero;
+            accentRt.sizeDelta = new Vector2(0f, 10f);
+            var accentImg = accentGo.AddComponent<Image>();
+            accentImg.color = accentColor;
+
+            var labelGo = new GameObject("ChromeLabel");
+            labelGo.transform.SetParent(parent, false);
+            var labelRt = labelGo.AddComponent<RectTransform>();
+            labelRt.anchorMin = new Vector2(0.5f, 1f);
+            labelRt.anchorMax = new Vector2(0.5f, 1f);
+            labelRt.pivot = new Vector2(0.5f, 1f);
+            labelRt.anchoredPosition = new Vector2(0f, -18f);
+            labelRt.sizeDelta = new Vector2(280f, 24f);
+            var tmp = labelGo.AddComponent<TextMeshProUGUI>();
+            tmp.text = label;
+            tmp.fontSize = 14f;
+            tmp.fontStyle = FontStyles.Bold;
+            tmp.alignment = TextAlignmentOptions.Center;
+            tmp.color = new Color(0.92f, 0.92f, 0.96f, 1f);
         }
     }
 }

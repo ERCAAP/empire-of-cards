@@ -154,6 +154,7 @@ namespace EmpireOfCards.Core
             VentureType activeVenture = gm != null && gm.ActiveEconomyProfile != null
                 ? gm.ActiveEconomyProfile.ventureType
                 : VentureType.FastFood;
+            TechCategoryProfile techCategory = gm != null ? gm.ActiveTechCategoryProfile : null;
 
             List<CardData> filtered = new List<CardData>();
             foreach (var card in _eventDeck)
@@ -161,6 +162,11 @@ namespace EmpireOfCards.Core
                 if (card == null) continue;
                 if (card.isGeneralCard || card.ventureType == activeVenture)
                     filtered.Add(card);
+            }
+
+            if (activeVenture == VentureType.TechApp && techCategory != null && techCategory.crisisCardIds != null && techCategory.crisisCardIds.Length > 0)
+            {
+                filtered.RemoveAll(card => card != null && card.cardType == CardType.Event && card.cardFamily == CardFamily.Crisis && card.cardId != "TC09" && System.Array.IndexOf(techCategory.crisisCardIds, card.cardId) < 0);
             }
 
             if (filtered.Count == 0)

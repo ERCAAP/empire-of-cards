@@ -142,7 +142,7 @@ namespace EmpireOfCards.Core
         public void Init(TutorialUI ui)
         {
             _ui = ui;
-            _steps = BuildSteps();
+            _steps = new List<TutorialStep>();
         }
 
         /// <summary>
@@ -164,6 +164,7 @@ namespace EmpireOfCards.Core
         /// </summary>
         public void StartTutorial()
         {
+            _steps = BuildSteps();
             _tutorialActive = true;
             _currentIndex = -1;
             _waitingForEvent = false;
@@ -497,8 +498,15 @@ namespace EmpireOfCards.Core
         /// Each step has narrative context, appropriate indicators, and
         /// trigger conditions matching real game flow.
         /// </summary>
-        private static List<TutorialStep> BuildSteps()
+        private List<TutorialStep> BuildSteps()
         {
+            var gm = GameManager.Instance;
+            VentureType ventureType = gm != null && gm.SelectedVenture != null
+                ? gm.SelectedVenture.ventureType
+                : VentureType.FastFood;
+            string runName = gm != null ? gm.RunDisplayName : "New Venture";
+            string categoryLabel = gm != null ? gm.RunCategoryLabel : null;
+
             return new List<TutorialStep>
             {
                 // ============================================================
@@ -507,12 +515,8 @@ namespace EmpireOfCards.Core
                 new TutorialStep
                 {
                     stepId = "story_intro",
-                    locKey = "tutorial.step1",
-                    message = "You just arrived in the city with $500 and a dream.\n" +
-                              "You picked your first venture, and your rival starts in the same sector.\n" +
-                              "This run is about surviving pressure, building a better board,\n" +
-                              "and finishing the 25-turn market fight ahead.\n\n" +
-                              "Your goal: build smarter than the rival and take the bigger share.",
+                    locKey = string.Empty,
+                    message = GetStoryIntroMessage(ventureType, runName, categoryLabel),
                     trigger = TutorialTrigger.Immediate,
                     displayMode = TutorialDisplayMode.FullScreen,
                     indicator = TutorialIndicator.None,
@@ -587,10 +591,8 @@ namespace EmpireOfCards.Core
                 new TutorialStep
                 {
                     stepId = "first_move",
-                    locKey = "tutorial.step5",
-                    message = "On the left of your board is your venture anchor.\n" +
-                              "This is your storefront or app HQ.\n" +
-                              "Your first core operation starts here and upgrades make it grow.",
+                    locKey = string.Empty,
+                    message = GetAnchorMessage(ventureType, categoryLabel),
                     trigger = TutorialTrigger.Manual,
                     displayMode = TutorialDisplayMode.FloatingTip,
                     indicator = TutorialIndicator.Arrow3D,
@@ -744,12 +746,8 @@ namespace EmpireOfCards.Core
                 new TutorialStep
                 {
                     stepId = "winning_strategy",
-                    locKey = "tutorial.step13",
-                    message = "Tips to dominate:\n\n" +
-                              "\u2022 Demand without capacity destroys rating\n" +
-                              "\u2022 Supplier and staff quality create organic growth\n" +
-                              "\u2022 Risk cards are short-term power, not free value\n" +
-                              "\u2022 Watch the rival lane and answer the right pressure",
+                    locKey = string.Empty,
+                    message = GetStrategyMessage(ventureType, categoryLabel),
                     trigger = TutorialTrigger.Manual,
                     displayMode = TutorialDisplayMode.FullScreen,
                     indicator = TutorialIndicator.None,
@@ -774,6 +772,52 @@ namespace EmpireOfCards.Core
                     pauseGame = false
                 }
             };
+        }
+
+        private static string GetStoryIntroMessage(VentureType ventureType, string runName, string categoryLabel)
+        {
+            return ventureType switch
+            {
+                VentureType.TechApp => $"You just launched {runName}.\nCategory: {categoryLabel ?? "Tech Product"}.\nYour rival starts in the same app market, chases the same users,\nand will punish weak backend, weak reviews, and sloppy growth.\n\nYour goal: survive the 25-turn product war with the bigger market share.",
+                VentureType.FastFood => $"You just opened {runName}.\nThe rival starts in the same food lane, chasing the same local traffic.\nKitchen flow, waiters, runners, cleaning, supplier quality, and reviews\nwill decide whether you scale or spiral.\n\nYour goal: end the run with the bigger market share.",
+                VentureType.Cafe => $"You just opened {runName}.\nThe rival cafe starts in the same neighborhood demand loop.\nBarista rhythm, service consistency, bean quality, floor cleanliness,\nand regular loyalty decide who owns the block.\n\nYour goal: finish the 25-turn run ahead on market share.",
+                VentureType.ClothingStore => $"You just launched {runName}.\nYour rival store competes in the same seasonal fashion cycle.\nDisplay quality, stock timing, returns, fabric trust, and trend relevance\nwill decide who captures demand.\n\nYour goal: finish stronger than the rival by turn 25.",
+                VentureType.GroceryStore => $"You just opened {runName}.\nThe rival store competes for the same repeat neighborhood traffic.\nFreshness, shelf discipline, night service, local trust, and spoilage control\nwill decide who keeps the market.\n\nYour goal: end the run with the bigger market share.",
+                _ => "You picked your first venture. Your rival starts in the same sector. Finish the run with the bigger market share."
+            };
+        }
+
+        private static string GetAnchorMessage(VentureType ventureType, string categoryLabel)
+        {
+            return ventureType switch
+            {
+                VentureType.TechApp => $"On the left is your app HQ.\nThe sign carries your name and category: {categoryLabel ?? "Product"}.\nYour first core operation starts here, then expands into backend, growth,\nand support pressure as the app scales.",
+                VentureType.FastFood => "On the left is your storefront anchor.\nThis is where your physical presence begins before kitchen, service,\nand delivery pressure expand around it.",
+                VentureType.Cafe => "On the left is your cafe anchor.\nThis is the brand customers remember before seating, bar flow,\nand takeaway pressure expand the board.",
+                VentureType.ClothingStore => "On the left is your storefront anchor.\nThis is where your brand starts before display, stock,\nand checkout pressure expand into a full retail board.",
+                VentureType.GroceryStore => "On the left is your store anchor.\nThis is your neighborhood identity before shelves, fresh goods,\nand local delivery pressure start stretching the operation.",
+                _ => "On the left is your venture anchor. This is where the board starts growing."
+            };
+        }
+
+        private static string GetStrategyMessage(VentureType ventureType, string categoryLabel)
+        {
+            string ventureTip = ventureType switch
+            {
+                VentureType.TechApp => $"A {categoryLabel ?? "tech"} app dies when growth outruns stability.\nBackend, reviews, data trust, and churn all punish sloppy scale.",
+                VentureType.FastFood => "A food chain dies when marketing outruns kitchen speed.\nCleaning, pest control, waiters, and meat quality protect your review loop.",
+                VentureType.Cafe => "A cafe dies when quality drifts while traffic rises.\nConsistency, mood, and staff rhythm matter as much as reach.",
+                VentureType.ClothingStore => "Retail dies when trend timing is wrong.\nWindow quality, stock turns, and returns punish bad inventory bets.",
+                VentureType.GroceryStore => "Grocery dies on thin margins.\nSpoilage, freshness, shelf gaps, and local trust are the real fight.",
+                _ => "Pressure comes from weak sequencing, not random punishment."
+            };
+
+            return "Tips to dominate:\n\n" +
+                   "\u2022 Demand without capacity destroys rating\n" +
+                   "\u2022 Supplier and staff quality create organic growth\n" +
+                   "\u2022 Risk cards are short-term power, not free value\n" +
+                   "\u2022 Watch the rival lane and answer the right pressure\n\n" +
+                   ventureTip;
         }
     }
 }

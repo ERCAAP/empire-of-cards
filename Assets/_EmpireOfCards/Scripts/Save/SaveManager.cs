@@ -19,13 +19,19 @@ namespace EmpireOfCards.Save
         public List<string> unlockedCardIds = new List<string>();
         public int bestScore;
         public bool tutorialCompleted;
+        public string lastPlayedRunId;
+        public List<RunSaveData> runs = new List<RunSaveData>();
         public RunSaveData activeRun;
     }
 
     [Serializable]
     public class RunSaveData
     {
+        public string slotId;
         public string runName;
+        public string runCategoryId;
+        public string runCategoryLabel;
+        public long savedAtUnixSeconds;
         public int ventureType;
         public int currentTurn;
         public int playerMoney;
@@ -85,6 +91,7 @@ namespace EmpireOfCards.Save
 
             // Load existing save or create fresh
             cachedData = LoadFromDisk();
+            NormalizeRunData(cachedData);
         }
 
         private void OnEnable()
@@ -106,15 +113,16 @@ namespace EmpireOfCards.Save
             if (cachedData == null)
                 cachedData = new SaveData();
 
+            var gm = GameManager.Instance;
             cachedData.runsPlayed++;
 
             if (won)
                 cachedData.runsWon++;
 
-            cachedData.activeRun = null;
+            string currentSlotId = gm != null ? gm.CurrentRunSlotId : null;
+            RemoveRunInternal(currentSlotId);
 
             // Calculate score from GameManager
-            var gm = GameManager.Instance;
             if (gm != null)
             {
                 int score = CalculateRunScore(gm, won);
@@ -211,20 +219,67 @@ namespace EmpireOfCards.Save
 
         public bool HasRunSave()
         {
-            return cachedData != null && cachedData.activeRun != null && cachedData.activeRun.HasData();
+            return HasRunSave(null);
         }
 
-        public RunSaveData LoadRun()
+        public bool HasRunSave(string slotId)
+        {
+            return LoadRun(slotId) != null;
+        }
+
+        public List<RunSaveData> ListRuns()
         {
             if (cachedData == null)
                 cachedData = LoadFromDisk();
 
-            return cachedData != null && cachedData.activeRun != null && cachedData.activeRun.HasData()
-                ? cachedData.activeRun
-                : null;
+            NormalizeRunData(cachedData);
+
+            return cachedData.runs
+                .FindAll(run => run != null && run.HasData());
         }
 
-        public void SaveRun(RunSaveData runData)
+        public RunSaveData LoadRun()
+        {
+            return LoadRun(null);
+        }
+
+        public RunSaveData LoadRun(string slotId)
+        {
+            if (cachedData == null)
+                cachedData = LoadFromDisk();
+
+            NormalizeRunData(cachedData);
+
+            if (!string.IsNullOrWhiteSpace(slotId))
+            {
+                RunSaveData selectedRun = cachedData.runs.Find(run => run != null && run.slotId == slotId && run.HasData());
+                if (selectedRun != null)
+                {
+                    cachedData.lastPlayedRunId = selectedRun.slotId;
+                    cachedData.activeRun = selectedRun;
+                    return selectedRun;
+                }
+            }
+
+            if (!string.IsNullOrWhiteSpace(cachedData.lastPlayedRunId))
+            {
+                RunSaveData lastPlayed = cachedData.runs.Find(run => run != null && run.slotId == cachedData.lastPlayedRunId && run.HasData());
+                if (lastPlayed != null)
+                {
+                    cachedData.activeRun = lastPlayed;
+                    return lastPlayed;
+                }
+            }
+
+            RunSaveData firstRun = cachedData.runs.Find(run => run != null && run.HasData());
+            cachedData.activeRun = firstRun;
+            if (firstRun != null)
+                cachedData.lastPlayedRunId = firstRun.slotId;
+
+            return firstRun;
+        }
+
+        public void SaveRun(string slotId, RunSaveData runData)
         {
             if (runData == null)
                 return;
@@ -232,11 +287,37 @@ namespace EmpireOfCards.Save
             if (cachedData == null)
                 cachedData = new SaveData();
 
+            NormalizeRunData(cachedData);
+
+            string resolvedSlotId = string.IsNullOrWhiteSpace(slotId)
+                ? (!string.IsNullOrWhiteSpace(runData.slotId) ? runData.slotId : CreateRunSlotId())
+                : slotId;
+
+            runData.slotId = resolvedSlotId;
+            runData.savedAtUnixSeconds = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+
+            int existingIndex = cachedData.runs.FindIndex(run => run != null && run.slotId == resolvedSlotId);
+            if (existingIndex >= 0)
+                cachedData.runs[existingIndex] = runData;
+            else
+                cachedData.runs.Add(runData);
+
+            cachedData.lastPlayedRunId = resolvedSlotId;
             cachedData.activeRun = runData;
             Save(cachedData);
         }
 
+        public void SaveRun(RunSaveData runData)
+        {
+            SaveRun(null, runData);
+        }
+
         public void DeleteRunSave()
+        {
+            DeleteRunSave(null);
+        }
+
+        public void DeleteRunSave(string slotId)
         {
             if (cachedData == null)
                 cachedData = LoadFromDisk();
@@ -244,8 +325,14 @@ namespace EmpireOfCards.Save
             if (cachedData == null)
                 cachedData = new SaveData();
 
-            cachedData.activeRun = null;
+            NormalizeRunData(cachedData);
+            RemoveRunInternal(slotId);
             Save(cachedData);
+        }
+
+        public string CreateRunSlotId()
+        {
+            return Guid.NewGuid().ToString("N");
         }
 
         /// <summary>
@@ -292,6 +379,7 @@ namespace EmpireOfCards.Save
             {
                 string json = File.ReadAllText(path);
                 SaveData data = JsonUtility.FromJson<SaveData>(json);
+                NormalizeRunData(data);
                 Debug.Log("[SaveManager] Save loaded successfully.");
                 return data;
             }
@@ -336,6 +424,89 @@ namespace EmpireOfCards.Save
                 score += Constants.SCORE_WIN_BONUS;
 
             return score;
+        }
+
+        private void NormalizeRunData(SaveData data)
+        {
+            if (data == null)
+                return;
+
+            if (data.unlockedCardIds == null)
+                data.unlockedCardIds = new List<string>();
+
+            if (data.runs == null)
+                data.runs = new List<RunSaveData>();
+
+            if (data.activeRun != null && data.activeRun.HasData())
+            {
+                if (string.IsNullOrWhiteSpace(data.activeRun.slotId))
+                    data.activeRun.slotId = CreateRunSlotId();
+
+                if (data.activeRun.savedAtUnixSeconds <= 0)
+                    data.activeRun.savedAtUnixSeconds = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+
+                if (!data.runs.Exists(run => run != null && run.slotId == data.activeRun.slotId))
+                    data.runs.Add(data.activeRun);
+            }
+
+            for (int i = data.runs.Count - 1; i >= 0; i--)
+            {
+                RunSaveData run = data.runs[i];
+                if (run == null || !run.HasData())
+                {
+                    data.runs.RemoveAt(i);
+                    continue;
+                }
+
+                if (string.IsNullOrWhiteSpace(run.slotId))
+                    run.slotId = CreateRunSlotId();
+
+                if (run.savedAtUnixSeconds <= 0)
+                    run.savedAtUnixSeconds = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+            }
+
+            if (!string.IsNullOrWhiteSpace(data.lastPlayedRunId))
+            {
+                RunSaveData lastPlayed = data.runs.Find(run => run != null && run.slotId == data.lastPlayedRunId);
+                data.activeRun = lastPlayed;
+            }
+
+            if ((data.activeRun == null || !data.activeRun.HasData()) && data.runs.Count > 0)
+            {
+                data.activeRun = data.runs[0];
+                data.lastPlayedRunId = data.activeRun.slotId;
+            }
+            else if (data.activeRun == null)
+            {
+                data.lastPlayedRunId = null;
+            }
+        }
+
+        private void RemoveRunInternal(string slotId)
+        {
+            NormalizeRunData(cachedData);
+
+            string resolvedSlotId = slotId;
+            if (string.IsNullOrWhiteSpace(resolvedSlotId))
+                resolvedSlotId = !string.IsNullOrWhiteSpace(cachedData.lastPlayedRunId) ? cachedData.lastPlayedRunId : null;
+
+            if (string.IsNullOrWhiteSpace(resolvedSlotId))
+            {
+                cachedData.activeRun = null;
+                cachedData.lastPlayedRunId = null;
+                return;
+            }
+
+            cachedData.runs.RemoveAll(run => run != null && run.slotId == resolvedSlotId);
+            cachedData.activeRun = null;
+            cachedData.lastPlayedRunId = null;
+
+            RunSaveData fallbackRun = cachedData.runs.Find(run => run != null && run.HasData());
+            if (fallbackRun != null)
+            {
+                cachedData.activeRun = fallbackRun;
+                cachedData.lastPlayedRunId = fallbackRun.slotId;
+            }
         }
     }
 }

@@ -85,17 +85,18 @@ namespace EmpireOfCards.Gameplay
 
         public void SetActiveProfile(VentureEconomyProfile profile)
         {
+            var techCategory = GameManager.Instance != null ? GameManager.Instance.ActiveTechCategoryProfile : null;
             _activeProfile = profile;
             snapshot = new VentureBoardSnapshot
             {
                 ventureType = profile != null ? profile.ventureType : VentureType.FastFood,
                 cash = profile != null ? profile.startingCash : Constants.STARTING_MONEY,
-                demand = profile != null ? profile.startingDemand : 2f,
-                capacity = profile != null ? profile.startingCapacity : 3f,
-                quality = profile != null ? profile.startingQuality : 3f,
-                rating = profile != null ? profile.startingRating : Constants.PLATFORM_RATING_DEFAULT,
+                demand = (profile != null ? profile.startingDemand : 2f) + (techCategory != null ? techCategory.demandModifier : 0f),
+                capacity = (profile != null ? profile.startingCapacity : 3f) + (techCategory != null ? techCategory.capacityModifier : 0f),
+                quality = (profile != null ? profile.startingQuality : 3f) + (techCategory != null ? techCategory.qualityModifier : 0f),
+                rating = (profile != null ? profile.startingRating : Constants.PLATFORM_RATING_DEFAULT) + (techCategory != null ? techCategory.ratingModifier : 0f),
                 staffStability = profile != null ? profile.startingStaffStability : 6f,
-                legalRisk = profile != null ? profile.startingLegalRisk : 0f,
+                legalRisk = (profile != null ? profile.startingLegalRisk : 0f) + (techCategory != null ? techCategory.legalRiskModifier : 0f),
                 marketShare = profile != null ? profile.startingMarketShare : 10f,
                 derivedMetrics = BuildDerivedMetrics(profile),
                 activeCrisisTags = System.Array.Empty<string>()
@@ -118,6 +119,7 @@ namespace EmpireOfCards.Gameplay
             var marketing = boardManager.GetCardsInSlotType(SlotType.Marketing);
             var suppliers = boardManager.GetCardsInSlotType(SlotType.Supplier);
             var temp = boardManager.GetCardsInSlotType(SlotType.TempEffect);
+            var techCategory = gm.ActiveTechCategoryProfile;
             float previousCash = snapshot.cash;
             float previousRating = snapshot.rating;
             float previousMarketShare = snapshot.marketShare;
@@ -127,9 +129,10 @@ namespace EmpireOfCards.Gameplay
             float organicDemand = Mathf.Max(0f, (snapshot.rating - 3f) * _activeProfile.ratingToOrganicDemandWeight);
             float tempDemand = Sum(temp, c => c.demandDelta);
 
-            snapshot.demand = Mathf.Max(0f, _activeProfile.baseDemand + opDemand + marketingDemand + organicDemand + tempDemand);
+            snapshot.demand = Mathf.Max(0f, _activeProfile.baseDemand + opDemand + marketingDemand + organicDemand + tempDemand + (techCategory != null ? techCategory.demandModifier : 0f));
             snapshot.capacity = Mathf.Max(1f,
                 _activeProfile.startingCapacity +
+                (techCategory != null ? techCategory.capacityModifier : 0f) +
                 Sum(operations, c => c.capacityDelta) +
                 Sum(staff, c => c.capacityDelta) +
                 Sum(suppliers, c => c.capacityDelta) +
@@ -137,6 +140,7 @@ namespace EmpireOfCards.Gameplay
 
             snapshot.quality = Mathf.Clamp(
                 _activeProfile.startingQuality +
+                (techCategory != null ? techCategory.qualityModifier : 0f) +
                 Sum(operations, c => c.qualityDelta) +
                 Sum(staff, c => c.qualityDelta) +
                 Sum(suppliers, c => c.qualityDelta) +
@@ -152,6 +156,7 @@ namespace EmpireOfCards.Gameplay
 
             snapshot.legalRisk = Mathf.Clamp(
                 snapshot.legalRisk - _activeProfile.legalRiskDecayPerTurn +
+                (techCategory != null ? techCategory.legalRiskModifier : 0f) +
                 Sum(suppliers, c => c.legalRiskDeltaPerTurn) +
                 Sum(marketing, c => c.legalRiskDeltaPerTurn) +
                 Sum(temp, c => c.legalRiskDeltaPerTurn),
@@ -162,6 +167,7 @@ namespace EmpireOfCards.Gameplay
             float ratingDelta = ((snapshot.quality - 5f) * _activeProfile.qualityToRatingWeight)
                 - (overload * _activeProfile.capacityPenaltyMultiplier)
                 - Mathf.Max(0f, 4f - snapshot.staffStability) * _activeProfile.staffInstabilityPenalty
+                + (techCategory != null ? techCategory.ratingModifier : 0f)
                 + Sum(marketing, c => c.ratingDeltaPerTurn)
                 + Sum(temp, c => c.ratingDeltaPerTurn);
 
@@ -498,6 +504,7 @@ namespace EmpireOfCards.Gameplay
             };
 
             report.reasons.Add($"Revenue {gross}, salaries {salaries}, upkeep {upkeep}, tax {tax}.");
+            AppendCategoryReason(report.reasons);
             if (overload > 0.1f)
                 report.reasons.Add($"Demand exceeded capacity by {overload:0.0}; trust took a hit.");
             else
@@ -519,36 +526,203 @@ namespace EmpireOfCards.Gameplay
 
         private string GetBriefHeadline(BoardPressureType pressure)
         {
-            return pressure switch
+            var venture = GameManager.Instance != null && GameManager.Instance.SelectedVenture != null
+                ? GameManager.Instance.SelectedVenture.ventureType
+                : VentureType.Diner;
+            var category = GameManager.Instance != null ? GameManager.Instance.ActiveTechCategoryProfile : null;
+            if (category != null)
             {
-                BoardPressureType.CapacityShortfall => "Rush pressure is building.",
-                BoardPressureType.LowCash => "Cash runway is tightening.",
-                BoardPressureType.LowRating => "Trust is slipping.",
-                BoardPressureType.HighLegalRisk => "Legal exposure is rising.",
-                BoardPressureType.WeakQuality => "Quality is underperforming.",
-                BoardPressureType.StaffInstability => "Team stability is fragile.",
-                BoardPressureType.LowDemand => "Demand needs a push.",
-                _ => "Board is stable, push your edge."
+                return pressure switch
+                {
+                    BoardPressureType.CapacityShortfall => $"{category.displayName} growth is outrunning the stack.",
+                    BoardPressureType.LowRating => $"{category.displayName} trust is getting fragile.",
+                    BoardPressureType.HighLegalRisk => $"{category.displayName} risk is becoming visible.",
+                    _ => pressure switch
+                    {
+                        BoardPressureType.LowCash => "Cash runway is tightening.",
+                        BoardPressureType.WeakQuality => "Quality is underperforming.",
+                        BoardPressureType.StaffInstability => "Team stability is fragile.",
+                        BoardPressureType.LowDemand => "Demand needs a push.",
+                        _ => "Board is stable, push your edge."
+                    }
+                };
+            }
+
+            return venture switch
+            {
+                VentureType.FastFood => pressure switch
+                {
+                    BoardPressureType.CapacityShortfall => "Kitchen pressure is spiking.",
+                    BoardPressureType.LowRating => "Local trust is wobbling.",
+                    BoardPressureType.WeakQuality => "Ingredient quality is falling behind.",
+                    _ => pressure switch
+                    {
+                        BoardPressureType.LowCash => "Cash runway is tightening.",
+                        BoardPressureType.HighLegalRisk => "Legal exposure is rising.",
+                        BoardPressureType.StaffInstability => "Team stability is fragile.",
+                        BoardPressureType.LowDemand => "Demand needs a push.",
+                        _ => "Board is stable, push your edge."
+                    }
+                },
+                VentureType.Cafe => pressure switch
+                {
+                    BoardPressureType.CapacityShortfall => "The bar is backing up.",
+                    BoardPressureType.LowRating => "Neighborhood trust is fading.",
+                    BoardPressureType.StaffInstability => "The shift is starting to crack.",
+                    _ => pressure switch
+                    {
+                        BoardPressureType.LowCash => "Cash runway is tightening.",
+                        BoardPressureType.HighLegalRisk => "Legal exposure is rising.",
+                        BoardPressureType.WeakQuality => "Quality is underperforming.",
+                        BoardPressureType.LowDemand => "Demand needs a push.",
+                        _ => "Board is stable, push your edge."
+                    }
+                },
+                VentureType.ClothingStore => pressure switch
+                {
+                    BoardPressureType.CapacityShortfall => "The floor cannot absorb demand.",
+                    BoardPressureType.LowRating => "Brand trust is slipping.",
+                    BoardPressureType.WeakQuality => "Fabric and fit are under pressure.",
+                    _ => pressure switch
+                    {
+                        BoardPressureType.LowCash => "Cash runway is tightening.",
+                        BoardPressureType.HighLegalRisk => "Legal exposure is rising.",
+                        BoardPressureType.StaffInstability => "Team stability is fragile.",
+                        BoardPressureType.LowDemand => "Demand needs a push.",
+                        _ => "Board is stable, push your edge."
+                    }
+                },
+                VentureType.GroceryStore => pressure switch
+                {
+                    BoardPressureType.CapacityShortfall => "Shelf pressure is building.",
+                    BoardPressureType.LowRating => "Mahalle trust is slipping.",
+                    BoardPressureType.WeakQuality => "Freshness discipline is slipping.",
+                    _ => pressure switch
+                    {
+                        BoardPressureType.LowCash => "Cash runway is tightening.",
+                        BoardPressureType.HighLegalRisk => "Legal exposure is rising.",
+                        BoardPressureType.StaffInstability => "Team stability is fragile.",
+                        BoardPressureType.LowDemand => "Demand needs a push.",
+                        _ => "Board is stable, push your edge."
+                    }
+                },
+                _ => pressure switch
+                {
+                    BoardPressureType.CapacityShortfall => "Rush pressure is building.",
+                    BoardPressureType.LowCash => "Cash runway is tightening.",
+                    BoardPressureType.LowRating => "Trust is slipping.",
+                    BoardPressureType.HighLegalRisk => "Legal exposure is rising.",
+                    BoardPressureType.WeakQuality => "Quality is underperforming.",
+                    BoardPressureType.StaffInstability => "Team stability is fragile.",
+                    BoardPressureType.LowDemand => "Demand needs a push.",
+                    _ => "Board is stable, push your edge."
+                }
             };
         }
 
         private string GetBriefDetail(BoardPressureType pressure)
         {
-            return pressure switch
+            var venture = GameManager.Instance != null && GameManager.Instance.SelectedVenture != null
+                ? GameManager.Instance.SelectedVenture.ventureType
+                : VentureType.Diner;
+            var category = GameManager.Instance != null ? GameManager.Instance.ActiveTechCategoryProfile : null;
+            if (category != null)
             {
-                BoardPressureType.CapacityShortfall => $"Demand {snapshot.demand:0.0} > capacity {snapshot.capacity:0.0}. Add staff or throughput.",
-                BoardPressureType.LowCash => $"Cash is {snapshot.cash:0}. Margin discipline matters this turn.",
-                BoardPressureType.LowRating => $"Rating is {snapshot.rating:0.0}. Recovery and quality upgrades now pay off.",
-                BoardPressureType.HighLegalRisk => $"Legal risk is {snapshot.legalRisk:0}. Defensive reactions are valuable.",
-                BoardPressureType.WeakQuality => $"Quality is {snapshot.quality:0.0}. Supplier and staff choices are lagging.",
-                BoardPressureType.StaffInstability => $"Staff stability is {snapshot.staffStability:0.0}. Burnout will cascade if ignored.",
-                BoardPressureType.LowDemand => $"Demand is only {snapshot.demand:0.0}. Marketing or discovery should lead.",
-                _ => $"Rating {snapshot.rating:0.0}, quality {snapshot.quality:0.0}, share {snapshot.marketShare:0.0}."
+                return pressure switch
+                {
+                    BoardPressureType.CapacityShortfall => $"{category.displayName} traffic is beating delivery capacity. Backend and support must catch up.",
+                    BoardPressureType.LowCash => $"{category.displayName} spend is too hot. Paid growth and infra discipline matter now.",
+                    BoardPressureType.LowRating => $"{category.displayName} reviews are fragile. Fix trust before pushing more installs.",
+                    BoardPressureType.HighLegalRisk => $"{category.displayName} is carrying visible risk. Privacy, dark patterns, or unstable launches may cascade.",
+                    BoardPressureType.WeakQuality => $"{category.displayName} quality is lagging. Product reliability and core experience need help.",
+                    BoardPressureType.StaffInstability => $"{category.displayName} team flow is shaky. Burnout or rushed releases can snowball.",
+                    BoardPressureType.LowDemand => $"{category.displayName} discovery is too weak. ASO, creators, or targeted acquisition should lead.",
+                    _ => $"{category.displayName}: rating {snapshot.rating:0.0}, quality {snapshot.quality:0.0}, share {snapshot.marketShare:0.0}."
+                };
+            }
+
+            return venture switch
+            {
+                VentureType.FastFood => pressure switch
+                {
+                    BoardPressureType.CapacityShortfall => $"Demand {snapshot.demand:0.0} is outrunning kitchen and counter throughput.",
+                    BoardPressureType.LowCash => $"Cash is {snapshot.cash:0}. Delivery spend and wages are squeezing margin.",
+                    BoardPressureType.LowRating => $"Rating is {snapshot.rating:0.0}. Reviews and quality fixes should lead.",
+                    BoardPressureType.HighLegalRisk => $"Legal risk is {snapshot.legalRisk:0}. Fake reviews or hygiene shortcuts can cascade.",
+                    BoardPressureType.WeakQuality => $"Quality is {snapshot.quality:0.0}. Ingredient discipline and cleanup matter now.",
+                    BoardPressureType.StaffInstability => $"Staff stability is {snapshot.staffStability:0.0}. Rush fatigue will slow service.",
+                    BoardPressureType.LowDemand => $"Demand is only {snapshot.demand:0.0}. Local buzz and Google presence need help.",
+                    _ => $"Rating {snapshot.rating:0.0}, quality {snapshot.quality:0.0}, share {snapshot.marketShare:0.0}."
+                },
+                VentureType.Cafe => pressure switch
+                {
+                    BoardPressureType.CapacityShortfall => $"Demand {snapshot.demand:0.0} is overrunning the bar and floor flow.",
+                    BoardPressureType.LowCash => $"Cash is {snapshot.cash:0}. Premium beans and staffing are biting margin.",
+                    BoardPressureType.LowRating => $"Rating is {snapshot.rating:0.0}. Slow service or weak drinks are visible.",
+                    BoardPressureType.HighLegalRisk => $"Legal risk is {snapshot.legalRisk:0}. Shortcut ambience or complaints may escalate.",
+                    BoardPressureType.WeakQuality => $"Quality is {snapshot.quality:0.0}. Beans, milk, and consistency are trailing.",
+                    BoardPressureType.StaffInstability => $"Staff stability is {snapshot.staffStability:0.0}. Burnout can spill into reviews.",
+                    BoardPressureType.LowDemand => $"Demand is only {snapshot.demand:0.0}. Regulars and visual discovery need a push.",
+                    _ => $"Rating {snapshot.rating:0.0}, quality {snapshot.quality:0.0}, share {snapshot.marketShare:0.0}."
+                },
+                VentureType.ClothingStore => pressure switch
+                {
+                    BoardPressureType.CapacityShortfall => $"Demand {snapshot.demand:0.0} is outpacing floor conversion and stock handling.",
+                    BoardPressureType.LowCash => $"Cash is {snapshot.cash:0}. Discounting and return pressure are squeezing margin.",
+                    BoardPressureType.LowRating => $"Rating is {snapshot.rating:0.0}. Fit, returns, and brand trust need recovery.",
+                    BoardPressureType.HighLegalRisk => $"Legal risk is {snapshot.legalRisk:0}. Cheap fabric or shady claims can rebound.",
+                    BoardPressureType.WeakQuality => $"Quality is {snapshot.quality:0.0}. Fabric, fit, and atelier quality are behind.",
+                    BoardPressureType.StaffInstability => $"Staff stability is {snapshot.staffStability:0.0}. The sales floor is getting brittle.",
+                    BoardPressureType.LowDemand => $"Demand is only {snapshot.demand:0.0}. Vitrine storytelling and trend pull need help.",
+                    _ => $"Rating {snapshot.rating:0.0}, quality {snapshot.quality:0.0}, share {snapshot.marketShare:0.0}."
+                },
+                VentureType.GroceryStore => pressure switch
+                {
+                    BoardPressureType.CapacityShortfall => $"Demand {snapshot.demand:0.0} is beating shelf and checkout throughput.",
+                    BoardPressureType.LowCash => $"Cash is {snapshot.cash:0}. Thin margin and waste are active this turn.",
+                    BoardPressureType.LowRating => $"Rating is {snapshot.rating:0.0}. Freshness trust is too fragile right now.",
+                    BoardPressureType.HighLegalRisk => $"Legal risk is {snapshot.legalRisk:0}. SKT shortcuts or trust gaps can snowball.",
+                    BoardPressureType.WeakQuality => $"Quality is {snapshot.quality:0.0}. Freshness and shelf discipline are slipping.",
+                    BoardPressureType.StaffInstability => $"Staff stability is {snapshot.staffStability:0.0}. Empty shelves and slow lines can follow.",
+                    BoardPressureType.LowDemand => $"Demand is only {snapshot.demand:0.0}. Convenience and neighborhood loyalty need help.",
+                    _ => $"Rating {snapshot.rating:0.0}, quality {snapshot.quality:0.0}, share {snapshot.marketShare:0.0}."
+                },
+                _ => pressure switch
+                {
+                    BoardPressureType.CapacityShortfall => $"Demand {snapshot.demand:0.0} > capacity {snapshot.capacity:0.0}. Add staff or throughput.",
+                    BoardPressureType.LowCash => $"Cash is {snapshot.cash:0}. Margin discipline matters this turn.",
+                    BoardPressureType.LowRating => $"Rating is {snapshot.rating:0.0}. Recovery and quality upgrades now pay off.",
+                    BoardPressureType.HighLegalRisk => $"Legal risk is {snapshot.legalRisk:0}. Defensive reactions are valuable.",
+                    BoardPressureType.WeakQuality => $"Quality is {snapshot.quality:0.0}. Supplier and staff choices are lagging.",
+                    BoardPressureType.StaffInstability => $"Staff stability is {snapshot.staffStability:0.0}. Burnout will cascade if ignored.",
+                    BoardPressureType.LowDemand => $"Demand is only {snapshot.demand:0.0}. Marketing or discovery should lead.",
+                    _ => $"Rating {snapshot.rating:0.0}, quality {snapshot.quality:0.0}, share {snapshot.marketShare:0.0}."
+                }
             };
         }
 
         private string BuildReportHeadline(float overload)
         {
+            var venture = GameManager.Instance != null && GameManager.Instance.SelectedVenture != null
+                ? GameManager.Instance.SelectedVenture.ventureType
+                : VentureType.Diner;
+            var category = GameManager.Instance != null ? GameManager.Instance.ActiveTechCategoryProfile : null;
+            if (category != null)
+            {
+                if (netIncome < 0)
+                    return $"{category.displayName} burned runway this turn.";
+                if (overload > 0.25f)
+                    return $"{category.displayName} growth outran stability.";
+            }
+
+            if (venture == VentureType.FastFood && overload > 0.25f)
+                return "The rush outran your kitchen.";
+            if (venture == VentureType.Cafe && overload > 0.25f)
+                return "The shift lost pace under pressure.";
+            if (venture == VentureType.ClothingStore && netIncome < 0)
+                return "Discounting and returns ate the turn.";
+            if (venture == VentureType.GroceryStore && netIncome < 0)
+                return "Margin got squeezed by waste and convenience.";
             if (netIncome < 0)
                 return "This turn burned cash.";
             if (overload > 0.25f)
@@ -556,6 +730,15 @@ namespace EmpireOfCards.Gameplay
             if (snapshot.marketShare > 55f)
                 return "You tightened your grip on the market.";
             return "Board held together this turn.";
+        }
+
+        private static void AppendCategoryReason(List<string> reasons)
+        {
+            var category = GameManager.Instance != null ? GameManager.Instance.ActiveTechCategoryProfile : null;
+            if (category == null || reasons == null)
+                return;
+
+            reasons.Add(category.scenarioNote);
         }
 
         private static string[] CollectActiveCrisisTags(IReadOnlyList<CardData> temp)

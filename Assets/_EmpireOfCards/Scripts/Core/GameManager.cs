@@ -65,6 +65,9 @@ namespace EmpireOfCards.Core
         [SerializeField] private VentureDeckProfile activeDeckProfile;
         [SerializeField] private VentureEconomyProfile activeEconomyProfile;
         [SerializeField] private string runDisplayName;
+        [SerializeField] private string runCategoryId;
+        [SerializeField] private string runCategoryLabel;
+        [SerializeField] private string currentRunSlotId;
 
         private Dictionary<string, CardData> _cardLookup;
 
@@ -112,10 +115,15 @@ namespace EmpireOfCards.Core
         public VentureBoardProfile ActiveBoardProfile => activeBoardProfile;
         public VentureDeckProfile ActiveDeckProfile => activeDeckProfile;
         public VentureEconomyProfile ActiveEconomyProfile => activeEconomyProfile;
+        public VentureData SelectedVenture => selectedVenture;
         public IReadOnlyDictionary<string, CardData> CardLookup => _cardLookup;
         public string RunDisplayName => string.IsNullOrWhiteSpace(runDisplayName)
             ? (selectedVenture != null ? selectedVenture.ventureName : "New Venture")
             : runDisplayName;
+        public string RunCategoryId => runCategoryId;
+        public string RunCategoryLabel => runCategoryLabel;
+        public string CurrentRunSlotId => currentRunSlotId;
+        public TechCategoryProfile ActiveTechCategoryProfile => TechCategoryCatalog.Find(runCategoryId);
 
         /// <summary>
         /// Assigns the MetaProgressionSystem. Called by WiringService after bootstrap.
@@ -152,6 +160,8 @@ namespace EmpireOfCards.Core
             activeDeckProfile = venture != null ? venture.deckProfile : null;
             activeEconomyProfile = venture != null ? venture.economyProfile : null;
             runDisplayName = venture != null ? venture.ventureName : "New Venture";
+            runCategoryId = null;
+            runCategoryLabel = null;
         }
 
         public void SetRunDisplayName(string displayName)
@@ -159,6 +169,17 @@ namespace EmpireOfCards.Core
             runDisplayName = string.IsNullOrWhiteSpace(displayName)
                 ? (selectedVenture != null ? selectedVenture.ventureName : "New Venture")
                 : displayName.Trim();
+        }
+
+        public void SetRunCategory(string categoryId, string categoryLabel)
+        {
+            runCategoryId = string.IsNullOrWhiteSpace(categoryId) ? null : categoryId.Trim();
+            runCategoryLabel = string.IsNullOrWhiteSpace(categoryLabel) ? null : categoryLabel.Trim();
+        }
+
+        public void SetCurrentRunSlotId(string slotId)
+        {
+            currentRunSlotId = string.IsNullOrWhiteSpace(slotId) ? null : slotId.Trim();
         }
 
         public void SetCardLookup(Dictionary<string, CardData> lookup)
@@ -219,6 +240,9 @@ namespace EmpireOfCards.Core
 
         public void StartNewRun(bool autoStartTurn = true)
         {
+            if (string.IsNullOrWhiteSpace(currentRunSlotId) && saveManager != null)
+                currentRunSlotId = saveManager.CreateRunSlotId();
+
             currentTurn = 0;
             gameIsRunning = true;
 
@@ -333,7 +357,7 @@ namespace EmpireOfCards.Core
             if (saveManager == null || selectedVenture == null || deckManager == null || slotManager == null)
                 return;
 
-            saveManager.SaveRun(BuildRunSave());
+            saveManager.SaveRun(currentRunSlotId, BuildRunSave());
         }
 
         public void RestoreRunCheckpoint(RunSaveData runData)
@@ -341,9 +365,11 @@ namespace EmpireOfCards.Core
             if (runData == null || !runData.HasData() || selectedVenture == null)
                 return;
 
+            currentRunSlotId = runData.slotId;
             StartNewRun(false);
 
             SetRunDisplayName(runData.runName);
+            SetRunCategory(runData.runCategoryId, runData.runCategoryLabel);
             currentTurn = Mathf.Max(1, runData.currentTurn);
 
             resources.SetMoney(runData.playerMoney);
@@ -517,7 +543,10 @@ namespace EmpireOfCards.Core
         {
             return new RunSaveData
             {
+                slotId = currentRunSlotId,
                 runName = RunDisplayName,
+                runCategoryId = runCategoryId,
+                runCategoryLabel = runCategoryLabel,
                 ventureType = (int)(selectedVenture != null ? selectedVenture.ventureType : VentureType.FastFood),
                 currentTurn = currentTurn,
                 playerMoney = resources.Money,

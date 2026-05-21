@@ -76,18 +76,18 @@ namespace EmpireOfCards.Bootstrap.Data
             {
                 CreateDeckProfile(VentureType.FastFood,
                     new[] { "FF02", "FF03", "FF04", "FF05", "FF06", "NT01" },
-                    new[] { "FF01", "FF02", "FF03", "FF04", "FF05", "FF06", "FF07", "FF08", "NT01", "NT02" },
-                    new[] { "FF02", "FF04", "FF05", "FF06", "FF07", "FF08", "NT02", "NT03" },
-                    new[] { "FF04", "FF06", "FF07", "FF08", "FF09", "NT03" },
+                    new[] { "FF01", "FF02", "FF03", "FF04", "FF05", "FF06", "FF07", "FF08", "FF10", "FF11", "NT01", "NT02" },
+                    new[] { "FF02", "FF04", "FF05", "FF06", "FF07", "FF08", "FF10", "FF11", "FF14", "NT02", "NT03" },
+                    new[] { "FF04", "FF06", "FF07", "FF08", "FF10", "FF11", "FF12", "FF13", "FF14", "NT03" },
                     new[] { "NT01", "NT02", "NT03", "NT04", "NT05" },
-                    new[] { "FF09" }),
+                    new[] { "FF09", "FF12", "FF13" }),
                 CreateDeckProfile(VentureType.Cafe,
                     new[] { "CF02", "CF03", "CF04", "CF05", "CF06", "NT01" },
-                    new[] { "CF01", "CF02", "CF03", "CF04", "CF05", "CF06", "CF07", "CF08", "NT01", "NT04" },
-                    new[] { "CF02", "CF04", "CF05", "CF06", "CF07", "CF08", "NT02", "NT04" },
-                    new[] { "CF04", "CF06", "CF07", "CF08", "CF09", "NT03" },
+                    new[] { "CF01", "CF02", "CF03", "CF04", "CF05", "CF06", "CF07", "CF08", "CF10", "CF11", "NT01", "NT04" },
+                    new[] { "CF02", "CF04", "CF05", "CF06", "CF07", "CF08", "CF10", "CF11", "CF12", "CF15", "NT02", "NT04" },
+                    new[] { "CF04", "CF06", "CF07", "CF08", "CF10", "CF11", "CF12", "CF13", "CF14", "CF15", "NT03" },
                     new[] { "NT01", "NT02", "NT03", "NT04", "NT05" },
-                    new[] { "CF09" }),
+                    new[] { "CF09", "CF13", "CF14" }),
                 CreateDeckProfile(VentureType.TechApp,
                     new[] { "TC02", "TC03", "TC04", "TC05", "TC06", "NT02" },
                     new[] { "TC01", "TC02", "TC03", "TC04", "TC05", "TC06", "TC07", "TC08", "NT02", "NT04" },
@@ -97,18 +97,18 @@ namespace EmpireOfCards.Bootstrap.Data
                     new[] { "TC09" }),
                 CreateDeckProfile(VentureType.ClothingStore,
                     new[] { "CL02", "CL03", "CL04", "CL05", "CL06", "NT01" },
-                    new[] { "CL01", "CL02", "CL03", "CL04", "CL05", "CL06", "CL07", "CL08", "NT01", "NT04" },
-                    new[] { "CL02", "CL04", "CL05", "CL06", "CL07", "CL08", "NT03", "NT04" },
-                    new[] { "CL04", "CL06", "CL07", "CL08", "CL09", "NT05" },
+                    new[] { "CL01", "CL02", "CL03", "CL04", "CL05", "CL06", "CL07", "CL08", "CL10", "CL11", "NT01", "NT04" },
+                    new[] { "CL02", "CL04", "CL05", "CL06", "CL07", "CL08", "CL10", "CL11", "CL12", "CL15", "NT03", "NT04" },
+                    new[] { "CL04", "CL06", "CL07", "CL08", "CL09", "CL10", "CL11", "CL12", "CL13", "CL14", "CL15", "NT05" },
                     new[] { "NT01", "NT02", "NT03", "NT04", "NT05" },
-                    new[] { "CL09" }),
+                    new[] { "CL09", "CL13", "CL14" }),
                 CreateDeckProfile(VentureType.GroceryStore,
                     new[] { "GR02", "GR03", "GR04", "GR05", "GR06", "NT01" },
-                    new[] { "GR01", "GR02", "GR03", "GR04", "GR05", "GR06", "GR07", "GR08", "NT01", "NT04" },
-                    new[] { "GR02", "GR04", "GR05", "GR06", "GR07", "GR08", "NT02", "NT03" },
-                    new[] { "GR04", "GR06", "GR07", "GR08", "GR09", "NT05" },
+                    new[] { "GR01", "GR02", "GR03", "GR04", "GR05", "GR06", "GR07", "GR08", "GR10", "GR11", "NT01", "NT04" },
+                    new[] { "GR02", "GR04", "GR05", "GR06", "GR07", "GR08", "GR10", "GR11", "GR12", "GR15", "NT02", "NT03" },
+                    new[] { "GR04", "GR06", "GR07", "GR08", "GR09", "GR10", "GR11", "GR12", "GR13", "GR14", "GR15", "NT05" },
                     new[] { "NT01", "NT02", "NT03", "NT04", "NT05" },
-                    new[] { "GR09" })
+                    new[] { "GR09", "GR13", "GR14" })
             };
         }
 
@@ -147,6 +147,8 @@ namespace EmpireOfCards.Bootstrap.Data
             venture.ventureName = name;
             venture.description = description;
             venture.playstyleSummary = playstyle;
+            venture.requiresCustomName = true;
+            venture.requiresRunCategorySelection = type == VentureType.TechApp;
             venture.startingBusiness = startingCard;
             venture.boardProfile = boardProfile;
             venture.deckProfile = deckProfile;
@@ -272,6 +274,11 @@ namespace EmpireOfCards.Bootstrap.Data
             yield return MakeTemp("FF07", "Fake Reviews", VentureType.FastFood, CardFamily.Risk, "review_rush", "Short-term boost, long-term trouble.", 20, 1.3f, 0f, 30f, 0.7f, 2, new[] { "fake_reviews", "review_manipulation" }, null, new[] { CardTag.Illegal, CardTag.Marketing });
             yield return MakeTemp("FF08", "Apology Combo", VentureType.FastFood, CardFamily.Reaction, "review_recovery", "Stabilize reputation after service issues.", 30, 0.4f, 0f, -10f, 0.8f, 1, null, new[] { "review_crisis", "quality_drop" }, new[] { CardTag.Support, CardTag.Marketing });
             yield return MakeCrisis("FF09", "Review Storm", VentureType.FastFood, "Rush order collapse sparks bad reviews.", "review_crisis", 2, -1.3f, -0.8f, 12f, new[] { CardTag.Risky, CardTag.Marketing });
+            yield return MakeStaff("FF10", "Front Counter Server", VentureType.FastFood, "cashier", "Moves queue friction off the grill line.", 36, 0.4f, 1.2f, 0.3f, 0.8f, new[] { CardTag.Food, CardTag.Support });
+            yield return MakeStaff("FF11", "Night Cleaner", VentureType.FastFood, "cleaning", "Protects hygiene before the next rush hits.", 32, 0.1f, 0.5f, 0.9f, 1.0f, new[] { CardTag.Support, CardTag.Defensive });
+            yield return MakeCrisis("FF12", "Hygiene Inspection", VentureType.FastFood, "Missed cleaning turns into a trust-killing inspection.", "hygiene_crisis", 2, -0.7f, -1.3f, 9f, new[] { CardTag.Risky, CardTag.Support });
+            yield return MakeCrisis("FF13", "Delivery Fee Squeeze", VentureType.FastFood, "Platform commissions spike and delivery margins collapse.", "delivery_fee", 2, -0.4f, -0.4f, 4f, new[] { CardTag.Pricing, CardTag.Risky });
+            yield return MakeTemp("FF14", "Deep Clean Reset", VentureType.FastFood, CardFamily.Reaction, "deep_clean", "Emergency cleanup protects trust after hygiene slips.", 24, 0.2f, 0.3f, -12f, 0.9f, 1, null, new[] { "hygiene_crisis", "review_crisis" }, new[] { CardTag.Support, CardTag.Defensive });
         }
 
         private static IEnumerable<CardData> CreateCafeCards()
@@ -285,6 +292,12 @@ namespace EmpireOfCards.Bootstrap.Data
             yield return MakeTemp("CF07", "Unlicensed Playlist", VentureType.Cafe, CardFamily.Risk, "mesam", "Cheap ambience with a legal edge.", 10, 0.6f, 0f, 24f, 0.2f, 2, new[] { "music_license" }, null, new[] { CardTag.Illegal, CardTag.Risky });
             yield return MakeTemp("CF08", "Customer Care Round", VentureType.Cafe, CardFamily.Reaction, "complaint_round", "Recovers trust after slow or bad service.", 25, 0.5f, 0f, -8f, 0.7f, 1, null, new[] { "review_crisis", "slow_service" }, new[] { CardTag.Support, CardTag.Marketing });
             yield return MakeCrisis("CF09", "Barista Burnout", VentureType.Cafe, "The star barista burns out during a busy week.", "staff_crisis", 2, -1.0f, -1.2f, 6f, new[] { CardTag.Risky, CardTag.Management });
+            yield return MakeStaff("CF10", "Floor Runner", VentureType.Cafe, "floor", "Clears tables and keeps the bar flowing.", 34, 0.3f, 1.1f, 0.3f, 0.8f, new[] { CardTag.Support, CardTag.Basic });
+            yield return MakeSupplier("CF11", "Milk Contract", VentureType.Cafe, "milk", "Reliable milk supply saves rush-hour consistency.", 36, 0.2f, 1.0f, 0.3f, 0.2f, new[] { "bean_shortage", "slow_service" }, new[] { CardTag.Support, CardTag.Coffee });
+            yield return MakeMarketing("CF12", "Regulars Stamp Card", VentureType.Cafe, "loyalty", "Builds sticky morning traffic and repeat orders.", 24, 1.5f, 0.35f, 7f, new[] { CardTag.Marketing, CardTag.Support });
+            yield return MakeCrisis("CF13", "Bean Shortage", VentureType.Cafe, "Your bean supplier slips and drink quality takes a hit.", "bean_shortage", 2, -0.5f, -1.1f, 5f, new[] { CardTag.Coffee, CardTag.Risky });
+            yield return MakeCrisis("CF14", "Slow Service Backlash", VentureType.Cafe, "A packed weekend turns into public complaints about waits.", "slow_service", 2, -1.1f, -0.6f, 4f, new[] { CardTag.Support, CardTag.Risky });
+            yield return MakeTemp("CF15", "Reset The Shift", VentureType.Cafe, CardFamily.Reaction, "shift_reset", "Extra help and workflow resets calm the floor fast.", 22, 0.3f, 0.8f, -8f, 0.8f, 1, null, new[] { "staff_crisis", "slow_service" }, new[] { CardTag.Support, CardTag.Management });
         }
 
         private static IEnumerable<CardData> CreateTechCards()
@@ -298,6 +311,24 @@ namespace EmpireOfCards.Bootstrap.Data
             yield return MakeTemp("TC07", "Dark Pattern Onboarding", VentureType.TechApp, CardFamily.Risk, "dark_pattern", "Boosts short-term installs but hurts trust.", 15, 1.6f, 0f, 26f, -0.4f, 2, new[] { "dark_pattern", "privacy" }, null, new[] { CardTag.Illegal, CardTag.Risky });
             yield return MakeTemp("TC08", "Hotfix Sprint", VentureType.TechApp, CardFamily.Reaction, "hotfix", "Rebuild rating after a crash wave.", 35, 0.2f, 0.8f, -10f, 0.9f, 1, null, new[] { "stability_crisis", "rating_drop" }, new[] { CardTag.Support, CardTag.Tech });
             yield return MakeCrisis("TC09", "Crash Wave", VentureType.TechApp, "A release breaks the core flow and triggers review damage.", "stability_crisis", 2, -1.2f, -0.8f, 8f, new[] { CardTag.Tech, CardTag.Risky });
+            yield return MakeOperation("TC10", "Template Engine", VentureType.TechApp, "product", "Turns design work into reusable output.", 95, 1.4f, 1.0f, 1.4f, 0.8f, 4.5f, 4.5f, 3.3f, new[] { CardTag.Tech, CardTag.Scaling });
+            yield return MakeSupplier("TC11", "Export Pipeline", VentureType.TechApp, "api", "Keeps large exports and collaboration smoother.", 42, 0.2f, 1.2f, 0.4f, 0.25f, new[] { "stability_crisis", "rating_drop" }, new[] { CardTag.Tech, CardTag.Support });
+            yield return MakeCrisis("TC12", "File Corruption Wave", VentureType.TechApp, "Broken exports and corrupted projects trigger angry teams.", "design_corruption", 2, -1.0f, -1.0f, 6f, new[] { CardTag.Tech, CardTag.Risky });
+            yield return MakeMarketing("TC13", "Habit Streaks", VentureType.TechApp, "community", "Healthy habit loops grow daily retention.", 34, 1.8f, 0.35f, 10f, new[] { CardTag.Marketing, CardTag.Support });
+            yield return MakeStaff("TC14", "Coach Network", VentureType.TechApp, "supporthire", "Boosts trust and user accountability.", 48, 0.3f, 1.0f, 0.9f, 0.9f, new[] { CardTag.Support, CardTag.Management });
+            yield return MakeCrisis("TC15", "Trust Breach", VentureType.TechApp, "Workout data confusion damages coaching credibility.", "health_trust", 2, -0.8f, -0.7f, 7f, new[] { CardTag.Tech, CardTag.Risky });
+            yield return MakeMarketing("TC16", "Discovery Feed Tuning", VentureType.TechApp, "creator", "Better match quality lifts acquisition fast.", 38, 2.2f, 0.15f, 14f, new[] { CardTag.Marketing, CardTag.Viral });
+            yield return MakeTemp("TC17", "Moderation Strike Team", VentureType.TechApp, CardFamily.Reaction, "support", "Absorbs abuse spikes before reviews crater.", 28, 0.1f, 0.5f, -6f, 0.8f, 1, null, new[] { "privacy_backlash", "rating_drop" }, new[] { CardTag.Support, CardTag.Defensive });
+            yield return MakeCrisis("TC18", "Privacy Backlash", VentureType.TechApp, "Users revolt after trust boundaries are crossed.", "privacy_backlash", 2, -1.2f, -0.5f, 10f, new[] { CardTag.Tech, CardTag.Illegal });
+            yield return MakeOperation("TC19", "Prompt Lab", VentureType.TechApp, "product", "Turns experiments into sticky AI workflows.", 108, 1.6f, 1.0f, 1.5f, 0.9f, 4f, 5f, 3.6f, new[] { CardTag.Tech, CardTag.AI });
+            yield return MakeSupplier("TC20", "GPU Reservation", VentureType.TechApp, "cloud", "Secures throughput when demand spikes.", 62, 0.2f, 1.0f, 0.5f, 0.3f, new[] { "stability_crisis", "cost_spike" }, new[] { CardTag.Tech, CardTag.AI });
+            yield return MakeCrisis("TC21", "Inference Cost Spike", VentureType.TechApp, "Model demand explodes and serving cost bites hard.", "cost_spike", 2, -0.5f, -0.3f, 5f, new[] { CardTag.Tech, CardTag.AI });
+            yield return MakeMarketing("TC22", "Live Ops Calendar", VentureType.TechApp, "community", "Events and quests keep sessions alive.", 32, 2.0f, 0.2f, 12f, new[] { CardTag.Marketing, CardTag.Entertainment });
+            yield return MakeSupplier("TC23", "Rewarded Ad Stack", VentureType.TechApp, "payments", "Adds monetization with some user irritation.", 36, 0.4f, 0.2f, 0.8f, -0.05f, new[] { "retention_crash" }, new[] { CardTag.Tech, CardTag.Marketing });
+            yield return MakeCrisis("TC24", "Retention Collapse", VentureType.TechApp, "Fresh installs bounce after weak day-one retention.", "retention_crash", 2, -1.3f, -0.4f, 4f, new[] { CardTag.Tech, CardTag.Risky });
+            yield return MakeOperation("TC25", "Prototype Mill", VentureType.TechApp, "product", "Ships experiments at relentless speed.", 82, 1.9f, 0.8f, 0.2f, 0.7f, 3f, 4f, 3.2f, new[] { CardTag.Tech, CardTag.Aggressive });
+            yield return MakeMarketing("TC26", "CPI Burst", VentureType.TechApp, "ads", "Cheap installs now, fragile quality later.", 26, 2.7f, -0.05f, 18f, new[] { CardTag.Marketing, CardTag.Aggressive });
+            yield return MakeCrisis("TC27", "Clone Swarm", VentureType.TechApp, "Copycat apps flood your lane and shred cheap traffic.", "clone_swarm", 2, -1.0f, -0.4f, 7f, new[] { CardTag.Tech, CardTag.Risky });
         }
 
         private static IEnumerable<CardData> CreateClothingCards()
@@ -311,6 +342,12 @@ namespace EmpireOfCards.Bootstrap.Data
             yield return MakeTemp("CL07", "Cheap Fabric Batch", VentureType.ClothingStore, CardFamily.Risk, "cheap_fabric", "Better short-term margin, worse long-term returns.", 10, 0.9f, -0.5f, 18f, -0.3f, 2, new[] { "quality_claim", "returns" }, null, new[] { CardTag.Illegal, CardTag.Risky });
             yield return MakeTemp("CL08", "Return Desk Reset", VentureType.ClothingStore, CardFamily.Reaction, "returns_reset", "Protects trust after sizing or quality issues.", 28, 0.4f, 0.4f, -8f, 0.7f, 1, null, new[] { "returns", "review_crisis" }, new[] { CardTag.Support, CardTag.Management });
             yield return MakeCrisis("CL09", "Season Misread", VentureType.ClothingStore, "You bought the wrong season too early.", "inventory_crisis", 2, -0.8f, -0.6f, 4f, new[] { CardTag.Scaling, CardTag.Risky });
+            yield return MakeStaff("CL10", "In-House Tailor", VentureType.ClothingStore, "tailor", "Fixes fit issues before they become return waves.", 44, 0.2f, 0.9f, 0.9f, 0.9f, new[] { CardTag.Support, CardTag.Luxury });
+            yield return MakeSupplier("CL11", "Premium Fabric Mill", VentureType.ClothingStore, "wholesale", "Sharper materials lift trust and hold margins.", 48, 0.2f, 1.3f, 0.5f, 0.25f, new[] { "quality_claim", "inventory_crisis" }, new[] { CardTag.Support, CardTag.Luxury });
+            yield return MakeMarketing("CL12", "Window Story Display", VentureType.ClothingStore, "shoppingads", "A stronger storefront narrative converts trend traffic.", 28, 1.7f, 0.2f, 10f, new[] { CardTag.Marketing, CardTag.Trendy });
+            yield return MakeCrisis("CL13", "Return Surge", VentureType.ClothingStore, "Sizing issues trigger a painful spike in returns.", "returns", 2, -0.6f, -0.9f, 5f, new[] { CardTag.Support, CardTag.Risky });
+            yield return MakeCrisis("CL14", "Influencer Mismatch", VentureType.ClothingStore, "A partnership lands with the wrong audience and trust slips.", "influencer_mismatch", 2, -0.9f, -0.5f, 3f, new[] { CardTag.Influencer, CardTag.Risky });
+            yield return MakeTemp("CL15", "Alteration Voucher", VentureType.ClothingStore, CardFamily.Reaction, "alteration_voucher", "Buys time and goodwill when fit complaints spread.", 24, 0.3f, 0.6f, -8f, 0.8f, 1, null, new[] { "returns", "quality_claim" }, new[] { CardTag.Support, CardTag.Luxury });
         }
 
         private static IEnumerable<CardData> CreateGroceryCards()
@@ -324,6 +361,12 @@ namespace EmpireOfCards.Bootstrap.Data
             yield return MakeTemp("GR07", "SKT Shuffle", VentureType.GroceryStore, CardFamily.Risk, "skt_shuffle", "Cuts spoilage today, creates huge trust risk tomorrow.", 10, 0.7f, -0.4f, 28f, -0.5f, 2, new[] { "skt", "freshness" }, null, new[] { CardTag.Illegal, CardTag.Risky });
             yield return MakeTemp("GR08", "Neighborhood Apology", VentureType.GroceryStore, CardFamily.Reaction, "local_repair", "Restores trust after freshness issues.", 22, 0.5f, 0.2f, -10f, 0.8f, 1, null, new[] { "freshness", "review_crisis" }, new[] { CardTag.Support, CardTag.Marketing });
             yield return MakeCrisis("GR09", "Spoilage Wave", VentureType.GroceryStore, "Fresh inventory turns faster than expected.", "freshness", 2, -0.9f, -0.7f, 10f, new[] { CardTag.Organic, CardTag.Risky });
+            yield return MakeStaff("GR10", "Shelf Stocker", VentureType.GroceryStore, "stocker", "Keeps lanes full during rush windows.", 30, 0.4f, 1.2f, 0.2f, 0.7f, new[] { CardTag.Support, CardTag.Basic });
+            yield return MakeSupplier("GR11", "Cold Chain Dairy", VentureType.GroceryStore, "dairy", "Extends freshness and steadies trust around staples.", 38, 0.2f, 1.1f, 0.4f, 0.2f, new[] { "freshness", "skt" }, new[] { CardTag.Organic, CardTag.Support });
+            yield return MakeMarketing("GR12", "Mahalle Defteri", VentureType.GroceryStore, "loyalty", "Neighborhood credit builds loyalty at a margin cost.", 16, 1.2f, 0.25f, 5f, new[] { CardTag.Marketing, CardTag.Support });
+            yield return MakeCrisis("GR13", "Shelf Gap Panic", VentureType.GroceryStore, "Empty shelves push regulars toward the rival store.", "shelf_gap", 2, -1.0f, -0.4f, 2f, new[] { CardTag.Basic, CardTag.Risky });
+            yield return MakeCrisis("GR14", "Neighborhood Trust Drop", VentureType.GroceryStore, "Rumors around stale goods spread through the block.", "trust_drop", 2, -0.8f, -0.8f, 6f, new[] { CardTag.Support, CardTag.Risky });
+            yield return MakeTemp("GR15", "Freshness Audit", VentureType.GroceryStore, CardFamily.Reaction, "fresh_audit", "Emergency checks and relabeling calm freshness fears.", 20, 0.2f, 0.5f, -12f, 0.8f, 1, null, new[] { "freshness", "skt", "trust_drop" }, new[] { CardTag.Support, CardTag.Defensive });
         }
 
         private static IEnumerable<CardData> CreateNeutralCards()

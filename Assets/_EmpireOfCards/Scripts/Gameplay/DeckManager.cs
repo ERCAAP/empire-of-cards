@@ -60,6 +60,7 @@ namespace EmpireOfCards.Gameplay
 
             AddIdsToPile(_activeDeckProfile.starterCardIds, drawPile, 1);
             AddIdsToPile(_activeDeckProfile.neutralCardIds, drawPile, 1);
+            AddTechCategoryIds(GetTechCategoryProfile()?.starterBonusCardIds, drawPile, 1);
 
             ShuffleDeck();
             redrawsRemaining = redrawsPerTurn;
@@ -274,6 +275,7 @@ namespace EmpireOfCards.Gameplay
             var combinedIds = new List<string>();
             if (basePool != null) combinedIds.AddRange(basePool);
             if (_activeDeckProfile.neutralCardIds != null) combinedIds.AddRange(_activeDeckProfile.neutralCardIds);
+            AppendTechCategoryPoolIds(currentTurn, combinedIds);
             if (combinedIds.Count == 0) return;
 
             for (int i = 0; i < 6; i++)
@@ -347,6 +349,40 @@ namespace EmpireOfCards.Gameplay
             }
 
             return weightedCards[weightedCards.Count - 1].card;
+        }
+
+        private void AppendTechCategoryPoolIds(int currentTurn, List<string> combinedIds)
+        {
+            var category = GetTechCategoryProfile();
+            if (category == null || combinedIds == null)
+                return;
+
+            string[] pool = currentTurn < 8
+                ? category.earlyBonusCardIds
+                : currentTurn < 16
+                    ? category.midBonusCardIds
+                    : category.lateBonusCardIds;
+
+            if (pool == null) return;
+            combinedIds.AddRange(pool);
+        }
+
+        private void AddTechCategoryIds(string[] ids, List<CardData> pile, int copies)
+        {
+            var category = GetTechCategoryProfile();
+            if (category == null)
+                return;
+
+            AddIdsToPile(ids, pile, copies);
+        }
+
+        private static TechCategoryProfile GetTechCategoryProfile()
+        {
+            var gm = GameManager.Instance;
+            if (gm == null || gm.SelectedVenture == null || gm.SelectedVenture.ventureType != VentureType.TechApp)
+                return null;
+
+            return gm.ActiveTechCategoryProfile;
         }
 
         private void RestorePile(IList<string> ids, List<CardData> target)

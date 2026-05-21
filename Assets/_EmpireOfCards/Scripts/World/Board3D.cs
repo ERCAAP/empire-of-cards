@@ -328,8 +328,9 @@ namespace EmpireOfCards.World
         {
             _businessAnchorVisual = CreateCube("BusinessAnchor", new Vector3(-5.35f, 0.18f, -1.45f), new Vector3(1.05f, 0.55f, 1.05f), ControlDeskTheme.Darken(ControlDeskTheme.OperationSlot, 0.12f));
             Destroy(_businessAnchorVisual.GetComponent<Collider>());
-            CreateCube("BusinessAnchorSign", new Vector3(-5.35f, 0.72f, -0.85f), new Vector3(1.25f, 0.18f, 0.12f), ControlDeskTheme.PanelLine).GetComponent<Collider>().enabled = false;
-            _businessAnchorLabel = CreateDeskText("NEW VENTURE", new Vector3(-5.35f, 0.78f, -0.85f), Quaternion.Euler(35f, 0f, 0f), 0.95f, ControlDeskTheme.TextPrimary, TextAlignmentOptions.Center);
+            CreateCube("BusinessAnchorSign", new Vector3(-5.35f, 0.72f, -0.80f), new Vector3(1.55f, 0.22f, 0.12f), ControlDeskTheme.PanelLine).GetComponent<Collider>().enabled = false;
+            _businessAnchorLabel = CreateDeskText("NEW VENTURE", new Vector3(-5.35f, 0.79f, -0.80f), Quaternion.Euler(35f, 0f, 0f), 0.82f, ControlDeskTheme.TextPrimary, TextAlignmentOptions.Center);
+            _businessAnchorLabel.textWrappingMode = TextWrappingModes.Normal;
         }
 
         private TextMeshPro CreateDeskText(string text, Vector3 localPos, Quaternion localRot, float fontSize, Color color, TextAlignmentOptions alignment)
@@ -484,6 +485,7 @@ namespace EmpireOfCards.World
                 ? gm.ActiveBoardProfile.ventureType
                 : VentureType.FastFood;
             string displayName = gm != null ? gm.RunDisplayName : "New Venture";
+            string categoryLabel = gm != null ? gm.RunCategoryLabel : null;
 
             _businessAnchorVisual.GetComponent<MeshRenderer>().material.color = venture switch
             {
@@ -494,7 +496,17 @@ namespace EmpireOfCards.World
                 VentureType.GroceryStore => ControlDeskTheme.Darken(new Color(0.23f, 0.60f, 0.28f), 0.05f),
                 _ => ControlDeskTheme.OperationSlot
             };
-            _businessAnchorLabel.text = displayName.ToUpperInvariant();
+
+            if (!string.IsNullOrWhiteSpace(categoryLabel))
+            {
+                _businessAnchorLabel.fontSize = 0.68f;
+                _businessAnchorLabel.text = $"{displayName.ToUpperInvariant()}\n{categoryLabel.ToUpperInvariant()}";
+            }
+            else
+            {
+                _businessAnchorLabel.fontSize = 0.82f;
+                _businessAnchorLabel.text = displayName.ToUpperInvariant();
+            }
         }
 
         private static string BuildHeader(string headerKey, string fallbackHeader, BoardSubSlotDefinition[] defs)

@@ -8,6 +8,8 @@ namespace EmpireOfCards.Data
         public EmpireOfCards.Core.VentureType ventureType;
         public string ventureName;
         [TextArea] public string description;
+        public bool requiresCustomName = true;
+        public bool requiresRunCategorySelection;
         public CardData startingBusiness;        // null for KaranlikPazar
         public CardData bonusDeckCard;           // extra card added to deck
         public int bonusMoney;                   // extra starting money (0 for most, 200 for KaranlikPazar)
