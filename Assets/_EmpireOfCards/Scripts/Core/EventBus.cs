@@ -157,6 +157,22 @@ namespace EmpireOfCards.Core
         public static event Action<bool, string> OnGameOver;
         public static void GameOver(bool won, string reason) => OnGameOver?.Invoke(won, reason);
 
+        // ── Setup ───────────────────────────────────────────────────
+
+        public static event Action<string, SectorType> OnSetupComplete;
+        public static void SetupComplete(string businessName, SectorType sector)
+            => OnSetupComplete?.Invoke(businessName, sector);
+
+        // ── Staff Promotion ─────────────────────────────────────────
+
+        public static event Action<CardData, StaffTier> OnStaffPromotionAvailable;
+        public static void StaffPromotionAvailable(CardData staff, StaffTier currentTier)
+            => OnStaffPromotionAvailable?.Invoke(staff, currentTier);
+
+        public static event Action<CardData, int> OnPromotionChoiceMade;
+        public static void PromotionChoiceMade(CardData staff, int choice)
+            => OnPromotionChoiceMade?.Invoke(staff, choice);
+
         // ── Cleanup ─────────────────────────────────────────────────
 
         public static void ClearAll()
@@ -225,6 +241,13 @@ namespace EmpireOfCards.Core
 
             // Game
             OnGameOver = null;
+
+            // Setup
+            OnSetupComplete = null;
+
+            // Staff Promotion
+            OnStaffPromotionAvailable = null;
+            OnPromotionChoiceMade = null;
         }
     }
 }

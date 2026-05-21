@@ -199,6 +199,17 @@ namespace EmpireOfCards.Core
 
         #endregion
 
+        #region Score Grades
+
+        public const int GRADE_S_THRESHOLD = 3000;
+        public const int GRADE_A_THRESHOLD = 2000;
+        public const int GRADE_B_THRESHOLD = 1500;
+        public const int GRADE_C_THRESHOLD = 1000;
+        public const int GRADE_D_THRESHOLD = 500;
+        public const int FAST_FINISH_TURN = 20;
+
+        #endregion
+
         #region Draw Bias
 
         public const float BIAS_WEIGHT_NORMAL = 1f;
