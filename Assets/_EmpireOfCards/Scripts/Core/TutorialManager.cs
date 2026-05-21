@@ -782,10 +782,10 @@ namespace EmpireOfCards.Core
             return ventureType switch
             {
                 VentureType.TechApp => $"You just launched {runName}.\nCategory: {categoryLabel ?? "Tech Product"}.\nYour rival starts in the same app market, chases the same users,\nand will punish weak backend, weak reviews, and sloppy growth.\n\nYour goal: survive the 25-turn product war with the bigger market share.",
-                VentureType.FastFood => $"You just opened {runName}.\nThe rival starts in the same food lane, chasing the same local traffic.\nKitchen flow, waiters, runners, cleaning, supplier quality, and reviews\nwill decide whether you scale or spiral.\n\nYour goal: end the run with the bigger market share.",
+                VentureType.FastFood => $"You just opened {runName}.\nThe rival restaurant starts on the same block, chasing the same local traffic.\nKitchen flow, waiters, runners, cleaning, supplier quality, and reviews\nwill decide whether you scale or spiral.\n\nYour goal: end the run with the bigger market share.",
                 VentureType.Cafe => $"You just opened {runName}.\nThe rival cafe starts in the same neighborhood demand loop.\nBarista rhythm, service consistency, bean quality, floor cleanliness,\nand regular loyalty decide who owns the block.\n\nYour goal: finish the 25-turn run ahead on market share.",
                 VentureType.ClothingStore => $"You just launched {runName}.\nYour rival store competes in the same seasonal fashion cycle.\nDisplay quality, stock timing, returns, fabric trust, and trend relevance\nwill decide who captures demand.\n\nYour goal: finish stronger than the rival by turn 25.",
-                VentureType.GroceryStore => $"You just opened {runName}.\nThe rival store competes for the same repeat neighborhood traffic.\nFreshness, shelf discipline, night service, local trust, and spoilage control\nwill decide who keeps the market.\n\nYour goal: end the run with the bigger market share.",
+                VentureType.GroceryStore => $"You just opened {runName}.\nThe rival market competes for the same repeat neighborhood traffic.\nFreshness, shelf discipline, night service, local trust, and spoilage control\nwill decide who keeps the block.\n\nYour goal: end the run with the bigger market share.",
                 _ => "You picked your first venture. Your rival starts in the same sector. Finish the run with the bigger market share."
             };
         }
@@ -795,10 +795,10 @@ namespace EmpireOfCards.Core
             return ventureType switch
             {
                 VentureType.TechApp => $"On the left is your app HQ.\nThe sign carries your name and category: {categoryLabel ?? "Product"}.\nYour first core operation starts here, then expands into backend, growth,\nand support pressure as the app scales.",
-                VentureType.FastFood => "On the left is your storefront anchor.\nThis is where your physical presence begins before kitchen, service,\nand delivery pressure expand around it.",
+                VentureType.FastFood => "On the left is your restaurant anchor.\nThis is where your street presence begins before kitchen, service,\nand delivery pressure expand around it.",
                 VentureType.Cafe => "On the left is your cafe anchor.\nThis is the brand customers remember before seating, bar flow,\nand takeaway pressure expand the board.",
                 VentureType.ClothingStore => "On the left is your storefront anchor.\nThis is where your brand starts before display, stock,\nand checkout pressure expand into a full retail board.",
-                VentureType.GroceryStore => "On the left is your store anchor.\nThis is your neighborhood identity before shelves, fresh goods,\nand local delivery pressure start stretching the operation.",
+                VentureType.GroceryStore => "On the left is your market anchor.\nThis is your neighborhood identity before shelves, fresh goods,\nand local delivery pressure start stretching the operation.",
                 _ => "On the left is your venture anchor. This is where the board starts growing."
             };
         }

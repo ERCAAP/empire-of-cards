@@ -17,11 +17,11 @@ namespace EmpireOfCards.Bootstrap.Data
 
             var ventures = new VentureData[5];
 
-            // FastFood - fast food starter
+            // FastFood - restaurant starter
             ventures[0] = CreateVenture(
                 VentureType.FastFood,
-                "Fast Food",
-                "Start with a fast food joint. Quick income, high volume.",
+                "Restaurant",
+                "Start with a neighborhood restaurant. Quick traffic, review pressure.",
                 FindCard(lookup, "FFC01_Grill"),
                 FindCard(lookup, "FFC04_LineCook"),
                 0
@@ -57,11 +57,11 @@ namespace EmpireOfCards.Bootstrap.Data
                 0
             );
 
-            // GroceryStore - grocery store starter
+            // GroceryStore - market starter
             ventures[4] = CreateVenture(
                 VentureType.GroceryStore,
-                "Grocery Store",
-                "Start with a grocery store. Steady customers, reliable income.",
+                "Market",
+                "Start with a neighborhood market. Steady traffic, freshness pressure.",
                 FindCard(lookup, "GRO01_FreshProduce"),
                 FindCard(lookup, "GRO04_Stocker"),
                 0

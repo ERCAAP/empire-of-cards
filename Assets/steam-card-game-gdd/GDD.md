@@ -3,7 +3,7 @@
 
 > Versiyon: 4.0 | Tarih: 2026-05-20
 > Engine: Unity 6 (C#) | Platform: PC (Steam)
-> Tür: Venture-first business card strategy
+> Tür: Local business turf war card strategy
 
 ---
 
@@ -11,7 +11,7 @@
 
 ## 1.1 Oyuncu Vaadi
 
-Oyuncu oyunun başında bir girişim seçer ve aynı sektörde başlayan rakibine karşı aynı semtte, aynı müşteri havuzu içinde büyüme savaşı verir. Kart oynar ama his olarak kart oyunu değil, işletme yönetimi yaşar.
+Oyuncu oyunun başında yerel bir işletme seçer ve aynı sektörde başlayan rakibine karşı aynı semtte, aynı müşteri havuzu içinde büyüme savaşı verir. Kart oynar ama his olarak kart oyunu değil, işletme yönetimi yaşar.
 
 Bu oyunun fantezisi:
 
@@ -19,7 +19,19 @@ Bu oyunun fantezisi:
 
 ## 1.2 Oyunun Cümlesi
 
-Küçük bir işletmeyle başla, sektörüne özel kart havuzuyla büyü, müşteri memnuniyeti ile itibarını koru, rakibinle aynı pazarı paylaş ve market share savaşını kazan.
+Küçük bir yerel işletmeyle başla, sektörüne özel kart havuzuyla büyü, müşteri memnuniyeti ile itibarını koru, rakibinle aynı mahalle pazarını paylaş ve market share savaşını kazan.
+
+## 1.2.1 İlk Launch Surface Notu
+
+İlk public yüzey ve pazarlama mesajı `local business turf war` etrafında kilitlenir.
+
+İlk görünür venture üçlüsü:
+
+- Restaurant
+- Cafe
+- Market
+
+`Tech App` ve diğer daha uzak fantasy'ler teknik omurgada kalabilir, ancak ilk launch kimliğini belirlemez.
 
 ## 1.3 Tasarım İlkeleri
 
@@ -43,13 +55,15 @@ Küçük bir işletmeyle başla, sektörüne özel kart havuzuyla büyü, müşt
 
 ## 2.1 Açılış Kuralı
 
-Run başında oyuncu 1 venture seçer:
+Run başında oyuncu 1 venture seçer.
 
-- Fast Food
+İlk launch surface'te oyuncuya görünen set:
+
+- Restaurant
 - Cafe
-- Tech App
-- Giyim Magazasi
-- Market / Bakkal
+- Market
+
+Geniş venture omurgası teknik olarak korunabilir, ancak launch mesajı ve ilk seçim ekranı fiziksel yerel işletmelere odaklanır.
 
 Rakip otomatik olarak aynı venture ile başlar.
 
@@ -77,9 +91,9 @@ Her venture'ın detaylı kuralları ayrı dosyadadır:
 
 - `Assets/steam-card-game-gdd/businesses/fast_food.md`
 - `Assets/steam-card-game-gdd/businesses/cafe.md`
-- `Assets/steam-card-game-gdd/businesses/tech_app.md`
-- `Assets/steam-card-game-gdd/businesses/giyim_magazasi.md`
 - `Assets/steam-card-game-gdd/businesses/market_bakkal.md`
+
+`tech_app.md` ve `giyim_magazasi.md` gelecek genişleme / post-launch venture yönleri olarak değerlendirilir.
 
 ---
 

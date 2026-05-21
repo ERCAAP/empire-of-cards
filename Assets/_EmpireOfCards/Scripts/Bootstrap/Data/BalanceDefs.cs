@@ -115,10 +115,10 @@ namespace EmpireOfCards.Bootstrap.Data
 
             rival.possibleBusinessNames = new[]
             {
-                "Tech Store",
-                "Supermarket",
+                "Corner Grill",
                 "Cafe Chain",
-                "Fitness Center"
+                "Neighborhood Market",
+                "Late Night Counter"
             };
 
             // Venture Mirror (GDD Section 1.7) — indexed by VentureType ordinal
@@ -127,7 +127,7 @@ namespace EmpireOfCards.Bootstrap.Data
             rival.ventureMatchedNames = new[]
             {
                 "Rival Diner", "Rival Tech Startup", "Rival Ad Agency", "MegaCorp HQ",
-                "Rival Fast Food", "Rival Cafe", "Rival Tech App", "Rival Clothing Store", "Rival Grocery Store"
+                "Rival Restaurant", "Rival Cafe", "Rival Tech App", "Rival Clothing Store", "Rival Market"
             };
             rival.ventureMatchedIncome = new[]
             {

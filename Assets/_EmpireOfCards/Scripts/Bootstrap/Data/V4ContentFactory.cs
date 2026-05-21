@@ -26,7 +26,7 @@ namespace EmpireOfCards.Bootstrap.Data
             return new[]
             {
                 CreateBoardProfile(
-                    VentureType.FastFood, "Fast Food",
+                    VentureType.FastFood, "Restaurant",
                     new[] { ("kitchen", "Kitchen"), ("service", "Service"), ("seating", "Seating"), ("delivery", "Delivery") },
                     new[] { ("chef", "Chef"), ("cashier", "Cashier"), ("courier", "Courier"), ("cleaning", "Cleaning"), ("manager", "Manager") },
                     new[] { ("flyers", "Flyers"), ("google", "Google"), ("social", "Social"), ("platform", "Delivery App") },
@@ -50,7 +50,7 @@ namespace EmpireOfCards.Bootstrap.Data
                     new[] { ("instagram", "Instagram"), ("influencer", "Influencer"), ("discount", "Indirim"), ("shoppingads", "Shopping Ads") },
                     new[] { ("wholesale", "Wholesale"), ("atelier", "Atelier"), ("shipping", "Shipping"), ("studio", "Studio") }),
                 CreateBoardProfile(
-                    VentureType.GroceryStore, "Grocery Store",
+                    VentureType.GroceryStore, "Market",
                     new[] { ("shelves", "Shelves"), ("fresh", "Fresh"), ("checkout", "Checkout"), ("delivery", "WhatsApp") },
                     new[] { ("cashier", "Cashier"), ("freshkeeper", "Fresh Keeper"), ("stocker", "Stocker"), ("courier", "Courier"), ("lead", "Shift Lead") },
                     new[] { ("whatsapp", "WhatsApp"), ("posters", "Posters"), ("loyalty", "Loyalty"), ("latenight", "Late Night") },
@@ -131,11 +131,11 @@ namespace EmpireOfCards.Bootstrap.Data
             {
                 CreateVenture(
                     VentureType.FastFood,
-                    "Fast Food",
-                    "High traffic, high pressure. Win by balancing growth and kitchen capacity.",
-                    "Fast local scaling with review risk.",
+                    "Restaurant",
+                    "Street-level restaurant rivalry. Win by balancing traffic, kitchen flow, and reviews.",
+                    "Fast local scaling with neighborhood review risk.",
                     "Open the counter, add seating, lock kitchen flow, then push local buzz without breaking the line.",
-                    "Turn 1: expand service flow.\nTurn 2: add kitchen or hygiene support.\nTurn 3: push flyers or Google once the rush is absorbable.",
+                    "Turn 1: stabilize service flow.\nTurn 2: add kitchen or hygiene support.\nTurn 3: push flyers or Google once the rush is absorbable.",
                     new[] { "FF02", "FF03", "FF04", "FF06", "FF05", "FF10", "FF11", "FF14" },
                     playbooks[0],
                     progressionArcs[0],
@@ -144,8 +144,8 @@ namespace EmpireOfCards.Bootstrap.Data
                 CreateVenture(
                     VentureType.Cafe,
                     "Cafe",
-                    "Loyalty and quality driven. Build social proof and neighborhood habits.",
-                    "Premium quality and sticky regulars.",
+                    "Neighborhood regulars, quality, and social proof decide the block.",
+                    "Premium quality and sticky neighborhood demand.",
                     "Open the room, seat guests, hire the barista, then lock beans and reviews before chasing social demand.",
                     "Turn 1: add seating and bar rhythm.\nTurn 2: stabilize beans, milk, and floor flow.\nTurn 3: push Maps, reels, and regular loyalty once service feels real.",
                     new[] { "CF02", "CF03", "CF04", "CF06", "CF05", "CF10", "CF11", "CF12" },
@@ -179,9 +179,9 @@ namespace EmpireOfCards.Bootstrap.Data
                     byId["CL01"], boardProfiles[3], deckProfiles[3], economyProfiles[3]),
                 CreateVenture(
                     VentureType.GroceryStore,
-                    "Grocery Store",
-                    "Low margin, repeat traffic, spoilage and neighborhood loyalty.",
-                    "Stable demand with tight operational margins.",
+                    "Market",
+                    "Repeat traffic, freshness pressure, and neighborhood loyalty decide the block.",
+                    "Stable demand with tight local operating margins.",
                     "Open the shelf, smooth checkout, secure morning supply, then lean into convenience and repeat orders.",
                     "Turn 1: remove checkout friction.\nTurn 2: protect freshness and spoilage.\nTurn 3: add WhatsApp or late-night convenience once basics are stable.",
                     new[] { "GR02", "GR03", "GR04", "GR05", "GR06", "GR10", "GR11", "GR15" },

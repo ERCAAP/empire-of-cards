@@ -12,6 +12,13 @@ namespace EmpireOfCards.Bootstrap
     /// </summary>
     public static class CardDataFactory
     {
+        private static readonly VentureType[] LaunchSurfaceVentures =
+        {
+            VentureType.FastFood,
+            VentureType.Cafe,
+            VentureType.GroceryStore
+        };
+
         public static GameDataBundle CreateAllData()
         {
             CardHelper.BeginSession();
@@ -54,6 +61,29 @@ namespace EmpireOfCards.Bootstrap
                       $"{bundle.ventures.Length} ventures.");
 
             return bundle;
+        }
+
+        public static VentureData[] CreateLaunchSurfaceVentures(VentureData[] allVentures)
+        {
+            if (allVentures == null || allVentures.Length == 0)
+                return System.Array.Empty<VentureData>();
+
+            var filtered = new List<VentureData>(LaunchSurfaceVentures.Length);
+            for (int i = 0; i < LaunchSurfaceVentures.Length; i++)
+            {
+                VentureType type = LaunchSurfaceVentures[i];
+                for (int j = 0; j < allVentures.Length; j++)
+                {
+                    VentureData venture = allVentures[j];
+                    if (venture != null && venture.ventureType == type)
+                    {
+                        filtered.Add(venture);
+                        break;
+                    }
+                }
+            }
+
+            return filtered.ToArray();
         }
     }
 
