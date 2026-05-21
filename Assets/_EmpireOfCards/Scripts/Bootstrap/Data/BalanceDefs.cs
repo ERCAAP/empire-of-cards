@@ -37,8 +37,8 @@ namespace EmpireOfCards.Bootstrap.Data
             gb.minTaxRate = Constants.MIN_TAX_RATE;
             gb.sellRate = Constants.SELL_RATE;
 
-            // FBI
-            gb.fbiRaidPenalty = Constants.FBI_RAID_PENALTY;
+            // Legal Risk (replaces old FBI system)
+            gb.fbiRaidPenalty = 300;
             gb.fbiStartingRisk = 0f;
 
             // Customer Market

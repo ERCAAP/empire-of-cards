@@ -41,6 +41,9 @@ namespace EmpireOfCards.Bootstrap
             // --- UIManager on canvas ---
             hud.uiManager = canvasGo.AddComponent<UIManager>();
 
+            // --- IncomeCascadeAnimator on canvas (self-contained, listens to EventBus) ---
+            canvasGo.AddComponent<IncomeCascadeAnimator>();
+
             var topBar = CreateUIPanel("TopBar", canvasGo.transform);
             SetAnchors(topBar, new Vector2(0, 1), new Vector2(1, 1), new Vector2(0.5f, 1));
             topBar.sizeDelta = new Vector2(0, 180);

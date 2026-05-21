@@ -256,6 +256,22 @@ namespace EmpireOfCards.Core
         Emergency           // Quick cash, highest interest
     }
 
+    // Drop zone types for 3D board slots
+    public enum DropZoneType
+    {
+        BusinessSlot,       // Legacy — maps to Operation
+        EmployeeSlot,       // Legacy — maps to Staff
+        UpgradeSlot,        // Legacy — maps to Supplier
+        ActionZone,         // Single-use action card zone
+        SellZone,           // Sell/discard zone
+        BurnZone,           // Burn/destroy zone
+        OperationSlot,      // v4 Operation slot
+        StaffSlot,          // v4 Staff slot
+        MarketingSlot,      // v4 Marketing slot
+        SupplierSlot,       // v4 Supplier slot
+        TempEffectSlot      // v4 Temp Effect slot
+    }
+
     // Location tiers affecting passive customers and rent (GDD Section 10.1)
     public enum LocationType
     {

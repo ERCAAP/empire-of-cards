@@ -743,11 +743,11 @@ namespace EmpireOfCards.Bootstrap.Data
 
         private static IEnumerable<CardData> CreateNeutralCards()
         {
-            yield return MakeMarketing("NT01", "Local Buzz", VentureType.Diner, "neutral_marketing", "A flexible marketing bump for any venture.", 25, 1.2f, 0.2f, 8f, new[] { CardTag.Marketing, CardTag.Basic }, true);
-            yield return MakeSupplier("NT02", "Cash Buffer", VentureType.Diner, "neutral_supplier", "Small financial breathing room every turn.", 30, 0f, 0.2f, 0.2f, 0f, new[] { "stability" }, new[] { CardTag.Finance, CardTag.Support }, true, 18f, 4f);
-            yield return MakeTemp("NT03", "Compliance Sweep", VentureType.Diner, CardFamily.Reaction, "compliance", "Reduces legal risk when things get messy.", 18, 0f, 0f, -18f, 0.2f, 1, null, new[] { "privacy", "review_crisis", "quality_claim", "skt" }, new[] { CardTag.Support, CardTag.Defensive }, true);
-            yield return MakeTemp("NT04", "Emergency Hire", VentureType.Diner, CardFamily.Reaction, "emergency_hire", "Stabilizes capacity and staff morale for one turn.", 20, 0.4f, 1.0f, -4f, 0.1f, 1, null, new[] { "staff_crisis", "slow_service", "stability_crisis" }, new[] { CardTag.Hiring, CardTag.Support }, true);
-            yield return MakeMarketing("NT05", "Seasonal Push", VentureType.Diner, "neutral_late", "Late-run momentum card for any venture.", 40, 1.8f, 0.35f, 12f, new[] { CardTag.Marketing, CardTag.Scaling }, true);
+            yield return MakeMarketing("NT01", "Local Buzz", VentureType.FastFood, "neutral_marketing", "A flexible marketing bump for any venture.", 25, 1.2f, 0.2f, 8f, new[] { CardTag.Marketing, CardTag.Basic }, true);
+            yield return MakeSupplier("NT02", "Cash Buffer", VentureType.FastFood, "neutral_supplier", "Small financial breathing room every turn.", 30, 0f, 0.2f, 0.2f, 0f, new[] { "stability" }, new[] { CardTag.Finance, CardTag.Support }, true, 18f, 4f);
+            yield return MakeTemp("NT03", "Compliance Sweep", VentureType.FastFood, CardFamily.Reaction, "compliance", "Reduces legal risk when things get messy.", 18, 0f, 0f, -18f, 0.2f, 1, null, new[] { "privacy", "review_crisis", "quality_claim", "skt" }, new[] { CardTag.Support, CardTag.Defensive }, true);
+            yield return MakeTemp("NT04", "Emergency Hire", VentureType.FastFood, CardFamily.Reaction, "emergency_hire", "Stabilizes capacity and staff morale for one turn.", 20, 0.4f, 1.0f, -4f, 0.1f, 1, null, new[] { "staff_crisis", "slow_service", "stability_crisis" }, new[] { CardTag.Hiring, CardTag.Support }, true);
+            yield return MakeMarketing("NT05", "Seasonal Push", VentureType.FastFood, "neutral_late", "Late-run momentum card for any venture.", 40, 1.8f, 0.35f, 12f, new[] { CardTag.Marketing, CardTag.Scaling }, true);
         }
 
         private static CardData MakeOperation(string id, string name, VentureType venture, string subSlot, string desc, int cost, float demand, float capacity, float quality, float cash, float price, float speed, float buildingHeight, CardTag[] tags)

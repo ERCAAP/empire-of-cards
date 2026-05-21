@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using EmpireOfCards.Core;
 using EmpireOfCards.Data;
+using EmpireOfCards.Gameplay.Rival;
 
 namespace EmpireOfCards.Gameplay
 {
@@ -41,6 +42,7 @@ namespace EmpireOfCards.Gameplay
         private readonly List<RivalQueuedAction> _queuedActions = new List<RivalQueuedAction>();
         private IRivalSectorController _sectorController;
         private RivalRuntimeState _runtimeState = new RivalRuntimeState();
+        private RivalSectorContext? _cachedContext;
 
         public int RivalMoney => rivalMoney;
         public int RivalCustomers => rivalCustomers;
@@ -92,6 +94,7 @@ namespace EmpireOfCards.Gameplay
             lastLaneLabel = string.Empty;
             lastPressureStyle = "balanced";
             _queuedActions.Clear();
+            _cachedContext = null;
 
             rivalBusinesses.Clear();
             rivalBusinesses.Add(new RivalBusiness
@@ -160,6 +163,8 @@ namespace EmpireOfCards.Gameplay
             if (!string.IsNullOrWhiteSpace(lastLaneLabel))
                 _runtimeState.activePlan = lastLaneLabel;
 
+            _cachedContext = null;
+
             gm.EconomyManager?.RegisterRivalPressure(rivalPressure, lastPressureStyle);
             EventBus.RivalActed(_queuedActions.Count > 0 ? DescribeAction(_queuedActions[_queuedActions.Count - 1]) : "Rival adapts.");
             EventBus.RivalMoodChanged(_queuedActions.Count > 0 ? _queuedActions[_queuedActions.Count - 1].moodIcon : "!");
@@ -205,7 +210,8 @@ namespace EmpireOfCards.Gameplay
 
         public string GetTaunt(int playerBlocks, int rivalBlocks)
         {
-            return GetMoveDescription(DecideMove(playerBlocks * 10f, GameManager.Instance != null ? GameManager.Instance.CurrentTurn : 1));
+            var move = DecideMove(playerBlocks * 10f, GameManager.Instance != null ? GameManager.Instance.CurrentTurn : 1);
+            return GetMoveDescription(move);
         }
 
         public void OnPlayerComboTriggered()
@@ -224,6 +230,7 @@ namespace EmpireOfCards.Gameplay
             rivalMomentumCustomers = 0f;
             _queuedActions.Clear();
             _runtimeState = new RivalRuntimeState();
+            _cachedContext = null;
         }
 
         public RivalRuntimeState CaptureState()
@@ -249,6 +256,8 @@ namespace EmpireOfCards.Gameplay
             _queuedActions.Clear();
             rivalPressure = Mathf.Max(0f, rivalPressure * 0.65f);
 
+            _cachedContext = BuildSectorContext(playerShare, currentTurn);
+
             RivalMove primaryMove = DecideMove(playerShare, currentTurn);
             _queuedActions.Add(BuildAction(primaryMove));
             _runtimeState.campaignsLaunched++;
@@ -268,7 +277,7 @@ namespace EmpireOfCards.Gameplay
         private RivalMove DecideMove(float playerShare, int currentTurn)
         {
             if (_sectorController != null)
-                return _sectorController.DecidePrimaryMove(BuildSectorContext(playerShare, currentTurn));
+                return _sectorController.DecidePrimaryMove(GetOrBuildContext(playerShare, currentTurn));
 
             if (playerShare >= 58f)
                 return RivalMove.MarketingBlitz;
@@ -288,11 +297,13 @@ namespace EmpireOfCards.Gameplay
         private RivalMove ChooseSecondaryMove(RivalMove primaryMove, int currentTurn)
         {
             if (_sectorController != null)
-                return _sectorController.DecideSecondaryMove(primaryMove, BuildSectorContext(
-                    GameManager.Instance != null && GameManager.Instance.EconomyManager != null && GameManager.Instance.EconomyManager.Snapshot != null
-                        ? GameManager.Instance.EconomyManager.Snapshot.marketShare
-                        : 0f,
-                    currentTurn));
+            {
+                var gm = GameManager.Instance;
+                float share = gm != null && gm.EconomyManager != null && gm.EconomyManager.Snapshot != null
+                    ? gm.EconomyManager.Snapshot.marketShare
+                    : 0f;
+                return _sectorController.DecideSecondaryMove(primaryMove, GetOrBuildContext(share, currentTurn));
+            }
 
             if (primaryMove == RivalMove.MarketingBlitz)
                 return activeVenture == VentureType.TechApp ? RivalMove.QualityImprove : RivalMove.PriceWar;
@@ -321,6 +332,7 @@ namespace EmpireOfCards.Gameplay
 
             return new RivalQueuedAction
             {
+                moveType = move,
                 cardId = $"{activeVenture}_{move}",
                 displayName = GetMoveCardName(move),
                 laneLabel = lane,
@@ -346,26 +358,26 @@ namespace EmpireOfCards.Gameplay
             rivalRating = Mathf.Clamp(rivalRating + action.ratingDelta, 1f, 5f);
             rivalQuality = Mathf.Clamp(rivalQuality + action.qualityDelta, 0f, 10f);
 
-            if (action.displayName.Contains("Poach") && playerShare > 45f)
+            if (action.moveType == RivalMove.StaffPoach && playerShare > 45f)
                 rivalMomentumCustomers += 3f;
             else
                 rivalMomentumCustomers += action.demandSteal;
 
-            switch (action.displayName)
+            switch (action.moveType)
             {
-                case "Price Drop Campaign":
+                case RivalMove.PriceWar:
                     rivalMomentumCustomers += 2f;
                     break;
-                case "Funding Round":
+                case RivalMove.SeekInvestment:
                     rivalMoney += 120;
                     break;
-                case "Expansion Lease":
+                case RivalMove.OpenBranch:
                     rivalIncome += 15;
                     break;
-                case "Staff Poach":
+                case RivalMove.StaffPoach:
                     totalRivalEmployees++;
                     break;
-                case "Ops Disruption":
+                case RivalMove.Sabotage:
                     var gm = GameManager.Instance;
                     if (gm != null && gm.BoardManager != null)
                         gm.BoardManager.SetProductionDisabledNextTurn(true);
@@ -389,92 +401,10 @@ namespace EmpireOfCards.Gameplay
 
         private string GetMoveDescription(RivalMove move)
         {
-            if (_sectorController != null)
-                return _sectorController.GetMoveDescription(move, BuildSectorContext(
-                    GameManager.Instance != null && GameManager.Instance.EconomyManager != null && GameManager.Instance.EconomyManager.Snapshot != null
-                        ? GameManager.Instance.EconomyManager.Snapshot.marketShare
-                        : 0f,
-                    GameManager.Instance != null ? GameManager.Instance.CurrentTurn : 1));
+            if (_sectorController != null && _cachedContext.HasValue)
+                return _sectorController.GetMoveDescription(move, _cachedContext.Value);
 
-            var techCategory = GameManager.Instance != null ? GameManager.Instance.ActiveTechCategoryProfile : null;
-            if (activeVenture == VentureType.TechApp && techCategory != null)
-            {
-                return move switch
-                {
-                    RivalMove.PriceWar => $"{techCategory.displayName} rival is undercutting acquisition efficiency and install conversion.",
-                    RivalMove.MarketingBlitz => $"{techCategory.displayName} rival is buying visibility, creators, and review momentum.",
-                    RivalMove.QualityImprove => $"{techCategory.displayName} rival is tightening product quality and trust.",
-                    RivalMove.StaffPoach => $"{techCategory.displayName} rival is competing for scarce product talent.",
-                    RivalMove.SeekInvestment => $"{techCategory.displayName} rival secured capital to keep burning aggressively.",
-                    RivalMove.OpenBranch => $"{techCategory.displayName} rival is widening footprint across a new channel.",
-                    RivalMove.Sabotage => $"{techCategory.displayName} rival is pressuring your weakest operational layer.",
-                    _ => "Rival app adapts."
-                };
-            }
-
-            if (activeVenture == VentureType.FastFood)
-            {
-                return move switch
-                {
-                    RivalMove.PriceWar => "Rival is undercutting combo prices and stealing rush-hour baskets.",
-                    RivalMove.MarketingBlitz => "Rival is pushing delivery apps, flyers, and Google review momentum.",
-                    RivalMove.QualityImprove => "Rival is tightening kitchen quality and speed.",
-                    RivalMove.StaffPoach => "Rival is grabbing the cleaner crew and counter staff first.",
-                    RivalMove.OpenBranch => "Rival is opening another traffic-capturing counter nearby.",
-                    _ => "Rival kitchen is adapting."
-                };
-            }
-
-            if (activeVenture == VentureType.Cafe)
-            {
-                return move switch
-                {
-                    RivalMove.PriceWar => "Rival is discounting drinks to break your morning routine hold.",
-                    RivalMove.MarketingBlitz => "Rival is leaning on Maps, Reels, and neighborhood buzz.",
-                    RivalMove.QualityImprove => "Rival is improving bean quality and drink consistency.",
-                    RivalMove.StaffPoach => "Rival is fishing for baristas and floor talent.",
-                    RivalMove.OpenBranch => "Rival is widening its footprint in the local coffee circuit.",
-                    _ => "Rival cafe is adapting."
-                };
-            }
-
-            if (activeVenture == VentureType.ClothingStore)
-            {
-                return move switch
-                {
-                    RivalMove.PriceWar => "Rival is discounting hard to clear stock and drag your margin down.",
-                    RivalMove.MarketingBlitz => "Rival is pushing storefront visuals and social fashion traffic.",
-                    RivalMove.QualityImprove => "Rival is investing in fit, tailoring, and fabric trust.",
-                    RivalMove.StaffPoach => "Rival is targeting stylists and tailoring talent.",
-                    RivalMove.OpenBranch => "Rival is expanding its fashion footprint into your lane.",
-                    _ => "Rival boutique is adapting."
-                };
-            }
-
-            if (activeVenture == VentureType.GroceryStore)
-            {
-                return move switch
-                {
-                    RivalMove.PriceWar => "Rival is cutting staple prices to win neighborhood baskets.",
-                    RivalMove.MarketingBlitz => "Rival is pushing convenience, WhatsApp orders, and late-night pull.",
-                    RivalMove.QualityImprove => "Rival is stabilizing freshness and checkout trust.",
-                    RivalMove.StaffPoach => "Rival is pulling reliable cashiers and stockers off the block.",
-                    RivalMove.OpenBranch => "Rival is stretching into another local convenience pocket.",
-                    _ => "Rival market is adapting."
-                };
-            }
-
-            return move switch
-            {
-                RivalMove.PriceWar => "Rival cuts price to drag demand away.",
-                RivalMove.MarketingBlitz => "Rival buys visibility and review momentum.",
-                RivalMove.QualityImprove => "Rival invests in quality and trust.",
-                RivalMove.StaffPoach => "Rival pressures your staffing edge.",
-                RivalMove.SeekInvestment => "Rival secures new capital to stay aggressive.",
-                RivalMove.OpenBranch => "Rival expands footprint into your district.",
-                RivalMove.Sabotage => "Rival pushes operational disruption.",
-                _ => "Rival adapts."
-            };
+            return RivalMoveTextProvider.GetDescription(move, activeVenture);
         }
 
         private string DescribeAction(RivalQueuedAction action)
@@ -484,100 +414,10 @@ namespace EmpireOfCards.Gameplay
 
         private string GetMoveCardName(RivalMove move)
         {
-            if (_sectorController != null)
-                return _sectorController.GetMoveCardName(move, BuildSectorContext(
-                    GameManager.Instance != null && GameManager.Instance.EconomyManager != null && GameManager.Instance.EconomyManager.Snapshot != null
-                        ? GameManager.Instance.EconomyManager.Snapshot.marketShare
-                        : 0f,
-                    GameManager.Instance != null ? GameManager.Instance.CurrentTurn : 1));
+            if (_sectorController != null && _cachedContext.HasValue)
+                return _sectorController.GetMoveCardName(move, _cachedContext.Value);
 
-            var techCategory = GameManager.Instance != null ? GameManager.Instance.ActiveTechCategoryProfile : null;
-            if (activeVenture == VentureType.TechApp && techCategory != null)
-            {
-                return move switch
-                {
-                    RivalMove.PriceWar => "Acquisition Undercut",
-                    RivalMove.MarketingBlitz => "Channel Surge",
-                    RivalMove.QualityImprove => "Product Reliability Pass",
-                    RivalMove.StaffPoach => "Talent Poach",
-                    RivalMove.SeekInvestment => "Growth Round",
-                    RivalMove.OpenBranch => "Platform Expansion",
-                    RivalMove.Sabotage => "Trust Disruption",
-                    _ => "Pressure Shift"
-                };
-            }
-
-            if (activeVenture == VentureType.FastFood)
-            {
-                return move switch
-                {
-                    RivalMove.PriceWar => "Combo Price Slash",
-                    RivalMove.MarketingBlitz => "Delivery Blitz",
-                    RivalMove.QualityImprove => "Kitchen Tune-Up",
-                    RivalMove.StaffPoach => "Counter Staff Poach",
-                    RivalMove.SeekInvestment => "Expansion Cash",
-                    RivalMove.OpenBranch => "Street Corner Lease",
-                    RivalMove.Sabotage => "Queue Disruption",
-                    _ => "Pressure Shift"
-                };
-            }
-
-            if (activeVenture == VentureType.Cafe)
-            {
-                return move switch
-                {
-                    RivalMove.PriceWar => "Morning Discount Push",
-                    RivalMove.MarketingBlitz => "Neighborhood Buzz",
-                    RivalMove.QualityImprove => "Bean Quality Pass",
-                    RivalMove.StaffPoach => "Barista Poach",
-                    RivalMove.SeekInvestment => "Roastery Credit",
-                    RivalMove.OpenBranch => "Second Corner Lease",
-                    RivalMove.Sabotage => "Rush-Hour Disruption",
-                    _ => "Pressure Shift"
-                };
-            }
-
-            if (activeVenture == VentureType.ClothingStore)
-            {
-                return move switch
-                {
-                    RivalMove.PriceWar => "Clearance Drop",
-                    RivalMove.MarketingBlitz => "Lookbook Surge",
-                    RivalMove.QualityImprove => "Fit & Fabric Pass",
-                    RivalMove.StaffPoach => "Stylist Poach",
-                    RivalMove.SeekInvestment => "Seasonal Credit",
-                    RivalMove.OpenBranch => "Mall Pop-Up",
-                    RivalMove.Sabotage => "Return Pressure Spike",
-                    _ => "Pressure Shift"
-                };
-            }
-
-            if (activeVenture == VentureType.GroceryStore)
-            {
-                return move switch
-                {
-                    RivalMove.PriceWar => "Staple Basket Cut",
-                    RivalMove.MarketingBlitz => "Convenience Push",
-                    RivalMove.QualityImprove => "Freshness Pass",
-                    RivalMove.StaffPoach => "Cashier Poach",
-                    RivalMove.SeekInvestment => "Distributor Credit",
-                    RivalMove.OpenBranch => "Neighborhood Annex",
-                    RivalMove.Sabotage => "Shelf Panic",
-                    _ => "Pressure Shift"
-                };
-            }
-
-            return move switch
-            {
-                RivalMove.PriceWar => "Price Drop Campaign",
-                RivalMove.MarketingBlitz => "Visibility Blitz",
-                RivalMove.QualityImprove => "Quality Sprint",
-                RivalMove.StaffPoach => "Staff Poach",
-                RivalMove.SeekInvestment => "Funding Round",
-                RivalMove.OpenBranch => "Expansion Lease",
-                RivalMove.Sabotage => "Ops Disruption",
-                _ => "Pressure Shift"
-            };
+            return RivalMoveTextProvider.GetCardName(move, activeVenture);
         }
 
         private string GetMoveMood(RivalMove move)
@@ -600,12 +440,8 @@ namespace EmpireOfCards.Gameplay
 
         private float GetPressureDelta(RivalMove move)
         {
-            if (_sectorController != null)
-                return _sectorController.GetPressureDelta(move, BuildSectorContext(
-                    GameManager.Instance != null && GameManager.Instance.EconomyManager != null && GameManager.Instance.EconomyManager.Snapshot != null
-                        ? GameManager.Instance.EconomyManager.Snapshot.marketShare
-                        : 0f,
-                    GameManager.Instance != null ? GameManager.Instance.CurrentTurn : 1));
+            if (_sectorController != null && _cachedContext.HasValue)
+                return _sectorController.GetPressureDelta(move, _cachedContext.Value);
 
             return move switch
             {
@@ -618,6 +454,13 @@ namespace EmpireOfCards.Gameplay
                 RivalMove.Sabotage => 2.1f,
                 _ => 1f
             };
+        }
+
+        private RivalSectorContext GetOrBuildContext(float playerShare, int currentTurn)
+        {
+            if (_cachedContext.HasValue)
+                return _cachedContext.Value;
+            return BuildSectorContext(playerShare, currentTurn);
         }
 
         private RivalSectorContext BuildSectorContext(float playerShare, int currentTurn)
