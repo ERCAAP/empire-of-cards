@@ -22,7 +22,6 @@ namespace EmpireOfCards.Bootstrap
         private TutorialManager _tutorialManager;
         private RunLaunchCoordinator _runLaunchCoordinator;
         private VentureSelectionUI _ventureSelectionUI;
-        private VentureData[] _allVentures;
         private VentureData[] _ventures;
         private TechCategoryProfile[] _techCategories;
         private GameObject _runNamePanel;
@@ -55,8 +54,7 @@ namespace EmpireOfCards.Bootstrap
 
             _runLaunchCoordinator = new RunLaunchCoordinator(managers.gameManager, managers.saveManager, scene.Board3D, scene.MainCamera, scene.Hand3D);
             _ventureSelectionUI = hud.ventureSelectionUI;
-            _allVentures = data.ventures;
-            _ventures = CardDataFactory.CreateLaunchSurfaceVentures(data.ventures);
+            _ventures = data.ventures;
             _techCategories = TechCategoryCatalog.CreateDefaults();
 
             if (_ventureSelectionUI != null && hud.ventureCards != null)
@@ -112,7 +110,7 @@ namespace EmpireOfCards.Bootstrap
 
         private void TryRestoreSavedRun()
         {
-            if (_runLaunchCoordinator == null || !_runLaunchCoordinator.TryRestoreSavedRun(RunLaunchConfig.SelectedRunSlotId, _allVentures))
+            if (_runLaunchCoordinator == null || !_runLaunchCoordinator.TryRestoreSavedRun(RunLaunchConfig.SelectedRunSlotId, _ventures))
             {
                 RunLaunchConfig.PrepareNewRun();
                 StartRun(null);

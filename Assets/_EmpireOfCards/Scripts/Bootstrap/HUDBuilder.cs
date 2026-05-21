@@ -694,36 +694,42 @@ namespace EmpireOfCards.Bootstrap
             venturePanel.GetComponent<Image>().color = new Color(0.05f, 0.05f, 0.1f, 0.95f);
 
             // Title
-            var ventureTitle = CreateTextElement("VentureTitle", venturePanel, Loc("venture.title", "CHOOSE YOUR LOCAL BUSINESS"), 42);
+            var ventureTitle = CreateTextElement("VentureTitle", venturePanel, Loc("venture.title", "CHOOSE YOUR FIRST VENTURE"), 42);
             ventureTitle.anchoredPosition = new Vector2(0, 350);
             ventureTitle.sizeDelta = new Vector2(800, 60);
 
-            // Launch surface focuses on the local-business trio.
-            var ventureCards = new RectTransform[3];
-            var ventureCardImages = new Image[3];
-            var ventureNameTexts = new TMP_Text[3];
-            var ventureDescTexts = new TMP_Text[3];
+            // 5 Venture cards in a row (GDD v3.0 Section 1.5)
+            var ventureCards = new RectTransform[5];
+            var ventureCardImages = new Image[5];
+            var ventureNameTexts = new TMP_Text[5];
+            var ventureDescTexts = new TMP_Text[5];
             string[] ventureNames = {
-                "RESTAURANT",
+                "FAST FOOD",
                 "CAFE",
-                "MARKET"
+                "TECH APP",
+                "CLOTHING STORE",
+                "GROCERY STORE"
             };
             string[] ventureDescs = {
-                "Fast service, local traffic, and review pressure.\nOwn the street before the rival does.",
-                "Regulars, atmosphere, and neighborhood pull.\nWin the block through consistency.",
-                "Repeat trips, tight margins, and freshness pressure.\nKeep the block coming back."
+                "High volume, low margin.\n+1 Cook in starter deck.\nFood combo potential.",
+                "Loyalty-driven income.\n+1 Barista in starter deck.\nPlatform rating matters.",
+                "Viral growth possible.\n+1 Developer in starter deck.\nPlatform fees apply.",
+                "Seasonal demand cycles.\n+1 Sales Associate in deck.\nTrend-sensitive.",
+                "Steady local demand.\n+1 Cashier in starter deck.\nSpoilage risk mechanic."
             };
             Color[] ventureColors = {
-                new Color(0.9f, 0.4f, 0.1f),
-                new Color(0.6f, 0.38f, 0.22f),
-                new Color(0.3f, 0.7f, 0.35f)
+                new Color(0.9f, 0.4f, 0.1f),   // FastFood - red-orange
+                new Color(0.6f, 0.38f, 0.22f),  // Cafe - coffee brown
+                new Color(0.25f, 0.55f, 0.95f), // TechApp - blue
+                new Color(0.85f, 0.25f, 0.55f), // ClothingStore - pink
+                new Color(0.3f, 0.7f, 0.35f)    // GroceryStore - green
             };
 
-            for (int i = 0; i < ventureCards.Length; i++)
+            for (int i = 0; i < 5; i++)
             {
                 var card = CreateUIPanel($"VentureCard_{i}", venturePanel);
                 card.sizeDelta = new Vector2(260, 400);
-                card.anchoredPosition = new Vector2((i - 1f) * 275f, -20);
+                card.anchoredPosition = new Vector2((i - 2f) * 275f, -20);
                 var cardImg = card.GetComponent<Image>();
                 cardImg.color = new Color(0.15f, 0.15f, 0.2f, 0.95f);
                 card.gameObject.AddComponent<Button>().targetGraphic = cardImg;

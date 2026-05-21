@@ -96,7 +96,7 @@ namespace EmpireOfCards.Bootstrap
             titleText.text = LocalizationManager.GetWithFallback("menu.title", "EMPIRE OF CARDS");
 
             TMP_Text subText = CreateText(parent, "Subtitle", new Vector2(0, 78), new Vector2(700, 52), 24, FontStyles.Normal, new Color(0.7f, 0.7f, 0.7f));
-            subText.text = LocalizationManager.GetWithFallback("menu.subtitle", "Pick a local business, build your board, and own the neighborhood.");
+            subText.text = LocalizationManager.GetWithFallback("menu.subtitle", "Pick a venture, build your board, and dominate the market.");
         }
 
         private static void BuildVersionLabel(Transform parent)
@@ -381,7 +381,7 @@ namespace EmpireOfCards.Bootstrap
             switch (ventureType)
             {
                 case VentureType.FastFood:
-                    return "Restaurant";
+                    return "Fast Food";
                 case VentureType.Cafe:
                     return "Cafe";
                 case VentureType.TechApp:
@@ -389,7 +389,7 @@ namespace EmpireOfCards.Bootstrap
                 case VentureType.ClothingStore:
                     return "Clothing Store";
                 case VentureType.GroceryStore:
-                    return "Market";
+                    return "Grocery Store";
                 default:
                     return ventureType.ToString();
             }

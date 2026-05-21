@@ -378,7 +378,7 @@ namespace EmpireOfCards.Gameplay
             var techCategory = GameManager.Instance != null ? GameManager.Instance.ActiveTechCategoryProfile : null;
             return venture switch
             {
-                VentureType.FastFood => "Rival Restaurant",
+                VentureType.FastFood => "Rival Kitchen",
                 VentureType.Cafe => "Rival Cafe",
                 VentureType.TechApp => techCategory != null && !string.IsNullOrWhiteSpace(techCategory.rivalName) ? techCategory.rivalName : "Rival App",
                 VentureType.ClothingStore => "Rival Boutique",
