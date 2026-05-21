@@ -148,6 +148,29 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6b5135811787f46dc8d134ce4b4872a8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _tutorialManager: {fileID: 0}
+  _ventureSelectionUI: {fileID: 0}
+  _ventures: []
+  _techCategories: []
+  _runNamePanel: {fileID: 0}
+  _runNameInput: {fileID: 0}
+  _runNamePlaceholderText: {fileID: 0}
+  _runNameTitleText: {fileID: 0}
+  _runNameSubtitleText: {fileID: 0}
+  _runNameBodyText: {fileID: 0}
+  _runNameHintText: {fileID: 0}
+  _runNameConfirmLabel: {fileID: 0}
+  _runNameInputRoot: {fileID: 0}
+  _runCategoryRoot: {fileID: 0}
+  _runCategorySummaryText: {fileID: 0}
+  _runConfirmButton: {fileID: 0}
+  _runBackButton: {fileID: 0}
+  _categoryButtonImages: []
+  _categoryButtonLabels: []
+  _pendingVenture: {fileID: 0}
+  _pendingRunName: 
+  _pendingTechCategory: {fileID: 0}
+  _showingCategoryStage: 0
 --- !u!4 &326078546
 Transform:
   m_ObjectHideFlags: 0
