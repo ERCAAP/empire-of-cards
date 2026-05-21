@@ -85,6 +85,7 @@ namespace EmpireOfCards.Core
         public const int LEGAL_RISK_CAUTION_THRESHOLD = 26;
         public const int LEGAL_RISK_DANGER_THRESHOLD = 51;
         public const int LEGAL_RISK_CERTAIN_THRESHOLD = 76;
+        public const int FBI_RAID_PENALTY = 300;
         public const float LEGAL_RISK_INCOME_PENALTY = 0.15f; // -15% income when in Danger
         public const int LEGAL_RISK_DECAY_PER_TURN = 3;       // Risk drops 3 per turn naturally
         #endregion

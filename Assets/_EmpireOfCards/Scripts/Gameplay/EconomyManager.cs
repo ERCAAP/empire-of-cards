@@ -594,7 +594,7 @@ namespace EmpireOfCards.Gameplay
         {
             var venture = GameManager.Instance != null && GameManager.Instance.SelectedVenture != null
                 ? GameManager.Instance.SelectedVenture.ventureType
-                : VentureType.Diner;
+                : VentureType.FastFood;
             var category = GameManager.Instance != null ? GameManager.Instance.ActiveTechCategoryProfile : null;
             if (category != null)
             {
@@ -690,7 +690,7 @@ namespace EmpireOfCards.Gameplay
         {
             var venture = GameManager.Instance != null && GameManager.Instance.SelectedVenture != null
                 ? GameManager.Instance.SelectedVenture.ventureType
-                : VentureType.Diner;
+                : VentureType.FastFood;
             var category = GameManager.Instance != null ? GameManager.Instance.ActiveTechCategoryProfile : null;
             if (category != null)
             {
@@ -771,7 +771,7 @@ namespace EmpireOfCards.Gameplay
         {
             var venture = GameManager.Instance != null && GameManager.Instance.SelectedVenture != null
                 ? GameManager.Instance.SelectedVenture.ventureType
-                : VentureType.Diner;
+                : VentureType.FastFood;
             var category = GameManager.Instance != null ? GameManager.Instance.ActiveTechCategoryProfile : null;
             if (category != null)
             {

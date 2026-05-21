@@ -24,8 +24,8 @@ namespace EmpireOfCards.Core.TurnPhases
                 var snapshot = gm.EconomyManager.Snapshot;
                 if (snapshot != null)
                 {
-                    Debug.Log($"[PlanningPhase] Board state — Demand: {snapshot.totalDemand}, " +
-                              $"Capacity: {snapshot.totalCapacity}, Quality: {snapshot.quality:F1}, " +
+                    Debug.Log($"[PlanningPhase] Board state — Demand: {snapshot.demand}, " +
+                              $"Capacity: {snapshot.capacity}, Quality: {snapshot.quality:F1}, " +
                               $"Rating: {snapshot.rating:F1}, Cash: {gm.PlayerMoney}");
                 }
             }

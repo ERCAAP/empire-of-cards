@@ -633,6 +633,13 @@ namespace EmpireOfCards.Editor
             Debug.Log("[AssetGenerator] GameBalance.asset created.");
         }
 
+        // Legacy menu step kept for editor compatibility.
+        // The current runtime deck flow is driven by venture deck profiles and bootstrap data.
+        private static void GenerateStartingDeck(CardData[] cards)
+        {
+            Debug.Log($"[AssetGenerator] Skipping legacy starting deck asset generation. Runtime uses venture deck profiles. Cards available: {(cards != null ? cards.Length : 0)}");
+        }
+
         // ===================================================================
         // 2. ALL CARDS (5 ventures + general)
         // ===================================================================
@@ -1488,6 +1495,13 @@ namespace EmpireOfCards.Editor
 
             MarkDirty(rival);
             Debug.Log("[AssetGenerator] MegaCorp.asset created.");
+        }
+
+        // Legacy menu step kept for editor compatibility.
+        // Runtime progression now comes from venture progression arcs in the bootstrap pipeline.
+        private static void GenerateMetaProgression()
+        {
+            Debug.Log("[AssetGenerator] Skipping legacy meta progression asset generation. Runtime uses venture progression arcs.");
         }
 
     }

@@ -167,6 +167,22 @@ namespace EmpireOfCards.Core
         TempEffect      // Temporary events/crises
     }
 
+    // World-space drop targets used by board presentation and drag/drop routing.
+    public enum DropZoneType
+    {
+        BusinessSlot,
+        EmployeeSlot,
+        UpgradeSlot,
+        ActionZone,
+        SellZone,
+        BurnZone,
+        OperationSlot,
+        StaffSlot,
+        MarketingSlot,
+        SupplierSlot,
+        TempEffectSlot
+    }
+
     public enum CardFamily
     {
         Setup,

@@ -311,7 +311,7 @@ namespace EmpireOfCards.Core
             // Fire initial events so UI updates
             EventBus.MoneyUpdated(resources.Money);
             EventBus.MarketBlocksUpdated(0, 0);
-            EventBus.FBIRiskUpdated(0f);
+            EventBus.LegalRiskUpdated(0);
 
             SetGameState(GameState.Playing);
             _gameStateMachine.Initialize(new InGameState());
@@ -359,7 +359,7 @@ namespace EmpireOfCards.Core
             playerCustomers = Mathf.Max(0, runData.playerCustomers);
             rivalCustomers = Mathf.Max(0, runData.rivalCustomers);
             SetMarketBlocks(runData.playerMarketBlocks, runData.rivalMarketBlocks);
-            EventBus.FBIRiskUpdated(fbiRisk);
+            EventBus.LegalRiskUpdated(Mathf.RoundToInt(fbiRisk * 100f));
 
             if (activeBoardProfile != null && slotManager != null)
                 slotManager.Configure(activeBoardProfile);
@@ -514,7 +514,7 @@ namespace EmpireOfCards.Core
         public void SetFBIRisk(float risk)
         {
             fbiRisk = Mathf.Clamp(risk, 0f, 1f);
-            EventBus.FBIRiskUpdated(fbiRisk);
+            EventBus.LegalRiskUpdated(Mathf.RoundToInt(fbiRisk * 100f));
         }
 
         // === Game State Machine ===
