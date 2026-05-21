@@ -1,3 +1,4 @@
+using UnityEngine;
 using EmpireOfCards.Bootstrap.Data;
 using EmpireOfCards.Core;
 
@@ -25,6 +26,15 @@ namespace EmpireOfCards.Bootstrap
             m.customerSystem.Init(m.boardManager, m.economyManager);
             m.crisisSystem.Init(m.boardManager, m.economyManager);
 
+            // EconomyManager needs subsystem references for resolve pipeline
+            m.economyManager.SetReferences(m.boardManager, m.customerSystem,
+                m.staffSystem, m.hygieneSystem);
+
+            // CrisisChainSystem needs the crisis card pool
+            m.crisisSystem.SetCrisisPool(
+                System.Array.FindAll(data.allCards,
+                    c => c.cardFamily == CardFamily.Crisis));
+
             // Rival needs economy info for decisions
             m.rivalAI.Init(m.economyManager);
 
@@ -39,12 +49,22 @@ namespace EmpireOfCards.Bootstrap
             // Audio + Save are independent
             m.audioManager.Init();
             m.saveManager.Init(m.gameManager);
+
+            // ── 3D World wiring ─────────────────────────────────────
+            m.board3D.BuildBoard();
+            m.cardFactory3D.transform.SetParent(m.board3D.transform);
+            m.hand3D.Init(m.cardFactory3D);
+            m.hand3D.transform.position = m.board3D.HandZone != null
+                ? m.board3D.HandZone.position + Vector3.up * 0.2f
+                : new Vector3(0f, 0.2f, -6f);
+            m.inputManager3D.Init(m.hand3D, m.board3D, m.boardManager);
         }
 
         public static void WireHUD(ManagerBundle m, HUDBundle hud)
         {
-            // HUD wiring will be implemented when UI layer is built.
-            // HUD components subscribe to EventBus -- no direct manager refs needed.
+            // HUD components subscribe to EventBus for stat updates.
+            // UIManager is already wired inside HUDBuilder.Build().
+            // No additional direct references needed.
         }
     }
 }

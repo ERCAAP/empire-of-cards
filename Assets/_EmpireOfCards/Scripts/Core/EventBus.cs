@@ -48,6 +48,9 @@ namespace EmpireOfCards.Core
         public static event Action OnBoardTicked;
         public static void BoardTicked() => OnBoardTicked?.Invoke();
 
+        public static event Action<ResolveStep> OnResolveStep;
+        public static void ResolveStepFired(ResolveStep step) => OnResolveStep?.Invoke(step);
+
         public static event Action<SlotType, int> OnSlotUnlocked;
         public static void SlotUnlocked(SlotType slot, int newMax)
             => OnSlotUnlocked?.Invoke(slot, newMax);
@@ -93,11 +96,36 @@ namespace EmpireOfCards.Core
         public static void MoraleChanged(string staffName, float newMorale)
             => OnMoraleChanged?.Invoke(staffName, newMorale);
 
+        // ── Deck / Hand ─────────────────────────────────────────────
+
+        public static event Action<CardData[]> OnHandDrawn;
+        public static void HandDrawn(CardData[] hand) => OnHandDrawn?.Invoke(hand);
+
+        public static event Action OnHandDiscarded;
+        public static void HandDiscarded() => OnHandDiscarded?.Invoke();
+
+        public static event Action<CardData> OnCardDrawn;
+        public static void CardDrawn(CardData card) => OnCardDrawn?.Invoke(card);
+
+        public static event Action<CardData> OnCardDiscarded;
+        public static void CardDiscarded(CardData card) => OnCardDiscarded?.Invoke(card);
+
+        // ── Turn Report ─────────────────────────────────────────────
+
+        public static event Action<int, int, int, float, int, int> OnTurnReport;
+        public static void TurnReport(int income, int expense, int net, float ratingDelta, int served, int waited)
+            => OnTurnReport?.Invoke(income, expense, net, ratingDelta, served, waited);
+
         // ── Customer ────────────────────────────────────────────────
 
         public static event Action<int, int, int> OnCustomersServed;
         public static void CustomersServed(int served, int waited, int left)
             => OnCustomersServed?.Invoke(served, waited, left);
+
+        // ── Hygiene ─────────────────────────────────────────────────
+
+        public static event Action<string> OnHygieneWarning;
+        public static void HygieneWarning(string message) => OnHygieneWarning?.Invoke(message);
 
         // ── Crisis ──────────────────────────────────────────────────
 
@@ -149,6 +177,7 @@ namespace EmpireOfCards.Core
             OnCardPlaced = null;
             OnCardRemoved = null;
             OnBoardTicked = null;
+            OnResolveStep = null;
             OnSlotUnlocked = null;
 
             // Stats
@@ -166,8 +195,20 @@ namespace EmpireOfCards.Core
             OnStaffPromoted = null;
             OnMoraleChanged = null;
 
+            // Deck / Hand
+            OnHandDrawn = null;
+            OnHandDiscarded = null;
+            OnCardDrawn = null;
+            OnCardDiscarded = null;
+
+            // Turn Report
+            OnTurnReport = null;
+
             // Customer
             OnCustomersServed = null;
+
+            // Hygiene
+            OnHygieneWarning = null;
 
             // Crisis
             OnCrisisTriggered = null;

@@ -55,24 +55,7 @@ namespace EmpireOfCards.Core.TurnPhases
         void ExecuteCurrentStep()
         {
             ResolveStep step = StepOrder[stepIndex];
-
-            // Each step is handled by the Gameplay layer (EconomyManager,
-            // BoardManager, etc.) listening to OnBoardTicked or running
-            // their own resolve logic triggered by OnPhaseStarted.
-            //
-            // The Core layer drives timing; the Gameplay layer owns the math.
-            //
-            // Resolve order per GDD section 16.2:
-            // 1. Kitchen+Staff+Supplier -> Quality+Capacity
-            // 2. Hygiene update
-            // 3. Marketing -> Demand
-            // 4. Rating update
-            // 5. Customer flow (served / waited / left)
-            // 6. Income / expense / tax / credit interest
-            // 7. Staff morale, experience, loyalty
-            // 8. Market share shift
-
-            EventBus.BoardTicked();
+            EventBus.ResolveStepFired(step);
         }
     }
 }
