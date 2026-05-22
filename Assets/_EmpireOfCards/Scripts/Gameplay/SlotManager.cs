@@ -10,7 +10,7 @@ namespace EmpireOfCards.Gameplay
     /// Tracks occupancy, enforces max limits, fires EventBus events on changes.
     /// Wired by WiringService. Not a Singleton — referenced through GameManager.
     /// </summary>
-    public class SlotManager : MonoBehaviour
+    public partial class SlotManager : MonoBehaviour
     {
         // Current slot counts per type (starts at GDD v3.0 defaults)
         private int _operationMax;
@@ -232,6 +232,22 @@ namespace EmpireOfCards.Gameplay
                 result.Add(list[i] != null ? list[i].cardId : string.Empty);
 
             return result;
+        }
+
+        public IReadOnlyList<CardData> GetActiveCards(SlotType slotType)
+        {
+            var source = GetList(slotType);
+            var cards = new List<CardData>();
+            if (source == null)
+                return cards;
+
+            for (int i = 0; i < source.Count; i++)
+            {
+                if (source[i] != null)
+                    cards.Add(source[i]);
+            }
+
+            return cards;
         }
 
         public void RestoreState(

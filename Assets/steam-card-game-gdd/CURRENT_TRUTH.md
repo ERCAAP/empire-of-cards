@@ -76,6 +76,25 @@ Gameplay sahnesinin ana runtime kaynaklari:
 - `MarketShareVisualizer` aktif market-share block gorsellestirme rolu olarak kabul edilir.
 - `TerritoryManager` yalnizca compatibility katmanidir.
 
+## Removed Dormant Runtime Scripts
+
+2026-05-22 cleanup sprintinde su orphan/dormant scriptler repo'dan cikarildi:
+
+- `CustomerLoyaltySystem`
+- `InflationSystem`
+- `DebtTracker`
+- `MarketPool`
+- `TaxCalculator`
+- `BoardQueries`
+- `ClosureManager`
+- `EmployeeTenure`
+- `RivalDecisionTree`
+- `RivalEconomy`
+- `RivalGrowth`
+- `RivalDialogue`
+
+Bu sistemler aktif runtime truth'un parcasi degildir. Gerekirse `Economy Core` veya `Rival Depth` milestone'unda v4 venture-first tasarimla yeniden kurulmalidir.
+
 ## Venture Priority
 
 Phase 1 odagi:

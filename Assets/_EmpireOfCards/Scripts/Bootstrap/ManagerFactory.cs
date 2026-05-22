@@ -24,105 +24,88 @@ namespace EmpireOfCards.Bootstrap
             var b = new ManagerBundle();
 
             // --- LocalizationManager (first, so translations are available) ---
-            var locGo = new GameObject("[LocalizationManager]");
-            b.localizationManager = locGo.AddComponent<LocalizationManager>();
+            b.localizationManager = CreateRoot<LocalizationManager>("[LocalizationManager]");
 
             // --- GameManager (Singleton root) ---
-            var gmGo = new GameObject("[GameManager]");
-            b.gameManager = gmGo.AddComponent<GameManager>();
+            b.gameManager = CreateRoot<GameManager>("[GameManager]");
+            var gmGo = b.gameManager.gameObject;
 
             // --- TurnManager ---
-            var tmGo = new GameObject("TurnManager");
-            tmGo.transform.SetParent(gmGo.transform);
-            b.turnManager = tmGo.AddComponent<TurnManager>();
+            b.turnManager = CreateChild<TurnManager>(gmGo.transform, "TurnManager");
 
             // --- EconomyManager ---
-            var emGo = new GameObject("EconomyManager");
-            emGo.transform.SetParent(gmGo.transform);
-            b.economyManager = emGo.AddComponent<EconomyManager>();
+            b.economyManager = CreateChild<EconomyManager>(gmGo.transform, "EconomyManager");
 
             // --- DeckManager ---
-            var dmGo = new GameObject("DeckManager");
-            dmGo.transform.SetParent(gmGo.transform);
-            b.deckManager = dmGo.AddComponent<DeckManager>();
+            b.deckManager = CreateChild<DeckManager>(gmGo.transform, "DeckManager");
 
             // --- BoardManager ---
-            var bmGo = new GameObject("BoardManager");
-            bmGo.transform.SetParent(gmGo.transform);
-            b.boardManager = bmGo.AddComponent<BoardManager>();
+            b.boardManager = CreateChild<BoardManager>(gmGo.transform, "BoardManager");
 
             // --- MarketShareVisualizer (TerritoryManager compatibility component) ---
-            var terGo = new GameObject("MarketShareVisualizer");
-            terGo.transform.SetParent(gmGo.transform);
-            b.marketShareVisualizer = terGo.AddComponent<TerritoryManager>();
+            b.marketShareVisualizer = CreateChild<TerritoryManager>(gmGo.transform, "MarketShareVisualizer");
 
             // --- RivalAI ---
-            var aiGo = new GameObject("RivalAI");
-            aiGo.transform.SetParent(gmGo.transform);
-            b.rivalAI = aiGo.AddComponent<RivalAI>();
+            b.rivalAI = CreateChild<RivalAI>(gmGo.transform, "RivalAI");
 
             // --- ShopManager ---
-            var shopGo = new GameObject("ShopManager");
-            shopGo.transform.SetParent(gmGo.transform);
-            b.shopManager = shopGo.AddComponent<ShopManager>();
+            b.shopManager = CreateChild<ShopManager>(gmGo.transform, "ShopManager");
 
             // --- AudioManager ---
-            var audioGo = new GameObject("[AudioManager]");
-            b.audioManager = audioGo.AddComponent<AudioManager>();
-            b.musicSourceA = audioGo.AddComponent<AudioSource>();
+            var audioGo = CreateRoot<AudioManager>("[AudioManager]");
+            b.audioManager = audioGo;
+            var audioHost = audioGo.gameObject;
+            b.musicSourceA = audioHost.AddComponent<AudioSource>();
             b.musicSourceA.loop = true;
             b.musicSourceA.playOnAwake = false;
-            b.musicSourceB = audioGo.AddComponent<AudioSource>();
+            b.musicSourceB = audioHost.AddComponent<AudioSource>();
             b.musicSourceB.loop = true;
             b.musicSourceB.playOnAwake = false;
-            b.sfxSource = audioGo.AddComponent<AudioSource>();
+            b.sfxSource = audioHost.AddComponent<AudioSource>();
             b.sfxSource.playOnAwake = false;
 
             // --- VFXManager ---
-            var vfxGo = new GameObject("VFXManager");
-            b.vfxManager = vfxGo.AddComponent<VFXManager>();
+            b.vfxManager = CreateRoot<VFXManager>("VFXManager");
 
             // --- SaveManager ---
-            var saveGo = new GameObject("[SaveManager]");
-            b.saveManager = saveGo.AddComponent<SaveManager>();
+            b.saveManager = CreateRoot<SaveManager>("[SaveManager]");
 
             // --- InputManager3D ---
-            var inputGo = new GameObject("InputManager3D");
-            inputGo.transform.SetParent(gmGo.transform);
-            b.inputManager3D = inputGo.AddComponent<InputManager3D>();
+            b.inputManager3D = CreateChild<InputManager3D>(gmGo.transform, "InputManager3D");
 
             // --- AbilitySystem ---
-            var abGo = new GameObject("AbilitySystem");
-            abGo.transform.SetParent(gmGo.transform);
-            b.abilitySystem = abGo.AddComponent<AbilitySystem>();
+            b.abilitySystem = CreateChild<AbilitySystem>(gmGo.transform, "AbilitySystem");
 
             // --- LevelManager ---
-            var lvlGo = new GameObject("[LevelManager]");
-            b.levelManager = lvlGo.AddComponent<LevelManager>();
+            b.levelManager = CreateRoot<LevelManager>("[LevelManager]");
 
             // --- ActionCardResolver ---
-            var acrGo = new GameObject("ActionCardResolver");
-            acrGo.transform.SetParent(gmGo.transform);
-            b.actionCardResolver = acrGo.AddComponent<ActionCardResolver>();
+            b.actionCardResolver = CreateChild<ActionCardResolver>(gmGo.transform, "ActionCardResolver");
 
             // --- SlotManager ---
-            var slotGo = new GameObject("SlotManager");
-            slotGo.transform.SetParent(gmGo.transform);
-            b.slotManager = slotGo.AddComponent<SlotManager>();
+            b.slotManager = CreateChild<SlotManager>(gmGo.transform, "SlotManager");
 
             // --- StaffStateSystem (GDD Section 6) ---
-            var staffGo = new GameObject("StaffStateSystem");
-            staffGo.transform.SetParent(gmGo.transform);
-            b.staffStateSystem = staffGo.AddComponent<StaffStateSystem>();
+            b.staffStateSystem = CreateChild<StaffStateSystem>(gmGo.transform, "StaffStateSystem");
 
             // --- ChainReactionSystem (GDD Section 11, 12) ---
-            var chainGo = new GameObject("ChainReactionSystem");
-            chainGo.transform.SetParent(gmGo.transform);
-            b.chainReactionSystem = chainGo.AddComponent<ChainReactionSystem>();
+            b.chainReactionSystem = CreateChild<ChainReactionSystem>(gmGo.transform, "ChainReactionSystem");
 
             Debug.Log("[ManagerFactory] All managers created.");
 
             return b;
+        }
+
+        private static T CreateRoot<T>(string objectName) where T : Component
+        {
+            return new GameObject(objectName).AddComponent<T>();
+        }
+
+        private static T CreateChild<T>(Transform parent, string objectName) where T : Component
+        {
+            var go = new GameObject(objectName);
+            go.transform.SetParent(parent);
+            return go.AddComponent<T>();
         }
     }
 

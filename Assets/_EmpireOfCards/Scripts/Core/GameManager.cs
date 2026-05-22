@@ -14,7 +14,7 @@ using System.Collections.Generic;
 
 namespace EmpireOfCards.Core
 {
-    public class GameManager : MonoBehaviour
+    public partial class GameManager : MonoBehaviour
     {
         public static GameManager Instance { get; private set; }
 
@@ -226,90 +226,8 @@ namespace EmpireOfCards.Core
 
             currentTurn = 0;
             gameIsRunning = true;
-
-            // Reset extracted resource state
-            resources.Reset(balanceData);
-
-            // Reset customer/market/fbi state
-            fbiRisk = 0f;
-            playerCustomers = 0;
-            rivalCustomers = 0;
-            playerMarketBlocks = 0;
-            rivalMarketBlocks = 0;
-
-            // Initialize subsystems
-            VentureType chosenVenture = VentureType.FastFood; // Default
-            if (selectedVenture != null)
-            {
-                chosenVenture = selectedVenture.ventureType;
-            }
-
-            if (activeBoardProfile != null && slotManager != null)
-            {
-                slotManager.Configure(activeBoardProfile);
-                resources.SetBusinessSlots(activeBoardProfile.startingOperationSlots);
-            }
-
-            if (boardManager != null)
-            {
-                boardManager.Reset();
-                boardManager.ConfigureForVenture(chosenVenture, activeBoardProfile);
-                boardManager.SetMaxSlots(resources.BusinessSlots);
-            }
-
-            if (activeEconomyProfile != null && economyManager != null)
-            {
-                economyManager.SetActiveProfile(activeEconomyProfile);
-                resources.SetMoney(Mathf.RoundToInt(activeEconomyProfile.startingCash) + (selectedVenture != null ? selectedVenture.bonusMoney : 0));
-                economyManager.SyncCashFromResources(resources.Money);
-            }
-
-            if (deckManager != null)
-            {
-                if (activeDeckProfile != null && _cardLookup != null)
-                    deckManager.InitializeDeck(activeDeckProfile, _cardLookup);
-            }
-
-            if (selectedVenture != null)
-            {
-                if (selectedVenture.startingBusiness != null && boardManager != null)
-                    boardManager.PlaceBusiness(selectedVenture.startingBusiness, 0);
-                if (selectedVenture.bonusDeckCard != null && deckManager != null)
-                    deckManager.AddCardToDeck(selectedVenture.bonusDeckCard);
-            }
-
-            if (rivalAI != null)
-            {
-                if (selectedVenture != null)
-                    rivalAI.Initialize(chosenVenture);
-                else
-                    rivalAI.Initialize();
-            }
-            if (shopManager != null)
-            {
-                if (selectedVenture != null)
-                {
-                    shopManager.SetVentureBias(chosenVenture);
-                    shopManager.FilterPoolByVenture(chosenVenture);
-                }
-                shopManager.RefreshShop();
-            }
-            if (staffStateSystem != null)
-                staffStateSystem.Reset();
-            if (chainReactionSystem != null)
-                chainReactionSystem.Reset();
-            WinLoseChecker.Reset();
-
-            // Fire initial events so UI updates
-            EventBus.MoneyUpdated(resources.Money);
-            EventBus.MarketBlocksUpdated(0, 0);
-            EventBus.LegalRiskUpdated(0);
-
-            SetGameState(GameState.Playing);
-            _gameStateMachine.Initialize(new InGameState());
-
-            if (autoStartTurn)
-                StartNextTurn();
+            ResetRunState();
+            PrepareNewRunRuntime(autoStartTurn);
         }
 
         public void StartNextTurn()
@@ -339,51 +257,7 @@ namespace EmpireOfCards.Core
 
             currentRunSlotId = runData.slotId;
             StartNewRun(false);
-
-            SetRunDisplayName(runData.runName);
-            SetRunCategory(runData.runCategoryId, runData.runCategoryLabel);
-            currentTurn = Mathf.Max(1, runData.currentTurn);
-
-            resources.SetMoney(runData.playerMoney);
-            resources.SetActions(runData.playerActions, runData.playerMaxActions);
-            resources.SetBusinessSlots(runData.playerBusinessSlots);
-            fbiRisk = runData.fbiRisk;
-            playerCustomers = Mathf.Max(0, runData.playerCustomers);
-            rivalCustomers = Mathf.Max(0, runData.rivalCustomers);
-            SetMarketBlocks(runData.playerMarketBlocks, runData.rivalMarketBlocks);
-            EventBus.LegalRiskUpdated(Mathf.RoundToInt(fbiRisk * 100f));
-
-            if (activeBoardProfile != null && slotManager != null)
-                slotManager.Configure(activeBoardProfile);
-
-            var opCards = ResolveCards(runData.operationSlotIds);
-            var staffCards = ResolveCards(runData.staffSlotIds);
-            var marketingCards = ResolveCards(runData.marketingSlotIds);
-            var supplierCards = ResolveCards(runData.supplierSlotIds);
-            var tempCards = ResolveCards(runData.tempEffectSlotIds);
-            slotManager?.RestoreState(opCards, staffCards, marketingCards, supplierCards, tempCards);
-            boardManager?.RebuildFromSlots();
-
-            deckManager?.RestoreState(
-                activeDeckProfile,
-                _cardLookup,
-                runData.drawPileIds,
-                runData.handIds,
-                runData.discardPileIds,
-                runData.redrawsRemaining);
-
-            if (economyManager != null && runData.economySnapshot != null)
-                economyManager.RestoreSnapshot(runData.economySnapshot);
-            else
-                economyManager?.SyncCashFromResources(resources.Money);
-
-            activeVentureRuntime?.RestoreState(runData.ventureRuntimeState, runData.openingArcState, runData.eventChainState);
-            activeVentureRuntime?.OnTurnStarted(currentTurn);
-            rivalAI?.RestoreState(runData.rivalState);
-
-            EventBus.MoneyUpdated(resources.Money);
-            EventBus.TurnStarted(currentTurn);
-            turnManager?.ResumePlayPhase(currentTurn);
+            RestoreRunState(runData);
         }
 
         /// <summary>
@@ -393,47 +267,8 @@ namespace EmpireOfCards.Core
         public void EndCurrentTurn()
         {
             EventBus.TurnEnded(currentTurn);
-
-            int winCustomers = Constants.WIN_CUSTOMER_SHARE;
-            bool dominationActive = currentTurn >= Constants.DOMINATION_CHECK_START_TURN;
-
-            if (dominationActive && WinLoseChecker.CheckWin(playerCustomers, winCustomers))
-            {
-                EndRun(true);
+            if (!TryContinueRunAfterTurn())
                 return;
-            }
-
-            // 1. Bankruptcy — always active
-            if (resources.Money <= 0)
-            {
-                EndRun(false);
-                return;
-            }
-
-            // 4. Rival domination — only after domination turn threshold
-            if (dominationActive && rivalCustomers >= winCustomers)
-            {
-                EndRun(false);
-                return;
-            }
-
-            // GDD 13.3 extended loss conditions: reputation collapse + legal disaster
-            if (economyManager != null && economyManager.Snapshot != null)
-            {
-                if (WinLoseChecker.CheckExtendedLose(
-                    economyManager.Snapshot.rating,
-                    economyManager.Snapshot.legalRisk))
-                {
-                    EndRun(false);
-                    return;
-                }
-            }
-
-            if (currentTurn >= MaxTurns)
-            {
-                EndRun(playerCustomers >= rivalCustomers);
-                return;
-            }
 
             StartNextTurn();
         }
@@ -531,39 +366,7 @@ namespace EmpireOfCards.Core
 
         private RunSaveData BuildRunSave()
         {
-            return new RunSaveData
-            {
-                saveVersion = SaveManager.CurrentRunSaveVersion,
-                slotId = currentRunSlotId,
-                runName = RunDisplayName,
-                runCategoryId = runCategoryId,
-                runCategoryLabel = runCategoryLabel,
-                ventureType = (int)(selectedVenture != null ? selectedVenture.ventureType : VentureType.FastFood),
-                currentTurn = currentTurn,
-                playerMoney = resources.Money,
-                playerActions = resources.Actions,
-                playerMaxActions = resources.MaxActions,
-                playerBusinessSlots = resources.BusinessSlots,
-                playerCustomers = playerCustomers,
-                rivalCustomers = rivalCustomers,
-                playerMarketBlocks = playerMarketBlocks,
-                rivalMarketBlocks = rivalMarketBlocks,
-                fbiRisk = fbiRisk,
-                redrawsRemaining = deckManager != null ? deckManager.RedrawsRemaining : 0,
-                economySnapshot = economyManager != null ? economyManager.Snapshot : null,
-                drawPileIds = deckManager != null ? deckManager.GetDrawPileIds() : new List<string>(),
-                handIds = deckManager != null ? deckManager.GetHandIds() : new List<string>(),
-                discardPileIds = deckManager != null ? deckManager.GetDiscardPileIds() : new List<string>(),
-                operationSlotIds = slotManager != null ? slotManager.GetSlotIds(SlotType.Operation) : new List<string>(),
-                staffSlotIds = slotManager != null ? slotManager.GetSlotIds(SlotType.Staff) : new List<string>(),
-                marketingSlotIds = slotManager != null ? slotManager.GetSlotIds(SlotType.Marketing) : new List<string>(),
-                supplierSlotIds = slotManager != null ? slotManager.GetSlotIds(SlotType.Supplier) : new List<string>(),
-                tempEffectSlotIds = slotManager != null ? slotManager.GetSlotIds(SlotType.TempEffect) : new List<string>(),
-                ventureRuntimeState = activeVentureRuntime != null ? activeVentureRuntime.CaptureRuntimeState() : null,
-                openingArcState = activeVentureRuntime != null ? activeVentureRuntime.CaptureOpeningArcState() : null,
-                eventChainState = activeVentureRuntime != null ? activeVentureRuntime.CaptureEventChainState() : null,
-                rivalState = rivalAI != null ? rivalAI.CaptureState() : null
-            };
+            return BuildRunSaveData();
         }
 
         private void HandleCardPlacedInSlot(CardData card, SlotType slotType)
@@ -578,23 +381,7 @@ namespace EmpireOfCards.Core
 
         private List<CardData> ResolveCards(IList<string> ids)
         {
-            var cards = new List<CardData>();
-            if (ids == null)
-                return cards;
-
-            for (int i = 0; i < ids.Count; i++)
-            {
-                string id = ids[i];
-                if (string.IsNullOrWhiteSpace(id))
-                {
-                    cards.Add(null);
-                    continue;
-                }
-
-                cards.Add(_cardLookup != null && _cardLookup.TryGetValue(id, out var card) ? card : null);
-            }
-
-            return cards;
+            return ResolveCardsFromIds(ids);
         }
     }
 }

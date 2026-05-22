@@ -17,7 +17,7 @@ namespace EmpireOfCards.Bootstrap
     ///   - HUDBuilder        (UI canvas, panels, buttons, popups)
     ///   - WiringService     (cross-references, button callbacks, 3D interaction)
     /// </summary>
-    public class GameSceneBootstrap : MonoBehaviour
+    public partial class GameSceneBootstrap : MonoBehaviour
     {
         private TutorialManager _tutorialManager;
         private RunLaunchCoordinator _runLaunchCoordinator;
@@ -73,48 +73,22 @@ namespace EmpireOfCards.Bootstrap
 
         private void Start()
         {
-            if (RunLaunchConfig.LaunchMode == RunLaunchMode.LoadRun)
-            {
-                TryRestoreSavedRun();
-                return;
-            }
-
-            // Show venture selection instead of starting immediately
-            if (_ventureSelectionUI != null && _ventures != null && _ventures.Length > 0)
-            {
-                _ventureSelectionUI.Init(_ventures);
-                _ventureSelectionUI.OnVentureSelected += OnVentureChosen;
-                _ventureSelectionUI.Show();
-            }
-            else
-            {
-                // Fallback: start without venture selection
-                StartRun(null);
-            }
+            StartSceneFlow();
         }
 
         private void OnVentureChosen(VentureData venture)
         {
-            _ventureSelectionUI.OnVentureSelected -= OnVentureChosen;
-            _pendingRunName = null;
-            _pendingTechCategory = null;
-            ShowRunNamePrompt(venture);
+            HandleVentureChosen(venture);
         }
 
         private void StartRun(VentureData venture)
         {
-            _runLaunchCoordinator?.StartNewRun(venture, _pendingRunName, _pendingTechCategory, _tutorialManager);
-            _pendingRunName = null;
-            _pendingTechCategory = null;
+            StartConfiguredRun(venture);
         }
 
         private void TryRestoreSavedRun()
         {
-            if (_runLaunchCoordinator == null || !_runLaunchCoordinator.TryRestoreSavedRun(RunLaunchConfig.SelectedRunSlotId, _ventures))
-            {
-                RunLaunchConfig.PrepareNewRun();
-                StartRun(null);
-            }
+            TryRestoreConfiguredRun();
         }
 
         /// <summary>

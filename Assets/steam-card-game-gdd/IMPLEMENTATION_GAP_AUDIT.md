@@ -297,14 +297,14 @@ Bu kimliklerin çekirdek katsayıları canlı sistemde var, ama bazı venture-sp
 
 ## 6. Ekonomide Eksik veya Yarım Bırakılan Katmanlar
 
-## 6.1 Kodda Var Ama Ana Döngüye Tam Bağlı Değil
+## 6.1 Cleanup Sonrasi Repo'dan Cikarilan Dormant Katmanlar
 
 | Sistem | Durum | Sorun |
 |---|---|---|
-| `InflationSystem` | `Partial / dormant` | class var, event var, ama ana resolve’e bağlı değil |
-| `CustomerLoyaltySystem` | `Partial / dormant` | class var ama manager factory/wiring içinde aktif kullanım görünmüyor |
-| `DebtTracker` | `Partial / likely legacy` | EconomyManager kendi debt yaklaşımını zaten taşıyor |
-| `MarketPool` | `Partial / legacy-leaning` | eski customer pool yaklaşımından kalma, ana v4 share modeli snapshot üzerinden dönüyor |
+| `InflationSystem` | `Removed` | canlı economy loop'a bağlı değildi; yeniden kurulacaksa v4 resolve içine baştan tasarlanmalı |
+| `CustomerLoyaltySystem` | `Removed` | aktif runtime'a bağlı değildi; loyalty tekrar eklenecekse rating/share sistemiyle yeni entegrasyon gerekir |
+| `DebtTracker` | `Removed` | EconomyManager zaten kendi debt yaklaşımını taşıdığı için duplicate kalıyordu |
+| `MarketPool` | `Removed` | eski customer-pool modeli, bugünkü share snapshot sistemiyle çakışıyordu |
 
 ## 6.2 Kodda Var Ama UX’e Yansımıyor
 
@@ -329,8 +329,8 @@ AGENTS.md’de tarif edilen “gerçek işletme simülasyonu” için şu katman
 | Inventory | kısmi stock etkisi var | tam stok akışı yok |
 | Multi-branch | yok | expansion gerçek işletme adımı değil |
 | Legal | risk sayacı var | denetim, dava, compliance kararı sınırlı |
-| Rival poaching | stub var | cevap akışları tamamlanmamış |
-| Inflation | constants + class var | canlı economy integration yok |
+| Rival poaching | kısmi cevap akışı var | gerçek employee transfer ve counter-offer sistemi hâlâ sığ |
+| Inflation | constants/profile yönü var | canlı economy integration yeni milestone'da baştan kurulmalı |
 | App venture specifics | temel identity var | funnel, bugs, server scaling, security derinliği sınırlı |
 
 ---
@@ -388,8 +388,8 @@ Doğrudan görülen unfinished noktalar:
 
 ### Faz 2: Dormant ekonomi sistemlerini bağla
 
-- `InflationSystem`i gerçek turn cadence’e bağla
-- `CustomerLoyaltySystem`i active runtime’a bağla
+- inflation loop'unu `EconomyManager` icine venture-first olarak yeniden tasarla
+- loyalty loop'unu rating/share sistemiyle yeni bir state modeli olarak yeniden kur
 - `TaxPeriodSystem`i UI pop-up ve decision step ile görünür yap
 - `CreditSystem` için repayment pressure ve event hook ekle
 
@@ -428,8 +428,8 @@ Bu liste “oyun hissini en çok güçlendirecek” sıraya göre düzenlenmişt
 | Öncelik | Sistem | Neden şimdi |
 |---|---|---|
 | P1 | Economy telemetry + debug panel | balansı körlemesine yapmamak için |
-| P1 | Inflation integration | ekonomi zaman içinde sertleşmeli |
-| P1 | Customer loyalty integration | rating dışı uzun vadeli büyüme hissi için |
+| P1 | Inflation loop rebuild | ekonomi zaman içinde sertleşmeli |
+| P1 | Customer loyalty loop rebuild | rating dışı uzun vadeli büyüme hissi için |
 | P1 | Rival poaching completion | rakip daha canlı görünür |
 | P1 | Tax / audit visible loop | legal risk gerçek baskıya dönüşür |
 | P1 | ActionCardResolver refactor | eski model sızıntısını kesmek için |
@@ -458,8 +458,8 @@ Bu liste “oyun hissini en çok güçlendirecek” sıraya göre düzenlenmişt
 
 ## Sprint 2: Economy Wiring
 
-- `InflationSystem` bağlanır
-- `CustomerLoyaltySystem` bağlanır
+- inflation sistemi `EconomyManager` icinde yeniden kurulur
+- loyalty state sistemi rating/share loop'una yeniden baglanir
 - `TaxPeriodSystem` decision UI alır
 - `CreditSystem` repayment/event pressure kazanır
 

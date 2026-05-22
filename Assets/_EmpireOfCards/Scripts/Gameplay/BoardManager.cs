@@ -26,7 +26,7 @@ namespace EmpireOfCards.Gameplay
         }
     }
 
-    public class BoardManager : MonoBehaviour
+    public partial class BoardManager : MonoBehaviour
     {
         private struct EmployeeAssignment
         {
@@ -381,15 +381,7 @@ namespace EmpireOfCards.Gameplay
             if (_slotManager == null)
                 return Array.Empty<CardData>();
 
-            return slotType switch
-            {
-                SlotType.Operation => CollectNonNull(_slotManager.OperationSlots),
-                SlotType.Staff => CollectNonNull(_slotManager.StaffSlots),
-                SlotType.Marketing => CollectNonNull(_slotManager.MarketingSlots),
-                SlotType.Supplier => CollectNonNull(_slotManager.SupplierSlots),
-                SlotType.TempEffect => CollectNonNull(_slotManager.TempEffectSlots),
-                _ => Array.Empty<CardData>()
-            };
+            return _slotManager.GetActiveCards(slotType);
         }
 
         public IEnumerable<CardData> GetAllActiveCards()
@@ -764,21 +756,6 @@ namespace EmpireOfCards.Gameplay
                 playerBusinesses[index] = new ActiveBusiness();
 
             return playerBusinesses[index];
-        }
-
-        private static IReadOnlyList<CardData> CollectNonNull(IReadOnlyList<CardData> source)
-        {
-            var list = new List<CardData>();
-            if (source == null)
-                return list;
-
-            for (int i = 0; i < source.Count; i++)
-            {
-                if (source[i] != null)
-                    list.Add(source[i]);
-            }
-
-            return list;
         }
     }
 }

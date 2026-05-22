@@ -8,7 +8,7 @@ using EmpireOfCards.UI.Clarity;
 
 namespace EmpireOfCards.Gameplay
 {
-    public class EconomyManager : MonoBehaviour
+    public partial class EconomyManager : MonoBehaviour
     {
         [Header("Balance Data")]
         [SerializeField] private GameBalanceData balanceData;
@@ -113,82 +113,25 @@ namespace EmpireOfCards.Gameplay
             if (gm == null || boardManager == null || slotManager == null || _activeProfile == null)
                 return;
 
-            var operations = boardManager.GetCardsInSlotType(SlotType.Operation);
-            var staff = boardManager.GetCardsInSlotType(SlotType.Staff);
-            var marketing = boardManager.GetCardsInSlotType(SlotType.Marketing);
-            var suppliers = boardManager.GetCardsInSlotType(SlotType.Supplier);
-            var temp = boardManager.GetCardsInSlotType(SlotType.TempEffect);
+            var lanes = CaptureTurnLanes();
             var techCategory = gm.ActiveTechCategoryProfile;
             float previousCash = snapshot.cash;
             float previousRating = snapshot.rating;
             float previousMarketShare = snapshot.marketShare;
+            var baseline = ResolveBaselineMetrics(lanes, techCategory);
+            snapshot.demand = baseline.demand;
+            snapshot.capacity = baseline.capacity;
+            snapshot.quality = baseline.quality;
+            snapshot.staffStability = baseline.staffStability;
+            snapshot.legalRisk = baseline.legalRisk;
 
-            float opDemand = Sum(operations, c => c.demandDelta + c.customersPerTurn * 0.2f);
-            float marketingDemand = Sum(marketing, c => c.demandDelta);
-            float organicDemand = Mathf.Max(0f, (snapshot.rating - 3f) * _activeProfile.ratingToOrganicDemandWeight);
-            float tempDemand = Sum(temp, c => c.demandDelta);
+            ApplyOperationalEconomyEffects(lanes.staff.Count, lanes.suppliers.Count > 0);
 
-            snapshot.demand = Mathf.Max(0f, _activeProfile.baseDemand + opDemand + marketingDemand + organicDemand + tempDemand + (techCategory != null ? techCategory.demandModifier : 0f));
-            snapshot.capacity = Mathf.Max(1f,
-                _activeProfile.startingCapacity +
-                (techCategory != null ? techCategory.capacityModifier : 0f) +
-                Sum(operations, c => c.capacityDelta) +
-                Sum(staff, c => c.capacityDelta) +
-                Sum(suppliers, c => c.capacityDelta) +
-                Sum(temp, c => c.capacityDelta));
-
-            snapshot.quality = Mathf.Clamp(
-                _activeProfile.startingQuality +
-                (techCategory != null ? techCategory.qualityModifier : 0f) +
-                Sum(operations, c => c.qualityDelta) +
-                Sum(staff, c => c.qualityDelta) +
-                Sum(suppliers, c => c.qualityDelta) +
-                Sum(temp, c => c.qualityDelta),
-                0f, 10f);
-
-            snapshot.staffStability = Mathf.Clamp(
-                _activeProfile.startingStaffStability +
-                Sum(staff, c => c.staffStabilityDelta) +
-                Sum(temp, c => c.staffStabilityDelta) -
-                Mathf.Max(0f, marketing.Count - staff.Count) * 0.4f,
-                0f, 10f);
-
-            snapshot.legalRisk = Mathf.Clamp(
-                snapshot.legalRisk - _activeProfile.legalRiskDecayPerTurn +
-                (techCategory != null ? techCategory.legalRiskModifier : 0f) +
-                Sum(suppliers, c => c.legalRiskDeltaPerTurn) +
-                Sum(marketing, c => c.legalRiskDeltaPerTurn) +
-                Sum(temp, c => c.legalRiskDeltaPerTurn),
-                0f, Constants.LEGAL_RISK_MAX);
-
-            // --- Economy subsystem effects (modify snapshot before rating/income) ---
-            float ssStability = snapshot.staffStability;
-            float ssLegalRisk = snapshot.legalRisk;
-            float ssQuality = snapshot.quality;
-            ApplySalaryEffects(ref ssStability);
-            ApplyInsuranceEffects(ref ssLegalRisk, staff.Count);
-            ApplyStockEffects(ref ssQuality, suppliers.Count > 0);
-            snapshot.staffStability = ssStability;
-            snapshot.legalRisk = ssLegalRisk;
-            snapshot.quality = ssQuality;
-
-            float servedDemand = Mathf.Min(snapshot.demand, snapshot.capacity);
-            float overload = Mathf.Max(0f, snapshot.demand - snapshot.capacity);
-            float ratingDelta = ((snapshot.quality - 5f) * _activeProfile.qualityToRatingWeight)
-                - (overload * _activeProfile.capacityPenaltyMultiplier)
-                - Mathf.Max(0f, 4f - snapshot.staffStability) * _activeProfile.staffInstabilityPenalty
-                + (techCategory != null ? techCategory.ratingModifier : 0f)
-                + Sum(marketing, c => c.ratingDeltaPerTurn)
-                + Sum(temp, c => c.ratingDeltaPerTurn);
-
-            snapshot.rating = Mathf.Clamp(snapshot.rating + ratingDelta, _activeProfile.minRating, _activeProfile.maxRating);
-
-            grossIncome = Mathf.RoundToInt(
-                servedDemand * _activeProfile.baseRevenuePerDemand +
-                Sum(operations, c => c.cashDeltaPerTurn) +
-                Sum(marketing, c => c.cashDeltaPerTurn) +
-                Sum(suppliers, c => c.cashDeltaPerTurn) +
-                Sum(temp, c => c.cashDeltaPerTurn));
+            var outcome = ResolveTurnOutcome(lanes, techCategory);
+            float organicDemand = baseline.organicDemand;
+            float overload = outcome.overload;
+            grossIncome = outcome.grossIncome;
+            snapshot.rating = outcome.rating;
 
             if (_investorDebtTurns > 0)
             {
@@ -200,37 +143,25 @@ namespace EmpireOfCards.Gameplay
             float seasonMultiplier = GetCurrentSeasonMultiplier(gm);
             grossIncome = Mathf.RoundToInt(grossIncome * seasonMultiplier);
 
-            totalSalaries = Mathf.RoundToInt(Sum(staff, c => Mathf.Max(0f, c.upkeepCostPerTurn > 0f ? c.upkeepCostPerTurn : c.salaryPerTurn)));
+            totalSalaries = Mathf.RoundToInt(Sum(lanes.staff, c => Mathf.Max(0f, c.upkeepCostPerTurn > 0f ? c.upkeepCostPerTurn : c.salaryPerTurn)));
             int upkeepCosts = Mathf.RoundToInt(
-                Sum(marketing, c => c.upkeepCostPerTurn) +
-                Sum(suppliers, c => c.upkeepCostPerTurn) +
-                Sum(temp, c => c.upkeepCostPerTurn));
+                Sum(lanes.marketing, c => c.upkeepCostPerTurn) +
+                Sum(lanes.suppliers, c => c.upkeepCostPerTurn) +
+                Sum(lanes.temp, c => c.upkeepCostPerTurn));
             taxAmount = grossIncome > 0 ? Mathf.RoundToInt(grossIncome * (_activeProfile.ventureType == VentureType.TechApp ? 0.08f : 0.10f)) : 0;
 
-            // --- Credit + Tax subsystem effects (modify expenses) ---
-            int subsystemExpenses = 0;
-            float taxLegalRisk = snapshot.legalRisk;
-            ApplyCreditEffects(ref subsystemExpenses);
-            ApplyTaxEffects(ref taxLegalRisk, ref subsystemExpenses, gm.CurrentTurn);
-            snapshot.legalRisk = taxLegalRisk;
+            int subsystemExpenses = ApplyFinancialEconomyEffects(gm.CurrentTurn);
 
             netIncome = grossIncome - totalSalaries - upkeepCosts - taxAmount - subsystemExpenses;
 
             if (abilitySystem != null && abilitySystem.IncomeMultiplier != 1f)
                 netIncome = Mathf.RoundToInt(netIncome * abilitySystem.IncomeMultiplier);
 
-            totalCustomersThisTurn = Mathf.RoundToInt(servedDemand * 6f);
+            totalCustomersThisTurn = outcome.totalCustomersThisTurn;
+            snapshot.marketShare = outcome.marketShare;
 
-            snapshot.marketShare = Mathf.Clamp(
-                snapshot.marketShare +
-                ((snapshot.rating - 3f) * 2f) +
-                ((snapshot.quality - 5f) * 1.5f) +
-                (servedDemand - overload) * 0.5f -
-                (_rivalPressureImpact * 1.15f),
-                0f, 100f);
-
-            UpdateDerivedMetrics(servedDemand, overload, suppliers.Count, marketing.Count, temp);
-            UpdatePressure(overload, marketing.Count, staff.Count);
+            UpdateDerivedMetrics(outcome.servedDemand, overload, lanes.suppliers.Count, lanes.marketing.Count, lanes.temp);
+            UpdatePressure(overload, lanes.marketing.Count, lanes.staff.Count);
 
             gm.SetPlayerCustomers(Mathf.RoundToInt(snapshot.marketShare));
             if (netIncome > 0)
@@ -239,7 +170,7 @@ namespace EmpireOfCards.Gameplay
                 gm.AdjustMoney(netIncome);
 
             snapshot.cash = gm.PlayerMoney;
-            snapshot.activeCrisisTags = CollectActiveCrisisTags(temp);
+            snapshot.activeCrisisTags = CollectActiveCrisisTags(lanes.temp);
             UpdateCashCrisis();
 
             EventBus.PlatformRatingChanged(snapshot.rating);
@@ -369,40 +300,7 @@ namespace EmpireOfCards.Gameplay
 
         public TurnBriefData GenerateTurnBrief(int currentTurn)
         {
-            var runtime = GameManager.Instance != null ? GameManager.Instance.ActiveVentureRuntime : null;
-            TurnScriptBeat beat = runtime != null ? runtime.GetBeatForTurn(currentTurn) : null;
-            if (beat != null)
-            {
-                currentBrief = new TurnBriefData
-                {
-                    currentTurn = currentTurn,
-                    pressure = currentPressure,
-                    headline = beat.headline,
-                    detail = beat.detail,
-                    recommendedMove = beat.recommendedMove,
-                    buildIdentity = GameClarityFormatter.GetBuildIdentity(GameManager.Instance)
-                };
-                EventBus.TurnBriefGenerated(currentBrief);
-                return currentBrief;
-            }
-
-            if (TryBuildOpeningBrief(currentTurn, out var openingBrief))
-            {
-                currentBrief = openingBrief;
-                EventBus.TurnBriefGenerated(currentBrief);
-                return currentBrief;
-            }
-
-            currentBrief = new TurnBriefData
-            {
-                currentTurn = currentTurn,
-                pressure = currentPressure,
-                headline = GetBriefHeadline(currentPressure),
-                detail = GetBriefDetail(currentPressure),
-                recommendedMove = GetRecommendedMove(currentPressure),
-                buildIdentity = GameClarityFormatter.GetBuildIdentity(GameManager.Instance)
-            };
-
+            currentBrief = BuildTurnBriefInternal(currentTurn);
             EventBus.TurnBriefGenerated(currentBrief);
             return currentBrief;
         }

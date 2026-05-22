@@ -215,7 +215,7 @@ Bu repo'da "company/business" ust sinifi venture'dir. Her run'da oyuncu `1` vent
 - `Implemented in code`: rival action queue lane telegraph verir
 - `Implemented in code`: rival milestone escalation var
 - `Implemented in code`: rival pressure, player share arttikca secondary move ve aggression aciyor
-- `Partial / dormant`: eski `RivalGrowth`/legacy economy katmani duruyor, ama mevcut phase akisi daha cok `RivalAI` queued-action modelini kullaniyor
+- `Implemented in code`: queued-action bazli `RivalAI` modeli aktif; eski `RivalGrowth` hattı cleanup sprintinde repo'dan cikarildi
 
 ### 3.5 Sinerji Bonuslari
 
@@ -423,8 +423,8 @@ marketShare =
 | InsuranceSystem | `Implemented in code` | Staff count uzerinden legal risk bindiriyor |
 | StockSystem | `Implemented in code` | Kalite/venture bagli penaltiler var |
 | TaxPeriodSystem | `Implemented in code` | Profit period accumulation ve unpaid tax risk mevcut |
-| MarketPool | `Partial / legacy-adjacent` | Class aktif hesapta merkezde degil; share snapshot sistemi daha baskin |
-| InflationSystem | `Partial / dormant` | Mevcut resolve akisina bagli degil |
+| MarketPool | `Removed` | Legacy customer-pool yaklasimi cleanup sprintinde kaldirildi |
+| InflationSystem | `Removed` | Aktif resolve akisina bagli olmayan dormant sinif repo'dan cikarildi |
 
 ### 5.5 Difficulty Scaling Gercekligi
 

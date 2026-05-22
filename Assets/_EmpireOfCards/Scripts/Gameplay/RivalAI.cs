@@ -21,7 +21,7 @@ namespace EmpireOfCards.Gameplay
         public float priceScore = 5f;
     }
 
-    public class RivalAI : MonoBehaviour
+    public partial class RivalAI : MonoBehaviour
     {
         [SerializeField] private RivalData data;
         [SerializeField] private int rivalMoney;
@@ -130,44 +130,12 @@ namespace EmpireOfCards.Gameplay
 
         public void FinalizeQueuedTurn(float playerShare)
         {
-            var gm = GameManager.Instance;
-            if (gm == null)
-                return;
-
-            rivalCustomers = Mathf.Clamp(Mathf.RoundToInt(100f - playerShare + rivalPressure + rivalMomentumCustomers), 0, 100);
-            rivalIncome = Mathf.RoundToInt(45f + rivalQuality * 6f + rivalRating * 8f);
-            rivalMoney += Mathf.Max(10, rivalIncome / 4);
-            rivalMomentumCustomers = 0f;
-
-            if (rivalBusinesses.Count > 0)
-            {
-                var lead = rivalBusinesses[0];
-                lead.customers = rivalCustomers;
-                lead.income = rivalIncome;
-                lead.platformRating = rivalRating;
-                lead.qualityScore = rivalQuality;
-            }
-
-            if (_queuedActions.Count > 0)
-            {
-                lastPlayedCardName = _queuedActions[_queuedActions.Count - 1].displayName;
-                lastLaneLabel = _queuedActions[_queuedActions.Count - 1].laneLabel;
-                lastPressureStyle = _queuedActions[_queuedActions.Count - 1].shortDescription;
-            }
-
-            _runtimeState.lastResolvedTurn = gm.CurrentTurn;
-            _runtimeState.pressureBank = rivalPressure;
-            if (!string.IsNullOrWhiteSpace(lastLaneLabel))
-                _runtimeState.activePlan = lastLaneLabel;
-
-            gm.EconomyManager?.RegisterRivalPressure(rivalPressure, lastPressureStyle);
-            EventBus.RivalActed(_queuedActions.Count > 0 ? DescribeAction(_queuedActions[_queuedActions.Count - 1]) : "Rival adapts.");
-            EventBus.RivalMoodChanged(_queuedActions.Count > 0 ? _queuedActions[_queuedActions.Count - 1].moodIcon : "!");
+            FinalizeQueuedTurnInternal(playerShare);
         }
 
-        public void RespondToPoach_Accept() { }
-        public void RespondToPoach_CounterOffer() { }
-        public void RespondToPoach_RejectWithBonus() { }
+        public void RespondToPoach_Accept() => ApplyPoachResponse(RivalMove.StaffPoach, 2f, 0.05f, 0);
+        public void RespondToPoach_CounterOffer() => ApplyPoachResponse(RivalMove.StaffPoach, 3.5f, 0.10f, 10);
+        public void RespondToPoach_RejectWithBonus() => ApplyPoachResponse(RivalMove.QualityImprove, 1.5f, 0.15f, 18);
 
         public void CalculateRivalCustomers()
         {
@@ -228,41 +196,17 @@ namespace EmpireOfCards.Gameplay
 
         public RivalRuntimeState CaptureState()
         {
-            return new RivalRuntimeState
-            {
-                escalationLevel = _runtimeState.escalationLevel,
-                campaignsLaunched = _runtimeState.campaignsLaunched,
-                pressureBank = rivalPressure,
-                activePlan = _runtimeState.activePlan,
-                lastResolvedTurn = _runtimeState.lastResolvedTurn
-            };
+            return CaptureStateInternal();
         }
 
         public void RestoreState(RivalRuntimeState state)
         {
-            _runtimeState = state ?? new RivalRuntimeState();
-            rivalPressure = _runtimeState.pressureBank;
+            RestoreStateInternal(state);
         }
 
         public List<RivalQueuedAction> BuildQueuedActions(float playerShare, int currentTurn)
         {
-            _queuedActions.Clear();
-            rivalPressure = Mathf.Max(0f, rivalPressure * 0.65f);
-
-            RivalMove primaryMove = DecideMove(playerShare, currentTurn);
-            _queuedActions.Add(BuildAction(primaryMove));
-            _runtimeState.campaignsLaunched++;
-
-            if (currentTurn >= 6 || playerShare >= 46f || _runtimeState.escalationLevel >= 2)
-            {
-                RivalMove secondaryMove = ChooseSecondaryMove(primaryMove, currentTurn);
-                _queuedActions.Add(BuildAction(secondaryMove));
-            }
-
-            if (currentTurn >= 4 || playerShare >= 50f)
-                _runtimeState.escalationLevel = Mathf.Clamp(_runtimeState.escalationLevel + 1, 0, 5);
-
-            return _queuedActions;
+            return BuildQueuedActionsInternal(playerShare, currentTurn);
         }
 
         private RivalMove DecideMove(float playerShare, int currentTurn)
@@ -335,42 +279,7 @@ namespace EmpireOfCards.Gameplay
 
         public void ResolveQueuedAction(RivalQueuedAction action, float playerShare)
         {
-            if (action == null)
-                return;
-
-            lastPlayedCardName = action.displayName;
-            lastLaneLabel = action.laneLabel;
-            lastPressureStyle = action.shortDescription;
-
-            rivalPressure += action.pressureDelta;
-            rivalRating = Mathf.Clamp(rivalRating + action.ratingDelta, 1f, 5f);
-            rivalQuality = Mathf.Clamp(rivalQuality + action.qualityDelta, 0f, 10f);
-
-            if (action.displayName.Contains("Poach") && playerShare > 45f)
-                rivalMomentumCustomers += 3f;
-            else
-                rivalMomentumCustomers += action.demandSteal;
-
-            switch (action.displayName)
-            {
-                case "Price Drop Campaign":
-                    rivalMomentumCustomers += 2f;
-                    break;
-                case "Funding Round":
-                    rivalMoney += 120;
-                    break;
-                case "Expansion Lease":
-                    rivalIncome += 15;
-                    break;
-                case "Staff Poach":
-                    totalRivalEmployees++;
-                    break;
-                case "Ops Disruption":
-                    var gm = GameManager.Instance;
-                    if (gm != null && gm.BoardManager != null)
-                        gm.BoardManager.SetProductionDisabledNextTurn(true);
-                    break;
-            }
+            ResolveQueuedActionInternal(action, playerShare);
         }
 
         private string GetRivalName(VentureType venture)
