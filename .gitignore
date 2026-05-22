@@ -109,6 +109,13 @@ InitTestScene*.unity*
 # Node modules
 node_modules/
 
+# Generated 3D asset batches
+/Artifacts/generated-3d-assets/
+
+# Python caches for local tools
+__pycache__/
+*.py[cod]
+
 # OS files
 .DS_Store
 Thumbs.db

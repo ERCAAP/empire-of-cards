@@ -1,0 +1,81 @@
+project: Empire of Cards
+style_doc: Assets/steam-card-game-gdd/UI_UX_3D_ART_BIBLE.md
+prompt_doc: Assets/steam-card-game-gdd/UI_UX_3D_PROMPT_PACK.md
+output_root: /assets
+defaults:
+  reference_steps: 40
+  reference_width: 1024
+  reference_height: 1024
+  reference_view: orthographic three-quarter top-down view
+  trellis_resolution: 512
+  lod_ratios:
+    lod0: 1.0
+    lod1: 0.45
+    lod2: 0.18
+  texture_sizes:
+    desktop: 1024
+    low: 512
+first_batch:
+  - id: global_slot_operation
+    category: Global
+    priority: P1
+    kind: slot
+    prompt: Create an empty recessed Operation card slot tray for Empire of Cards. Rectangular tabletop tray with beveled rim, shallow depression, blue steel colored edge glow, sized for one 3D card, but do not include any card inside it. It must clearly indicate a valid drop target and read from a top-down Unity camera.
+    desktop_tri_budget: 500
+    low_tri_budget: 120
+  - id: global_card_generic
+    category: Global
+    priority: P1
+    kind: card
+    prompt: Create a generic physical 3D playing card model for Empire of Cards. Rounded rectangular card, slight thickness, beveled edges, dark card back, front face suitable for a world-space UI texture, subtle edge highlight, no shadow. Card ratio close to 2.5:3.5.
+    desktop_tri_budget: 300
+    low_tri_budget: 80
+  - id: global_market_block
+    category: Global
+    priority: P1
+    kind: token
+    prompt: Create a market share ownership block for Empire of Cards. Small rectangular chunky board piece, soft bevel, flips or changes color between neutral gray, player blue, and rival red. It represents local customer control and must look like a physical territory/customer block.
+    desktop_tri_budget: 300
+    low_tri_budget: 80
+  - id: ff_grill_fryer
+    category: FastFood
+    priority: P1
+    kind: prop
+    prompt: Create a stylized fast food kitchen station miniature: flat grill, fryer basket, small steam/sizzle area, steel body, orange heat accent. Readable from top-down. No realistic grease, no excessive detail.
+    desktop_tri_budget: 1500
+    low_tri_budget: 300
+  - id: ff_staff_cook
+    category: FastFood
+    priority: P1
+    kind: staff
+    prompt: Create a simple tabletop staff standee for a fast food cook. Stylized worker with apron, cap, spatula, confident busy pose, orange/yellow role accents, readable from top-down/isometric camera. Mature business-board-game style, not chibi.
+    desktop_tri_budget: 2000
+    low_tri_budget: 400
+  - id: cf_espresso_machine
+    category: Cafe
+    priority: P1
+    kind: prop
+    prompt: Create a stylized espresso machine miniature. Compact machine with portafilter shape, steam wand, cup platform, brass/steel and coffee-brown accents. Must read clearly from top-down and fit on a cafe Operation slot.
+    desktop_tri_budget: 1800
+    low_tri_budget: 350
+  - id: cf_staff_barista
+    category: Cafe
+    priority: P1
+    kind: staff
+    prompt: Create a tabletop staff standee for a cafe barista. Stylized worker with apron, coffee cup, latte art gesture, calm confident pose, cream/brown cafe colors with green staff accent. Must communicate drink consistency and quality.
+    desktop_tri_budget: 2000
+    low_tri_budget: 400
+  - id: gr_checkout_counter
+    category: Grocery
+    priority: P1
+    kind: prop
+    prompt: Create a grocery checkout counter miniature. Small register, scanner, conveyor strip or counter surface, green/gray accents. Must communicate checkout speed and friction reduction.
+    desktop_tri_budget: 1500
+    low_tri_budget: 300
+  - id: gr_produce_crate
+    category: Grocery
+    priority: P1
+    kind: prop
+    prompt: Create a fresh produce crate miniature. Wooden/cardboard crate with chunky stylized tomatoes, greens, lemons or apples, fresh green and red/yellow accents. Represents taze urun quality and spoilage risk.
+    desktop_tri_budget: 1500
+    low_tri_budget: 300

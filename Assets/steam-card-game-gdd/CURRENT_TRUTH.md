@@ -31,6 +31,7 @@ Bu dosyalar yardimci referanstir. Gameplay truth degildir:
 
 - `UI_UX_3D_ART_BIBLE.md`
 - `UI_UX_3D_PROMPT_PACK.md`
+- `MODAL_3D_ASSET_PIPELINE.md`
 - `ART_DIRECTION_GUIDE.md`
 - `ASSET_LIST.md`
 - `COMBO_MATRIX.md`
