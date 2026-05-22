@@ -1,0 +1,372 @@
+{
+  "model": "imagen-4.0-ultra-generate-001",
+  "endpoint": "https://generativelanguage.googleapis.com/v1beta/models/imagen-4.0-ultra-generate-001:predict",
+  "createdAt": "2026-05-21T23:26:54.231Z",
+  "options": {
+    "outDir": "/Users/omerercan/Documents/card-games-buisnes/Artifacts/generated-imagen-assets",
+    "aspectRatio": "3:4",
+    "imageSize": "1K",
+    "concurrency": 1,
+    "sampleCount": 1,
+    "ventures": [
+      "fast_food",
+      "cafe",
+      "market_bakkal",
+      "giyim_magazasi",
+      "tech_app"
+    ],
+    "limit": null
+  },
+  "jobs": [
+    {
+      "venture": "fast_food",
+      "index": 1,
+      "outputPath": "/Users/omerercan/Documents/card-games-buisnes/Artifacts/generated-imagen-assets/2026-05-21T23-26-54-230Z/fast_food/01.png",
+      "prompt": "small neighborhood burger shop exterior, red and yellow branding, friendly storefront, sunny street corner, charming fast food atmosphere",
+      "fullPrompt": "small neighborhood burger shop exterior, red and yellow branding, friendly storefront, sunny street corner, charming fast food atmosphere, stylized 3D cartoon, premium toon shading, bold readable shapes, vibrant clean colors, soft warm lighting, polished game asset, no text, no watermark. Avoid realistic photo style, blur, messy composition, low detail, logos, UI, watermark, horror, grunge."
+    },
+    {
+      "venture": "fast_food",
+      "index": 2,
+      "outputPath": "/Users/omerercan/Documents/card-games-buisnes/Artifacts/generated-imagen-assets/2026-05-21T23-26-54-230Z/fast_food/02.png",
+      "prompt": "burger counter interior, cashier desk, soda machine, tray area, glowing menu feeling, lively service atmosphere",
+      "fullPrompt": "burger counter interior, cashier desk, soda machine, tray area, glowing menu feeling, lively service atmosphere, stylized 3D cartoon, premium toon shading, bold readable shapes, vibrant clean colors, soft warm lighting, polished game asset, no text, no watermark. Avoid realistic photo style, blur, messy composition, low detail, logos, UI, watermark, horror, grunge."
+    },
+    {
+      "venture": "fast_food",
+      "index": 3,
+      "outputPath": "/Users/omerercan/Documents/card-games-buisnes/Artifacts/generated-imagen-assets/2026-05-21T23-26-54-230Z/fast_food/03.png",
+      "prompt": "burger kitchen station, grill, fryer, prep counter, ingredient bins, compact high-speed food production setup, isolated composition",
+      "fullPrompt": "burger kitchen station, grill, fryer, prep counter, ingredient bins, compact high-speed food production setup, isolated composition, stylized 3D cartoon, premium toon shading, bold readable shapes, vibrant clean colors, soft warm lighting, polished game asset, no text, no watermark. Avoid realistic photo style, blur, messy composition, low detail, logos, UI, watermark, horror, grunge."
+    },
+    {
+      "venture": "fast_food",
+      "index": 4,
+      "outputPath": "/Users/omerercan/Documents/card-games-buisnes/Artifacts/generated-imagen-assets/2026-05-21T23-26-54-230Z/fast_food/04.png",
+      "prompt": "burger delivery pickup shelf, packed paper bags, courier helmet, takeaway focus, minimal background",
+      "fullPrompt": "burger delivery pickup shelf, packed paper bags, courier helmet, takeaway focus, minimal background, stylized 3D cartoon, premium toon shading, bold readable shapes, vibrant clean colors, soft warm lighting, polished game asset, no text, no watermark. Avoid realistic photo style, blur, messy composition, low detail, logos, UI, watermark, horror, grunge."
+    },
+    {
+      "venture": "fast_food",
+      "index": 5,
+      "outputPath": "/Users/omerercan/Documents/card-games-buisnes/Artifacts/generated-imagen-assets/2026-05-21T23-26-54-230Z/fast_food/05.png",
+      "prompt": "late night burger restaurant exterior, neon glow, warm interior light, empty sidewalk, cozy urban fast food mood",
+      "fullPrompt": "late night burger restaurant exterior, neon glow, warm interior light, empty sidewalk, cozy urban fast food mood, stylized 3D cartoon, premium toon shading, bold readable shapes, vibrant clean colors, soft warm lighting, polished game asset, no text, no watermark. Avoid realistic photo style, blur, messy composition, low detail, logos, UI, watermark, horror, grunge."
+    },
+    {
+      "venture": "fast_food",
+      "index": 6,
+      "outputPath": "/Users/omerercan/Documents/card-games-buisnes/Artifacts/generated-imagen-assets/2026-05-21T23-26-54-230Z/fast_food/06.png",
+      "prompt": "busy lunch rush burger shop, customers waiting, trays moving, cheerful controlled chaos",
+      "fullPrompt": "busy lunch rush burger shop, customers waiting, trays moving, cheerful controlled chaos, stylized 3D cartoon, premium toon shading, bold readable shapes, vibrant clean colors, soft warm lighting, polished game asset, no text, no watermark. Avoid realistic photo style, blur, messy composition, low detail, logos, UI, watermark, horror, grunge."
+    },
+    {
+      "venture": "fast_food",
+      "index": 7,
+      "outputPath": "/Users/omerercan/Documents/card-games-buisnes/Artifacts/generated-imagen-assets/2026-05-21T23-26-54-230Z/fast_food/07.png",
+      "prompt": "upgraded burger branch, bigger storefront, sharper branding, more seating, successful local chain feeling",
+      "fullPrompt": "upgraded burger branch, bigger storefront, sharper branding, more seating, successful local chain feeling, stylized 3D cartoon, premium toon shading, bold readable shapes, vibrant clean colors, soft warm lighting, polished game asset, no text, no watermark. Avoid realistic photo style, blur, messy composition, low detail, logos, UI, watermark, horror, grunge."
+    },
+    {
+      "venture": "fast_food",
+      "index": 8,
+      "outputPath": "/Users/omerercan/Documents/card-games-buisnes/Artifacts/generated-imagen-assets/2026-05-21T23-26-54-230Z/fast_food/08.png",
+      "prompt": "burger combo display asset, burger fries soda on tray, highly appetizing, isolated card illustration, no background",
+      "fullPrompt": "burger combo display asset, burger fries soda on tray, highly appetizing, isolated card illustration, no background, stylized 3D cartoon, premium toon shading, bold readable shapes, vibrant clean colors, soft warm lighting, polished game asset, no text, no watermark. Avoid realistic photo style, blur, messy composition, low detail, logos, UI, watermark, horror, grunge."
+    },
+    {
+      "venture": "fast_food",
+      "index": 9,
+      "outputPath": "/Users/omerercan/Documents/card-games-buisnes/Artifacts/generated-imagen-assets/2026-05-21T23-26-54-230Z/fast_food/09.png",
+      "prompt": "cleaning and hygiene scene inside burger kitchen, staff sanitizing surfaces, readable management theme",
+      "fullPrompt": "cleaning and hygiene scene inside burger kitchen, staff sanitizing surfaces, readable management theme, stylized 3D cartoon, premium toon shading, bold readable shapes, vibrant clean colors, soft warm lighting, polished game asset, no text, no watermark. Avoid realistic photo style, blur, messy composition, low detail, logos, UI, watermark, horror, grunge."
+    },
+    {
+      "venture": "fast_food",
+      "index": 10,
+      "outputPath": "/Users/omerercan/Documents/card-games-buisnes/Artifacts/generated-imagen-assets/2026-05-21T23-26-54-230Z/fast_food/10.png",
+      "prompt": "premium signature burger stand asset, branded counter, spotlighted hero presentation, isolated object style, no background",
+      "fullPrompt": "premium signature burger stand asset, branded counter, spotlighted hero presentation, isolated object style, no background, stylized 3D cartoon, premium toon shading, bold readable shapes, vibrant clean colors, soft warm lighting, polished game asset, no text, no watermark. Avoid realistic photo style, blur, messy composition, low detail, logos, UI, watermark, horror, grunge."
+    },
+    {
+      "venture": "cafe",
+      "index": 1,
+      "outputPath": "/Users/omerercan/Documents/card-games-buisnes/Artifacts/generated-imagen-assets/2026-05-21T23-26-54-230Z/cafe/01.png",
+      "prompt": "cozy specialty cafe exterior, wooden facade, big windows, plants, small terrace, warm neighborhood coffee shop mood",
+      "fullPrompt": "cozy specialty cafe exterior, wooden facade, big windows, plants, small terrace, warm neighborhood coffee shop mood, stylized 3D cartoon, premium toon shading, bold readable shapes, vibrant clean colors, soft warm lighting, polished game asset, no text, no watermark. Avoid realistic photo style, blur, messy composition, low detail, logos, UI, watermark, horror, grunge."
+    },
+    {
+      "venture": "cafe",
+      "index": 2,
+      "outputPath": "/Users/omerercan/Documents/card-games-buisnes/Artifacts/generated-imagen-assets/2026-05-21T23-26-54-230Z/cafe/02.png",
+      "prompt": "espresso bar interior, coffee machine, grinder, ceramic cups, pastry display, calm premium cafe atmosphere",
+      "fullPrompt": "espresso bar interior, coffee machine, grinder, ceramic cups, pastry display, calm premium cafe atmosphere, stylized 3D cartoon, premium toon shading, bold readable shapes, vibrant clean colors, soft warm lighting, polished game asset, no text, no watermark. Avoid realistic photo style, blur, messy composition, low detail, logos, UI, watermark, horror, grunge."
+    },
+    {
+      "venture": "cafe",
+      "index": 3,
+      "outputPath": "/Users/omerercan/Documents/card-games-buisnes/Artifacts/generated-imagen-assets/2026-05-21T23-26-54-230Z/cafe/03.png",
+      "prompt": "barista workstation asset, espresso machine, milk pitcher, beans, cups, centered composition, minimal background",
+      "fullPrompt": "barista workstation asset, espresso machine, milk pitcher, beans, cups, centered composition, minimal background, stylized 3D cartoon, premium toon shading, bold readable shapes, vibrant clean colors, soft warm lighting, polished game asset, no text, no watermark. Avoid realistic photo style, blur, messy composition, low detail, logos, UI, watermark, horror, grunge."
+    },
+    {
+      "venture": "cafe",
+      "index": 4,
+      "outputPath": "/Users/omerercan/Documents/card-games-buisnes/Artifacts/generated-imagen-assets/2026-05-21T23-26-54-230Z/cafe/04.png",
+      "prompt": "cafe seating corner, round table, soft lamp, indoor plant, reading and laptop vibe, isolated composition",
+      "fullPrompt": "cafe seating corner, round table, soft lamp, indoor plant, reading and laptop vibe, isolated composition, stylized 3D cartoon, premium toon shading, bold readable shapes, vibrant clean colors, soft warm lighting, polished game asset, no text, no watermark. Avoid realistic photo style, blur, messy composition, low detail, logos, UI, watermark, horror, grunge."
+    },
+    {
+      "venture": "cafe",
+      "index": 5,
+      "outputPath": "/Users/omerercan/Documents/card-games-buisnes/Artifacts/generated-imagen-assets/2026-05-21T23-26-54-230Z/cafe/05.png",
+      "prompt": "rainy evening cafe exterior, glowing windows, warm reflections, intimate urban charm",
+      "fullPrompt": "rainy evening cafe exterior, glowing windows, warm reflections, intimate urban charm, stylized 3D cartoon, premium toon shading, bold readable shapes, vibrant clean colors, soft warm lighting, polished game asset, no text, no watermark. Avoid realistic photo style, blur, messy composition, low detail, logos, UI, watermark, horror, grunge."
+    },
+    {
+      "venture": "cafe",
+      "index": 6,
+      "outputPath": "/Users/omerercan/Documents/card-games-buisnes/Artifacts/generated-imagen-assets/2026-05-21T23-26-54-230Z/cafe/06.png",
+      "prompt": "pastry showcase asset, croissants, cakes, elegant dessert display, isolated clean composition, no background",
+      "fullPrompt": "pastry showcase asset, croissants, cakes, elegant dessert display, isolated clean composition, no background, stylized 3D cartoon, premium toon shading, bold readable shapes, vibrant clean colors, soft warm lighting, polished game asset, no text, no watermark. Avoid realistic photo style, blur, messy composition, low detail, logos, UI, watermark, horror, grunge."
+    },
+    {
+      "venture": "cafe",
+      "index": 7,
+      "outputPath": "/Users/omerercan/Documents/card-games-buisnes/Artifacts/generated-imagen-assets/2026-05-21T23-26-54-230Z/cafe/07.png",
+      "prompt": "busy morning cafe rush, queue at the bar, warm staff interaction, premium but pressured atmosphere",
+      "fullPrompt": "busy morning cafe rush, queue at the bar, warm staff interaction, premium but pressured atmosphere, stylized 3D cartoon, premium toon shading, bold readable shapes, vibrant clean colors, soft warm lighting, polished game asset, no text, no watermark. Avoid realistic photo style, blur, messy composition, low detail, logos, UI, watermark, horror, grunge."
+    },
+    {
+      "venture": "cafe",
+      "index": 8,
+      "outputPath": "/Users/omerercan/Documents/card-games-buisnes/Artifacts/generated-imagen-assets/2026-05-21T23-26-54-230Z/cafe/08.png",
+      "prompt": "upgraded cafe terrace, richer furniture, larger seating area, stronger brand personality",
+      "fullPrompt": "upgraded cafe terrace, richer furniture, larger seating area, stronger brand personality, stylized 3D cartoon, premium toon shading, bold readable shapes, vibrant clean colors, soft warm lighting, polished game asset, no text, no watermark. Avoid realistic photo style, blur, messy composition, low detail, logos, UI, watermark, horror, grunge."
+    },
+    {
+      "venture": "cafe",
+      "index": 9,
+      "outputPath": "/Users/omerercan/Documents/card-games-buisnes/Artifacts/generated-imagen-assets/2026-05-21T23-26-54-230Z/cafe/09.png",
+      "prompt": "loyal customer scene in a cozy cafe, regulars chatting, welcoming service, soft ambient light",
+      "fullPrompt": "loyal customer scene in a cozy cafe, regulars chatting, welcoming service, soft ambient light, stylized 3D cartoon, premium toon shading, bold readable shapes, vibrant clean colors, soft warm lighting, polished game asset, no text, no watermark. Avoid realistic photo style, blur, messy composition, low detail, logos, UI, watermark, horror, grunge."
+    },
+    {
+      "venture": "cafe",
+      "index": 10,
+      "outputPath": "/Users/omerercan/Documents/card-games-buisnes/Artifacts/generated-imagen-assets/2026-05-21T23-26-54-230Z/cafe/10.png",
+      "prompt": "signature coffee and dessert card asset, latte art cup with pastry plate, isolated hero object, no background",
+      "fullPrompt": "signature coffee and dessert card asset, latte art cup with pastry plate, isolated hero object, no background, stylized 3D cartoon, premium toon shading, bold readable shapes, vibrant clean colors, soft warm lighting, polished game asset, no text, no watermark. Avoid realistic photo style, blur, messy composition, low detail, logos, UI, watermark, horror, grunge."
+    },
+    {
+      "venture": "market_bakkal",
+      "index": 1,
+      "outputPath": "/Users/omerercan/Documents/card-games-buisnes/Artifacts/generated-imagen-assets/2026-05-21T23-26-54-230Z/market_bakkal/01.png",
+      "prompt": "small neighborhood market exterior, colorful fruit crates, bread stand, local storefront, friendly street atmosphere",
+      "fullPrompt": "small neighborhood market exterior, colorful fruit crates, bread stand, local storefront, friendly street atmosphere, stylized 3D cartoon, premium toon shading, bold readable shapes, vibrant clean colors, soft warm lighting, polished game asset, no text, no watermark. Avoid realistic photo style, blur, messy composition, low detail, logos, UI, watermark, horror, grunge."
+    },
+    {
+      "venture": "market_bakkal",
+      "index": 2,
+      "outputPath": "/Users/omerercan/Documents/card-games-buisnes/Artifacts/generated-imagen-assets/2026-05-21T23-26-54-230Z/market_bakkal/02.png",
+      "prompt": "compact market interior, shelf aisles, fridges, snacks, daily essentials, readable local grocery layout",
+      "fullPrompt": "compact market interior, shelf aisles, fridges, snacks, daily essentials, readable local grocery layout, stylized 3D cartoon, premium toon shading, bold readable shapes, vibrant clean colors, soft warm lighting, polished game asset, no text, no watermark. Avoid realistic photo style, blur, messy composition, low detail, logos, UI, watermark, horror, grunge."
+    },
+    {
+      "venture": "market_bakkal",
+      "index": 3,
+      "outputPath": "/Users/omerercan/Documents/card-games-buisnes/Artifacts/generated-imagen-assets/2026-05-21T23-26-54-230Z/market_bakkal/03.png",
+      "prompt": "fresh produce corner asset, tomatoes, peppers, greens, wooden crates, isolated composition, no background",
+      "fullPrompt": "fresh produce corner asset, tomatoes, peppers, greens, wooden crates, isolated composition, no background, stylized 3D cartoon, premium toon shading, bold readable shapes, vibrant clean colors, soft warm lighting, polished game asset, no text, no watermark. Avoid realistic photo style, blur, messy composition, low detail, logos, UI, watermark, horror, grunge."
+    },
+    {
+      "venture": "market_bakkal",
+      "index": 4,
+      "outputPath": "/Users/omerercan/Documents/card-games-buisnes/Artifacts/generated-imagen-assets/2026-05-21T23-26-54-230Z/market_bakkal/04.png",
+      "prompt": "small grocery cashier counter asset, register, candy shelf, shopping basket, centered card art composition",
+      "fullPrompt": "small grocery cashier counter asset, register, candy shelf, shopping basket, centered card art composition, stylized 3D cartoon, premium toon shading, bold readable shapes, vibrant clean colors, soft warm lighting, polished game asset, no text, no watermark. Avoid realistic photo style, blur, messy composition, low detail, logos, UI, watermark, horror, grunge."
+    },
+    {
+      "venture": "market_bakkal",
+      "index": 5,
+      "outputPath": "/Users/omerercan/Documents/card-games-buisnes/Artifacts/generated-imagen-assets/2026-05-21T23-26-54-230Z/market_bakkal/05.png",
+      "prompt": "night-open bakkal exterior, warm fluorescent light, quiet street, dependable neighborhood service mood",
+      "fullPrompt": "night-open bakkal exterior, warm fluorescent light, quiet street, dependable neighborhood service mood, stylized 3D cartoon, premium toon shading, bold readable shapes, vibrant clean colors, soft warm lighting, polished game asset, no text, no watermark. Avoid realistic photo style, blur, messy composition, low detail, logos, UI, watermark, horror, grunge."
+    },
+    {
+      "venture": "market_bakkal",
+      "index": 6,
+      "outputPath": "/Users/omerercan/Documents/card-games-buisnes/Artifacts/generated-imagen-assets/2026-05-21T23-26-54-230Z/market_bakkal/06.png",
+      "prompt": "whatsapp order and local delivery setup, packed bags, scooter ready, practical community commerce feel",
+      "fullPrompt": "whatsapp order and local delivery setup, packed bags, scooter ready, practical community commerce feel, stylized 3D cartoon, premium toon shading, bold readable shapes, vibrant clean colors, soft warm lighting, polished game asset, no text, no watermark. Avoid realistic photo style, blur, messy composition, low detail, logos, UI, watermark, horror, grunge."
+    },
+    {
+      "venture": "market_bakkal",
+      "index": 7,
+      "outputPath": "/Users/omerercan/Documents/card-games-buisnes/Artifacts/generated-imagen-assets/2026-05-21T23-26-54-230Z/market_bakkal/07.png",
+      "prompt": "upgraded neighborhood market, cleaner shelves, better fridges, stronger fresh section identity",
+      "fullPrompt": "upgraded neighborhood market, cleaner shelves, better fridges, stronger fresh section identity, stylized 3D cartoon, premium toon shading, bold readable shapes, vibrant clean colors, soft warm lighting, polished game asset, no text, no watermark. Avoid realistic photo style, blur, messy composition, low detail, logos, UI, watermark, horror, grunge."
+    },
+    {
+      "venture": "market_bakkal",
+      "index": 8,
+      "outputPath": "/Users/omerercan/Documents/card-games-buisnes/Artifacts/generated-imagen-assets/2026-05-21T23-26-54-230Z/market_bakkal/08.png",
+      "prompt": "bread and dairy shelf asset, milk, yogurt, loaves, basic essentials, isolated composition, plain background",
+      "fullPrompt": "bread and dairy shelf asset, milk, yogurt, loaves, basic essentials, isolated composition, plain background, stylized 3D cartoon, premium toon shading, bold readable shapes, vibrant clean colors, soft warm lighting, polished game asset, no text, no watermark. Avoid realistic photo style, blur, messy composition, low detail, logos, UI, watermark, horror, grunge."
+    },
+    {
+      "venture": "market_bakkal",
+      "index": 9,
+      "outputPath": "/Users/omerercan/Documents/card-games-buisnes/Artifacts/generated-imagen-assets/2026-05-21T23-26-54-230Z/market_bakkal/09.png",
+      "prompt": "market fridge breakdown crisis, worried shopkeeper, melting cold products, readable management tension",
+      "fullPrompt": "market fridge breakdown crisis, worried shopkeeper, melting cold products, readable management tension, stylized 3D cartoon, premium toon shading, bold readable shapes, vibrant clean colors, soft warm lighting, polished game asset, no text, no watermark. Avoid realistic photo style, blur, messy composition, low detail, logos, UI, watermark, horror, grunge."
+    },
+    {
+      "venture": "market_bakkal",
+      "index": 10,
+      "outputPath": "/Users/omerercan/Documents/card-games-buisnes/Artifacts/generated-imagen-assets/2026-05-21T23-26-54-230Z/market_bakkal/10.png",
+      "prompt": "loyal neighborhood crowd around a local bakkal, families and elderly customers, strong community bond",
+      "fullPrompt": "loyal neighborhood crowd around a local bakkal, families and elderly customers, strong community bond, stylized 3D cartoon, premium toon shading, bold readable shapes, vibrant clean colors, soft warm lighting, polished game asset, no text, no watermark. Avoid realistic photo style, blur, messy composition, low detail, logos, UI, watermark, horror, grunge."
+    },
+    {
+      "venture": "giyim_magazasi",
+      "index": 1,
+      "outputPath": "/Users/omerercan/Documents/card-games-buisnes/Artifacts/generated-imagen-assets/2026-05-21T23-26-54-230Z/giyim_magazasi/01.png",
+      "prompt": "stylish local clothing boutique exterior, elegant window display, mannequins, modern fashion storefront",
+      "fullPrompt": "stylish local clothing boutique exterior, elegant window display, mannequins, modern fashion storefront, stylized 3D cartoon, premium toon shading, bold readable shapes, vibrant clean colors, soft warm lighting, polished game asset, no text, no watermark. Avoid realistic photo style, blur, messy composition, low detail, logos, UI, watermark, horror, grunge."
+    },
+    {
+      "venture": "giyim_magazasi",
+      "index": 2,
+      "outputPath": "/Users/omerercan/Documents/card-games-buisnes/Artifacts/generated-imagen-assets/2026-05-21T23-26-54-230Z/giyim_magazasi/02.png",
+      "prompt": "boutique interior with clothing racks, folded tables, fitting mirror, curated premium local fashion vibe",
+      "fullPrompt": "boutique interior with clothing racks, folded tables, fitting mirror, curated premium local fashion vibe, stylized 3D cartoon, premium toon shading, bold readable shapes, vibrant clean colors, soft warm lighting, polished game asset, no text, no watermark. Avoid realistic photo style, blur, messy composition, low detail, logos, UI, watermark, horror, grunge."
+    },
+    {
+      "venture": "giyim_magazasi",
+      "index": 3,
+      "outputPath": "/Users/omerercan/Documents/card-games-buisnes/Artifacts/generated-imagen-assets/2026-05-21T23-26-54-230Z/giyim_magazasi/03.png",
+      "prompt": "fashion display mannequin asset, trendy outfit, boutique styling, isolated composition, no background",
+      "fullPrompt": "fashion display mannequin asset, trendy outfit, boutique styling, isolated composition, no background, stylized 3D cartoon, premium toon shading, bold readable shapes, vibrant clean colors, soft warm lighting, polished game asset, no text, no watermark. Avoid realistic photo style, blur, messy composition, low detail, logos, UI, watermark, horror, grunge."
+    },
+    {
+      "venture": "giyim_magazasi",
+      "index": 4,
+      "outputPath": "/Users/omerercan/Documents/card-games-buisnes/Artifacts/generated-imagen-assets/2026-05-21T23-26-54-230Z/giyim_magazasi/04.png",
+      "prompt": "clothing rack asset with curated garments, neat boutique presentation, centered clean card art, plain background",
+      "fullPrompt": "clothing rack asset with curated garments, neat boutique presentation, centered clean card art, plain background, stylized 3D cartoon, premium toon shading, bold readable shapes, vibrant clean colors, soft warm lighting, polished game asset, no text, no watermark. Avoid realistic photo style, blur, messy composition, low detail, logos, UI, watermark, horror, grunge."
+    },
+    {
+      "venture": "giyim_magazasi",
+      "index": 5,
+      "outputPath": "/Users/omerercan/Documents/card-games-buisnes/Artifacts/generated-imagen-assets/2026-05-21T23-26-54-230Z/giyim_magazasi/05.png",
+      "prompt": "fitting room corner asset, mirror, curtain, stool, elegant retail detail, isolated composition",
+      "fullPrompt": "fitting room corner asset, mirror, curtain, stool, elegant retail detail, isolated composition, stylized 3D cartoon, premium toon shading, bold readable shapes, vibrant clean colors, soft warm lighting, polished game asset, no text, no watermark. Avoid realistic photo style, blur, messy composition, low detail, logos, UI, watermark, horror, grunge."
+    },
+    {
+      "venture": "giyim_magazasi",
+      "index": 6,
+      "outputPath": "/Users/omerercan/Documents/card-games-buisnes/Artifacts/generated-imagen-assets/2026-05-21T23-26-54-230Z/giyim_magazasi/06.png",
+      "prompt": "seasonal sale event inside a boutique, customers browsing, energetic retail pressure",
+      "fullPrompt": "seasonal sale event inside a boutique, customers browsing, energetic retail pressure, stylized 3D cartoon, premium toon shading, bold readable shapes, vibrant clean colors, soft warm lighting, polished game asset, no text, no watermark. Avoid realistic photo style, blur, messy composition, low detail, logos, UI, watermark, horror, grunge."
+    },
+    {
+      "venture": "giyim_magazasi",
+      "index": 7,
+      "outputPath": "/Users/omerercan/Documents/card-games-buisnes/Artifacts/generated-imagen-assets/2026-05-21T23-26-54-230Z/giyim_magazasi/07.png",
+      "prompt": "influencer photo shoot in a clothing store, ring light, phone stand, styled outfits, social media retail mood",
+      "fullPrompt": "influencer photo shoot in a clothing store, ring light, phone stand, styled outfits, social media retail mood, stylized 3D cartoon, premium toon shading, bold readable shapes, vibrant clean colors, soft warm lighting, polished game asset, no text, no watermark. Avoid realistic photo style, blur, messy composition, low detail, logos, UI, watermark, horror, grunge."
+    },
+    {
+      "venture": "giyim_magazasi",
+      "index": 8,
+      "outputPath": "/Users/omerercan/Documents/card-games-buisnes/Artifacts/generated-imagen-assets/2026-05-21T23-26-54-230Z/giyim_magazasi/08.png",
+      "prompt": "upgraded fashion boutique, stronger visual merchandising, premium lighting, more confident brand identity",
+      "fullPrompt": "upgraded fashion boutique, stronger visual merchandising, premium lighting, more confident brand identity, stylized 3D cartoon, premium toon shading, bold readable shapes, vibrant clean colors, soft warm lighting, polished game asset, no text, no watermark. Avoid realistic photo style, blur, messy composition, low detail, logos, UI, watermark, horror, grunge."
+    },
+    {
+      "venture": "giyim_magazasi",
+      "index": 9,
+      "outputPath": "/Users/omerercan/Documents/card-games-buisnes/Artifacts/generated-imagen-assets/2026-05-21T23-26-54-230Z/giyim_magazasi/09.png",
+      "prompt": "online order packing station for a boutique, branded boxes, tissue paper, shipping workflow, isolated composition",
+      "fullPrompt": "online order packing station for a boutique, branded boxes, tissue paper, shipping workflow, isolated composition, stylized 3D cartoon, premium toon shading, bold readable shapes, vibrant clean colors, soft warm lighting, polished game asset, no text, no watermark. Avoid realistic photo style, blur, messy composition, low detail, logos, UI, watermark, horror, grunge."
+    },
+    {
+      "venture": "giyim_magazasi",
+      "index": 10,
+      "outputPath": "/Users/omerercan/Documents/card-games-buisnes/Artifacts/generated-imagen-assets/2026-05-21T23-26-54-230Z/giyim_magazasi/10.png",
+      "prompt": "signature outfit hero asset, mannequin with standout fashion look, isolated object style, no background",
+      "fullPrompt": "signature outfit hero asset, mannequin with standout fashion look, isolated object style, no background, stylized 3D cartoon, premium toon shading, bold readable shapes, vibrant clean colors, soft warm lighting, polished game asset, no text, no watermark. Avoid realistic photo style, blur, messy composition, low detail, logos, UI, watermark, horror, grunge."
+    },
+    {
+      "venture": "tech_app",
+      "index": 1,
+      "outputPath": "/Users/omerercan/Documents/card-games-buisnes/Artifacts/generated-imagen-assets/2026-05-21T23-26-54-230Z/tech_app/01.png",
+      "prompt": "small startup app office, glass frontage, glowing monitors, creative software company mood",
+      "fullPrompt": "small startup app office, glass frontage, glowing monitors, creative software company mood, stylized 3D cartoon, premium toon shading, bold readable shapes, vibrant clean colors, soft warm lighting, polished game asset, no text, no watermark. Avoid realistic photo style, blur, messy composition, low detail, logos, UI, watermark, horror, grunge."
+    },
+    {
+      "venture": "tech_app",
+      "index": 2,
+      "outputPath": "/Users/omerercan/Documents/card-games-buisnes/Artifacts/generated-imagen-assets/2026-05-21T23-26-54-230Z/tech_app/02.png",
+      "prompt": "developer workstation asset, dual monitors, keyboard, sticky notes, app prototype on screen, isolated composition",
+      "fullPrompt": "developer workstation asset, dual monitors, keyboard, sticky notes, app prototype on screen, isolated composition, stylized 3D cartoon, premium toon shading, bold readable shapes, vibrant clean colors, soft warm lighting, polished game asset, no text, no watermark. Avoid realistic photo style, blur, messy composition, low detail, logos, UI, watermark, horror, grunge."
+    },
+    {
+      "venture": "tech_app",
+      "index": 3,
+      "outputPath": "/Users/omerercan/Documents/card-games-buisnes/Artifacts/generated-imagen-assets/2026-05-21T23-26-54-230Z/tech_app/03.png",
+      "prompt": "backend server rack asset, glowing dashboards, compact cloud infrastructure look, centered composition, no background",
+      "fullPrompt": "backend server rack asset, glowing dashboards, compact cloud infrastructure look, centered composition, no background, stylized 3D cartoon, premium toon shading, bold readable shapes, vibrant clean colors, soft warm lighting, polished game asset, no text, no watermark. Avoid realistic photo style, blur, messy composition, low detail, logos, UI, watermark, horror, grunge."
+    },
+    {
+      "venture": "tech_app",
+      "index": 4,
+      "outputPath": "/Users/omerercan/Documents/card-games-buisnes/Artifacts/generated-imagen-assets/2026-05-21T23-26-54-230Z/tech_app/04.png",
+      "prompt": "mvp launch war room, small team around screens, excitement and tension, startup release night",
+      "fullPrompt": "mvp launch war room, small team around screens, excitement and tension, startup release night, stylized 3D cartoon, premium toon shading, bold readable shapes, vibrant clean colors, soft warm lighting, polished game asset, no text, no watermark. Avoid realistic photo style, blur, messy composition, low detail, logos, UI, watermark, horror, grunge."
+    },
+    {
+      "venture": "tech_app",
+      "index": 5,
+      "outputPath": "/Users/omerercan/Documents/card-games-buisnes/Artifacts/generated-imagen-assets/2026-05-21T23-26-54-230Z/tech_app/05.png",
+      "prompt": "crash spike emergency scene, warning monitors, hotfix mood, stressed but readable startup operations",
+      "fullPrompt": "crash spike emergency scene, warning monitors, hotfix mood, stressed but readable startup operations, stylized 3D cartoon, premium toon shading, bold readable shapes, vibrant clean colors, soft warm lighting, polished game asset, no text, no watermark. Avoid realistic photo style, blur, messy composition, low detail, logos, UI, watermark, horror, grunge."
+    },
+    {
+      "venture": "tech_app",
+      "index": 6,
+      "outputPath": "/Users/omerercan/Documents/card-games-buisnes/Artifacts/generated-imagen-assets/2026-05-21T23-26-54-230Z/tech_app/06.png",
+      "prompt": "product design corner asset, wireframes, tablets, sticky notes, playful startup planning area, isolated composition",
+      "fullPrompt": "product design corner asset, wireframes, tablets, sticky notes, playful startup planning area, isolated composition, stylized 3D cartoon, premium toon shading, bold readable shapes, vibrant clean colors, soft warm lighting, polished game asset, no text, no watermark. Avoid realistic photo style, blur, messy composition, low detail, logos, UI, watermark, horror, grunge."
+    },
+    {
+      "venture": "tech_app",
+      "index": 7,
+      "outputPath": "/Users/omerercan/Documents/card-games-buisnes/Artifacts/generated-imagen-assets/2026-05-21T23-26-54-230Z/tech_app/07.png",
+      "prompt": "growth analytics setup, large dashboard screens, app metrics, user acquisition mood",
+      "fullPrompt": "growth analytics setup, large dashboard screens, app metrics, user acquisition mood, stylized 3D cartoon, premium toon shading, bold readable shapes, vibrant clean colors, soft warm lighting, polished game asset, no text, no watermark. Avoid realistic photo style, blur, messy composition, low detail, logos, UI, watermark, horror, grunge."
+    },
+    {
+      "venture": "tech_app",
+      "index": 8,
+      "outputPath": "/Users/omerercan/Documents/card-games-buisnes/Artifacts/generated-imagen-assets/2026-05-21T23-26-54-230Z/tech_app/08.png",
+      "prompt": "late night startup office, pizza boxes, glowing screens, backend pressure, determined indie tech team vibe",
+      "fullPrompt": "late night startup office, pizza boxes, glowing screens, backend pressure, determined indie tech team vibe, stylized 3D cartoon, premium toon shading, bold readable shapes, vibrant clean colors, soft warm lighting, polished game asset, no text, no watermark. Avoid realistic photo style, blur, messy composition, low detail, logos, UI, watermark, horror, grunge."
+    },
+    {
+      "venture": "tech_app",
+      "index": 9,
+      "outputPath": "/Users/omerercan/Documents/card-games-buisnes/Artifacts/generated-imagen-assets/2026-05-21T23-26-54-230Z/tech_app/09.png",
+      "prompt": "scaled-up app company office, more desks, cleaner branding, stronger infrastructure, successful startup growth fantasy",
+      "fullPrompt": "scaled-up app company office, more desks, cleaner branding, stronger infrastructure, successful startup growth fantasy, stylized 3D cartoon, premium toon shading, bold readable shapes, vibrant clean colors, soft warm lighting, polished game asset, no text, no watermark. Avoid realistic photo style, blur, messy composition, low detail, logos, UI, watermark, horror, grunge."
+    },
+    {
+      "venture": "tech_app",
+      "index": 10,
+      "outputPath": "/Users/omerercan/Documents/card-games-buisnes/Artifacts/generated-imagen-assets/2026-05-21T23-26-54-230Z/tech_app/10.png",
+      "prompt": "mobile app icon and dashboard hero asset, floating phone screen with analytics glow, isolated composition, no background",
+      "fullPrompt": "mobile app icon and dashboard hero asset, floating phone screen with analytics glow, isolated composition, no background, stylized 3D cartoon, premium toon shading, bold readable shapes, vibrant clean colors, soft warm lighting, polished game asset, no text, no watermark. Avoid realistic photo style, blur, messy composition, low detail, logos, UI, watermark, horror, grunge."
+    }
+  ]
+}
