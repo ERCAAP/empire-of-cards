@@ -6,7 +6,7 @@ This folder contains the Modal serverless GPU scaffold for generating Unity-read
 
 Ready:
 
-- First-batch asset manifest.
+- Full production asset manifest with global, Phase 1, Phase 2, and shared human-base groups.
 - Global style and negative prompts.
 - Modal app scaffold.
 - Z-Image reference generator worker.
@@ -14,6 +14,8 @@ Ready:
 - Transparent PNG cutout pass for references.
 - TRELLIS.2 worker shell with configurable command template.
 - Blender postprocess entrypoint for raw GLB to FBX.
+- Per-asset Unity import destinations under `Assets/_EmpireOfCards/Art/Generated3D` and `Assets/_EmpireOfCards/Materials/Generated3D`.
+- Per-asset scale, texture, LOD, and import metadata written during processing.
 - Local artifact folders under `Artifacts/generated-3d-assets/`.
 
 Not done yet:
@@ -80,10 +82,24 @@ modal run tools/asset_pipeline/modal_app.py::generate_reference --asset-id globa
 modal run tools/asset_pipeline/modal_app.py::generate_reference --asset-id ff_grill_fryer
 ```
 
+List all assets or a named group:
+
+```bash
+modal run tools/asset_pipeline/modal_app.py::list_assets
+modal run tools/asset_pipeline/modal_app.py::list_assets --group phase1_launch
+modal run tools/asset_pipeline/modal_app.py::list_assets --group phase2_ventures
+```
+
 Generate 3D after TRELLIS.2 command is validated:
 
 ```bash
 modal run tools/asset_pipeline/modal_app.py::generate_3d_asset --asset-id global_slot_operation
+```
+
+Import the processed asset into Unity folders:
+
+```bash
+python tools/asset_pipeline/import_to_unity.py global_slot_operation
 ```
 
 The old `generate_first_batch` entrypoint is guarded and fails unless `--allow-batch true` is passed. It should not be used for production asset creation.
@@ -99,21 +115,14 @@ An asset is not ready for TRELLIS.2 until all checks pass:
 - Color and material match the shared Empire of Cards art bible.
 - Asset role is readable from the top-down/isometric board camera.
 
-## First Batch Assets
+## Production Groups
 
-The first batch is intentionally small, but each item should still be generated and approved one by one:
+Generate and approve one asset at a time, but use these logical groups:
 
-- `global_slot_operation`
-- `global_card_generic`
-- `global_market_block`
-- `ff_grill_fryer`
-- `ff_staff_cook`
-- `cf_espresso_machine`
-- `cf_staff_barista`
-- `gr_checkout_counter`
-- `gr_produce_crate`
-
-This proves the pipeline before spending GPU time on the full asset list.
+- `phase1_launch`: global board assets plus Fast Food, Cafe, and Grocery launch props and staff.
+- `phase1_staff`: the full Phase 1 human set for staffing variation.
+- `phase2_ventures`: Tech App and Clothing Store props, buildings, seated cashier, and extra staff.
+- `shared_humans`: neutral T-pose male/female bases and seated cashier base for future variants.
 
 ## Output Layout
 
@@ -123,6 +132,7 @@ Modal volume paths:
 /assets/references/<asset_id>/reference.png
 /assets/raw_glb/<asset_id>/raw.glb
 /assets/processed/<asset_id>/EOC_<asset_id>_LOD0.fbx
+/assets/processed/<asset_id>/import_manifest.json
 /assets/logs/<asset_id>/*.log
 ```
 
@@ -130,4 +140,11 @@ Local artifact mirror:
 
 ```text
 Artifacts/generated-3d-assets/
+```
+
+Unity destinations:
+
+```text
+Assets/_EmpireOfCards/Art/Generated3D/<Category>/<Kind>/<asset_id>/
+Assets/_EmpireOfCards/Materials/Generated3D/<Category>/<Kind>/<asset_id>/
 ```

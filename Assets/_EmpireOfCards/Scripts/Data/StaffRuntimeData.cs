@@ -27,6 +27,7 @@ namespace EmpireOfCards.Data
         public int agreedSalary;
         public int moraleDelta;
         public int loyaltyDelta;
+        public bool placedImmediately;
     }
 
     [Serializable]
@@ -81,5 +82,52 @@ namespace EmpireOfCards.Data
         public int experience;
         public int turnsWorked;
         public int consecutiveOvertimeTurns;
+    }
+
+    [Serializable]
+    public class StaffSystemRuntimeSaveData
+    {
+        public List<StaffApplicant> applicantPool = new List<StaffApplicant>();
+        public int lastApplicantTurn;
+        public string pendingPoachCardId;
+        public int pendingPoachOffer;
+        public int lastPoachTurn;
+    }
+
+    [Serializable]
+    public class ActiveCreditSaveData
+    {
+        public CreditType type;
+        public int principal;
+        public float interestRate;
+        public int turnsRemaining;
+        public int accumulatedInterest;
+    }
+
+    [Serializable]
+    public class LegalIncidentRuntimeData
+    {
+        public string incidentId;
+        public string displayName;
+        public int turnsRemaining;
+        public int forcedExpensePerTurn;
+        public float ratingPenaltyPerTurn;
+        public float capacityPenalty;
+        public float legalRiskDeltaPerTurn;
+        public int closureTurnsRemaining;
+    }
+
+    [Serializable]
+    public class EconomyRuntimeSaveData
+    {
+        public SalaryChoice lastSalaryChoice;
+        public int consecutiveSalaryDelays;
+        public InsuranceType insuranceType;
+        public int payrollDebt;
+        public int accumulatedNetProfit;
+        public int unpaidTaxDebt;
+        public int unpaidTaxTurns;
+        public List<ActiveCreditSaveData> activeCredits = new List<ActiveCreditSaveData>();
+        public LegalIncidentRuntimeData legalIncident;
     }
 }

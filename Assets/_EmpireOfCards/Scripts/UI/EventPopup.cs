@@ -99,6 +99,41 @@ namespace EmpireOfCards.UI
             stateTimer = 0f;
         }
 
+        public void ShowMessage(string title, string detail, string context = null)
+        {
+            string resolvedTitle = string.IsNullOrWhiteSpace(title) ? "ALERT" : title.ToUpperInvariant();
+            string resolvedDetail = string.IsNullOrWhiteSpace(detail) ? string.Empty : detail;
+            string resolvedContext = string.IsNullOrWhiteSpace(context) ? string.Empty : context.ToUpperInvariant();
+
+            if (string.IsNullOrWhiteSpace(resolvedTitle) && string.IsNullOrWhiteSpace(resolvedDetail))
+            {
+                HideImmediate();
+                return;
+            }
+
+            gameObject.SetActive(true);
+
+            if (titleText != null)
+                titleText.text = resolvedTitle;
+            if (detailText != null)
+                detailText.text = resolvedDetail;
+            if (contextText != null)
+            {
+                contextText.text = resolvedContext;
+                contextText.gameObject.SetActive(!string.IsNullOrWhiteSpace(resolvedContext));
+            }
+
+            if (canvasGroup != null)
+            {
+                canvasGroup.alpha = 0f;
+                canvasGroup.blocksRaycasts = false;
+                canvasGroup.interactable = false;
+            }
+
+            state = State.FadeIn;
+            stateTimer = 0f;
+        }
+
         private void UpdateFadeIn()
         {
             float t = Mathf.Clamp01(stateTimer / fadeInDuration);

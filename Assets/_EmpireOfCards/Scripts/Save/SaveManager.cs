@@ -13,7 +13,7 @@ namespace EmpireOfCards.Save
     [Serializable]
     public class SaveData
     {
-        public int saveVersion = 2;
+        public int saveVersion = 5;
         public int totalXP;
         public int currentAscension;
         public int runsPlayed;
@@ -29,7 +29,7 @@ namespace EmpireOfCards.Save
     [Serializable]
     public class RunSaveData
     {
-        public int saveVersion = 2;
+        public int saveVersion = 5;
         public string slotId;
         public string runName;
         public string runCategoryId;
@@ -57,6 +57,8 @@ namespace EmpireOfCards.Save
         public List<string> supplierSlotIds = new List<string>();
         public List<string> tempEffectSlotIds = new List<string>();
         public List<StaffRuntimeSaveData> staffRuntimeStates = new List<StaffRuntimeSaveData>();
+        public StaffSystemRuntimeSaveData staffSystemState;
+        public EconomyRuntimeSaveData economyRuntimeState;
         public VentureRuntimeState ventureRuntimeState;
         public OpeningArcState openingArcState;
         public EventChainState eventChainState;
@@ -76,7 +78,7 @@ namespace EmpireOfCards.Save
     public class SaveManager : MonoBehaviour
     {
         public static SaveManager Instance { get; private set; }
-        public const int CurrentRunSaveVersion = 3;
+        public const int CurrentRunSaveVersion = 5;
 
         [SerializeField] private string saveFileName = "empire_save.json";
 
@@ -245,7 +247,9 @@ namespace EmpireOfCards.Save
             NormalizeRunData(cachedData);
 
             return cachedData.runs
-                .FindAll(run => run != null && run.HasData());
+                .FindAll(run => run != null
+                    && run.HasData()
+                    && LaunchVentureScope.IsEnabled((VentureType)run.ventureType));
         }
 
         public RunSaveData LoadRun()
@@ -263,7 +267,7 @@ namespace EmpireOfCards.Save
             if (!string.IsNullOrWhiteSpace(slotId))
             {
                 RunSaveData selectedRun = cachedData.runs.Find(run => run != null && run.slotId == slotId && run.HasData());
-                if (selectedRun != null)
+                if (selectedRun != null && LaunchVentureScope.IsEnabled((VentureType)selectedRun.ventureType))
                 {
                     cachedData.lastPlayedRunId = selectedRun.slotId;
                     cachedData.activeRun = selectedRun;
@@ -274,14 +278,16 @@ namespace EmpireOfCards.Save
             if (!string.IsNullOrWhiteSpace(cachedData.lastPlayedRunId))
             {
                 RunSaveData lastPlayed = cachedData.runs.Find(run => run != null && run.slotId == cachedData.lastPlayedRunId && run.HasData());
-                if (lastPlayed != null)
+                if (lastPlayed != null && LaunchVentureScope.IsEnabled((VentureType)lastPlayed.ventureType))
                 {
                     cachedData.activeRun = lastPlayed;
                     return lastPlayed;
                 }
             }
 
-            RunSaveData firstRun = cachedData.runs.Find(run => run != null && run.HasData());
+            RunSaveData firstRun = cachedData.runs.Find(run => run != null
+                && run.HasData()
+                && LaunchVentureScope.IsEnabled((VentureType)run.ventureType));
             cachedData.activeRun = firstRun;
             if (firstRun != null)
                 cachedData.lastPlayedRunId = firstRun.slotId;

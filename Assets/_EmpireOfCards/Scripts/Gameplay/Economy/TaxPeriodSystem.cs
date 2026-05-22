@@ -1,5 +1,6 @@
 using UnityEngine;
 using EmpireOfCards.Core;
+using EmpireOfCards.Data;
 
 namespace EmpireOfCards.Gameplay.Economy
 {
@@ -95,6 +96,22 @@ namespace EmpireOfCards.Gameplay.Economy
                 unpaidTaxDebt = 0;
                 unpaidTaxTurns = 0;
             }
+        }
+
+        public void AddDirectTaxDebt(int amount)
+        {
+            if (amount <= 0)
+                return;
+
+            unpaidTaxDebt += amount;
+            unpaidTaxTurns = Mathf.Max(1, unpaidTaxTurns);
+        }
+
+        public void RestoreState(int accumulatedProfit, int debt, int debtTurns)
+        {
+            accumulatedNetProfit = accumulatedProfit;
+            unpaidTaxDebt = Mathf.Max(0, debt);
+            unpaidTaxTurns = unpaidTaxDebt > 0 ? Mathf.Max(0, debtTurns) : 0;
         }
 
         public void Reset()

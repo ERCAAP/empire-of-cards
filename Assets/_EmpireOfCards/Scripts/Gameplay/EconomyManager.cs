@@ -49,6 +49,16 @@ namespace EmpireOfCards.Gameplay
         private float _rivalPressureImpact;
         private string _rivalPressureStyle = "balanced";
         private float _staffRatingPenaltyThisTurn;
+        private float _loyaltyDemandContributionThisTurn;
+        private float _inflationStepThisTurn;
+        private int _creditExpenseThisTurn;
+        private int _insuranceExpenseThisTurn;
+        private int _stockLossExpenseThisTurn;
+        private int _inflationExpenseThisTurn;
+        private int _supplierFailureExpenseThisTurn;
+        private int _taxDebtExpenseThisTurn;
+        private int _payrollDebt;
+        private LegalIncidentRuntimeData _legalIncident;
 
         public int GrossIncome => grossIncome;
         public int TotalSalaries => totalSalaries;
@@ -69,6 +79,7 @@ namespace EmpireOfCards.Gameplay
         public TurnReportData LastReport => lastReport;
         public float RivalPressureImpact => _rivalPressureImpact;
         public string RivalPressureStyle => _rivalPressureStyle;
+        public int PayrollDebt => _payrollDebt;
 
         public void Init(GameBalanceData balance, BoardManager board,
             AbilitySystem ability = null, SlotManager slots = null, StaffStateSystem staff = null)
@@ -84,6 +95,7 @@ namespace EmpireOfCards.Gameplay
             creditSystem = new CreditSystem();
             stockSystem = new StockSystem();
             taxPeriodSystem = new TaxPeriodSystem();
+            _legalIncident = null;
         }
 
         public void SetActiveProfile(VentureEconomyProfile profile)
@@ -98,6 +110,10 @@ namespace EmpireOfCards.Gameplay
                 capacity = (profile != null ? profile.startingCapacity : 3f) + (techCategory != null ? techCategory.capacityModifier : 0f),
                 quality = (profile != null ? profile.startingQuality : 3f) + (techCategory != null ? techCategory.qualityModifier : 0f),
                 rating = (profile != null ? profile.startingRating : Constants.PLATFORM_RATING_DEFAULT) + (techCategory != null ? techCategory.ratingModifier : 0f),
+                loyalty = profile != null && profile.ventureType == VentureType.Cafe ? 4.8f : 4.2f,
+                inflationPressure = 0f,
+                supplierReliability = 5f,
+                stockPressure = profile != null && profile.ventureType == VentureType.GroceryStore ? 3f : 2f,
                 staffStability = profile != null ? profile.startingStaffStability : 6f,
                 legalRisk = (profile != null ? profile.startingLegalRisk : 0f) + (techCategory != null ? techCategory.legalRiskModifier : 0f),
                 marketShare = profile != null ? profile.startingMarketShare : 10f,
@@ -108,6 +124,7 @@ namespace EmpireOfCards.Gameplay
             EventBus.PlatformRatingChanged(snapshot.rating);
             EventBus.LegalRiskUpdated(Mathf.RoundToInt(snapshot.legalRisk));
             EventBus.CashBalanceChanged(Mathf.RoundToInt(snapshot.cash));
+            EventBus.LoyaltyScoreChanged(snapshot.loyalty);
             UpdatePressure(0f, 0, 0);
         }
 
@@ -122,6 +139,7 @@ namespace EmpireOfCards.Gameplay
             float previousCash = snapshot.cash;
             float previousRating = snapshot.rating;
             float previousMarketShare = snapshot.marketShare;
+            float previousLoyalty = snapshot.loyalty;
             var baseline = ResolveBaselineMetrics(lanes, techCategory);
             snapshot.demand = baseline.demand;
             snapshot.capacity = baseline.capacity;
@@ -129,6 +147,7 @@ namespace EmpireOfCards.Gameplay
             snapshot.staffStability = baseline.staffStability;
             snapshot.legalRisk = baseline.legalRisk;
             _staffRatingPenaltyThisTurn = 0f;
+            _loyaltyDemandContributionThisTurn = baseline.loyaltyDemand;
 
             StaffStateSystem activeStaffSystem = staffStateSystem != null ? staffStateSystem : gm.StaffStateSystem;
             if (activeStaffSystem != null)
@@ -156,6 +175,7 @@ namespace EmpireOfCards.Gameplay
             float overload = outcome.overload;
             grossIncome = outcome.grossIncome;
             snapshot.rating = outcome.rating;
+            UpdateLoyalty(overload);
 
             if (_investorDebtTurns > 0)
             {
@@ -176,17 +196,43 @@ namespace EmpireOfCards.Gameplay
                 Sum(lanes.temp, c => c.upkeepCostPerTurn));
             taxAmount = grossIncome > 0 ? Mathf.RoundToInt(grossIncome * (_activeProfile.ventureType == VentureType.TechApp ? 0.08f : 0.10f)) : 0;
 
-            int subsystemExpenses = ApplyFinancialEconomyEffects(gm.CurrentTurn);
+            _currentInsuranceType = DetermineInsuranceType(totalSalaries, upkeepCosts, lanes.staff.Count);
+            MaybeTakeBridgeCredit(grossIncome, totalSalaries, upkeepCosts, taxAmount);
+            EventBus.SalaryChoiceRequired(totalSalaries);
+            SalaryChoice salaryChoice = DetermineSalaryChoice(totalSalaries, upkeepCosts, taxAmount);
+            SalaryResult salaryResult = ProcessSalaryChoice(salaryChoice);
+            int salariesPaid = Mathf.Clamp(salaryResult != null ? salaryResult.amountPaid : totalSalaries, 0, totalSalaries);
+            int unpaidPayroll = Mathf.Max(0, totalSalaries - salariesPaid);
+            if (unpaidPayroll > 0)
+            {
+                _payrollDebt += unpaidPayroll;
+                snapshot.staffStability = Mathf.Clamp(snapshot.staffStability - 0.45f, 0f, 10f);
+                snapshot.legalRisk = Mathf.Clamp(snapshot.legalRisk + 3f + salarySystem.ConsecutiveDelayTurns, 0f, Constants.LEGAL_RISK_MAX);
+                EventBus.PayrollDefaulted(unpaidPayroll);
+            }
+            else
+            {
+                _payrollDebt = Mathf.Max(0, _payrollDebt - Mathf.Max(10, salariesPaid / 3));
+            }
 
-            netIncome = grossIncome - totalSalaries - upkeepCosts - taxAmount - subsystemExpenses;
+            int actualTaxPaid = ResolveTaxPayments(gm.CurrentTurn, grossIncome, salariesPaid, upkeepCosts, taxAmount);
+            taxAmount = actualTaxPaid;
+
+            int supplierCount = lanes.suppliers.Count;
+            int subsystemExpenses = ApplyFinancialEconomyEffects(gm.CurrentTurn, grossIncome, salariesPaid, upkeepCosts, supplierCount);
+
+            netIncome = grossIncome - salariesPaid - upkeepCosts - taxAmount - subsystemExpenses;
+            taxPeriodSystem?.TrackProfit(netIncome);
 
             if (abilitySystem != null && abilitySystem.IncomeMultiplier != 1f)
                 netIncome = Mathf.RoundToInt(netIncome * abilitySystem.IncomeMultiplier);
 
             totalCustomersThisTurn = outcome.totalCustomersThisTurn;
             snapshot.marketShare = outcome.marketShare;
+            UpdateSupplierTelemetry(supplierCount, lanes.temp.Count, overload);
+            UpdateStockPressure(supplierCount, overload, lanes.temp.Count);
 
-            UpdateDerivedMetrics(outcome.servedDemand, overload, lanes.suppliers.Count, lanes.marketing.Count, lanes.temp);
+            UpdateDerivedMetrics(outcome.servedDemand, overload, supplierCount, lanes.marketing.Count, lanes.temp);
             UpdatePressure(overload, lanes.marketing.Count, lanes.staff.Count);
 
             gm.SetPlayerCustomers(Mathf.RoundToInt(snapshot.marketShare));
@@ -202,9 +248,10 @@ namespace EmpireOfCards.Gameplay
             EventBus.PlatformRatingChanged(snapshot.rating);
             EventBus.LegalRiskUpdated(Mathf.RoundToInt(snapshot.legalRisk));
             EventBus.CashBalanceChanged(Mathf.RoundToInt(snapshot.cash));
+            EventBus.LoyaltyScoreChanged(snapshot.loyalty);
             EventBus.OrganicCustomersGained(Mathf.RoundToInt(organicDemand * 4f));
-            EventBus.IncomeBreakdownReported(BuildIncomeBreakdown(grossIncome, totalSalaries, upkeepCosts, taxAmount, netIncome));
-            lastReport = BuildTurnReport(previousCash, previousRating, previousMarketShare, overload, grossIncome, totalSalaries, upkeepCosts, taxAmount);
+            EventBus.IncomeBreakdownReported(BuildIncomeBreakdown(grossIncome, totalSalaries, upkeepCosts, taxAmount, netIncome, previousRating, previousMarketShare));
+            lastReport = BuildTurnReport(previousCash, previousRating, previousMarketShare, previousLoyalty, overload, grossIncome, totalSalaries, upkeepCosts, taxAmount);
             EventBus.TurnReportGenerated(lastReport);
         }
 
@@ -348,7 +395,11 @@ namespace EmpireOfCards.Gameplay
             _rivalPressureImpact = 0f;
             _rivalPressureStyle = "balanced";
             _staffRatingPenaltyThisTurn = 0f;
+            _loyaltyDemandContributionThisTurn = 0f;
             _currentInsuranceType = InsuranceType.Uninsured;
+            _payrollDebt = 0;
+            _legalIncident = null;
+            ResetFinancialTelemetry();
             salarySystem?.Reset();
             creditSystem?.Reset();
             taxPeriodSystem?.Reset();
@@ -365,7 +416,44 @@ namespace EmpireOfCards.Gameplay
             EventBus.PlatformRatingChanged(snapshot.rating);
             EventBus.LegalRiskUpdated(Mathf.RoundToInt(snapshot.legalRisk));
             EventBus.CashBalanceChanged(Mathf.RoundToInt(snapshot.cash));
+            EventBus.LoyaltyScoreChanged(snapshot.loyalty);
             UpdatePressure(Mathf.Max(0f, snapshot.demand - snapshot.capacity), 0, 0);
+        }
+
+        public EconomyRuntimeSaveData CaptureRuntimeState()
+        {
+            return new EconomyRuntimeSaveData
+            {
+                lastSalaryChoice = salarySystem != null ? salarySystem.LastChoice : SalaryChoice.PayOnTime,
+                consecutiveSalaryDelays = salarySystem != null ? salarySystem.ConsecutiveDelayTurns : 0,
+                insuranceType = _currentInsuranceType,
+                payrollDebt = _payrollDebt,
+                accumulatedNetProfit = taxPeriodSystem != null ? taxPeriodSystem.AccumulatedNetProfit : 0,
+                unpaidTaxDebt = taxPeriodSystem != null ? taxPeriodSystem.UnpaidTaxDebt : 0,
+                unpaidTaxTurns = taxPeriodSystem != null ? taxPeriodSystem.UnpaidTaxTurns : 0,
+                activeCredits = creditSystem != null ? creditSystem.CaptureState() : new List<ActiveCreditSaveData>(),
+                legalIncident = _legalIncident
+            };
+        }
+
+        public void RestoreRuntimeState(EconomyRuntimeSaveData saved)
+        {
+            if (saved == null)
+                return;
+
+            if (salarySystem == null)
+                salarySystem = new SalarySystem();
+            if (creditSystem == null)
+                creditSystem = new CreditSystem();
+            if (taxPeriodSystem == null)
+                taxPeriodSystem = new TaxPeriodSystem();
+
+            salarySystem.RestoreState(saved.lastSalaryChoice, saved.consecutiveSalaryDelays);
+            _currentInsuranceType = saved.insuranceType;
+            _payrollDebt = Mathf.Max(0, saved.payrollDebt);
+            taxPeriodSystem.RestoreState(saved.accumulatedNetProfit, saved.unpaidTaxDebt, saved.unpaidTaxTurns);
+            creditSystem.RestoreState(saved.activeCredits);
+            _legalIncident = saved.legalIncident;
         }
 
         private float GetCurrentSeasonMultiplier(GameManager gm)
@@ -399,7 +487,15 @@ namespace EmpireOfCards.Gameplay
                     case "hygiene":
                     case "ambience":
                     case "local_loyalty":
+                    case "loyalty":
+                    case "regular_loyalty":
                         metric.value = Mathf.Clamp(snapshot.staffStability + snapshot.rating * 0.5f, 0f, 10f);
+                        break;
+                    case "freshness":
+                        metric.value = Mathf.Clamp(10f - snapshot.stockPressure + snapshot.supplierReliability * 0.25f, 0f, 10f);
+                        break;
+                    case "shelf_fill":
+                        metric.value = Mathf.Clamp(snapshot.capacity - overload * 0.3f + supplierCount * 0.4f, 0f, 10f);
                         break;
                     case "churn":
                     case "return_pressure":
@@ -461,9 +557,24 @@ namespace EmpireOfCards.Gameplay
             currentPressure = BoardPressureType.None;
         }
 
-        private IncomeBreakdown BuildIncomeBreakdown(int gross, int salaries, int upkeep, int tax, int net)
+        private IncomeBreakdown BuildIncomeBreakdown(int gross, int salaries, int upkeep, int tax, int net, float previousRating, float previousMarketShare)
         {
             var breakdown = new IncomeBreakdown();
+            breakdown.grossIncome = gross;
+            breakdown.salaryExpense = salaries;
+            breakdown.upkeepExpense = upkeep;
+            breakdown.taxExpense = tax + _taxDebtExpenseThisTurn;
+            breakdown.creditExpense = _creditExpenseThisTurn;
+            breakdown.insuranceExpense = _insuranceExpenseThisTurn;
+            breakdown.stockLossExpense = _stockLossExpenseThisTurn + _supplierFailureExpenseThisTurn;
+            breakdown.inflationExpense = _inflationExpenseThisTurn;
+            breakdown.loyaltyContribution = _loyaltyDemandContributionThisTurn;
+            breakdown.organicDemandContribution = Mathf.Max(0f, (snapshot.rating - 3f) * _activeProfile.ratingToOrganicDemandWeight);
+            breakdown.demandTotal = snapshot.demand;
+            breakdown.capacityTotal = snapshot.capacity;
+            breakdown.qualityTotal = snapshot.quality;
+            breakdown.ratingDelta = snapshot.rating - previousRating;
+            breakdown.marketShareDelta = snapshot.marketShare - previousMarketShare;
             breakdown.steps.Add(new IncomeStep("Revenue", gross));
             if (salaries > 0)
                 breakdown.steps.Add(new IncomeStep("Salaries", salaries, false, true));
@@ -471,6 +582,18 @@ namespace EmpireOfCards.Gameplay
                 breakdown.steps.Add(new IncomeStep("Upkeep", upkeep, false, true));
             if (tax > 0)
                 breakdown.steps.Add(new IncomeStep("Tax", tax, false, true));
+            if (_insuranceExpenseThisTurn > 0)
+                breakdown.steps.Add(new IncomeStep("Insurance", _insuranceExpenseThisTurn, false, true));
+            if (_creditExpenseThisTurn > 0)
+                breakdown.steps.Add(new IncomeStep("Credit Interest", _creditExpenseThisTurn, false, true));
+            if (_stockLossExpenseThisTurn > 0)
+                breakdown.steps.Add(new IncomeStep("Stock Loss", _stockLossExpenseThisTurn, false, true));
+            if (_supplierFailureExpenseThisTurn > 0)
+                breakdown.steps.Add(new IncomeStep("Supplier Failure", _supplierFailureExpenseThisTurn, false, true));
+            if (_inflationExpenseThisTurn > 0)
+                breakdown.steps.Add(new IncomeStep("Inflation", _inflationExpenseThisTurn, false, true));
+            if (_payrollDebt > 0)
+                breakdown.steps.Add(new IncomeStep("Payroll Debt", _payrollDebt, false, true));
             breakdown.netIncome = net;
             return breakdown;
         }
@@ -479,6 +602,7 @@ namespace EmpireOfCards.Gameplay
             float previousCash,
             float previousRating,
             float previousMarketShare,
+            float previousLoyalty,
             float overload,
             int gross,
             int salaries,
@@ -497,6 +621,7 @@ namespace EmpireOfCards.Gameplay
             };
 
             report.reasons.Add($"Revenue {gross}, salaries {salaries}, upkeep {upkeep}, tax {tax}.");
+            report.reasons.Add($"Loyalty {(snapshot.loyalty - previousLoyalty >= 0f ? "+" : "")}{(snapshot.loyalty - previousLoyalty):0.0}, inflation +{_inflationStepThisTurn:0.00}, supplier reliability {snapshot.supplierReliability:0.0}.");
             AppendCategoryReason(report.reasons);
             if (overload > 0.1f)
                 report.reasons.Add($"Demand exceeded capacity by {overload:0.0}; trust took a hit.");
@@ -513,6 +638,18 @@ namespace EmpireOfCards.Gameplay
 
             if (snapshot.cash < previousCash)
                 report.reasons.Add($"Cash fell to {snapshot.cash:0}; margin pressure is active.");
+
+            if (_stockLossExpenseThisTurn > 0 || _supplierFailureExpenseThisTurn > 0)
+                report.reasons.Add($"Supply pressure cost {_stockLossExpenseThisTurn + _supplierFailureExpenseThisTurn} this turn.");
+
+            if (_inflationExpenseThisTurn > 0)
+                report.reasons.Add($"Inflation added {_inflationExpenseThisTurn} to operating pressure.");
+
+            if (_payrollDebt > 0)
+                report.reasons.Add($"Payroll debt is now {_payrollDebt}; staff loyalty and poach risk are climbing.");
+
+            if (_legalIncident != null && _legalIncident.turnsRemaining > 0)
+                report.reasons.Add($"{_legalIncident.displayName} stays active for {_legalIncident.turnsRemaining} more turns.");
 
             return report;
         }
@@ -1013,12 +1150,80 @@ namespace EmpireOfCards.Gameplay
             legalRisk = Mathf.Clamp(legalRisk, 0f, Constants.LEGAL_RISK_MAX);
         }
 
+        private void ResetFinancialTelemetry()
+        {
+            _creditExpenseThisTurn = 0;
+            _insuranceExpenseThisTurn = 0;
+            _stockLossExpenseThisTurn = 0;
+            _inflationExpenseThisTurn = 0;
+            _supplierFailureExpenseThisTurn = 0;
+            _taxDebtExpenseThisTurn = 0;
+            _inflationStepThisTurn = 0f;
+        }
+
+        private void ApplyInflationProgress(int currentTurn)
+        {
+            float inflationStep = Mathf.Clamp(0.10f + currentTurn * 0.01f, 0.10f, 0.35f);
+            snapshot.inflationPressure = Mathf.Clamp(snapshot.inflationPressure + inflationStep, 0f, 10f);
+            _inflationStepThisTurn = inflationStep;
+            EventBus.InflationOccurred(currentTurn, inflationStep);
+        }
+
+        private void ApplyInsuranceCostEffects(ref int expenses)
+        {
+            if (insuranceSystem == null || boardManager == null)
+                return;
+
+            _insuranceExpenseThisTurn = insuranceSystem.CalculateTotalInsuranceCost(
+                boardManager.PlayerBusinesses,
+                (_, __) => _currentInsuranceType);
+
+            expenses += _insuranceExpenseThisTurn;
+        }
+
         private void ApplyCreditEffects(ref int expenses)
         {
             if (creditSystem == null || creditSystem.ActiveCreditCount <= 0) return;
 
             int interestPayment = creditSystem.TickCredits();
+            _creditExpenseThisTurn += interestPayment;
             expenses += interestPayment;
+        }
+
+        private void ApplyStockCostEffects(ref int expenses, int grossIncomeValue, int currentTurn, int supplierCount)
+        {
+            if (stockSystem == null || _activeProfile == null)
+                return;
+
+            int spoilageCost = stockSystem.ApplySpoilage(grossIncomeValue, _activeProfile.ventureType, currentTurn);
+            if (supplierCount <= 0)
+                spoilageCost += Mathf.RoundToInt(grossIncomeValue * 0.04f);
+
+            _stockLossExpenseThisTurn += spoilageCost;
+            expenses += spoilageCost;
+        }
+
+        private void ApplyInflationExpense(ref int expenses, int salaries, int upkeep)
+        {
+            int inflationBase = salaries + upkeep + _insuranceExpenseThisTurn + _creditExpenseThisTurn;
+            if (inflationBase <= 0)
+                return;
+
+            _inflationExpenseThisTurn = Mathf.RoundToInt(inflationBase * (snapshot.inflationPressure * 0.0125f));
+            expenses += _inflationExpenseThisTurn;
+        }
+
+        private void ApplySupplierFailureEffects(ref int expenses, int grossIncomeValue, int supplierCount, int currentTurn)
+        {
+            if (_activeProfile == null || supplierCount <= 0)
+                return;
+
+            if (snapshot.supplierReliability >= 4.2f || (currentTurn % 4) != 0)
+                return;
+
+            _supplierFailureExpenseThisTurn = Mathf.RoundToInt(grossIncomeValue * 0.06f);
+            expenses += _supplierFailureExpenseThisTurn;
+            EventBus.SupplierFailed(_activeProfile.ventureType, _supplierFailureExpenseThisTurn);
         }
 
         private void ApplyStockEffects(ref float quality, bool hasSupplier)
@@ -1041,19 +1246,72 @@ namespace EmpireOfCards.Gameplay
         {
             if (taxPeriodSystem == null) return;
 
-            // Track this turn's profit for period accumulation
-            taxPeriodSystem.TrackProfit(netIncome);
-
             // Tick existing tax debt (interest + audit check)
             if (taxPeriodSystem.HasTaxDebt)
             {
                 int debtInterest = taxPeriodSystem.TickTaxDebt();
+                _taxDebtExpenseThisTurn += debtInterest;
                 expenses += debtInterest;
 
                 // +5 legal risk per turn with unpaid tax debt
                 legalRisk += 5f;
                 legalRisk = Mathf.Clamp(legalRisk, 0f, Constants.LEGAL_RISK_MAX);
             }
+        }
+
+        private void ApplyLegalIncidentEffects(ref int expenses, ref float capacity, ref float rating, ref float legalRisk)
+        {
+            if (_legalIncident == null || _legalIncident.turnsRemaining <= 0)
+                return;
+
+            expenses += _legalIncident.forcedExpensePerTurn;
+            capacity = Mathf.Max(1f, capacity - _legalIncident.capacityPenalty);
+            rating = Mathf.Clamp(rating - _legalIncident.ratingPenaltyPerTurn, _activeProfile.minRating, _activeProfile.maxRating);
+            legalRisk = Mathf.Clamp(legalRisk + _legalIncident.legalRiskDeltaPerTurn, 0f, Constants.LEGAL_RISK_MAX);
+            if (_legalIncident.closureTurnsRemaining > 0)
+                _legalIncident.closureTurnsRemaining--;
+
+            _legalIncident.turnsRemaining--;
+            if (_legalIncident.turnsRemaining <= 0)
+            {
+                EventBus.InspectionResolved(_legalIncident.displayName);
+                _legalIncident = null;
+            }
+        }
+
+        private void UpdateLoyalty(float overload)
+        {
+            float loyaltyDelta =
+                ((snapshot.rating - 3.4f) * 0.18f) +
+                ((snapshot.quality - 5f) * 0.08f) +
+                ((snapshot.staffStability - 5f) * 0.05f) -
+                (overload * 0.12f) -
+                (_rivalPressureImpact * 0.04f);
+
+            snapshot.loyalty = Mathf.Clamp(snapshot.loyalty + loyaltyDelta, 0f, 10f);
+        }
+
+        private void UpdateSupplierTelemetry(int supplierCount, int tempCount, float overload)
+        {
+            snapshot.supplierReliability = Mathf.Clamp(
+                3.2f +
+                supplierCount * 1.15f +
+                snapshot.quality * 0.16f -
+                tempCount * 0.15f -
+                overload * 0.2f,
+                0f, 10f);
+        }
+
+        private void UpdateStockPressure(int supplierCount, float overload, int tempCount)
+        {
+            float ventureBase = _activeProfile != null && _activeProfile.ventureType == VentureType.GroceryStore ? 3.8f : 2.8f;
+            snapshot.stockPressure = Mathf.Clamp(
+                ventureBase +
+                overload * 0.75f +
+                Mathf.Max(0f, 4f - snapshot.supplierReliability) +
+                tempCount * 0.2f -
+                supplierCount * 0.35f,
+                0f, 10f);
         }
 
         private void UpdateCashCrisis()
@@ -1069,6 +1327,169 @@ namespace EmpireOfCards.Gameplay
                 _cashCrisis = false;
                 EventBus.CashCrisisResolved();
             }
+        }
+
+        private InsuranceType DetermineInsuranceType(int salaries, int upkeep, int staffCount)
+        {
+            if (staffCount <= 0)
+                return InsuranceType.Uninsured;
+
+            int operatingFloat = CashBalance + grossIncome;
+            if (snapshot.legalRisk >= 35f || _payrollDebt > 0)
+                return operatingFloat >= salaries + upkeep + 120 ? InsuranceType.FullSGK : InsuranceType.DailyWage;
+            if (operatingFloat >= salaries + upkeep + 180)
+                return InsuranceType.FullSGK;
+            return operatingFloat >= salaries + upkeep + 60 ? InsuranceType.DailyWage : InsuranceType.Uninsured;
+        }
+
+        private void MaybeTakeBridgeCredit(int gross, int salaries, int upkeep, int directTax)
+        {
+            if (creditSystem == null)
+                creditSystem = new CreditSystem();
+
+            int required = salaries + upkeep + directTax + 40;
+            int operatingFloat = CashBalance + gross;
+            int shortfall = required - operatingFloat;
+            if (shortfall <= 0)
+                return;
+
+            CreditType type = SelectCreditType(shortfall);
+            if (creditSystem.HasActiveCreditType(type))
+                return;
+
+            TakeCredit(type);
+        }
+
+        private CreditType SelectCreditType(int shortfall)
+        {
+            if (shortfall <= Constants.CREDIT_EMERGENCY_AMOUNT)
+                return CreditType.Emergency;
+            if (shortfall <= Constants.CREDIT_SMALL_AMOUNT)
+                return CreditType.SmallBusiness;
+            if (shortfall <= Constants.CREDIT_MEDIUM_AMOUNT)
+                return CreditType.Medium;
+            return CreditType.LargeInvestment;
+        }
+
+        private SalaryChoice DetermineSalaryChoice(int salariesDue, int upkeepCosts, int directTaxDue)
+        {
+            int operatingFloat = CashBalance + grossIncome;
+            if (_payrollDebt > 0 && operatingFloat >= Mathf.RoundToInt(salariesDue * Constants.SALARY_ADVANCE_PAY_RATE) + upkeepCosts + directTaxDue + 60)
+                return SalaryChoice.Advance;
+            if (operatingFloat >= salariesDue + upkeepCosts + directTaxDue + 40)
+                return snapshot.staffStability < 4.25f || snapshot.loyalty < 4f ? SalaryChoice.Advance : SalaryChoice.PayOnTime;
+            if (operatingFloat >= Mathf.RoundToInt(salariesDue * Constants.SALARY_PARTIAL_PAY_RATE) + upkeepCosts + 20)
+                return SalaryChoice.PartialPay;
+            return SalaryChoice.Delay;
+        }
+
+        private int ResolveTaxPayments(int currentTurn, int gross, int salariesPaid, int upkeepCosts, int directTaxDue)
+        {
+            if (taxPeriodSystem == null)
+                return directTaxDue;
+
+            int operatingFloat = CashBalance + gross - salariesPaid - upkeepCosts;
+            int directTaxPaid = Mathf.Clamp(directTaxDue, 0, Mathf.Max(0, operatingFloat));
+            int unpaidDirectTax = Mathf.Max(0, directTaxDue - directTaxPaid);
+            if (unpaidDirectTax > 0)
+            {
+                taxPeriodSystem.AddDirectTaxDebt(unpaidDirectTax);
+                snapshot.legalRisk = Mathf.Clamp(snapshot.legalRisk + 4f, 0f, Constants.LEGAL_RISK_MAX);
+            }
+
+            operatingFloat -= directTaxPaid;
+            int periodTaxPaid = 0;
+            if (taxPeriodSystem.IsTaxPeriod(currentTurn))
+            {
+                TaxPeriodResult result = taxPeriodSystem.ProcessTaxPeriod(currentTurn, Mathf.Max(0, operatingFloat));
+                periodTaxPaid = result != null ? result.amountPaid : 0;
+            }
+
+            return directTaxPaid + periodTaxPaid;
+        }
+
+        private void TryTriggerLegalIncident(int currentTurn, int staffCount, int supplierCount)
+        {
+            if (_legalIncident != null && _legalIncident.turnsRemaining > 0)
+                return;
+
+            string incidentId = null;
+            string label = null;
+            int turns = 0;
+            int expense = 0;
+            float ratingPenalty = 0f;
+            float capacityPenalty = 0f;
+            float riskDelta = 0f;
+            int closureTurns = 0;
+
+            if (taxPeriodSystem != null && taxPeriodSystem.UnpaidTaxTurns >= 1)
+            {
+                incidentId = "tax_audit";
+                label = "Tax Audit";
+                turns = 2;
+                expense = 35 + Mathf.RoundToInt(taxPeriodSystem.UnpaidTaxDebt * 0.05f);
+                ratingPenalty = 0.06f;
+                riskDelta = 4f;
+            }
+            else if (_currentInsuranceType == InsuranceType.Uninsured && staffCount >= 2 && snapshot.legalRisk >= 24f)
+            {
+                incidentId = "labor_inspection";
+                label = "Labor Compliance Inspection";
+                turns = 2;
+                expense = 24;
+                ratingPenalty = 0.04f;
+                capacityPenalty = 0.45f;
+                riskDelta = 3f;
+            }
+            else if (_activeProfile != null && _activeProfile.ventureType == VentureType.FastFood && (snapshot.stockPressure >= 6.2f || snapshot.quality <= 3.3f))
+            {
+                incidentId = "hygiene_inspection";
+                label = "Hygiene Inspection";
+                turns = 2;
+                expense = 28;
+                ratingPenalty = 0.08f;
+                capacityPenalty = 0.55f;
+                riskDelta = 3f;
+                closureTurns = 1;
+            }
+            else if (_activeProfile != null && _activeProfile.ventureType == VentureType.Cafe && (snapshot.staffStability <= 3.8f || snapshot.rating <= 2.9f))
+            {
+                incidentId = "cleanliness_complaint";
+                label = "Cleanliness Complaint";
+                turns = 2;
+                expense = 22;
+                ratingPenalty = 0.07f;
+                capacityPenalty = 0.35f;
+                riskDelta = 2f;
+            }
+            else if (_activeProfile != null && _activeProfile.ventureType == VentureType.GroceryStore && (snapshot.stockPressure >= 6f || snapshot.supplierReliability <= 3.8f || supplierCount <= 0))
+            {
+                incidentId = "freshness_inspection";
+                label = "Freshness Inspection";
+                turns = 2;
+                expense = 30;
+                ratingPenalty = 0.09f;
+                capacityPenalty = 0.40f;
+                riskDelta = 3f;
+                closureTurns = 1;
+            }
+
+            if (string.IsNullOrWhiteSpace(incidentId))
+                return;
+
+            _legalIncident = new LegalIncidentRuntimeData
+            {
+                incidentId = incidentId,
+                displayName = label,
+                turnsRemaining = turns,
+                forcedExpensePerTurn = expense,
+                ratingPenaltyPerTurn = ratingPenalty,
+                capacityPenalty = capacityPenalty,
+                legalRiskDeltaPerTurn = riskDelta,
+                closureTurnsRemaining = closureTurns
+            };
+
+            EventBus.InspectionTriggered(label, turns);
         }
 
         private static float Sum(IReadOnlyList<CardData> cards, System.Func<CardData, float> selector)

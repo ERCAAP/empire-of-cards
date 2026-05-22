@@ -54,7 +54,7 @@ namespace EmpireOfCards.Bootstrap
 
             _runLaunchCoordinator = new RunLaunchCoordinator(managers.gameManager, managers.saveManager, scene.Board3D, scene.MainCamera, scene.Hand3D);
             _ventureSelectionUI = hud.ventureSelectionUI;
-            _ventures = data.ventures;
+            _ventures = LaunchVentureScope.Filter(data.ventures);
             _techCategories = TechCategoryCatalog.CreateDefaults();
 
             if (_ventureSelectionUI != null && hud.ventureCards != null)

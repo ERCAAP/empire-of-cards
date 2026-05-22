@@ -38,8 +38,9 @@ namespace EmpireOfCards.Gameplay
             public readonly float staffStability;
             public readonly float legalRisk;
             public readonly float organicDemand;
+            public readonly float loyaltyDemand;
 
-            public BaselineEconomyMetrics(float demand, float capacity, float quality, float staffStability, float legalRisk, float organicDemand)
+            public BaselineEconomyMetrics(float demand, float capacity, float quality, float staffStability, float legalRisk, float organicDemand, float loyaltyDemand)
             {
                 this.demand = demand;
                 this.capacity = capacity;
@@ -47,6 +48,7 @@ namespace EmpireOfCards.Gameplay
                 this.staffStability = staffStability;
                 this.legalRisk = legalRisk;
                 this.organicDemand = organicDemand;
+                this.loyaltyDemand = loyaltyDemand;
             }
         }
 
@@ -85,9 +87,10 @@ namespace EmpireOfCards.Gameplay
             float opDemand = Sum(lanes.operations, c => c.demandDelta + c.customersPerTurn * 0.2f);
             float marketingDemand = Sum(lanes.marketing, c => c.demandDelta);
             float organicDemand = Mathf.Max(0f, (snapshot.rating - 3f) * _activeProfile.ratingToOrganicDemandWeight);
+            float loyaltyDemand = Mathf.Max(0f, snapshot.loyalty - 4f) * 0.45f;
             float tempDemand = Sum(lanes.temp, c => c.demandDelta);
 
-            float demand = Mathf.Max(0f, _activeProfile.baseDemand + opDemand + marketingDemand + organicDemand + tempDemand + (techCategory != null ? techCategory.demandModifier : 0f));
+            float demand = Mathf.Max(0f, _activeProfile.baseDemand + opDemand + marketingDemand + organicDemand + loyaltyDemand + tempDemand + (techCategory != null ? techCategory.demandModifier : 0f));
             float capacity = Mathf.Max(1f,
                 _activeProfile.startingCapacity +
                 (techCategory != null ? techCategory.capacityModifier : 0f) +
@@ -120,7 +123,7 @@ namespace EmpireOfCards.Gameplay
                 Sum(lanes.temp, c => c.legalRiskDeltaPerTurn),
                 0f, Constants.LEGAL_RISK_MAX);
 
-            return new BaselineEconomyMetrics(demand, capacity, quality, staffStability, legalRisk, organicDemand);
+            return new BaselineEconomyMetrics(demand, capacity, quality, staffStability, legalRisk, organicDemand, loyaltyDemand);
         }
 
         private void ApplyOperationalEconomyEffects(int staffCount, bool hasSupplier)
@@ -170,12 +173,24 @@ namespace EmpireOfCards.Gameplay
             return new TurnOutcomeMetrics(servedDemand, overload, rating, marketShare, gross, customers);
         }
 
-        private int ApplyFinancialEconomyEffects(int currentTurn)
+        private int ApplyFinancialEconomyEffects(int currentTurn, int gross, int salaries, int upkeep, int supplierCount)
         {
             int subsystemExpenses = 0;
             float taxLegalRisk = snapshot.legalRisk;
+            float adjustedCapacity = snapshot.capacity;
+            float adjustedRating = snapshot.rating;
+            ResetFinancialTelemetry();
+            ApplyInflationProgress(currentTurn);
+            ApplyInsuranceCostEffects(ref subsystemExpenses);
             ApplyCreditEffects(ref subsystemExpenses);
+            ApplyStockCostEffects(ref subsystemExpenses, gross, currentTurn, supplierCount);
+            ApplyInflationExpense(ref subsystemExpenses, salaries, upkeep);
+            ApplySupplierFailureEffects(ref subsystemExpenses, gross, supplierCount, currentTurn);
             ApplyTaxEffects(ref taxLegalRisk, ref subsystemExpenses, currentTurn);
+            TryTriggerLegalIncident(currentTurn, boardManager != null ? boardManager.GetCardsInSlotType(SlotType.Staff).Count : 0, supplierCount);
+            ApplyLegalIncidentEffects(ref subsystemExpenses, ref adjustedCapacity, ref adjustedRating, ref taxLegalRisk);
+            snapshot.capacity = adjustedCapacity;
+            snapshot.rating = adjustedRating;
             snapshot.legalRisk = taxLegalRisk;
             return subsystemExpenses;
         }

@@ -69,17 +69,26 @@ namespace EmpireOfCards.UI
         {
             _ventures = ventures;
 
+            for (int i = 0; i < ventureCards.Length; i++)
+            {
+                var btn = ventureCards[i].GetComponent<Button>();
+                if (btn != null)
+                    btn.onClick.RemoveAllListeners();
+            }
+
+            LayoutCards();
+
             for (int i = 0; i < ventureCards.Length && i < ventures.Length; i++)
             {
-                int idx = i; // Capture for lambda
+                int idx = i;
                 var btn = ventureCards[i].GetComponent<Button>();
                 if (btn != null)
                     btn.onClick.AddListener(() => SelectVenture(idx));
-
             }
 
             if (startButton != null)
             {
+                startButton.onClick.RemoveAllListeners();
                 startButton.onClick.AddListener(ConfirmSelection);
                 startButton.interactable = false;
             }
@@ -135,16 +144,21 @@ namespace EmpireOfCards.UI
         {
             for (int i = 0; i < ventureCardImages.Length; i++)
             {
-                if (ventureCardImages[i] == null) continue;
+                if (ventureCardImages[i] == null || _ventures == null || i >= _ventures.Length)
+                    continue;
+
+                VentureData venture = _ventures[i];
+                if (venture == null)
+                    continue;
 
                 if (i == _selectedIndex)
                 {
-                    ventureCardImages[i].color = Color.Lerp(SelectedColor, GetAccentForIndex(i), 0.35f);
+                    ventureCardImages[i].color = Color.Lerp(SelectedColor, GetAccentForVenture(venture.ventureType), 0.35f);
                     ventureCards[i].localScale = Vector3.one * 1.05f;
                 }
                 else
                 {
-                    ventureCardImages[i].color = Color.Lerp(NormalColor, GetAccentForIndex(i), 0.08f);
+                    ventureCardImages[i].color = Color.Lerp(NormalColor, GetAccentForVenture(venture.ventureType), 0.08f);
                     ventureCards[i].localScale = Vector3.one;
                 }
             }
@@ -212,12 +226,36 @@ namespace EmpireOfCards.UI
             };
         }
 
-        private static Color GetAccentForIndex(int index)
+        private void LayoutCards()
         {
-            if (index < 0 || index >= VentureAccents.Length)
-                return Color.white;
+            int visibleCount = _ventures != null ? Mathf.Min(_ventures.Length, ventureCards.Length) : 0;
+            float centerOffset = (visibleCount - 1) * 0.5f;
 
-            return VentureAccents[index];
+            for (int i = 0; i < ventureCards.Length; i++)
+            {
+                if (ventureCards[i] == null)
+                    continue;
+
+                bool visible = i < visibleCount;
+                ventureCards[i].gameObject.SetActive(visible);
+                if (!visible)
+                    continue;
+
+                ventureCards[i].anchoredPosition = new Vector2((i - centerOffset) * 275f, -20f);
+            }
+        }
+
+        private static Color GetAccentForVenture(VentureType ventureType)
+        {
+            return ventureType switch
+            {
+                VentureType.FastFood => VentureAccents[0],
+                VentureType.Cafe => VentureAccents[1],
+                VentureType.TechApp => VentureAccents[2],
+                VentureType.ClothingStore => VentureAccents[3],
+                VentureType.GroceryStore => VentureAccents[4],
+                _ => Color.white
+            };
         }
 
         private static string GetFirstPlanLine(string raw)

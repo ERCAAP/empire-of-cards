@@ -130,6 +130,18 @@ namespace EmpireOfCards.UI
             EventBus.OnUpgradePlaced += HandleBoardChanged;
             EventBus.OnCardPlacedInSlot += HandleCardPlacedInSlot;
             EventBus.OnCardRemovedFromSlot += HandleCardRemovedFromSlot;
+            EventBus.OnSalaryChoiceRequired += HandleSalaryChoiceRequired;
+            EventBus.OnSalaryPaid += HandleSalaryPaid;
+            EventBus.OnTaxPeriodProcessed += HandleTaxPeriodProcessed;
+            EventBus.OnTaxAuditTriggered += HandleTaxAuditTriggered;
+            EventBus.OnInflationOccurred += HandleInflationOccurred;
+            EventBus.OnSupplierFailed += HandleSupplierFailed;
+            EventBus.OnStockSpoilageOccurred += HandleStockSpoilageOccurred;
+            EventBus.OnStockSeasonLossOccurred += HandleStockSeasonLossOccurred;
+            EventBus.OnStaffPoachAttempted += HandleStaffPoachAttempted;
+            EventBus.OnStaffPoachAccepted += HandleStaffPoachAccepted;
+            EventBus.OnStaffPoachCountered += HandleStaffPoachCountered;
+            EventBus.OnStaffPoachRejected += HandleStaffPoachRejected;
         }
 
         private void OnDisable()
@@ -154,6 +166,18 @@ namespace EmpireOfCards.UI
             EventBus.OnUpgradePlaced -= HandleBoardChanged;
             EventBus.OnCardPlacedInSlot -= HandleCardPlacedInSlot;
             EventBus.OnCardRemovedFromSlot -= HandleCardRemovedFromSlot;
+            EventBus.OnSalaryChoiceRequired -= HandleSalaryChoiceRequired;
+            EventBus.OnSalaryPaid -= HandleSalaryPaid;
+            EventBus.OnTaxPeriodProcessed -= HandleTaxPeriodProcessed;
+            EventBus.OnTaxAuditTriggered -= HandleTaxAuditTriggered;
+            EventBus.OnInflationOccurred -= HandleInflationOccurred;
+            EventBus.OnSupplierFailed -= HandleSupplierFailed;
+            EventBus.OnStockSpoilageOccurred -= HandleStockSpoilageOccurred;
+            EventBus.OnStockSeasonLossOccurred -= HandleStockSeasonLossOccurred;
+            EventBus.OnStaffPoachAttempted -= HandleStaffPoachAttempted;
+            EventBus.OnStaffPoachAccepted -= HandleStaffPoachAccepted;
+            EventBus.OnStaffPoachCountered -= HandleStaffPoachCountered;
+            EventBus.OnStaffPoachRejected -= HandleStaffPoachRejected;
         }
 
         // ------------------------------------------------------------------
@@ -343,6 +367,107 @@ namespace EmpireOfCards.UI
             RefreshContextPanels();
         }
 
+        private void HandleSalaryChoiceRequired(int totalSalaries)
+        {
+            string detail = $"Payroll due this turn: ${totalSalaries:N0}. Delay raises burnout and poach risk.";
+            eventPopup?.ShowMessage("Payroll Due", detail, "Finance Pressure");
+            analyticsPanel?.SetAlert("Payroll Due", detail);
+            RefreshAnalytics();
+        }
+
+        private void HandleSalaryPaid(SalaryChoice choice, int amountPaid)
+        {
+            string detail = $"Payroll policy: {FormatSalaryChoice(choice)} · Cash moved ${amountPaid:N0}.";
+            eventPopup?.ShowMessage("Payroll Resolved", detail, "Staff Stability");
+            analyticsPanel?.SetAlert("Payroll Resolved", detail);
+            RefreshAnalytics();
+        }
+
+        private void HandleTaxPeriodProcessed(int taxOwed, int amountPaid)
+        {
+            string detail = amountPaid >= taxOwed
+                ? $"Tax cleared. Paid ${amountPaid:N0} against ${taxOwed:N0} owed."
+                : $"Tax debt rolled. Paid ${amountPaid:N0} against ${taxOwed:N0} owed.";
+            eventPopup?.ShowMessage("Tax Period", detail, "Legal Pressure");
+            analyticsPanel?.SetAlert("Tax Period", detail);
+            RefreshAnalytics();
+        }
+
+        private void HandleTaxAuditTriggered(int unpaidDebt)
+        {
+            string detail = $"Audit opened on unpaid debt of ${unpaidDebt:N0}. Legal pressure will escalate until cleared.";
+            eventPopup?.ShowMessage("Tax Audit", detail, "Legal Pressure");
+            analyticsPanel?.SetAlert("Tax Audit", detail);
+            RefreshAnalytics();
+        }
+
+        private void HandleInflationOccurred(int currentTurn, float increase)
+        {
+            string detail = $"Turn {currentTurn}: supplier and payroll pressure rose by {increase:0.00}.";
+            analyticsPanel?.SetAlert("Inflation", detail);
+            RefreshAnalytics();
+        }
+
+        private void HandleSupplierFailed(VentureType venture, int penaltyCost)
+        {
+            string detail = $"{FormatVentureName(venture)} supply missed. Immediate penalty ${penaltyCost:N0} and freshness risk increased.";
+            eventPopup?.ShowMessage("Supplier Failure", detail, "Supply Pressure");
+            analyticsPanel?.SetAlert("Supplier Failure", detail);
+            RefreshAnalytics();
+        }
+
+        private void HandleStockSpoilageOccurred(VentureType venture, int cost)
+        {
+            string detail = $"{FormatVentureName(venture)} stock spoiled for ${cost:N0}. Freshness and margin are slipping.";
+            eventPopup?.ShowMessage("Stock Loss", detail, "Inventory Pressure");
+            analyticsPanel?.SetAlert("Stock Loss", detail);
+            RefreshAnalytics();
+        }
+
+        private void HandleStockSeasonLossOccurred(VentureType venture, int cost)
+        {
+            string detail = $"{FormatVentureName(venture)} seasonal mismatch burned ${cost:N0}.";
+            eventPopup?.ShowMessage("Season Loss", detail, "Inventory Pressure");
+            analyticsPanel?.SetAlert("Season Loss", detail);
+            RefreshAnalytics();
+        }
+
+        private void HandleStaffPoachAttempted(CardData card, int offer)
+        {
+            string target = card != null ? card.cardName : "Staff";
+            string detail = $"{target} received a rival offer worth ${offer:N0}. Counter now or stability drops.";
+            rivalPopup?.Show("STAFF POACH", detail);
+            analyticsPanel?.SetAlert("Staff Poach", detail);
+            RefreshAnalytics();
+        }
+
+        private void HandleStaffPoachAccepted(CardData card)
+        {
+            string target = card != null ? card.cardName : "Staff";
+            string detail = $"{target} left for the rival. Replace capacity before demand slips.";
+            eventPopup?.ShowMessage("Staff Lost", detail, "Rival Pressure");
+            analyticsPanel?.SetAlert("Staff Lost", detail);
+            RefreshAnalytics();
+        }
+
+        private void HandleStaffPoachCountered(CardData card, int cost)
+        {
+            string target = card != null ? card.cardName : "Staff";
+            string detail = $"{target} stayed after a counter-offer costing ${cost:N0}.";
+            eventPopup?.ShowMessage("Poach Countered", detail, "Staff Stability");
+            analyticsPanel?.SetAlert("Poach Countered", detail);
+            RefreshAnalytics();
+        }
+
+        private void HandleStaffPoachRejected(CardData card, int cost)
+        {
+            string target = card != null ? card.cardName : "Staff";
+            string detail = $"{target} stayed without leaving, but retention spending hit ${cost:N0}.";
+            eventPopup?.ShowMessage("Poach Defended", detail, "Staff Stability");
+            analyticsPanel?.SetAlert("Poach Defended", detail);
+            RefreshAnalytics();
+        }
+
         // ------------------------------------------------------------------
         // Income Cascade Animation (Balatro-style scoring chain)
         // ------------------------------------------------------------------
@@ -384,6 +509,31 @@ namespace EmpireOfCards.UI
             yield return StartCoroutine(AnimateCascadeNet(parent, breakdown.netIncome, startY));
 
             _activeCascade = null;
+        }
+
+        private static string FormatSalaryChoice(SalaryChoice choice)
+        {
+            return choice switch
+            {
+                SalaryChoice.PayOnTime => "Pay on time",
+                SalaryChoice.Delay => "Delay payroll",
+                SalaryChoice.PartialPay => "Partial pay",
+                SalaryChoice.Advance => "Advance pay",
+                _ => choice.ToString()
+            };
+        }
+
+        private static string FormatVentureName(VentureType venture)
+        {
+            return venture switch
+            {
+                VentureType.FastFood => "Fast Food",
+                VentureType.Cafe => "Cafe",
+                VentureType.GroceryStore => "Grocery Store",
+                VentureType.TechApp => "Tech App",
+                VentureType.ClothingStore => "Clothing Store",
+                _ => venture.ToString()
+            };
         }
 
         /// <summary>
