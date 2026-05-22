@@ -86,9 +86,13 @@ namespace EmpireOfCards.Tests.EditMode
             float weakPressure = _staff.ResolveWorkload(VentureType.FastFood, 8f, 6f, 2, null).workloadPressure;
 
             CardData chef = MakeStaff("FF03", "Chef", VentureType.FastFood, StaffRole.Chef, 45);
+            CardData courier = MakeStaff("FF15", "Courier", VentureType.FastFood, StaffRole.Courier, 34);
             CardData cleaning = MakeStaff("FF11", "Cleaning", VentureType.FastFood, StaffRole.Cleaning, 32);
+            CardData manager = MakeStaff("FF16", "Manager", VentureType.FastFood, StaffRole.Manager, 52);
             _staff.RegisterStaff(chef);
+            _staff.RegisterStaff(courier);
             _staff.RegisterStaff(cleaning);
+            _staff.RegisterStaff(manager);
 
             StaffWorkloadReport covered = _staff.ResolveWorkload(VentureType.FastFood, 8f, 6f, 2, null);
 
@@ -97,7 +101,49 @@ namespace EmpireOfCards.Tests.EditMode
 
             Object.DestroyImmediate(cashier);
             Object.DestroyImmediate(chef);
+            Object.DestroyImmediate(courier);
             Object.DestroyImmediate(cleaning);
+            Object.DestroyImmediate(manager);
+        }
+
+        [Test]
+        public void EveryVenture_UsesGddFiveRoleCoverage()
+        {
+            AssertCoverage(VentureType.FastFood, StaffRole.Chef, StaffRole.Cashier, StaffRole.Courier, StaffRole.Cleaning, StaffRole.Manager);
+            AssertCoverage(VentureType.Cafe, StaffRole.Barista, StaffRole.Cashier, StaffRole.Floor, StaffRole.Cleaning, StaffRole.Manager);
+            AssertCoverage(VentureType.TechApp, StaffRole.Developer, StaffRole.Designer, StaffRole.Growth, StaffRole.Support, StaffRole.ProductManager);
+            AssertCoverage(VentureType.ClothingStore, StaffRole.Sales, StaffRole.Cashier, StaffRole.Tailor, StaffRole.Stocker, StaffRole.Manager);
+            AssertCoverage(VentureType.GroceryStore, StaffRole.Cashier, StaffRole.Stocker, StaffRole.FreshKeeper, StaffRole.Courier, StaffRole.Manager);
+        }
+
+        [Test]
+        public void CafeMarketing_WithMissingFloorCashierAndLead_CreatesRolePressureAndBurnsExistingStaff()
+        {
+            CardData barista = MakeStaff("CF03", "Barista", VentureType.Cafe, StaffRole.Barista, 48);
+            CardData reels = MakeMarketing("CF05", "Instagram Reels", VentureType.Cafe, "instagram", 1.8f);
+            CardData maps = MakeMarketing("CF06", "Maps Reviews", VentureType.Cafe, "maps", 1.0f);
+            _staff.RegisterStaff(barista);
+
+            StaffWorkloadReport report = _staff.ResolveWorkload(
+                VentureType.Cafe,
+                8f,
+                8f,
+                1,
+                null,
+                null,
+                new[] { reels, maps },
+                null);
+            StaffState state = _staff.GetState(barista);
+
+            Assert.That(GetRolePressure(report, StaffRole.Floor), Is.GreaterThan(0f));
+            Assert.That(GetRolePressure(report, StaffRole.Cashier), Is.GreaterThan(0f));
+            Assert.That(GetRolePressure(report, StaffRole.Manager), Is.GreaterThan(0f));
+            Assert.That(state.fatigue, Is.GreaterThan(0));
+            Assert.That(state.workload, Is.GreaterThan(0f));
+
+            Object.DestroyImmediate(barista);
+            Object.DestroyImmediate(reels);
+            Object.DestroyImmediate(maps);
         }
 
         [Test]
@@ -133,25 +179,84 @@ namespace EmpireOfCards.Tests.EditMode
         public void ReactionTempCard_ReducesFatiguePressure()
         {
             CardData barista = MakeStaff("CF03", "Barista", VentureType.Cafe, StaffRole.Barista, 48);
+            CardData cashier = MakeStaff("CF16", "Cashier", VentureType.Cafe, StaffRole.Cashier, 32);
+            CardData floor = MakeStaff("CF10", "Floor", VentureType.Cafe, StaffRole.Floor, 34);
+            CardData cleaning = MakeStaff("CF17", "Cleaning", VentureType.Cafe, StaffRole.Cleaning, 28);
+            CardData manager = MakeStaff("CF18", "Manager", VentureType.Cafe, StaffRole.Manager, 50);
+            CardData crisis = ScriptableObject.CreateInstance<CardData>();
+            crisis.cardId = "CF14";
+            crisis.cardName = "Slow Service Backlash";
+            crisis.cardType = CardType.Event;
+            crisis.cardFamily = CardFamily.Crisis;
+            crisis.targetSlotType = SlotType.TempEffect;
+            crisis.crisisTags = new[] { "slow_service" };
             CardData reaction = ScriptableObject.CreateInstance<CardData>();
             reaction.cardId = "CF15";
             reaction.cardName = "Reset The Shift";
             reaction.cardType = CardType.Upgrade;
             reaction.cardFamily = CardFamily.Reaction;
             reaction.targetSlotType = SlotType.TempEffect;
+            reaction.solutionTags = new[] { "slow_service" };
             reaction.fatigueDeltaPerTurn = -2;
             reaction.moraleDeltaPerTurn = 1;
             reaction.burnoutRiskDeltaPerTurn = -0.12f;
 
             _staff.RegisterStaff(barista);
+            _staff.RegisterStaff(cashier);
+            _staff.RegisterStaff(floor);
+            _staff.RegisterStaff(cleaning);
+            _staff.RegisterStaff(manager);
             StaffState state = _staff.GetState(barista);
             state.fatigue = 5;
-            _staff.ResolveWorkload(VentureType.Cafe, 6f, 6f, 1, new[] { reaction });
+            _staff.ResolveWorkload(VentureType.Cafe, 6f, 6f, 1, new[] { crisis, reaction });
 
             Assert.That(state.fatigue, Is.LessThan(5));
             Assert.That(state.moral, Is.GreaterThanOrEqualTo(Constants.STAFF_DEFAULT_MORAL));
 
             Object.DestroyImmediate(barista);
+            Object.DestroyImmediate(cashier);
+            Object.DestroyImmediate(floor);
+            Object.DestroyImmediate(cleaning);
+            Object.DestroyImmediate(manager);
+            Object.DestroyImmediate(crisis);
+            Object.DestroyImmediate(reaction);
+        }
+
+        [Test]
+        public void ReactionTempCard_WithoutMatchingCrisis_DoesNotApplyRecovery()
+        {
+            CardData barista = MakeStaff("CF03", "Barista", VentureType.Cafe, StaffRole.Barista, 48);
+            CardData cashier = MakeStaff("CF16", "Cashier", VentureType.Cafe, StaffRole.Cashier, 32);
+            CardData floor = MakeStaff("CF10", "Floor", VentureType.Cafe, StaffRole.Floor, 34);
+            CardData cleaning = MakeStaff("CF17", "Cleaning", VentureType.Cafe, StaffRole.Cleaning, 28);
+            CardData manager = MakeStaff("CF18", "Manager", VentureType.Cafe, StaffRole.Manager, 50);
+            CardData reaction = ScriptableObject.CreateInstance<CardData>();
+            reaction.cardId = "CF15";
+            reaction.cardName = "Reset The Shift";
+            reaction.cardType = CardType.Upgrade;
+            reaction.cardFamily = CardFamily.Reaction;
+            reaction.targetSlotType = SlotType.TempEffect;
+            reaction.solutionTags = new[] { "slow_service" };
+            reaction.fatigueDeltaPerTurn = -2;
+            reaction.moraleDeltaPerTurn = 1;
+
+            _staff.RegisterStaff(barista);
+            _staff.RegisterStaff(cashier);
+            _staff.RegisterStaff(floor);
+            _staff.RegisterStaff(cleaning);
+            _staff.RegisterStaff(manager);
+            StaffState state = _staff.GetState(barista);
+            state.fatigue = 5;
+            _staff.ResolveWorkload(VentureType.Cafe, 3f, 6f, 1, new[] { reaction });
+
+            Assert.That(state.fatigue, Is.EqualTo(5));
+            Assert.That(state.moral, Is.EqualTo(Constants.STAFF_DEFAULT_MORAL));
+
+            Object.DestroyImmediate(barista);
+            Object.DestroyImmediate(cashier);
+            Object.DestroyImmediate(floor);
+            Object.DestroyImmediate(cleaning);
+            Object.DestroyImmediate(manager);
             Object.DestroyImmediate(reaction);
         }
 
@@ -193,6 +298,41 @@ namespace EmpireOfCards.Tests.EditMode
             card.upkeepCostPerTurn = salary;
             card.defaultTrialTurns = 2;
             return card;
+        }
+
+        private static CardData MakeMarketing(string id, string name, VentureType venture, string subSlot, float demand)
+        {
+            CardData card = ScriptableObject.CreateInstance<CardData>();
+            card.cardId = id;
+            card.cardName = name;
+            card.cardType = CardType.Upgrade;
+            card.cardFamily = CardFamily.Growth;
+            card.ventureType = venture;
+            card.targetSlotType = SlotType.Marketing;
+            card.targetSubSlotId = subSlot;
+            card.demandDelta = demand;
+            card.workloadDeltaPerTurn = Mathf.Max(0.2f, demand * 0.35f);
+            return card;
+        }
+
+        private void AssertCoverage(VentureType venture, params StaffRole[] roles)
+        {
+            StaffRoleCoverage coverage = _staff.GetRoleCoverage(venture);
+
+            Assert.That(coverage.requiredRoleCount, Is.EqualTo(roles.Length));
+            for (int i = 0; i < roles.Length; i++)
+                Assert.That(coverage.missingRoles, Does.Contain(roles[i]));
+        }
+
+        private static float GetRolePressure(StaffWorkloadReport report, StaffRole role)
+        {
+            for (int i = 0; i < report.rolePressures.Count; i++)
+            {
+                if (report.rolePressures[i].role == role)
+                    return report.rolePressures[i].pressure;
+            }
+
+            return 0f;
         }
     }
 }

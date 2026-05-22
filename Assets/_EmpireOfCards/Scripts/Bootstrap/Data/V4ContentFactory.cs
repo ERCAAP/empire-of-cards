@@ -75,38 +75,38 @@ namespace EmpireOfCards.Bootstrap.Data
             return new[]
             {
                 CreateDeckProfile(VentureType.FastFood,
-                    new[] { "FF02", "FF03", "FF04", "FF05", "FF06", "NT01" },
-                    new[] { "FF01", "FF02", "FF03", "FF04", "FF05", "FF06", "FF07", "FF08", "FF10", "FF11", "NT01", "NT02" },
-                    new[] { "FF02", "FF04", "FF05", "FF06", "FF07", "FF08", "FF10", "FF11", "FF14", "NT02", "NT03" },
-                    new[] { "FF04", "FF06", "FF07", "FF08", "FF10", "FF11", "FF12", "FF13", "FF14", "NT03" },
+                    new[] { "FF02", "FF03", "FF04", "FF05", "FF06", "FF10", "NT01" },
+                    new[] { "FF01", "FF02", "FF03", "FF04", "FF05", "FF06", "FF07", "FF08", "FF10", "FF11", "FF15", "FF16", "NT01", "NT02" },
+                    new[] { "FF02", "FF04", "FF05", "FF06", "FF07", "FF08", "FF10", "FF11", "FF14", "FF15", "FF16", "NT02", "NT03" },
+                    new[] { "FF04", "FF06", "FF07", "FF08", "FF10", "FF11", "FF12", "FF13", "FF14", "FF15", "FF16", "NT03" },
                     new[] { "NT01", "NT02", "NT03", "NT04", "NT05" },
                     new[] { "FF09", "FF12", "FF13" }),
                 CreateDeckProfile(VentureType.Cafe,
-                    new[] { "CF02", "CF03", "CF04", "CF05", "CF06", "NT01" },
-                    new[] { "CF01", "CF02", "CF03", "CF04", "CF05", "CF06", "CF07", "CF08", "CF10", "CF11", "NT01", "NT04" },
-                    new[] { "CF02", "CF04", "CF05", "CF06", "CF07", "CF08", "CF10", "CF11", "CF12", "CF15", "NT02", "NT04" },
-                    new[] { "CF04", "CF06", "CF07", "CF08", "CF10", "CF11", "CF12", "CF13", "CF14", "CF15", "NT03" },
+                    new[] { "CF02", "CF03", "CF04", "CF05", "CF06", "CF10", "NT01" },
+                    new[] { "CF01", "CF02", "CF03", "CF04", "CF05", "CF06", "CF07", "CF08", "CF10", "CF11", "CF16", "CF17", "CF18", "NT01", "NT04" },
+                    new[] { "CF02", "CF04", "CF05", "CF06", "CF07", "CF08", "CF10", "CF11", "CF12", "CF15", "CF16", "CF17", "CF18", "NT02", "NT04" },
+                    new[] { "CF04", "CF06", "CF07", "CF08", "CF10", "CF11", "CF12", "CF13", "CF14", "CF15", "CF16", "CF17", "CF18", "NT03" },
                     new[] { "NT01", "NT02", "NT03", "NT04", "NT05" },
                     new[] { "CF09", "CF13", "CF14" }),
                 CreateDeckProfile(VentureType.TechApp,
-                    new[] { "TC02", "TC03", "TC04", "TC05", "TC06", "NT02" },
-                    new[] { "TC01", "TC02", "TC03", "TC04", "TC05", "TC06", "TC07", "TC08", "NT02", "NT04" },
-                    new[] { "TC02", "TC04", "TC05", "TC06", "TC07", "TC08", "NT02", "NT03" },
-                    new[] { "TC04", "TC06", "TC07", "TC08", "TC09", "NT05" },
+                    new[] { "TC02", "TC03", "TC04", "TC05", "TC06", "TC28", "NT02" },
+                    new[] { "TC01", "TC02", "TC03", "TC04", "TC05", "TC06", "TC07", "TC08", "TC28", "TC29", "TC30", "NT02", "NT04" },
+                    new[] { "TC02", "TC04", "TC05", "TC06", "TC07", "TC08", "TC28", "TC29", "TC30", "NT02", "NT03" },
+                    new[] { "TC04", "TC06", "TC07", "TC08", "TC09", "TC28", "TC29", "TC30", "NT05" },
                     new[] { "NT01", "NT02", "NT03", "NT04", "NT05" },
                     new[] { "TC09" }),
                 CreateDeckProfile(VentureType.ClothingStore,
-                    new[] { "CL02", "CL03", "CL04", "CL05", "CL06", "NT01" },
-                    new[] { "CL01", "CL02", "CL03", "CL04", "CL05", "CL06", "CL07", "CL08", "CL10", "CL11", "NT01", "NT04" },
-                    new[] { "CL02", "CL04", "CL05", "CL06", "CL07", "CL08", "CL10", "CL11", "CL12", "CL15", "NT03", "NT04" },
-                    new[] { "CL04", "CL06", "CL07", "CL08", "CL09", "CL10", "CL11", "CL12", "CL13", "CL14", "CL15", "NT05" },
+                    new[] { "CL02", "CL03", "CL04", "CL05", "CL06", "CL16", "NT01" },
+                    new[] { "CL01", "CL02", "CL03", "CL04", "CL05", "CL06", "CL07", "CL08", "CL10", "CL11", "CL16", "CL17", "CL18", "NT01", "NT04" },
+                    new[] { "CL02", "CL04", "CL05", "CL06", "CL07", "CL08", "CL10", "CL11", "CL12", "CL15", "CL16", "CL17", "CL18", "NT03", "NT04" },
+                    new[] { "CL04", "CL06", "CL07", "CL08", "CL09", "CL10", "CL11", "CL12", "CL13", "CL14", "CL15", "CL16", "CL17", "CL18", "NT05" },
                     new[] { "NT01", "NT02", "NT03", "NT04", "NT05" },
                     new[] { "CL09", "CL13", "CL14" }),
                 CreateDeckProfile(VentureType.GroceryStore,
-                    new[] { "GR02", "GR03", "GR04", "GR05", "GR06", "NT01" },
-                    new[] { "GR01", "GR02", "GR03", "GR04", "GR05", "GR06", "GR07", "GR08", "GR10", "GR11", "NT01", "NT04" },
-                    new[] { "GR02", "GR04", "GR05", "GR06", "GR07", "GR08", "GR10", "GR11", "GR12", "GR15", "NT02", "NT03" },
-                    new[] { "GR04", "GR06", "GR07", "GR08", "GR09", "GR10", "GR11", "GR12", "GR13", "GR14", "GR15", "NT05" },
+                    new[] { "GR02", "GR03", "GR04", "GR05", "GR06", "GR10", "NT01" },
+                    new[] { "GR01", "GR02", "GR03", "GR04", "GR05", "GR06", "GR07", "GR08", "GR10", "GR11", "GR16", "GR17", "GR18", "NT01", "NT04" },
+                    new[] { "GR02", "GR04", "GR05", "GR06", "GR07", "GR08", "GR10", "GR11", "GR12", "GR15", "GR16", "GR17", "GR18", "NT02", "NT03" },
+                    new[] { "GR04", "GR06", "GR07", "GR08", "GR09", "GR10", "GR11", "GR12", "GR13", "GR14", "GR15", "GR16", "GR17", "GR18", "NT05" },
                     new[] { "NT01", "NT02", "NT03", "NT04", "NT05" },
                     new[] { "GR09", "GR13", "GR14" })
             };
@@ -136,7 +136,7 @@ namespace EmpireOfCards.Bootstrap.Data
                     "Fast local scaling with review risk.",
                     "Open the counter, add seating, lock kitchen flow, then push local buzz without breaking the line.",
                     "Turn 1: expand service flow.\nTurn 2: add kitchen or hygiene support.\nTurn 3: push flyers or Google once the rush is absorbable.",
-                    new[] { "FF02", "FF03", "FF04", "FF06", "FF05", "FF10", "FF11", "FF14" },
+                    new[] { "FF02", "FF03", "FF04", "FF06", "FF05", "FF10", "FF11", "FF15", "FF16", "FF14" },
                     playbooks[0],
                     progressionArcs[0],
                     themeProfiles[0],
@@ -148,7 +148,7 @@ namespace EmpireOfCards.Bootstrap.Data
                     "Premium quality and sticky regulars.",
                     "Open the room, seat guests, hire the barista, then lock beans and reviews before chasing social demand.",
                     "Turn 1: add seating and bar rhythm.\nTurn 2: stabilize beans, milk, and floor flow.\nTurn 3: push Maps, reels, and regular loyalty once service feels real.",
-                    new[] { "CF02", "CF03", "CF04", "CF06", "CF05", "CF10", "CF11", "CF12" },
+                    new[] { "CF02", "CF03", "CF04", "CF06", "CF05", "CF10", "CF16", "CF17", "CF18", "CF11", "CF12" },
                     playbooks[1],
                     progressionArcs[1],
                     themeProfiles[1],
@@ -160,7 +160,7 @@ namespace EmpireOfCards.Bootstrap.Data
                     "Product, growth, and retention balancing act.",
                     "Ship the first working product, harden backend, and only then spend to acquire users at scale.",
                     "Turn 1: stabilize the core product.\nTurn 2: reinforce backend and cloud reliability.\nTurn 3: turn on acquisition once reviews and uptime are safe.",
-                    new[] { "TC02", "TC03", "TC04", "TC05", "TC06", "TC11", "TC13", "TC14" },
+                    new[] { "TC02", "TC03", "TC04", "TC05", "TC06", "TC11", "TC13", "TC14", "TC28", "TC29", "TC30" },
                     playbooks[2],
                     progressionArcs[2],
                     themeProfiles[2],
@@ -172,7 +172,7 @@ namespace EmpireOfCards.Bootstrap.Data
                     "Trend and stock management duel.",
                     "Dress the storefront, widen inventory, add fit support, then market the look once returns are under control.",
                     "Turn 1: improve display and floor conversion.\nTurn 2: secure fit and fabric quality.\nTurn 3: advertise the collection only after the return risk is covered.",
-                    new[] { "CL02", "CL03", "CL04", "CL05", "CL06", "CL10", "CL11", "CL12" },
+                    new[] { "CL02", "CL03", "CL04", "CL05", "CL06", "CL10", "CL11", "CL12", "CL16", "CL17", "CL18" },
                     playbooks[3],
                     progressionArcs[3],
                     themeProfiles[3],
@@ -184,7 +184,7 @@ namespace EmpireOfCards.Bootstrap.Data
                     "Stable demand with tight operational margins.",
                     "Open the shelf, smooth checkout, secure morning supply, then lean into convenience and repeat orders.",
                     "Turn 1: remove checkout friction.\nTurn 2: protect freshness and spoilage.\nTurn 3: add WhatsApp or late-night convenience once basics are stable.",
-                    new[] { "GR02", "GR03", "GR04", "GR05", "GR06", "GR10", "GR11", "GR15" },
+                    new[] { "GR02", "GR03", "GR04", "GR05", "GR06", "GR10", "GR11", "GR15", "GR16", "GR17", "GR18" },
                     playbooks[4],
                     progressionArcs[4],
                     themeProfiles[4],
@@ -365,63 +365,63 @@ namespace EmpireOfCards.Bootstrap.Data
                 CreateProgressionArc(VentureType.FastFood,
                     CreateOpeningBeats(
                         ("ff_open_counter", 1, "Open the floor before you chase volume.", "The counter is live, but the rush still needs seating and visible service flow around the grill.", "Play Extra Tables first. Add kitchen support before flyer demand.", new[] { "FF02", "FF03", "FF10" }, new[] { "ff_tables" }),
-                        ("ff_staff_line", 2, "Put people on the line.", "A real rush needs labor behind the counter, not only a sign and a grill.", "Hire Line Cook or Front Counter Server now.", new[] { "FF03", "FF10", "FF11" }, new[] { "ff_line" }),
+                        ("ff_staff_line", 2, "Put people on the line.", "A real rush needs labor behind the counter, not only a sign and a grill.", "Hire Line Cook or Front Counter Server now.", new[] { "FF03", "FF10", "FF11", "FF15" }, new[] { "ff_line" }),
                         ("ff_quality_lock", 3, "Protect food quality before the reviews hit.", "Ingredient trust and hygiene are the first real multiplier in this lane.", "Take Premium Butcher or Night Cleaner before stacking growth.", new[] { "FF04", "FF11", "FF14" }, new[] { "ff_quality" }),
                         ("ff_local_buzz", 5, "Now the neighborhood should notice you.", "The board can start absorbing traffic once the line stops wobbling.", "Use Google Business or Flyer Team only if capacity still holds.", new[] { "FF05", "FF06", "NT01" }, new[] { "ff_buzz" })),
-                    new[] { "FF02", "FF03", "FF10", "FF11", "FF04" },
-                    new[] { "FF04", "FF11", "FF06", "NT02", "FF14" },
-                    new[] { "FF05", "FF06", "FF10", "NT01", "NT05" },
+                    new[] { "FF02", "FF03", "FF10", "FF11", "FF15", "FF04" },
+                    new[] { "FF04", "FF11", "FF15", "FF16", "FF06", "NT02", "FF14" },
+                    new[] { "FF05", "FF06", "FF10", "FF15", "FF16", "NT01", "NT05" },
                     new[] { "FF09", "FF12", "FF13", "NT03" },
                     new[] { "FF08", "FF14", "NT03", "NT04" },
-                    new[] { "FF06", "FF10", "FF11", "NT05" }),
+                    new[] { "FF06", "FF10", "FF11", "FF15", "FF16", "NT05" }),
                 CreateProgressionArc(VentureType.Cafe,
                     CreateOpeningBeats(
                         ("cf_room_open", 1, "Make the cafe feel open, not just named.", "The espresso bar exists, but guests still need a room, a seat, and visible flow around the counter.", "Play Window Seating first. Then line up Senior Barista.", new[] { "CF02", "CF03", "CF10" }, new[] { "cf_tables" }),
-                        ("cf_shift_real", 2, "The room needs a real shift behind it.", "A cafe does not feel alive until the bar and floor have an actual operator holding consistency.", "Hire Senior Barista now. Floor Runner is the next stabilizer.", new[] { "CF03", "CF10", "NT04" }, new[] { "cf_barista" }),
+                        ("cf_shift_real", 2, "The room needs a real shift behind it.", "A cafe does not feel alive until the bar and floor have an actual operator holding consistency.", "Hire Senior Barista now. Floor Runner is the next stabilizer.", new[] { "CF03", "CF10", "CF16", "CF18", "NT04" }, new[] { "cf_barista" }),
                         ("cf_taste_lock", 3, "Lock the taste before you chase the crowd.", "Beans, milk, and drink consistency are what turn one-time curiosity into loyalty.", "Play Specialty Beans or Milk Contract before Instagram.", new[] { "CF04", "CF11", "CF08" }, new[] { "cf_beans" }),
                         ("cf_regular_loop", 5, "Now you can build the regular loop.", "Service is credible enough to convert trust into discovery, reels, and repeat mornings.", "Use Maps Reviews first, then Reels or Stamp Card.", new[] { "CF06", "CF05", "CF12" }, new[] { "cf_regulars" })),
-                    new[] { "CF02", "CF03", "CF10", "CF04", "CF11" },
-                    new[] { "CF04", "CF11", "CF06", "CF08", "NT02" },
-                    new[] { "CF05", "CF06", "CF12", "NT01", "NT05" },
+                    new[] { "CF02", "CF03", "CF10", "CF16", "CF04", "CF11" },
+                    new[] { "CF04", "CF11", "CF16", "CF17", "CF18", "CF06", "CF08", "NT02" },
+                    new[] { "CF05", "CF06", "CF12", "CF10", "CF18", "NT01", "NT05" },
                     new[] { "CF09", "CF13", "CF14", "NT03" },
                     new[] { "CF08", "CF15", "NT03", "NT04" },
-                    new[] { "CF12", "CF05", "CF06", "NT05" }),
+                    new[] { "CF12", "CF05", "CF06", "CF16", "CF18", "NT05" }),
                 CreateProgressionArc(VentureType.TechApp,
                     CreateOpeningBeats(
                         ("tc_core_stable", 1, "Ship the core before you buy growth.", "The product is live, but the stack still needs more reliability before users arrive at scale.", "Play Backend Upgrade or a second product card first.", new[] { "TC02", "TC03", "TC11" }, new[] { "tc_stack" }),
                         ("tc_build_team", 2, "Put real builders behind the MVP.", "The app still feels fragile until a developer or support layer turns the launch into a system.", "Hire Core Developer first. Support follows once the loop is real.", new[] { "TC03", "TC14", "NT04" }, new[] { "tc_team" }),
                         ("tc_infra_cost", 3, "Stability economics come before growth economics.", "Cloud, analytics, and payment infrastructure decide whether growth becomes retention or chaos.", "Take Cloud Credits or Export Pipeline before the biggest acquisition cards.", new[] { "TC04", "TC11", "TC08" }, new[] { "tc_infra" }),
                         ("tc_growth_switch", 5, "Now turn reliability into user growth.", "You finally have enough product trust to scale discovery without instantly burning reviews.", "Lead with ASO Push. Add paid acquisition only if rating still looks safe.", new[] { "TC05", "TC06", "TC13" }, new[] { "tc_growth" })),
-                    new[] { "TC02", "TC03", "TC04", "TC11", "TC14" },
-                    new[] { "TC04", "TC11", "TC08", "NT02", "NT04" },
-                    new[] { "TC05", "TC06", "TC13", "TC16", "TC22" },
+                    new[] { "TC02", "TC03", "TC28", "TC04", "TC11", "TC14" },
+                    new[] { "TC04", "TC11", "TC28", "TC30", "TC08", "NT02", "NT04" },
+                    new[] { "TC05", "TC06", "TC13", "TC16", "TC22", "TC29" },
                     new[] { "TC09", "TC12", "TC18", "TC21", "TC24", "TC27" },
                     new[] { "TC08", "TC17", "NT03", "NT04" },
-                    new[] { "TC16", "TC20", "TC22", "NT05" }),
+                    new[] { "TC16", "TC20", "TC22", "TC29", "TC30", "NT05" }),
                 CreateProgressionArc(VentureType.ClothingStore,
                     CreateOpeningBeats(
                         ("cl_floor_ready", 1, "Dress the floor before you advertise the brand.", "The storefront exists, but customers still need depth, fit confidence, and visible merchandise logic.", "Play Inventory Rail first. Then add fit support.", new[] { "CL02", "CL03", "CL10" }, new[] { "cl_display" }),
                         ("cl_style_staff", 2, "Style needs staff, not only display.", "A clothing board feels empty until a stylist or tailor can convert browsing into trust.", "Hire Floor Stylist first. Tailor is the next stabilizer.", new[] { "CL03", "CL10", "NT04" }, new[] { "cl_team" }),
                         ("cl_fit_lock", 3, "Protect fit and fabric before trend traffic.", "Returns and weak materials are what make a promising fashion run collapse early.", "Play Reliable Atelier or Premium Fabric Mill before aggressive demand.", new[] { "CL04", "CL11", "CL15" }, new[] { "cl_fit" }),
                         ("cl_story_push", 5, "Now the collection is ready to be seen.", "The board has enough fit confidence to turn display into conversion and trend pull.", "Use Lookbook or Window Story Display once return pressure feels covered.", new[] { "CL05", "CL12", "CL06" }, new[] { "cl_story" })),
-                    new[] { "CL02", "CL03", "CL10", "CL04", "CL11" },
-                    new[] { "CL04", "CL11", "CL08", "CL15", "NT02" },
-                    new[] { "CL05", "CL12", "CL06", "NT01", "NT05" },
+                    new[] { "CL02", "CL03", "CL10", "CL16", "CL04", "CL11" },
+                    new[] { "CL04", "CL11", "CL16", "CL17", "CL18", "CL08", "CL15", "NT02" },
+                    new[] { "CL05", "CL12", "CL06", "CL03", "CL18", "NT01", "NT05" },
                     new[] { "CL09", "CL13", "CL14", "NT03" },
                     new[] { "CL08", "CL15", "NT03", "NT04" },
-                    new[] { "CL12", "CL11", "CL05", "NT05" }),
+                    new[] { "CL12", "CL11", "CL05", "CL16", "CL17", "CL18", "NT05" }),
                 CreateProgressionArc(VentureType.GroceryStore,
                     CreateOpeningBeats(
                         ("gr_checkout_first", 1, "Make the store function before you extend convenience.", "Fresh shelves are live, but the basket still needs smoother checkout and a clearer trip flow.", "Play Checkout Upgrade first. Then add staff before widening demand.", new[] { "GR02", "GR03", "GR10" }, new[] { "gr_checkout" }),
-                        ("gr_staff_trust", 2, "Neighborhood trust starts with the people inside.", "A grocery board does not feel dependable until the register and shelf rhythm have actual support.", "Hire Trusted Cashier first. Stocker follows if lines stay messy.", new[] { "GR03", "GR10", "NT04" }, new[] { "gr_staff" }),
+                        ("gr_staff_trust", 2, "Neighborhood trust starts with the people inside.", "A grocery board does not feel dependable until the register and shelf rhythm have actual support.", "Hire Trusted Cashier first. Stocker follows if lines stay messy.", new[] { "GR03", "GR10", "GR16", "GR18", "NT04" }, new[] { "gr_staff" }),
                         ("gr_fresh_lock", 3, "Protect freshness before you widen reach.", "Morning supply quality and spoilage discipline are what make repeat traffic stick in grocery.", "Take Morning Hal Route or Cold Chain Dairy before new convenience demand.", new[] { "GR04", "GR11", "GR15" }, new[] { "gr_fresh" }),
                         ("gr_convenience", 5, "Now convenience can become loyalty.", "The store is credible enough to convert reliability into repeat neighborhood demand.", "Use WhatsApp Orders or Late Night Sign once checkout still feels under control.", new[] { "GR05", "GR06", "GR12" }, new[] { "gr_loyalty" })),
-                    new[] { "GR02", "GR03", "GR10", "GR04", "GR11" },
-                    new[] { "GR04", "GR11", "GR15", "NT02", "NT04" },
-                    new[] { "GR05", "GR06", "GR12", "NT01", "NT05" },
+                    new[] { "GR02", "GR03", "GR10", "GR16", "GR04", "GR11" },
+                    new[] { "GR04", "GR11", "GR15", "GR16", "GR18", "NT02", "NT04" },
+                    new[] { "GR05", "GR06", "GR12", "GR17", "GR18", "NT01", "NT05" },
                     new[] { "GR09", "GR13", "GR14", "NT03" },
                     new[] { "GR08", "GR15", "NT03", "NT04" },
-                    new[] { "GR12", "GR06", "GR05", "NT05" })
+                    new[] { "GR12", "GR06", "GR05", "GR16", "GR17", "GR18", "NT05" })
             };
         }
 
@@ -651,6 +651,8 @@ namespace EmpireOfCards.Bootstrap.Data
             yield return MakeCrisis("FF12", "Hygiene Inspection", VentureType.FastFood, "Missed cleaning turns into a trust-killing inspection.", "hygiene_crisis", 2, -0.7f, -1.3f, 9f, new[] { CardTag.Risky, CardTag.Support });
             yield return MakeCrisis("FF13", "Delivery Fee Squeeze", VentureType.FastFood, "Platform commissions spike and delivery margins collapse.", "delivery_fee", 2, -0.4f, -0.4f, 4f, new[] { CardTag.Pricing, CardTag.Risky });
             yield return MakeTemp("FF14", "Deep Clean Reset", VentureType.FastFood, CardFamily.Reaction, "deep_clean", "Emergency cleanup protects trust after hygiene slips.", 24, 0.2f, 0.3f, -12f, 0.9f, 1, null, new[] { "hygiene_crisis", "review_crisis" }, new[] { CardTag.Support, CardTag.Defensive });
+            yield return MakeStaff("FF15", "Delivery Rider", VentureType.FastFood, "courier", "Keeps app orders from choking the counter during rush turns.", 34, 0.4f, 1.1f, 0.2f, 0.7f, new[] { CardTag.Logistics, CardTag.Support });
+            yield return MakeStaff("FF16", "Shift Supervisor", VentureType.FastFood, "manager", "Coordinates kitchen, counter, cleaning, and delivery before pressure spills into reviews.", 52, 0.2f, 0.9f, 0.5f, 1.2f, new[] { CardTag.Management, CardTag.Support });
         }
 
         private static IEnumerable<CardData> CreateCafeCards()
@@ -670,6 +672,9 @@ namespace EmpireOfCards.Bootstrap.Data
             yield return MakeCrisis("CF13", "Bean Shortage", VentureType.Cafe, "Your bean supplier slips and drink quality takes a hit.", "bean_shortage", 2, -0.5f, -1.1f, 5f, new[] { CardTag.Coffee, CardTag.Risky });
             yield return MakeCrisis("CF14", "Slow Service Backlash", VentureType.Cafe, "A packed weekend turns into public complaints about waits.", "slow_service", 2, -1.1f, -0.6f, 4f, new[] { CardTag.Support, CardTag.Risky });
             yield return MakeTemp("CF15", "Reset The Shift", VentureType.Cafe, CardFamily.Reaction, "shift_reset", "Extra help and workflow resets calm the floor fast.", 22, 0.3f, 0.8f, -8f, 0.8f, 1, null, new[] { "staff_crisis", "slow_service" }, new[] { CardTag.Support, CardTag.Management });
+            yield return MakeStaff("CF16", "Register Lead", VentureType.Cafe, "cashier", "Protects the barista from payment queues when maps and reels bring new guests.", 32, 0.2f, 0.9f, 0.2f, 0.8f, new[] { CardTag.Support, CardTag.Basic });
+            yield return MakeStaff("CF17", "Closing Cleaner", VentureType.Cafe, "cleaning", "Keeps tables, toilets, and closing routines from becoming tomorrow's rating problem.", 28, 0.1f, 0.5f, 0.6f, 1.0f, new[] { CardTag.Support, CardTag.Defensive });
+            yield return MakeStaff("CF18", "Shift Lead", VentureType.Cafe, "lead", "Balances bar, floor, register, and complaints before regulars notice the cracks.", 50, 0.2f, 0.8f, 0.5f, 1.2f, new[] { CardTag.Management, CardTag.Support });
         }
 
         private static IEnumerable<CardData> CreateTechCards()
@@ -701,6 +706,9 @@ namespace EmpireOfCards.Bootstrap.Data
             yield return MakeOperation("TC25", "Prototype Mill", VentureType.TechApp, "product", "Ships experiments at relentless speed.", 82, 1.9f, 0.8f, 0.2f, 0.7f, 3f, 4f, 3.2f, new[] { CardTag.Tech, CardTag.Aggressive });
             yield return MakeMarketing("TC26", "CPI Burst", VentureType.TechApp, "ads", "Cheap installs now, fragile quality later.", 26, 2.7f, -0.05f, 18f, new[] { CardTag.Marketing, CardTag.Aggressive });
             yield return MakeCrisis("TC27", "Clone Swarm", VentureType.TechApp, "Copycat apps flood your lane and shred cheap traffic.", "clone_swarm", 2, -1.0f, -0.4f, 7f, new[] { CardTag.Tech, CardTag.Risky });
+            yield return MakeStaff("TC28", "Product Designer", VentureType.TechApp, "designer", "Turns raw features into usable flows before support load explodes.", 46, 0.2f, 0.8f, 0.9f, 0.8f, new[] { CardTag.Tech, CardTag.Support });
+            yield return MakeStaff("TC29", "Growth Marketer", VentureType.TechApp, "growthhire", "Owns ASO, paid acquisition, creator loops, and the quality of incoming users.", 48, 0.6f, 0.7f, 0.3f, 0.7f, new[] { CardTag.Marketing, CardTag.Tech });
+            yield return MakeStaff("TC30", "Product Manager", VentureType.TechApp, "pm", "Keeps roadmap, support pressure, and growth promises from pulling the product apart.", 58, 0.2f, 0.9f, 0.6f, 1.2f, new[] { CardTag.Management, CardTag.Tech });
         }
 
         private static IEnumerable<CardData> CreateClothingCards()
@@ -720,6 +728,9 @@ namespace EmpireOfCards.Bootstrap.Data
             yield return MakeCrisis("CL13", "Return Surge", VentureType.ClothingStore, "Sizing issues trigger a painful spike in returns.", "returns", 2, -0.6f, -0.9f, 5f, new[] { CardTag.Support, CardTag.Risky });
             yield return MakeCrisis("CL14", "Influencer Mismatch", VentureType.ClothingStore, "A partnership lands with the wrong audience and trust slips.", "influencer_mismatch", 2, -0.9f, -0.5f, 3f, new[] { CardTag.Influencer, CardTag.Risky });
             yield return MakeTemp("CL15", "Alteration Voucher", VentureType.ClothingStore, CardFamily.Reaction, "alteration_voucher", "Buys time and goodwill when fit complaints spread.", 24, 0.3f, 0.6f, -8f, 0.8f, 1, null, new[] { "returns", "quality_claim" }, new[] { CardTag.Support, CardTag.Luxury });
+            yield return MakeStaff("CL16", "Register Cashier", VentureType.ClothingStore, "cashier", "Keeps checkout, exchanges, and discount days from tying up the sales floor.", 34, 0.2f, 0.9f, 0.2f, 0.8f, new[] { CardTag.Support, CardTag.Basic });
+            yield return MakeStaff("CL17", "Backroom Stocker", VentureType.ClothingStore, "stocker", "Keeps sizes, rails, and online pickups from collapsing during trend spikes.", 32, 0.3f, 1.0f, 0.2f, 0.8f, new[] { CardTag.Logistics, CardTag.Support });
+            yield return MakeStaff("CL18", "Store Manager", VentureType.ClothingStore, "manager", "Coordinates stock, styling, returns, and promotions before the brand feels chaotic.", 52, 0.2f, 0.8f, 0.5f, 1.2f, new[] { CardTag.Management, CardTag.Support });
         }
 
         private static IEnumerable<CardData> CreateGroceryCards()
@@ -739,6 +750,9 @@ namespace EmpireOfCards.Bootstrap.Data
             yield return MakeCrisis("GR13", "Shelf Gap Panic", VentureType.GroceryStore, "Empty shelves push regulars toward the rival store.", "shelf_gap", 2, -1.0f, -0.4f, 2f, new[] { CardTag.Basic, CardTag.Risky });
             yield return MakeCrisis("GR14", "Neighborhood Trust Drop", VentureType.GroceryStore, "Rumors around stale goods spread through the block.", "trust_drop", 2, -0.8f, -0.8f, 6f, new[] { CardTag.Support, CardTag.Risky });
             yield return MakeTemp("GR15", "Freshness Audit", VentureType.GroceryStore, CardFamily.Reaction, "fresh_audit", "Emergency checks and relabeling calm freshness fears.", 20, 0.2f, 0.5f, -12f, 0.8f, 1, null, new[] { "freshness", "skt", "trust_drop" }, new[] { CardTag.Support, CardTag.Defensive });
+            yield return MakeStaff("GR16", "Fresh Keeper", VentureType.GroceryStore, "freshkeeper", "Owns produce rotation, SKT checks, and the freshness trust regulars notice.", 34, 0.2f, 0.8f, 0.8f, 1.0f, new[] { CardTag.Organic, CardTag.Support });
+            yield return MakeStaff("GR17", "WhatsApp Courier", VentureType.GroceryStore, "courier", "Handles neighborhood orders without dragging the cashier away from the line.", 30, 0.4f, 1.0f, 0.2f, 0.7f, new[] { CardTag.Logistics, CardTag.Support });
+            yield return MakeStaff("GR18", "Shift Lead", VentureType.GroceryStore, "lead", "Balances checkout, shelves, freshness, and delivery when repeat traffic spikes.", 48, 0.2f, 0.8f, 0.4f, 1.2f, new[] { CardTag.Management, CardTag.Support });
         }
 
         private static IEnumerable<CardData> CreateNeutralCards()
@@ -816,6 +830,8 @@ namespace EmpireOfCards.Bootstrap.Data
             card.upkeepCostPerTurn = cashCost;
             card.platformRatingGain = rating;
             card.cashDeltaPerTurn = 0f;
+            card.workloadDeltaPerTurn = Mathf.Max(0.2f, demand * 0.35f);
+            card.fatigueDeltaPerTurn = demand >= 2f ? 1 : 0;
             card.preferredPressures = new[] { BoardPressureType.LowDemand };
             card.buildingScale = new Vector3(0.7f, 0.6f, 0.7f);
             card.buildingColor = GetVentureColor(venture, 1.20f);

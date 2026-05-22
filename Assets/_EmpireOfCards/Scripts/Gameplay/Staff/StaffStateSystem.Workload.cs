@@ -61,18 +61,32 @@ namespace EmpireOfCards.Gameplay.Staff
             float demand,
             float capacity,
             int operationCount,
-            IReadOnlyList<CardData> tempEffects)
+            IReadOnlyList<CardData> tempEffects,
+            IReadOnlyList<CardData> operations = null,
+            IReadOnlyList<CardData> marketing = null,
+            IReadOnlyList<CardData> suppliers = null)
         {
             StaffRoleCoverage coverage = GetRoleCoverage(venture);
             float overload = Mathf.Max(0f, demand - capacity);
-            float missingRolePressure = coverage.missingRoles.Count * 1.35f;
             float operationPressure = Mathf.Max(0, operationCount - CountWorkingStaff()) * 0.65f;
-            float tempPressure = SumTemp(tempEffects, c => c.workloadDeltaPerTurn);
+            float tempPressure = SumApplicableTemp(tempEffects, c => c.workloadDeltaPerTurn);
+            Dictionary<StaffRole, float> rolePressure = BuildRolePressure(
+                venture,
+                overload,
+                operationPressure,
+                tempEffects,
+                operations,
+                marketing,
+                suppliers,
+                coverage);
+            float rolePressureTotal = SumRolePressure(rolePressure);
+            float missingRolePressure = coverage.missingRoles.Count * 1.35f;
             float workloadPressure = Mathf.Max(0f, overload + missingRolePressure + operationPressure + tempPressure);
+            workloadPressure = Mathf.Max(workloadPressure, rolePressureTotal);
 
             int workingStaff = CountWorkingStaff();
             if (workingStaff > 0)
-                ApplyWorkloadToStaff(workloadPressure / workingStaff, tempEffects);
+                ApplyWorkloadToStaff(rolePressure, workloadPressure, workingStaff, tempEffects);
 
             var report = new StaffWorkloadReport
             {
@@ -81,6 +95,7 @@ namespace EmpireOfCards.Gameplay.Staff
                 capacity = capacity,
                 workloadPressure = workloadPressure,
                 coverage = coverage,
+                rolePressures = BuildRolePressureReport(rolePressure),
                 capacityPenalty = coverage.missingRoles.Count * 0.35f + (workingStaff == 0 && demand > 1f ? 1.25f : 0f),
                 qualityPenalty = coverage.missingRoles.Count * 0.18f + Mathf.Max(0f, workloadPressure - 4f) * 0.08f,
                 ratingPenalty = coverage.missingRoles.Count * 0.08f + Mathf.Max(0f, workloadPressure - 5f) * 0.045f,
@@ -273,18 +288,26 @@ namespace EmpireOfCards.Gameplay.Staff
             }
         }
 
-        private void ApplyWorkloadToStaff(float perStaffPressure, IReadOnlyList<CardData> tempEffects)
+        private void ApplyWorkloadToStaff(Dictionary<StaffRole, float> rolePressure, float totalPressure, int workingStaff, IReadOnlyList<CardData> tempEffects)
         {
-            int fatigueDelta = Mathf.RoundToInt(Mathf.Clamp(perStaffPressure * 0.55f, 0f, 3f)) + SumTempInt(tempEffects, c => c.fatigueDeltaPerTurn);
-            int moraleDelta = -Mathf.RoundToInt(Mathf.Clamp(perStaffPressure * 0.25f, 0f, 2f)) + SumTempInt(tempEffects, c => c.moraleDeltaPerTurn);
-            int loyaltyDelta = SumTempInt(tempEffects, c => c.loyaltyDeltaPerTurn);
-            float burnoutDelta = Mathf.Max(0f, perStaffPressure * 0.045f) + SumTemp(tempEffects, c => c.burnoutRiskDeltaPerTurn);
+            float fallbackPressure = workingStaff > 0 ? totalPressure / workingStaff : 0f;
+            float uncoveredPressure = CalculateUncoveredPressure(rolePressure);
+            float redistributedPressure = workingStaff > 0 ? uncoveredPressure / workingStaff : 0f;
 
             for (int i = 0; i < _staffStates.Count; i++)
             {
                 StaffState state = _staffStates[i];
                 if (state == null || state.card == null || state.employmentStatus == EmploymentStatus.Quit || state.employmentStatus == EmploymentStatus.Poached)
                     continue;
+
+                float directPressure = rolePressure != null && rolePressure.TryGetValue(state.role, out float pressure)
+                    ? pressure
+                    : 0f;
+                float perStaffPressure = Mathf.Max(directPressure + redistributedPressure, fallbackPressure * 0.35f);
+                int fatigueDelta = Mathf.RoundToInt(Mathf.Clamp(perStaffPressure * 0.55f, 0f, 3f)) + SumApplicableTempInt(tempEffects, c => c.fatigueDeltaPerTurn);
+                int moraleDelta = -Mathf.RoundToInt(Mathf.Clamp(perStaffPressure * 0.25f, 0f, 2f)) + SumApplicableTempInt(tempEffects, c => c.moraleDeltaPerTurn);
+                int loyaltyDelta = SumApplicableTempInt(tempEffects, c => c.loyaltyDeltaPerTurn);
+                float burnoutDelta = Mathf.Max(0f, perStaffPressure * 0.045f) + SumApplicableTemp(tempEffects, c => c.burnoutRiskDeltaPerTurn);
 
                 state.workload = Mathf.Clamp(state.workload + perStaffPressure, 0f, 10f);
                 state.fatigue = Mathf.Clamp(state.fatigue + fatigueDelta, 0, Constants.STAFF_FATIGUE_MAX);
@@ -361,13 +384,235 @@ namespace EmpireOfCards.Gameplay.Staff
         {
             return venture switch
             {
-                VentureType.FastFood => new[] { StaffRole.Chef, StaffRole.Cashier, StaffRole.Cleaning },
-                VentureType.Cafe => new[] { StaffRole.Barista, StaffRole.Floor },
-                VentureType.TechApp => new[] { StaffRole.Developer, StaffRole.Support },
-                VentureType.ClothingStore => new[] { StaffRole.Sales, StaffRole.Tailor },
-                VentureType.GroceryStore => new[] { StaffRole.Cashier, StaffRole.Stocker },
+                VentureType.FastFood => new[] { StaffRole.Chef, StaffRole.Cashier, StaffRole.Courier, StaffRole.Cleaning, StaffRole.Manager },
+                VentureType.Cafe => new[] { StaffRole.Barista, StaffRole.Cashier, StaffRole.Floor, StaffRole.Cleaning, StaffRole.Manager },
+                VentureType.TechApp => new[] { StaffRole.Developer, StaffRole.Designer, StaffRole.Growth, StaffRole.Support, StaffRole.ProductManager },
+                VentureType.ClothingStore => new[] { StaffRole.Sales, StaffRole.Cashier, StaffRole.Tailor, StaffRole.Stocker, StaffRole.Manager },
+                VentureType.GroceryStore => new[] { StaffRole.Cashier, StaffRole.Stocker, StaffRole.FreshKeeper, StaffRole.Courier, StaffRole.Manager },
                 _ => new[] { StaffRole.Generalist }
             };
+        }
+
+        private Dictionary<StaffRole, float> BuildRolePressure(
+            VentureType venture,
+            float overload,
+            float operationPressure,
+            IReadOnlyList<CardData> tempEffects,
+            IReadOnlyList<CardData> operations,
+            IReadOnlyList<CardData> marketing,
+            IReadOnlyList<CardData> suppliers,
+            StaffRoleCoverage coverage)
+        {
+            var pressures = new Dictionary<StaffRole, float>();
+            AddPressure(pressures, GetServiceRoles(venture), overload * 0.75f);
+            AddPressure(pressures, GetManagerRoles(venture), operationPressure);
+
+            if (coverage != null && coverage.missingRoles != null)
+                for (int i = 0; i < coverage.missingRoles.Count; i++)
+                    AddPressure(pressures, coverage.missingRoles[i], 1.35f);
+
+            AddCardPressure(pressures, venture, operations, 0.35f);
+            AddCardPressure(pressures, venture, marketing, 0.85f);
+            AddCardPressure(pressures, venture, suppliers, 0.45f);
+            AddCardPressure(pressures, venture, tempEffects, 1.00f);
+
+            return pressures;
+        }
+
+        private void AddCardPressure(Dictionary<StaffRole, float> pressures, VentureType venture, IReadOnlyList<CardData> cards, float multiplier)
+        {
+            if (cards == null)
+                return;
+
+            for (int i = 0; i < cards.Count; i++)
+            {
+                CardData card = cards[i];
+                if (card == null)
+                    continue;
+                if (card.cardFamily == CardFamily.Reaction)
+                    continue;
+
+                float basePressure = Mathf.Max(0f, card.demandDelta) + Mathf.Max(0f, card.workloadDeltaPerTurn);
+                if (card.cardFamily == CardFamily.Crisis)
+                    basePressure += Mathf.Abs(card.qualityDelta) + Mathf.Abs(card.ratingDeltaPerTurn) + Mathf.Max(0f, card.legalRiskDeltaPerTurn) * 0.03f;
+                else if (card.cardFamily == CardFamily.Risk)
+                    basePressure += Mathf.Max(0f, card.legalRiskDeltaPerTurn) * 0.04f;
+
+                if (basePressure <= 0f)
+                    continue;
+
+                AddPressure(pressures, ResolvePressureRoles(venture, card), basePressure * multiplier);
+            }
+        }
+
+        private StaffRole[] ResolvePressureRoles(VentureType venture, CardData card)
+        {
+            if (card == null)
+                return GetServiceRoles(venture);
+
+            string subSlot = card.targetSubSlotId != null ? card.targetSubSlotId.ToLowerInvariant() : "";
+            string[] crisisTags = card.crisisTags ?? Array.Empty<string>();
+            string[] solutionTags = card.solutionTags ?? Array.Empty<string>();
+
+            if (ContainsAny(subSlot, crisisTags, solutionTags, "delivery", "courier", "whatsapp", "online", "platform"))
+                return new[] { StaffRole.Courier, StaffRole.Manager };
+            if (ContainsAny(subSlot, crisisTags, solutionTags, "hygiene", "clean", "skt", "freshness", "spoilage", "fresh", "dairy"))
+                return venture == VentureType.GroceryStore
+                    ? new[] { StaffRole.FreshKeeper, StaffRole.Stocker, StaffRole.Manager }
+                    : new[] { StaffRole.Cleaning, StaffRole.Manager };
+            if (ContainsAny(subSlot, crisisTags, solutionTags, "bean", "kitchen", "ingredient", "butcher", "bakery", "quality"))
+                return venture == VentureType.Cafe
+                    ? new[] { StaffRole.Barista, StaffRole.Manager }
+                    : new[] { StaffRole.Chef, StaffRole.Manager };
+            if (ContainsAny(subSlot, crisisTags, solutionTags, "backend", "stability", "crash", "corruption", "infra", "cloud", "api", "cost"))
+                return new[] { StaffRole.Developer, StaffRole.Support, StaffRole.ProductManager };
+            if (ContainsAny(subSlot, crisisTags, solutionTags, "aso", "ads", "community", "creator", "growth", "privacy", "dark_pattern", "retention", "clone"))
+                return new[] { StaffRole.Growth, StaffRole.Support, StaffRole.ProductManager };
+            if (ContainsAny(subSlot, crisisTags, solutionTags, "inventory", "stock", "returns", "tailor", "fit", "fabric", "atelier", "wholesale"))
+                return new[] { StaffRole.Sales, StaffRole.Tailor, StaffRole.Stocker, StaffRole.Manager };
+            if (ContainsAny(subSlot, crisisTags, solutionTags, "cashier", "checkout", "maps", "instagram", "reels", "loyalty", "flyers", "google", "discount", "shoppingads", "latenight"))
+                return GetServiceRoles(venture);
+
+            return card.targetSlotType == SlotType.Marketing ? GetServiceRoles(venture) : GetRoleFallback(venture, card);
+        }
+
+        private StaffRole[] GetRoleFallback(VentureType venture, CardData card)
+        {
+            if (card != null && card.cardType == CardType.Employee)
+                return new[] { card.staffRole };
+
+            return venture switch
+            {
+                VentureType.FastFood => new[] { StaffRole.Chef, StaffRole.Cashier, StaffRole.Manager },
+                VentureType.Cafe => new[] { StaffRole.Barista, StaffRole.Floor, StaffRole.Cashier },
+                VentureType.TechApp => new[] { StaffRole.Developer, StaffRole.Support, StaffRole.ProductManager },
+                VentureType.ClothingStore => new[] { StaffRole.Sales, StaffRole.Stocker, StaffRole.Manager },
+                VentureType.GroceryStore => new[] { StaffRole.Cashier, StaffRole.Stocker, StaffRole.FreshKeeper },
+                _ => new[] { StaffRole.Generalist }
+            };
+        }
+
+        private static StaffRole[] GetServiceRoles(VentureType venture)
+        {
+            return venture switch
+            {
+                VentureType.FastFood => new[] { StaffRole.Cashier, StaffRole.Chef, StaffRole.Courier },
+                VentureType.Cafe => new[] { StaffRole.Floor, StaffRole.Cashier, StaffRole.Barista },
+                VentureType.TechApp => new[] { StaffRole.Support, StaffRole.Developer, StaffRole.Growth },
+                VentureType.ClothingStore => new[] { StaffRole.Sales, StaffRole.Cashier, StaffRole.Stocker },
+                VentureType.GroceryStore => new[] { StaffRole.Cashier, StaffRole.Stocker, StaffRole.Courier },
+                _ => new[] { StaffRole.Generalist }
+            };
+        }
+
+        private static StaffRole[] GetManagerRoles(VentureType venture)
+        {
+            return venture == VentureType.TechApp
+                ? new[] { StaffRole.ProductManager }
+                : new[] { StaffRole.Manager };
+        }
+
+        private bool IsRoleCovered(StaffRole role)
+        {
+            for (int i = 0; i < _staffStates.Count; i++)
+            {
+                StaffState state = _staffStates[i];
+                if (state != null && state.card != null && state.role == role && state.employmentStatus != EmploymentStatus.Quit && state.employmentStatus != EmploymentStatus.Poached)
+                    return true;
+            }
+
+            return false;
+        }
+
+        private float CalculateUncoveredPressure(Dictionary<StaffRole, float> rolePressure)
+        {
+            if (rolePressure == null)
+                return 0f;
+
+            float total = 0f;
+            foreach (KeyValuePair<StaffRole, float> pair in rolePressure)
+                if (!IsRoleCovered(pair.Key))
+                    total += pair.Value * 0.75f;
+            return total;
+        }
+
+        private List<StaffRolePressure> BuildRolePressureReport(Dictionary<StaffRole, float> rolePressure)
+        {
+            var result = new List<StaffRolePressure>();
+            if (rolePressure == null)
+                return result;
+
+            foreach (KeyValuePair<StaffRole, float> pair in rolePressure)
+            {
+                if (pair.Value <= 0f)
+                    continue;
+
+                result.Add(new StaffRolePressure
+                {
+                    role = pair.Key,
+                    pressure = pair.Value,
+                    covered = IsRoleCovered(pair.Key)
+                });
+            }
+
+            return result;
+        }
+
+        private static void AddPressure(Dictionary<StaffRole, float> pressures, StaffRole role, float pressure)
+        {
+            if (pressure <= 0f)
+                return;
+
+            if (pressures.ContainsKey(role))
+                pressures[role] += pressure;
+            else
+                pressures[role] = pressure;
+        }
+
+        private static void AddPressure(Dictionary<StaffRole, float> pressures, StaffRole[] roles, float pressure)
+        {
+            if (roles == null || roles.Length == 0 || pressure <= 0f)
+                return;
+
+            float perRole = pressure / roles.Length;
+            for (int i = 0; i < roles.Length; i++)
+                AddPressure(pressures, roles[i], perRole);
+        }
+
+        private static float SumRolePressure(Dictionary<StaffRole, float> rolePressure)
+        {
+            if (rolePressure == null)
+                return 0f;
+
+            float total = 0f;
+            foreach (KeyValuePair<StaffRole, float> pair in rolePressure)
+                total += pair.Value;
+            return total;
+        }
+
+        private static bool ContainsAny(string subSlot, string[] crisisTags, string[] solutionTags, params string[] needles)
+        {
+            for (int i = 0; i < needles.Length; i++)
+            {
+                string needle = needles[i];
+                if (!string.IsNullOrEmpty(subSlot) && subSlot.Contains(needle))
+                    return true;
+                if (ContainsTag(crisisTags, needle) || ContainsTag(solutionTags, needle))
+                    return true;
+            }
+
+            return false;
+        }
+
+        private static bool ContainsTag(string[] tags, string needle)
+        {
+            if (tags == null || string.IsNullOrEmpty(needle))
+                return false;
+
+            for (int i = 0; i < tags.Length; i++)
+                if (!string.IsNullOrEmpty(tags[i]) && tags[i].ToLowerInvariant().Contains(needle))
+                    return true;
+            return false;
         }
 
         private CardData ResolveApplicantTemplate(StaffApplicant applicant)
@@ -390,6 +635,18 @@ namespace EmpireOfCards.Gameplay.Staff
             return total;
         }
 
+        private static float SumApplicableTemp(IReadOnlyList<CardData> cards, Func<CardData, float> selector)
+        {
+            if (cards == null || selector == null)
+                return 0f;
+
+            float total = 0f;
+            for (int i = 0; i < cards.Count; i++)
+                if (IsTempModifierApplicable(cards, cards[i]))
+                    total += selector(cards[i]);
+            return total;
+        }
+
         private static int SumTempInt(IReadOnlyList<CardData> cards, Func<CardData, int> selector)
         {
             if (cards == null || selector == null)
@@ -400,6 +657,46 @@ namespace EmpireOfCards.Gameplay.Staff
                 if (cards[i] != null)
                     total += selector(cards[i]);
             return total;
+        }
+
+        private static int SumApplicableTempInt(IReadOnlyList<CardData> cards, Func<CardData, int> selector)
+        {
+            if (cards == null || selector == null)
+                return 0;
+
+            int total = 0;
+            for (int i = 0; i < cards.Count; i++)
+                if (IsTempModifierApplicable(cards, cards[i]))
+                    total += selector(cards[i]);
+            return total;
+        }
+
+        private static bool IsTempModifierApplicable(IReadOnlyList<CardData> activeTempEffects, CardData card)
+        {
+            if (card == null)
+                return false;
+            if (card.cardFamily != CardFamily.Reaction)
+                return true;
+            if (card.solutionTags == null || card.solutionTags.Length == 0)
+                return false;
+
+            for (int i = 0; i < activeTempEffects.Count; i++)
+            {
+                CardData active = activeTempEffects[i];
+                if (active == null || active == card || active.crisisTags == null)
+                    continue;
+
+                for (int s = 0; s < card.solutionTags.Length; s++)
+                {
+                    for (int c = 0; c < active.crisisTags.Length; c++)
+                    {
+                        if (!string.IsNullOrEmpty(card.solutionTags[s]) && card.solutionTags[s] == active.crisisTags[c])
+                            return true;
+                    }
+                }
+            }
+
+            return false;
         }
     }
 }

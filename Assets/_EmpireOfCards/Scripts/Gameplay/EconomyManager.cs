@@ -138,7 +138,10 @@ namespace EmpireOfCards.Gameplay
                     snapshot.demand,
                     snapshot.capacity,
                     lanes.operations.Count,
-                    lanes.temp);
+                    lanes.temp,
+                    lanes.operations,
+                    lanes.marketing,
+                    lanes.suppliers);
 
                 snapshot.capacity = Mathf.Max(1f, snapshot.capacity - workload.capacityPenalty);
                 snapshot.quality = Mathf.Clamp(snapshot.quality - workload.qualityPenalty, 0f, 10f);
