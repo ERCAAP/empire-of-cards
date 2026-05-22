@@ -1,6 +1,8 @@
 # Empire of Cards -- Next Session Prompts
 ## Ne Bitti, Ne Kaldi, Her Role Ozel Prompt
 
+> Durum: Session log. Icindeki eski sorunlar ve dosya yolları tarihsel olabilir; aktif truth degildir.
+
 ---
 
 ## TAMAMLANANLAR (bir onceki session)

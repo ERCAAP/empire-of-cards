@@ -44,7 +44,7 @@ namespace EmpireOfCards.Core
         [SerializeField] private EconomyManager economyManager;
         [SerializeField] private DeckManager deckManager;
         [SerializeField] private BoardManager boardManager;
-        [SerializeField] private TerritoryManager territoryManager;
+        [SerializeField] private MarketShareVisualizer marketShareVisualizer;
         [SerializeField] private RivalAI rivalAI;
         [SerializeField] private ShopManager shopManager;
         [SerializeField] private UIManager uiManager;
@@ -94,7 +94,7 @@ namespace EmpireOfCards.Core
         public EconomyManager EconomyManager => economyManager;
         public DeckManager DeckManager => deckManager;
         public BoardManager BoardManager => boardManager;
-        public TerritoryManager TerritoryManager => territoryManager;
+        public MarketShareVisualizer MarketShareVisualizer => marketShareVisualizer;
         public RivalAI RivalAI => rivalAI;
         public ShopManager ShopManager => shopManager;
         public UIManager UIManager => uiManager;
@@ -158,9 +158,12 @@ namespace EmpireOfCards.Core
         /// Assigns all manager dependencies without reflection.
         /// Called by WiringService during bootstrap.
         /// </summary>
+        [Obsolete("Use MarketShareVisualizer. TerritoryManager is compatibility-only.")]
+        public TerritoryManager TerritoryManager => marketShareVisualizer as TerritoryManager;
+
         public void Init(GameBalanceData balance, TurnManager tm,
             EconomyManager em, DeckManager dm, BoardManager bm,
-            TerritoryManager ter, RivalAI ai, ShopManager shop,
+            MarketShareVisualizer marketVisualizer, RivalAI ai, ShopManager shop,
             UIManager ui, AudioManager audio, VFXManager vfx, SaveManager save,
             SlotManager sm, StaffStateSystem sss, ChainReactionSystem crs)
         {
@@ -169,7 +172,7 @@ namespace EmpireOfCards.Core
             this.economyManager = em;
             this.deckManager = dm;
             this.boardManager = bm;
-            this.territoryManager = ter;
+            this.marketShareVisualizer = marketVisualizer;
             this.rivalAI = ai;
             this.shopManager = shop;
             this.uiManager = ui;

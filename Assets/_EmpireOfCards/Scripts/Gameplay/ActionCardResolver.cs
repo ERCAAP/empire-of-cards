@@ -10,6 +10,9 @@ namespace EmpireOfCards.Gameplay
     /// Subscribes to EventBus.OnActionExecuted and resolves each action card's
     /// effect based on its ActionEffectType (GDD Section 3.3).
     /// Created by ManagerFactory and lives as a child of the GameManager object.
+    /// Status: partial legacy surface. Some effects still reflect the older
+    /// business-centric prototype and should be treated as compatibility logic
+    /// until the venture-first action taxonomy fully replaces them.
     /// </summary>
     public class ActionCardResolver : MonoBehaviour
     {
@@ -36,51 +39,62 @@ namespace EmpireOfCards.Gameplay
 
             switch (card.actionEffectType)
             {
+                // Active compatibility effect. Still used as a generic demand bump.
                 case ActionEffectType.AddCustomersToRandom:
                     ResolveAddCustomersToRandom(gm, card);
                     break;
 
+                // Active effect. Works cleanly in the v4 economy layer.
                 case ActionEffectType.AddMoneyInstant:
                     gm.GainMoney(card.actionValue);
                     break;
 
+                // Partial legacy effect. Scales older business output assumptions.
                 case ActionEffectType.MultiplyAllCustomers:
                     ResolveMultiplyAllCustomers(gm, card);
                     break;
 
+                // Partial legacy effect. Still routed through rival pressure hooks.
                 case ActionEffectType.CloseRivalWeakestBusiness:
                     if (gm.RivalAI != null)
                         gm.RivalAI.CloseWeakestBusiness(1);
                     break;
 
+                // Legacy FBI action. The FBI subsystem is no longer active in v4,
+                // so this falls back to a plain customer swing.
                 case ActionEffectType.AddCustomersWithFBI:
-                    // FBI system removed; resolve as customer-only effect
                     ResolveAddCustomersToRandom(gm, card);
                     break;
 
+                // Partial legacy pressure effect. Keeps high-level risk/reward feel.
                 case ActionEffectType.StealCustomersHalfIncome:
                     ResolveStealCustomersHalfIncome(gm, card);
                     break;
 
+                // Active sabotage effect.
                 case ActionEffectType.DisableRivalOneTurn:
                     if (gm.RivalAI != null)
                         gm.RivalAI.DisableProductionOneTurn();
                     break;
 
+                // Active debt effect.
                 case ActionEffectType.MoneyNowPayLater:
                     gm.GainMoney(card.actionValue);
                     if (gm.EconomyManager != null)
                         gm.EconomyManager.StartInvestorDebt(card.actionDebtDuration, card.actionDebtPercent);
                     break;
 
+                // Legacy helper effect. Still useful until hiring loops become systemic.
                 case ActionEffectType.DrawAndPlayEmployee:
                     ResolveDrawAndPlayEmployee(gm);
                     break;
 
+                // Legacy business-centric effect retained for compatibility only.
                 case ActionEffectType.SacrificeBusiness:
                     ResolveSacrificeBusiness(gm);
                     break;
 
+                // Active staff pressure effect.
                 case ActionEffectType.Overtime:
                     ResolveOvertime(gm);
                     break;

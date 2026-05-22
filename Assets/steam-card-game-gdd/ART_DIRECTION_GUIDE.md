@@ -2,6 +2,7 @@
 
 > Versiyon: 1.0 | Tarih: 2026-05-18
 > GDD v2.0 baz alınarak hazırlanmıştır.
+> Durum: Reference only. Gameplay source of truth degildir; aktif sistem kararlarini `CURRENT_TRUTH.md` uzerinden takip et.
 
 ---
 

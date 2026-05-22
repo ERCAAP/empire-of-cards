@@ -4,6 +4,8 @@ namespace EmpireOfCards.Gameplay.Economy
     /// Tracks investor debt from the "Yatirimci Sunumu" action card.
     /// For N turns, a percentage of income is deducted.
     /// Default: +600 gold now, 3 turns x 15% income deducted.
+    /// Status: legacy-leaning. The active run economy now relies on
+    /// EconomyManager investor-debt state and CreditSystem flow.
     /// </summary>
     public class DebtTracker
     {

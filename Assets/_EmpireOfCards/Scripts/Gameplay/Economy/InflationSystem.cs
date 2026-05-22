@@ -3,6 +3,10 @@ using EmpireOfCards.Core;
 
 namespace EmpireOfCards.Gameplay.Economy
 {
+    /// <summary>
+    /// Status: partial. Inflation rules exist, but the system is not yet wired
+    /// into the live end-of-turn economy pipeline.
+    /// </summary>
     public class InflationEvent
     {
         public float supplierCostIncrease;
@@ -10,6 +14,10 @@ namespace EmpireOfCards.Gameplay.Economy
         public float salaryExpectationIncrease;
     }
 
+    /// <summary>
+    /// Status: partial. This helper owns inflation cadence and modifiers, but
+    /// callers still need to integrate it into the active run economy.
+    /// </summary>
     public class InflationSystem
     {
         private int lastInflationTurn;

@@ -2,6 +2,7 @@
 
 > Combo = 2-3 kart aynı anda aktifken otomatik tetiklenen sinerji.
 > Oyuncu combo'ları kendisi keşfeder (öğretilmez).
+> Durum: Legacy-leaning reference. Aktif combo ve card behavior truth'u degildir.
 
 ---
 

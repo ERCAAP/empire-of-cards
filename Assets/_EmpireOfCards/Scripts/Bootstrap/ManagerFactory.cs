@@ -51,10 +51,10 @@ namespace EmpireOfCards.Bootstrap
             bmGo.transform.SetParent(gmGo.transform);
             b.boardManager = bmGo.AddComponent<BoardManager>();
 
-            // --- TerritoryManager ---
-            var terGo = new GameObject("TerritoryManager");
+            // --- MarketShareVisualizer (TerritoryManager compatibility component) ---
+            var terGo = new GameObject("MarketShareVisualizer");
             terGo.transform.SetParent(gmGo.transform);
-            b.territoryManager = terGo.AddComponent<TerritoryManager>();
+            b.marketShareVisualizer = terGo.AddComponent<TerritoryManager>();
 
             // --- RivalAI ---
             var aiGo = new GameObject("RivalAI");
@@ -137,7 +137,7 @@ namespace EmpireOfCards.Bootstrap
         public EconomyManager economyManager;
         public DeckManager deckManager;
         public BoardManager boardManager;
-        public TerritoryManager territoryManager;
+        public MarketShareVisualizer marketShareVisualizer;
         public RivalAI rivalAI;
         public ShopManager shopManager;
         public UIManager uiManager; // Set later by HUDBuilder

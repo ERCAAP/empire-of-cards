@@ -134,9 +134,9 @@ namespace EmpireOfCards.Core.TurnPhases
                 // 4b.6: Market share calculation
                 case ResolveStep.MarketShareCalculation:
                 {
-                    if (gm.TerritoryManager != null)
+                    if (gm.MarketShareVisualizer != null)
                     {
-                        gm.TerritoryManager.CalculateMarketBlocks(
+                        gm.MarketShareVisualizer.CalculateMarketBlocks(
                             gm.PlayerCustomers,
                             gm.RivalCustomers,
                             Constants.TOTAL_MARKET_CUSTOMERS);

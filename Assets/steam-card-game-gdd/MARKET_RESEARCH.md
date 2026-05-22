@@ -2,6 +2,7 @@
 
 > Araştırma Tarihi: 2026-05-18
 > Kaynaklar: Steam, SteamSpy, Gamalytic, SullyGnome, GameDiscover, Ars Technica
+> Durum: Product strategy reference. Gameplay source of truth degildir.
 
 ---
 

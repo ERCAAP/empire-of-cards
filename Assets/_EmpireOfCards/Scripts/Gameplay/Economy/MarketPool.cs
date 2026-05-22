@@ -4,8 +4,9 @@ using EmpireOfCards.Data;
 namespace EmpireOfCards.Gameplay.Economy
 {
     /// <summary>
-    /// Calculates customer market pool size per turn.
-    /// Base 60, +5/turn (1-5), +6 (6-10), +8 (11-15), +10 (16-20).
+    /// Status: legacy-leaning helper. It reflects the older pooled-customer
+    /// scoring model; the active v4 runtime primarily resolves share through
+    /// EconomyManager snapshot values.
     /// </summary>
     public class MarketPool
     {

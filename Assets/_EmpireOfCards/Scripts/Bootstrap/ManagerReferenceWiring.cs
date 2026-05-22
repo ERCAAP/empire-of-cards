@@ -19,7 +19,7 @@ namespace EmpireOfCards.Bootstrap
             m.gameManager.Init(
                 data.balanceData,
                 m.turnManager, m.economyManager, m.deckManager, m.boardManager,
-                m.territoryManager, m.rivalAI,
+                m.marketShareVisualizer, m.rivalAI,
                 m.shopManager, m.uiManager, m.audioManager, m.vfxManager, m.saveManager,
                 m.slotManager, m.staffStateSystem, m.chainReactionSystem);
             m.gameManager.SetCardLookup(data.cardLookup);

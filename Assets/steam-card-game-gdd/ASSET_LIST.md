@@ -2,6 +2,7 @@
 
 > Prototip + MVP için gereken tüm asset'ler.
 > Öncelik: P1 = prototip şart, P2 = MVP şart, P3 = polish/EA sonrası
+> Durum: Reference only. Gameplay source of truth degildir; aktif sistem kararlarini `CURRENT_TRUTH.md` uzerinden takip et.
 
 ---
 

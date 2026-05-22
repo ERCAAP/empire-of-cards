@@ -6,6 +6,8 @@ namespace EmpireOfCards.Gameplay
     /// <summary>
     /// Tracks customer loyalty and word-of-mouth organic growth (GDD Section 7.3-7.4).
     /// Good experience builds loyalty; loyalty generates free organic customers.
+    /// Status: partial. The system is implemented but not yet fully wired into
+    /// the current venture-first resolve loop.
     /// </summary>
     public class CustomerLoyaltySystem : MonoBehaviour
     {

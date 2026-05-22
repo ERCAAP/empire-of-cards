@@ -2,6 +2,7 @@
 
 > Bu rehberle oyunu kağıtla oynayıp test edebilirsin.
 > Hedef: "Kart koymak eğlenceli mi?" sorusuna cevap almak.
+> Durum: Legacy-leaning paper reference. Aktif gameplay truth'u degildir.
 
 ---
 
@@ -74,7 +75,7 @@ Her karta şunu yaz:
 └─────────────┘
 ```
 
-Tüm 40 kartı CARD_LIST.md'den bakarak yaz.
+Tüm 40 kartı `legacy/LEGACY_CARD_LIST.md` uzerinden tarihsel referans olarak yaz.
 
 ---
 

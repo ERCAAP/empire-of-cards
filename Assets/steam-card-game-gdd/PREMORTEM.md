@@ -3,6 +3,8 @@
 > **Çerçeve:** Kasım 2027. Empire of Cards 6 ay önce çıktı. Sadece 847 kopya sattı. Geriye bakıyoruz — ne oldu?
 >
 > *Gary Klein'ın premortem metodolojisi uygulanmıştır. 5 farklı başarısızlık perspektifinden analiz yapılmıştır.*
+>
+> Durum: Product risk reference. Gameplay source of truth degildir.
 
 ---
 
