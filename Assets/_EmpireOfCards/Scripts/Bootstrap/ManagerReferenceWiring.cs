@@ -31,7 +31,7 @@ namespace EmpireOfCards.Bootstrap
                 m.slotManager, m.staffStateSystem, m.chainReactionSystem);
             m.gameManager.SetCardLookup(data.cardLookup);
 
-            m.economyManager.Init(data.balanceData, m.boardManager, m.abilitySystem, m.slotManager);
+            m.economyManager.Init(data.balanceData, m.boardManager, m.abilitySystem, m.slotManager, m.staffStateSystem);
             m.rivalAI.Init(data.rivalData);
             m.slotManager.Init();
             m.boardManager.Init(m.slotManager);

@@ -112,6 +112,7 @@ namespace EmpireOfCards.Core
                 ResolveCardsFromIds(runData.supplierSlotIds),
                 ResolveCardsFromIds(runData.tempEffectSlotIds));
             boardManager?.RebuildFromSlots();
+            RestoreStaffStateFromSlots(runData.staffRuntimeStates);
 
             deckManager?.RestoreState(
                 activeDeckProfile,
@@ -204,11 +205,28 @@ namespace EmpireOfCards.Core
                 marketingSlotIds = slotManager != null ? slotManager.GetSlotIds(SlotType.Marketing) : new List<string>(),
                 supplierSlotIds = slotManager != null ? slotManager.GetSlotIds(SlotType.Supplier) : new List<string>(),
                 tempEffectSlotIds = slotManager != null ? slotManager.GetSlotIds(SlotType.TempEffect) : new List<string>(),
+                staffRuntimeStates = staffStateSystem != null ? staffStateSystem.CaptureStaffRuntimeState() : new List<StaffRuntimeSaveData>(),
                 ventureRuntimeState = activeVentureRuntime != null ? activeVentureRuntime.CaptureRuntimeState() : null,
                 openingArcState = activeVentureRuntime != null ? activeVentureRuntime.CaptureOpeningArcState() : null,
                 eventChainState = activeVentureRuntime != null ? activeVentureRuntime.CaptureEventChainState() : null,
                 rivalState = rivalAI != null ? rivalAI.CaptureState() : null
             };
+        }
+
+        private void RestoreStaffStateFromSlots(IList<StaffRuntimeSaveData> savedStates)
+        {
+            if (staffStateSystem == null || slotManager == null)
+                return;
+
+            staffStateSystem.Reset();
+            IReadOnlyList<CardData> staffCards = slotManager.StaffSlots;
+            for (int i = 0; i < staffCards.Count; i++)
+            {
+                if (staffCards[i] != null)
+                    staffStateSystem.RegisterStaff(staffCards[i]);
+            }
+
+            staffStateSystem.RestoreStaffRuntimeState(savedStates);
         }
 
         private List<CardData> ResolveCardsFromIds(IList<string> ids)

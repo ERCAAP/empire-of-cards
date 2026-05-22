@@ -71,6 +71,9 @@ namespace EmpireOfCards.Gameplay
 
         public bool PlaceCardInSlot(CardData card, SlotType slotType, int slotIndex, int businessIndex = -1)
         {
+            if (!CanPlaceInSubSlot(card, slotType, slotIndex))
+                return false;
+
             return slotType switch
             {
                 SlotType.Operation => PlaceBusiness(card, slotIndex),
@@ -80,6 +83,28 @@ namespace EmpireOfCards.Gameplay
                 SlotType.TempEffect => PlaceUpgrade(card, businessIndex, SlotType.TempEffect, slotIndex),
                 _ => false
             };
+        }
+
+        public bool CanPlaceInSubSlot(CardData card, SlotType slotType, int slotIndex)
+        {
+            if (card == null || card.isGeneralCard || string.IsNullOrWhiteSpace(card.targetSubSlotId))
+                return true;
+            if (_boardProfile == null)
+                return true;
+
+            BoardSubSlotDefinition[] definitions = slotType switch
+            {
+                SlotType.Operation => _boardProfile.operationSubSlots,
+                SlotType.Staff => _boardProfile.staffSubSlots,
+                SlotType.Marketing => _boardProfile.marketingSubSlots,
+                SlotType.Supplier => _boardProfile.supplierSubSlots,
+                _ => null
+            };
+
+            if (definitions == null || slotIndex < 0 || slotIndex >= definitions.Length)
+                return true;
+
+            return definitions[slotIndex] != null && definitions[slotIndex].id == card.targetSubSlotId;
         }
 
         public bool PlaceBusiness(CardData card, int slotIndex)

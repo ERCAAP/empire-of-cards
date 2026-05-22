@@ -122,6 +122,12 @@ namespace EmpireOfCards.Core
         public static event Action<CardData> OnStaffStrike;                             // striking employee
         public static event Action<CardData> OnStaffStolenByRival;                      // stolen employee
         public static event Action OnOvertimeApplied;                                   // overtime used this turn
+        public static event Action<StaffApplicant[]> OnApplicantPoolGenerated;
+        public static event Action<HiringDecisionResult> OnHiringDecisionResolved;
+        public static event Action<StaffWorkloadReport> OnStaffWorkloadChanged;
+        public static event Action<CardData, float> OnStaffBurnoutRiskChanged;
+        public static event Action<CardData, QuitReason> OnStaffQuit;
+        public static event Action<CardData> OnStaffTrialCompleted;
         #endregion
 
         #region Chain Reaction Events (GDD Section 11, 12)
@@ -241,6 +247,12 @@ namespace EmpireOfCards.Core
         public static void StaffStrikeTriggered(CardData card) => OnStaffStrike?.Invoke(card);
         public static void StaffStolenByRival(CardData card) => OnStaffStolenByRival?.Invoke(card);
         public static void OvertimeApplied() => OnOvertimeApplied?.Invoke();
+        public static void ApplicantPoolGenerated(StaffApplicant[] applicants) => OnApplicantPoolGenerated?.Invoke(applicants);
+        public static void HiringDecisionResolved(HiringDecisionResult result) => OnHiringDecisionResolved?.Invoke(result);
+        public static void StaffWorkloadChanged(StaffWorkloadReport report) => OnStaffWorkloadChanged?.Invoke(report);
+        public static void StaffBurnoutRiskChanged(CardData card, float risk) => OnStaffBurnoutRiskChanged?.Invoke(card, risk);
+        public static void StaffQuit(CardData card, QuitReason reason) => OnStaffQuit?.Invoke(card, reason);
+        public static void StaffTrialCompleted(CardData card) => OnStaffTrialCompleted?.Invoke(card);
         #endregion
 
         #region Chain Reaction Invoke Helpers
@@ -380,6 +392,12 @@ namespace EmpireOfCards.Core
             OnStaffStrike = null;
             OnStaffStolenByRival = null;
             OnOvertimeApplied = null;
+            OnApplicantPoolGenerated = null;
+            OnHiringDecisionResolved = null;
+            OnStaffWorkloadChanged = null;
+            OnStaffBurnoutRiskChanged = null;
+            OnStaffQuit = null;
+            OnStaffTrialCompleted = null;
 
             // Chain Reaction
             OnChainReactionTriggered = null;

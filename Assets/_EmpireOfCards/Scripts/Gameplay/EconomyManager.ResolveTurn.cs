@@ -145,6 +145,7 @@ namespace EmpireOfCards.Gameplay
             float ratingDelta = ((snapshot.quality - 5f) * _activeProfile.qualityToRatingWeight)
                 - (overload * _activeProfile.capacityPenaltyMultiplier)
                 - Mathf.Max(0f, 4f - snapshot.staffStability) * _activeProfile.staffInstabilityPenalty
+                - _staffRatingPenaltyThisTurn
                 + (techCategory != null ? techCategory.ratingModifier : 0f)
                 + Sum(lanes.marketing, c => c.ratingDeltaPerTurn)
                 + Sum(lanes.temp, c => c.ratingDeltaPerTurn);

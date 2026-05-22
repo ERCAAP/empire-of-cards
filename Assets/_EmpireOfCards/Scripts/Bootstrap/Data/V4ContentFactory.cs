@@ -773,6 +773,8 @@ namespace EmpireOfCards.Bootstrap.Data
             card.buyCost = upkeep * 2;
             card.playCost = 0;
             card.salaryPerTurn = upkeep;
+            card.staffRole = ResolveStaffRole(venture, subSlot);
+            card.defaultTrialTurns = 2;
             card.demandDelta = demand;
             card.capacityDelta = capacity;
             card.qualityDelta = quality;
@@ -830,6 +832,11 @@ namespace EmpireOfCards.Bootstrap.Data
             card.capacityDelta = capacity;
             card.legalRiskDeltaPerTurn = legalRisk;
             card.ratingDeltaPerTurn = rating;
+            card.workloadDeltaPerTurn = family == CardFamily.Risk ? Mathf.Max(0.5f, demand * 0.8f) : -0.75f;
+            card.fatigueDeltaPerTurn = family == CardFamily.Risk ? 1 : -2;
+            card.moraleDeltaPerTurn = family == CardFamily.Risk ? -1 : 1;
+            card.loyaltyDeltaPerTurn = family == CardFamily.Risk ? -1 : 0;
+            card.burnoutRiskDeltaPerTurn = family == CardFamily.Risk ? 0.08f : -0.12f;
             card.tempEffectDuration = duration;
             card.crisisTags = crisisTags ?? new string[0];
             card.solutionTags = solutionTags ?? new string[0];
@@ -852,11 +859,44 @@ namespace EmpireOfCards.Bootstrap.Data
             card.demandDelta = demandPenalty;
             card.qualityDelta = qualityPenalty;
             card.legalRiskDeltaPerTurn = legalRisk;
+            card.workloadDeltaPerTurn = Mathf.Abs(demandPenalty) + Mathf.Abs(qualityPenalty);
+            card.fatigueDeltaPerTurn = 1;
+            card.moraleDeltaPerTurn = -1;
+            card.burnoutRiskDeltaPerTurn = 0.08f;
             card.crisisTags = new[] { crisisTag };
             card.buildingScale = new Vector3(0.85f, 0.7f, 0.85f);
             card.buildingColor = new Color(0.48f, 0.10f, 0.10f);
             card.buildingLabel = name;
             return card;
+        }
+
+        private static StaffRole ResolveStaffRole(VentureType venture, string subSlot)
+        {
+            if (string.IsNullOrWhiteSpace(subSlot))
+                return StaffRole.Generalist;
+
+            switch (subSlot)
+            {
+                case "chef": return StaffRole.Chef;
+                case "cashier": return StaffRole.Cashier;
+                case "courier": return StaffRole.Courier;
+                case "cleaning": return StaffRole.Cleaning;
+                case "manager":
+                case "lead": return StaffRole.Manager;
+                case "barista": return StaffRole.Barista;
+                case "floor": return StaffRole.Floor;
+                case "developer": return StaffRole.Developer;
+                case "designer": return StaffRole.Designer;
+                case "growthhire": return StaffRole.Growth;
+                case "supporthire": return StaffRole.Support;
+                case "pm": return StaffRole.ProductManager;
+                case "sales": return StaffRole.Sales;
+                case "tailor": return StaffRole.Tailor;
+                case "stocker": return StaffRole.Stocker;
+                case "freshkeeper": return StaffRole.FreshKeeper;
+                default:
+                    return venture == VentureType.Cafe ? StaffRole.Floor : StaffRole.Generalist;
+            }
         }
 
         private static Color GetVentureColor(VentureType venture, float multiplier)

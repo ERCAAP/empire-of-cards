@@ -56,6 +56,7 @@ namespace EmpireOfCards.Save
         public List<string> marketingSlotIds = new List<string>();
         public List<string> supplierSlotIds = new List<string>();
         public List<string> tempEffectSlotIds = new List<string>();
+        public List<StaffRuntimeSaveData> staffRuntimeStates = new List<StaffRuntimeSaveData>();
         public VentureRuntimeState ventureRuntimeState;
         public OpeningArcState openingArcState;
         public EventChainState eventChainState;
@@ -75,7 +76,7 @@ namespace EmpireOfCards.Save
     public class SaveManager : MonoBehaviour
     {
         public static SaveManager Instance { get; private set; }
-        public const int CurrentRunSaveVersion = 2;
+        public const int CurrentRunSaveVersion = 3;
 
         [SerializeField] private string saveFileName = "empire_save.json";
 

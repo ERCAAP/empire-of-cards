@@ -4,6 +4,7 @@ using EmpireOfCards.Core;
 using EmpireOfCards.Core.TurnPhases;
 using EmpireOfCards.Data;
 using EmpireOfCards.Gameplay.Economy;
+using EmpireOfCards.Gameplay.Staff;
 using EmpireOfCards.UI.Clarity;
 
 namespace EmpireOfCards.Gameplay
@@ -32,6 +33,7 @@ namespace EmpireOfCards.Gameplay
 
         private VentureEconomyProfile _activeProfile;
         private AbilitySystem abilitySystem;
+        private StaffStateSystem staffStateSystem;
 
         private SalarySystem salarySystem;
         private InsuranceSystem insuranceSystem;
@@ -46,6 +48,7 @@ namespace EmpireOfCards.Gameplay
         private bool _cashCrisis;
         private float _rivalPressureImpact;
         private string _rivalPressureStyle = "balanced";
+        private float _staffRatingPenaltyThisTurn;
 
         public int GrossIncome => grossIncome;
         public int TotalSalaries => totalSalaries;
@@ -68,12 +71,13 @@ namespace EmpireOfCards.Gameplay
         public string RivalPressureStyle => _rivalPressureStyle;
 
         public void Init(GameBalanceData balance, BoardManager board,
-            AbilitySystem ability = null, SlotManager slots = null)
+            AbilitySystem ability = null, SlotManager slots = null, StaffStateSystem staff = null)
         {
             balanceData = balance;
             boardManager = board;
             abilitySystem = ability;
             slotManager = slots;
+            staffStateSystem = staff;
 
             salarySystem = new SalarySystem();
             insuranceSystem = new InsuranceSystem();
@@ -124,6 +128,23 @@ namespace EmpireOfCards.Gameplay
             snapshot.quality = baseline.quality;
             snapshot.staffStability = baseline.staffStability;
             snapshot.legalRisk = baseline.legalRisk;
+            _staffRatingPenaltyThisTurn = 0f;
+
+            StaffStateSystem activeStaffSystem = staffStateSystem != null ? staffStateSystem : gm.StaffStateSystem;
+            if (activeStaffSystem != null)
+            {
+                var workload = activeStaffSystem.ResolveWorkload(
+                    _activeProfile.ventureType,
+                    snapshot.demand,
+                    snapshot.capacity,
+                    lanes.operations.Count,
+                    lanes.temp);
+
+                snapshot.capacity = Mathf.Max(1f, snapshot.capacity - workload.capacityPenalty);
+                snapshot.quality = Mathf.Clamp(snapshot.quality - workload.qualityPenalty, 0f, 10f);
+                snapshot.staffStability = Mathf.Clamp(snapshot.staffStability - workload.staffStabilityPenalty, 0f, 10f);
+                _staffRatingPenaltyThisTurn = workload.ratingPenalty;
+            }
 
             ApplyOperationalEconomyEffects(lanes.staff.Count, lanes.suppliers.Count > 0);
 
@@ -143,7 +164,9 @@ namespace EmpireOfCards.Gameplay
             float seasonMultiplier = GetCurrentSeasonMultiplier(gm);
             grossIncome = Mathf.RoundToInt(grossIncome * seasonMultiplier);
 
-            totalSalaries = Mathf.RoundToInt(Sum(lanes.staff, c => Mathf.Max(0f, c.upkeepCostPerTurn > 0f ? c.upkeepCostPerTurn : c.salaryPerTurn)));
+            totalSalaries = Mathf.RoundToInt(Sum(lanes.staff, c => activeStaffSystem != null
+                ? activeStaffSystem.GetNegotiatedSalary(c)
+                : Mathf.Max(0f, c.upkeepCostPerTurn > 0f ? c.upkeepCostPerTurn : c.salaryPerTurn)));
             int upkeepCosts = Mathf.RoundToInt(
                 Sum(lanes.marketing, c => c.upkeepCostPerTurn) +
                 Sum(lanes.suppliers, c => c.upkeepCostPerTurn) +
@@ -212,7 +235,10 @@ namespace EmpireOfCards.Gameplay
         {
             if (salarySystem == null)
                 salarySystem = new SalarySystem();
-            return salarySystem.ProcessSalary(choice, totalSalaries, CashBalance);
+            SalaryResult result = salarySystem.ProcessSalary(choice, totalSalaries, CashBalance);
+            (staffStateSystem != null ? staffStateSystem : GameManager.Instance != null ? GameManager.Instance.StaffStateSystem : null)
+                ?.ApplySalaryResult(result);
+            return result;
         }
 
         public bool CanTakeCredit(CreditType type) => creditSystem != null && creditSystem.CanTakeCredit(type);
@@ -318,6 +344,7 @@ namespace EmpireOfCards.Gameplay
             currentPressure = BoardPressureType.None;
             _rivalPressureImpact = 0f;
             _rivalPressureStyle = "balanced";
+            _staffRatingPenaltyThisTurn = 0f;
             _currentInsuranceType = InsuranceType.Uninsured;
             salarySystem?.Reset();
             creditSystem?.Reset();

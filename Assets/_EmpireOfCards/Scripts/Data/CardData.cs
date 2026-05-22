@@ -58,6 +58,8 @@ namespace EmpireOfCards.Data
         public int illegalIncomePerTurn;    // Fraudster: 120
         public bool preventsTransfer;       // Loyal Manager: transfer protection
         public float taxReduction;          // Accountant: 0.5 (50% reduction)
+        public StaffRole staffRole;         // Runtime HR role coverage (waiter/barista/cashier/etc.)
+        public int defaultTrialTurns = 2;    // Trial period when hired through applicant flow
 
         // Active Ability (GDD Section 3.2)
         public ActiveAbilityType activeAbilityType;
@@ -129,6 +131,11 @@ namespace EmpireOfCards.Data
         public float staffStabilityDelta;
         public float legalRiskDeltaPerTurn;
         public float ratingDeltaPerTurn;
+        public float workloadDeltaPerTurn;
+        public int fatigueDeltaPerTurn;
+        public int moraleDeltaPerTurn;
+        public int loyaltyDeltaPerTurn;
+        public float burnoutRiskDeltaPerTurn;
         public int tempEffectDuration;
         public string[] crisisTags;
         public string[] solutionTags;

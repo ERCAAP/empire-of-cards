@@ -10,6 +10,15 @@ namespace EmpireOfCards.Gameplay.Staff
     public class StaffState
     {
         public CardData card;
+        public StaffRole role;
+        public EmploymentStatus employmentStatus;
+        public int baseSalary;
+        public int negotiatedSalary;
+        public int trialTurnsRemaining;
+        public float workload;
+        public float burnoutRisk;
+        public float resignRisk;
+        public QuitReason lastQuitReason;
         public int moral;
         public int fatigue;
         public int loyalty;
@@ -21,9 +30,10 @@ namespace EmpireOfCards.Gameplay.Staff
         public int Level => Mathf.Clamp(experience / Constants.STAFF_XP_PER_LEVEL, 0, Constants.STAFF_MAX_LEVEL);
     }
 
-    public class StaffStateSystem : MonoBehaviour
+    public partial class StaffStateSystem : MonoBehaviour
     {
         private List<StaffState> _staffStates = new List<StaffState>();
+        private StaffWorkloadReport _lastWorkloadReport = new StaffWorkloadReport();
 
         // Exposed for other systems to query staff modifiers
         public IReadOnlyList<StaffState> StaffStates => _staffStates;
@@ -89,6 +99,15 @@ namespace EmpireOfCards.Gameplay.Staff
             var state = new StaffState
             {
                 card = card,
+                role = card.staffRole,
+                employmentStatus = EmploymentStatus.Active,
+                baseSalary = Mathf.Max(0, card.salaryPerTurn > 0 ? card.salaryPerTurn : Mathf.RoundToInt(card.upkeepCostPerTurn)),
+                negotiatedSalary = Mathf.Max(0, card.salaryPerTurn > 0 ? card.salaryPerTurn : Mathf.RoundToInt(card.upkeepCostPerTurn)),
+                trialTurnsRemaining = Mathf.Max(0, card.defaultTrialTurns),
+                workload = 0f,
+                burnoutRisk = 0f,
+                resignRisk = 0f,
+                lastQuitReason = QuitReason.None,
                 moral = Constants.STAFF_DEFAULT_MORAL,
                 fatigue = Constants.STAFF_DEFAULT_FATIGUE,
                 loyalty = Constants.STAFF_DEFAULT_LOYALTY,
@@ -128,6 +147,16 @@ namespace EmpireOfCards.Gameplay.Staff
                 var s = _staffStates[i];
                 s.turnsWorked++;
 
+                if (s.employmentStatus == EmploymentStatus.Trial)
+                {
+                    s.trialTurnsRemaining = Mathf.Max(0, s.trialTurnsRemaining - 1);
+                    if (s.trialTurnsRemaining == 0)
+                    {
+                        s.employmentStatus = EmploymentStatus.Active;
+                        EventBus.StaffTrialCompleted(s.card);
+                    }
+                }
+
                 // XP gain (GDD 6.4): +5 XP per turn
                 s.experience = Mathf.Min(s.experience + Constants.STAFF_XP_PER_TURN, Constants.STAFF_MAX_LEVEL * Constants.STAFF_XP_PER_LEVEL);
 
@@ -148,11 +177,17 @@ namespace EmpireOfCards.Gameplay.Staff
 
                 // Low moral drains loyalty
                 if (s.moral < 3)
+                {
                     s.loyalty = Mathf.Max(0, s.loyalty - 1);
+                    s.resignRisk = Mathf.Clamp01(s.resignRisk + 0.05f);
+                }
 
                 // High moral boosts loyalty slowly
                 if (s.moral > 8 && s.loyalty < Constants.STAFF_LOYALTY_MAX)
+                {
                     s.loyalty = Mathf.Min(s.loyalty + 1, Constants.STAFF_LOYALTY_MAX);
+                    s.resignRisk = Mathf.Max(0f, s.resignRisk - 0.04f);
+                }
 
                 // Check fatigue > 9: "Staff Strike" risk (GDD 6.3)
                 if (s.fatigue > 9)
@@ -191,10 +226,16 @@ namespace EmpireOfCards.Gameplay.Staff
 
                 // Reset overtime flag for next turn
                 s.overtimeThisTurn = false;
+                s.workload = Mathf.Max(0f, s.workload - 0.75f);
+                s.burnoutRisk = Mathf.Clamp01(s.burnoutRisk + Mathf.Max(0, s.fatigue - 7) * 0.015f - (s.moral >= 7 ? 0.02f : 0f));
+                if (s.burnoutRisk >= 0.75f)
+                    EventBus.StaffBurnoutRiskChanged(s.card, s.burnoutRisk);
 
                 // Fire state update event
                 EventBus.StaffStateUpdated(s.card, s.moral, s.fatigue, s.loyalty, s.experience);
             }
+
+            TryResolveQuitChecks();
         }
 
         // ----------------------------------------------------------------
@@ -312,6 +353,7 @@ namespace EmpireOfCards.Gameplay.Staff
         public void Reset()
         {
             _staffStates.Clear();
+            _lastWorkloadReport = new StaffWorkloadReport();
         }
     }
 }

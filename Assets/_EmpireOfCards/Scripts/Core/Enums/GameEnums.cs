@@ -234,6 +234,55 @@ namespace EmpireOfCards.Core
         NewCustomer         // First-time, influenced by marketing
     }
 
+    public enum StaffRole
+    {
+        Generalist,
+        Chef,
+        Cashier,
+        Courier,
+        Cleaning,
+        Manager,
+        Barista,
+        Floor,
+        Developer,
+        Designer,
+        Growth,
+        Support,
+        ProductManager,
+        Sales,
+        Tailor,
+        Stocker,
+        FreshKeeper
+    }
+
+    public enum EmploymentStatus
+    {
+        Applicant,
+        Trial,
+        Active,
+        BurnedOut,
+        Quit,
+        Poached
+    }
+
+    public enum QuitReason
+    {
+        None,
+        Burnout,
+        LowMorale,
+        SalaryDelay,
+        RivalPoach,
+        TrialFailed
+    }
+
+    public enum HiringDecision
+    {
+        Reject,
+        Trial,
+        Hire,
+        CounterOffer
+    }
+
     // Rival AI moves (GDD v3.0 Section 15)
     public enum RivalMove
     {

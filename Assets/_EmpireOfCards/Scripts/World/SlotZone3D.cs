@@ -131,19 +131,23 @@ namespace EmpireOfCards.World
                 // === Slot System v2 (GDD v3.0 Section 4) ===
                 // Uses targetSlotType from CardData v2 when available, falls back to CardType check
                 case DropZoneType.OperationSlot:
+                    if (boardManager != null && !boardManager.CanPlaceInSubSlot(card, SlotType.Operation, slotIndex)) return false;
                     if (card.targetSlotType == SlotType.Operation) return true;
                     return card.cardType == CardType.Business;
 
                 case DropZoneType.StaffSlot:
+                    if (boardManager != null && !boardManager.CanPlaceInSubSlot(card, SlotType.Staff, slotIndex)) return false;
                     if (card.targetSlotType == SlotType.Staff) return true;
                     return card.cardType == CardType.Employee;
 
                 case DropZoneType.MarketingSlot:
+                    if (boardManager != null && !boardManager.CanPlaceInSubSlot(card, SlotType.Marketing, slotIndex)) return false;
                     if (card.targetSlotType == SlotType.Marketing) return true;
                     return card.cardType == CardType.Action
                            || (card.tags != null && System.Array.IndexOf(card.tags, CardTag.Marketing) >= 0);
 
                 case DropZoneType.SupplierSlot:
+                    if (boardManager != null && !boardManager.CanPlaceInSubSlot(card, SlotType.Supplier, slotIndex)) return false;
                     if (card.targetSlotType == SlotType.Supplier) return true;
                     return card.cardType == CardType.Upgrade;
 
