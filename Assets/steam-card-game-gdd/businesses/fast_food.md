@@ -1,220 +1,122 @@
 # FAST FOOD — Venture Dosyası
 
-> Empire of Cards | Versiyon: 4.0 | Tarih: 2026-05-20
-> Rol: Referans venture
+> Empire of Cards | Versiyon: 5.0 | Tarih: 2026-05-23
+> Rol: Referans tempo venture'ı
 
 ---
 
 ## 1. Venture Kimliği
 
-Fast food yüksek tempo, yüksek trafik ve yüksek çöküş riski venture'ıdır. Doğru kurulduğunda en hızlı büyüyen sektörlerden biridir; yanlış kurulduğunda birkaç tur içinde yorum ve kalite çöküşü yaşar.
+Fast food yüksek trafik, yüksek hız baskısı ve yüksek çöküş riski venture'ıdır.
 
 Oyuncu hissi:
 
-> "Talebi patlatabiliyorum ama o talebi taşıyamazsam kendi reklamımla kendimi batırıyorum."
+> "Müşteriyi çekmek kolay, o müşteriyi rezil etmeden doyurmak zor."
 
-## 2. Başlangıç Board'u
+## 2. 3-Zone Board Kimliği
 
-Başlangıç durumu:
+- üstte rakip fast food dükkanı, agresif kırmızı kampanya dili
+- ortada gri mahalle müşterileri ve hızlı karar panelleri
+- altta oyuncunun mutfak, kasa, servis ve delivery odaklı işletmesi
 
-- küçük dükkan
-- 1 temel mutfak istasyonu
-- 2 masa
-- 1 kasiyer
-- düşük Google görünürlüğü
-- sınırlı cash
+## 3. Persistent Build Anchors
 
-Başlangıç baskısı:
+- mutfak hattı
+- kasa noktası
+- servis alanı
+- delivery çıkışı
+- tedarik rafı
+- reklam panosu
 
-- demand düşük
-- quality kırılgan
-- capacity dar
-- rating nötr ya da hafif düşük
+## 4. Core Question Families
 
-## 3. Alt-Slot Yapısı
+- öğle yoğunluğu
+- eksik aşçı / kasiyer
+- yağ ve malzeme kalitesi baskısı
+- kötü yorum patlaması
+- delivery yetişmeme krizi
+- sağlık denetimi hazırlığı
 
-### Operation
+## 5. Economy Pressure Profile
 
-- Mutfak
-- Servis
-- Oturma
-- Delivery
+Ana baskılar:
 
-### Staff
+- service speed
+- ingredient quality
+- hygiene
+- staff fatigue
 
-- Aşçı
-- Kasiyer
-- Kurye
-- Temizlik
-- Şube Müdürü
+Fast food talebi hızla artar ama kalite ve hijyen cezaları da hızlı çalışır.
 
-### Marketing
+## 6. Early-Stage Question Examples
 
-- Broşür
-- Google
-- Sosyal Medya
-- Yemek App Kampanyası
+- "Öğle saati geliyor. Kuyruğu neyle eriteceksin?"
+- "İlk broşür dalgası ilgi çekti. Mutfak hazır mı?"
+- "Kasiyer yetişmiyor. Yeni eleman mı, mesai mi?"
 
-### Supplier
+## 7. Mid-Stage Question Examples
 
-- Kasap
-- Manav
-- Fırın/Ekmek
-- İçecek Partneri
+- "Ucuz tedarik kârı artırdı ama tat düştü. Ne yapacaksın?"
+- "Delivery açıldı, içeride müşteri bekliyor. Hangi tarafı koruyacaksın?"
+- "Rakip indirim açtı. Fiyat mı kıracaksın, kalite mi savunacaksın?"
 
-## 4. Türetilmiş Metrikler
+## 8. Late-Stage Question Examples
 
-- Malzeme Kalitesi
-- Servis Hızı
-- Hijyen
-- Google Puanı
+- "İkinci satış hattı açıldı, hijyen standardını kim taşıyacak?"
+- "Yüksek hacim yüzünden personel yanıyor. Şef mi müdür mü alacaksın?"
+- "Viral video riski var. İmajı mı operasyonu mu kurtaracaksın?"
 
-Ana zincir:
+## 9. Rival Pressure Patterns
 
-```text
-Supplier + Staff + Operation
-→ Quality + Service Speed
-→ Google Rating
-→ Organik müşteri
-→ Market Share
-```
+- fiyat savaşı
+- hızlı delivery baskısı
+- yorum bombardımanı
+- iyi çalışanı transfer etme
+- uygulama görünürlüğü savaşı
 
-## 5. Kart Aileleri
+## 10. Example Build Paths
 
-### Kalıcı Kurulum
+`Hız Önce`
 
-- Dükkan Satın Al
-- Yeni Masa
-- Mutfak Upgrade
-- Paket Servis İstasyonu
-- Google İşletme Profili
+- kasa + aşçı + delivery
+- agresif demand
+- yüksek burnout riski
 
-### Aktif Büyüme
+`Temiz Büyüme`
 
-- Broşür Bastır
-- Işıklarda Broşür Dağıt
-- Sosyal Medya Reklamı
-- Yemek Uygulamasıyla Anlaş
-- Google Reklamı
+- kaliteli tedarik + temiz mutfak + kontrollü reklam
+- daha yavaş müşteri çekişi
+- daha dirençli reputation
 
-### Risk / Illegal
+## 11. Venture-Specific Customer Movement Logic
 
-- Sahte Yorum Satın Al
-- Sigortasız Çalıştır
-- Ucuz Kalitesiz Yağ
-- Vergi Kaçır
+Fast food müşterisi:
 
-### Reaksiyon / Çözüm
+- hızlı aksiyonlara çabuk gelir
+- kötü deneyimde hızlı kaçar
+- delivery ve görünür kampanyalara güçlü tepki verir
 
-- Özür Kampanyası
-- Ustayı Değiştir
-- Kaliteli Et Anlaşması
-- Ücretsiz Tatlı
-- Acil Temizlik
+## 12. Example 2-Turn Walkthrough
 
-## 6. Erken Oyun
+### Turn 1
 
-Hedef:
+- soru 1: öğle yoğunluğu
+- soru 2: ilk fark edilme sorunu
+- build: kasiyer ya da mutfak hattı
+- response: broşür ya da mesai
 
-- temel demand yaratmak
-- kapasiteyi talebe paralel büyütmek
-- Google görünürlüğünü açmak
+Sonuç:
 
-Tipik sıra:
+- birkaç gri müşteri oyuncuya akar
+- kapasite yetmezse ilk stress/hijyen baskısı doğar
 
-1. Google işletme profili
-2. birinci mutfak iyileştirmesi
-3. kasap/manav anlaşması
-4. ilk küçük marketing hamlesi
+### Turn 2
 
-## 7. Orta Oyun
+- soru 1: yetişme sorunu
+- soru 2: kalite mi maliyet mi
+- build: supplier anlaşması ya da aşçı
+- response: indirim, özür, mesai veya acil temizlik
 
-Hedef:
+Sonuç:
 
-- demand ile capacity'yi kilitlemek
-- delivery kanalını açmak
-- rating'i 4.2 üstüne taşımak
-
-Bu aşamada oyuncu şu kararları verir:
-
-- masa mı eklesin, mutfak mı?
-- kurye mi alsın, aşçı mı?
-- organik büyüme mi, agresif kampanya mı?
-
-## 8. Geç Oyun
-
-Hedef:
-
-- zincirleşme
-- ikinci satış kanalı
-- rakibin market share alanına baskı
-
-Geç oyun araçları:
-
-- premium tedarik
-- şube müdürü
-- yüksek bütçeli dijital kampanya
-- yemek platformunda görünürlük üstünlüğü
-
-## 9. Temel Kriz Havuzu
-
-- Kötü Yorum Patlaması
-- Gıda Denetimi
-- Usta Ayrıldı
-- Kira Arttı
-- Yemek App Komisyonu Arttı
-- Viral Kötü Video
-- Hijyen Sorunu
-
-## 10. Rakip Baskısı
-
-Rakip fast food venture içinde şunlarla baskı kurar:
-
-- fiyat indirimi
-- delivery hız üstünlüğü
-- yorum savaşı
-- personel çalma
-- görünürlük bombardımanı
-
-## 11. Strateji Build'leri
-
-### Erken Oyun Build
-
-`Lokal Güven`
-
-- düşük bütçeli marketing
-- temiz tedarik
-- yavaş ama stabil rating artışı
-
-### Orta Oyun Build
-
-`Delivery Sprint`
-
-- paket servis aç
-- kurye yatırımı
-- yemek platformu görünürlüğü
-
-### Geç Oyun Build
-
-`Premium Zincir`
-
-- kaliteli et
-- güçlü staff
-- yüksek Google puanı
-- rakibin fiyat savaşına kalite ile cevap
-
-## 12. Referans Kriz Kararı
-
-Senaryo:
-
-- Broşür + sosyal medya ile demand patladı
-- mutfak yetişemedi
-- yorumlar düştü
-
-Seçenekler:
-
-- sahte yorum satın al: hızlı ama riskli
-- kaliteli et ve yeni usta al: pahalı ama kalıcı
-- ücretsiz tatlı ve özür kampanyası: kısa vadeli toparlama
-
-Bu venture oyunun referans denge testidir.
+- oyuncu bugünü kurtarırken yarına hijyen ya da burnout borcu yazabilir

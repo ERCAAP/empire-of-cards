@@ -1,159 +1,119 @@
 # MARKET / BAKKAL — Venture Dosyası
 
-> Empire of Cards | Versiyon: 4.0 | Tarih: 2026-05-20
+> Empire of Cards | Versiyon: 5.0 | Tarih: 2026-05-23
 
 ---
 
 ## 1. Venture Kimliği
 
-Market / bakkal venture'ı düşük marj, yüksek tekrar ve mahalle sadakati üstünden oynanır. Hızlı büyüme değil, sürekli ayakta kalma ve doğru küçük avantajları biriktirme oyunudur.
+Market / bakkal venture'ı mahalle güveni, raf sağlığı ve küçük marjlarla ayakta kalan sürekli akış oyunudur.
 
 Oyuncu hissi:
 
-> "Az kazanıyorum ama doğru işlersem her gün bana dönen bir mahalle kuruyorum."
+> "Herkes bana uğruyor ama küçük hatalar birikince mahalle bana sırtını dönebiliyor."
 
-## 2. Başlangıç Board'u
+## 2. 3-Zone Board Kimliği
 
-- küçük raf sistemi
-- temel kasa
-- sınırlı taze ürün
-- 1 çalışan
-- düşük ama stabil demand
+- üstte rakip market, fiyat ve ürün çeşitliliği baskısı
+- ortada mahalle müşterileri, günlük ihtiyaç akışı
+- altta oyuncunun raf, kasa, depo ve mahalle ilişkisi odaklı marketi
 
-Başlangıç baskısı:
+## 3. Persistent Build Anchors
 
-- marj çok dar
-- fire ve veresiye hatayı affetmez
+- kasa
+- raf alanı
+- soğuk dolap
+- depo / mal kabul
+- mahalle ilan panosu
+- tedarik ve kredi defteri alanı
 
-## 3. Alt-Slot Yapısı
+## 4. Core Question Families
 
-### Operation
+- stok yetişmeme
+- bozulma ve son kullanma baskısı
+- mahalle veresiye ilişkisi
+- fiyat artışı tepkisi
+- raf düzeni ve çeşit dengesi
+- personel yorgunluğu
 
-- Raf
-- Taze Ürün
-- Kasa
-- Mahalle Servis / WhatsApp
+## 5. Economy Pressure Profile
 
-### Staff
+Ana baskılar:
 
-- Kasiyer
-- Reyon
-- Taze Ürün Sorumlusu
-- Kurye
-- Vardiya
+- shelf health
+- spoilage pressure
+- local credit load
+- service continuity
 
-### Marketing
+Market venture'ı küçük ama sürekli akışın doğru yönetimini ister.
 
-- WhatsApp
-- Mahalle Afişi
-- Sadakat
-- Gece Açık
+## 6. Early-Stage Question Examples
 
-### Supplier
+- "İlk müşteri trafiği başladı. Hangi rafı güçlendireceksin?"
+- "Veresiye isteyen eski müşteri geldi. Nakit mi ilişki mi?"
+- "Soğuk ürünlerde fire riski var. Hemen çözümün ne?"
 
-- Hal
-- Distribütör
-- Mandıra / Fırın
-- İçecek Partneri
+## 7. Mid-Stage Question Examples
 
-## 4. Türetilmiş Metrikler
+- "Zamlı tedarik mahalleyi kızdırıyor. Fiyatı mı marjı mı koruyacaksın?"
+- "Raf boşalıyor ama kasa da sıkışık. Hangi hattı kurtaracaksın?"
+- "Rakip çeşit artırdı. Sen güveni mi seçimi mi büyüteceksin?"
 
-- Fire
-- SKT Baskısı
-- Veresiye Riski
-- Mahalle Sadakati
+## 8. Late-Stage Question Examples
 
-## 5. Kart Aileleri
+- "Mahalle seni alışkanlık noktası yaptı. Hata toleransı düştü."
+- "Bozulma baskısı depoda büyüyor. Sistem mi personel mi yatırımı?"
+- "Yerel itibarın yüksek ama kâr dar. Zincir mi mahalleci mi kalacaksın?"
 
-### Kalıcı Kurulum
+## 9. Rival Pressure Patterns
 
-- Yeni Buzdolabı
-- Taze Ürün Tezgahı
-- Stok Yönetim Sistemi
-- WhatsApp Sipariş Hattı
+- fiyat kırma
+- ürün çeşitliliği baskısı
+- mahalle promosyonu
+- hızlı ikmal üstünlüğü
 
-### Aktif Büyüme
+## 10. Example Build Paths
 
-- Gece Vardiyası
-- Mahalleye Afiş
-- Veresiye Defteri
-- Ekmek Çekim Kampanyası
+`Mahalle Güveni`
 
-### Risk / Illegal
+- veresiye dengesi
+- düzenli raf
+- sadık müşteri birikimi
 
-- SKT geçmiş ürün sat
-- fişsiz satış
-- etiketsiz ürün
-- kaçak ürün
+`Hızlı Devir`
 
-### Reaksiyon / Çözüm
+- daha agresif stok dönüşü
+- promosyon baskısı
+- daha yüksek fire riski
 
-- Tedarikçi değiştir
-- Stok temizliği
-- Mahalle özür kampanyası
-- Acil soğuk zincir onarımı
+## 11. Venture-Specific Customer Movement Logic
 
-## 6. Erken Oyun
+Market müşterisi:
 
-Hedef:
+- güven ve alışkanlığa güçlü tepki verir
+- çeşit eksildiğinde rakibe kayabilir
+- sadık hale geldiğinde düzenli geri dönüş sağlar
 
-- taze ürün ile farklılaşmak
-- günlük müşteri düzenini oturtmak
-- fire'ı kontrolden çıkarmamak
+## 12. Example 2-Turn Walkthrough
 
-## 7. Orta Oyun
+### Turn 1
 
-Hedef:
+- soru 1: ilk raf düzeni
+- soru 2: veresiye kararı
+- build: kasa ya da soğuk dolap
+- response: küçük promosyon ya da ilişki koruma
 
-- mahalle sadakatini büyütmek
-- WhatsApp kanalını açmak
-- düşük marja rağmen cash akışını çevirmek
+Sonuç:
 
-## 8. Geç Oyun
+- müşteri akışı küçük ama düzenli başlar
 
-Hedef:
+### Turn 2
 
-- zincir market baskısına niş avantajlarla direnmek
-- gece servis ve kişisel ilişki ile alan tutmak
-- veresiye riskini yönetilebilir seviyede tutmak
+- soru 1: stok eksilmesi
+- soru 2: fire baskısı
+- build: depo ya da supplier hattı
+- response: acil ikmal, fiyat ayarı, müşteri ikna hamlesi
 
-## 9. Temel Kriz Havuzu
+Sonuç:
 
-- buzdolabı arızası
-- zincir market açıldı
-- elektrik kesintisi
-- veresiye batığı
-- SKT denetimi
-- taze ürün bozulma dalgası
-
-## 10. Rakip Baskısı
-
-- daha ucuz kampanya
-- daha uzun açık kalma
-- daha güçlü mahalle görünürlüğü
-- taze ürün üstünlüğü
-
-## 11. Strateji Build'leri
-
-### Erken Oyun Build
-
-`Fresh Corner`
-
-- taze ürün
-- düşük ama sadık müşteri
-
-### Orta Oyun Build
-
-`Mahalle Convenience`
-
-- WhatsApp
-- geç saate kadar açık
-- kişisel ilişki
-
-### Geç Oyun Build
-
-`Stable Ledger`
-
-- düşük fire
-- kontrollü veresiye
-- rakibin fiyat baskısına hizmet farkıyla cevap
+- oyuncu mahalleyi elde tutabilir ama nakit sıkışması yaşayabilir

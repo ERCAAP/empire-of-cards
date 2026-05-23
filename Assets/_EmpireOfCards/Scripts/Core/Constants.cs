@@ -40,6 +40,7 @@ namespace EmpireOfCards.Core
         public const int MAX_ACTIONS = 5;            // Max with AI Assistant
         public const int HAND_SIZE = 5;              // Draw 5 cards each turn
         public const int REDRAWS_PER_TURN = 1;
+        public const int PERSISTENT_BUILDS_PER_TURN = 1; // GDD v5: 2 questions + 1 build tempo
         #endregion
 
         #region Slot System v2 (GDD v3.0 Section 4)

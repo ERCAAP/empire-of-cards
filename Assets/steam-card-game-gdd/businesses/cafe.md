@@ -1,158 +1,118 @@
 # CAFE — Venture Dosyası
 
-> Empire of Cards | Versiyon: 4.0 | Tarih: 2026-05-20
+> Empire of Cards | Versiyon: 5.0 | Tarih: 2026-05-23
 
 ---
 
 ## 1. Venture Kimliği
 
-Cafe venture'ı sadakat, ambiyans ve kalite üzerinden büyür. Fast food kadar patlayıcı değildir ama daha yavaş ve daha rafine bir değer zinciri kurar.
+Cafe venture'ı trust, ambiyans ve ritim yönetimi üzerinden büyür.
 
 Oyuncu hissi:
 
-> "Ben kahve satmıyorum; ritüel, alan ve sadakat satıyorum."
+> "Ben sadece kahve satmıyorum; insanların tekrar gelmek isteyeceği bir alışkanlık kuruyorum."
 
-## 2. Başlangıç Board'u
+## 2. 3-Zone Board Kimliği
 
-- temel espresso setup
-- küçük oturma alanı
-- 1 barista
-- zayıf Google Maps görünürlüğü
-- orta seviye başlangıç cash'i
+- üstte rakip cafe, sosyal görünürlük ve premium algı baskısı
+- ortada mahallenin gri müşteri havuzu, oturmak isteyenler ve hızlı takeaway akışı
+- altta oyuncunun bar, oturma ve sadakat odaklı cafesi
 
-Başlangıç baskısı:
+## 3. Persistent Build Anchors
 
-- kalite yükseltebilirsin ama hacim sınırın dar
-- yanlış ekipman seçimi uzun süre hissedilir
+- espresso barı
+- oturma alanı
+- takeaway noktası
+- vitrin / tatlı alanı
+- çekirdek tedariki
+- loyalty / maps görünürlüğü alanı
 
-## 3. Alt-Slot Yapısı
+## 4. Core Question Families
 
-### Operation
+- yavaş servis şikayeti
+- barista baskısı
+- çekirdek kalitesi kararı
+- maps yorumu yönetimi
+- ambiyans ve oturma dengesi
+- sadık müşteri tutma soruları
 
-- Bar
-- Oturma
-- Takeaway
-- Vitrin/Pastane
+## 5. Economy Pressure Profile
 
-### Staff
+Ana baskılar:
 
-- Barista
-- Kasiyer
-- Floor Staff
-- Temizlik
-- Vardiya Sorumlusu
+- ingredient quality
+- drink consistency
+- ambience trust
+- service speed
 
-### Marketing
+Cafe müşteri akışı fast food kadar patlayıcı değildir; güvenli büyüme daha yüksek değer taşır.
 
-- Instagram
-- Reels
-- Loyalty
-- Google Maps
+## 6. Early-Stage Question Examples
 
-### Supplier
+- "İlk misafirler geliyor. Kaliteyi mi hızı mı güvenceye alacaksın?"
+- "Maps'te görünür olmak için önce ne kuracaksın?"
+- "Tek barista yetişmiyor. Destek mi eğitim mi?"
 
-- Kahve
-- Süt
-- Tatlı/Pastane
-- Ambiyans Partneri
+## 7. Mid-Stage Question Examples
 
-## 4. Türetilmiş Metrikler
+- "Çalışmaya gelen müşteri WiFi ve priz istiyor. Ambiyans mı dönüş hızı mı?"
+- "İyi çekirdek pahalı. Fiyatı mı marjı mı koruyacaksın?"
+- "Rakip influencer aldı. Sen güven mi, görünürlük mü oynayacaksın?"
 
-- Çekirdek Kalitesi
-- İçecek Tutarlılığı
-- Ambiyans Skoru
-- Google Puanı
+## 8. Late-Stage Question Examples
 
-## 5. Kart Aileleri
+- "Sadık müşteriler kalabalıktan kaçıyor. Hacmi mi huzuru mu seçeceksin?"
+- "Vitrin büyüdü, personel standardı düşüyor. Eğitimi kim taşıyacak?"
+- "Premium algı yükseldi, hata kaldırmıyor. Hangi zinciri güçlendireceksin?"
 
-### Kalıcı Kurulum
+## 9. Rival Pressure Patterns
 
-- Espresso Makinesi Upgrade
-- Teras Aç
-- Vitrin Tatlı Dolabı
-- WiFi Upgrade
+- maps ve instagram baskısı
+- premium algı savaşı
+- güçlü barista transferi
+- ambience yatırımıyla müşteri çalma
 
-### Aktif Büyüme
-
-- Instagram Post Serisi
-- Mikro Influencer
-- Loyalty Kartı
-- "Çalışmaya Uygun" Kampanyası
-
-### Risk / Illegal
-
-- MESAM Almadan Müzik
-- Fake Specialty Etiketi
-- Sigortasız Stajyer
-
-### Reaksiyon / Çözüm
-
-- Barista Eğitimi
-- Menü Sadeleştirme
-- Ücretsiz Kahve Kuponu
-- Müşteri Şikayet Turu
-
-## 6. Erken Oyun
-
-Hedef:
-
-- kahve kalitesini güvenceye almak
-- oturma ile takeaway dengesini kurmak
-- Maps görünürlüğünü açmak
-
-## 7. Orta Oyun
-
-Hedef:
-
-- sadık müşteri kitlesi kurmak
-- ambiyans ile kaliteyi marketing'e çevirmek
-- barista baskısını yönetmek
-
-## 8. Geç Oyun
-
-Hedef:
-
-- mahalle favorisi olmak
-- yüksek rating ile organik akış kurmak
-- rakibin influencer baskısını ürün kalitesiyle bozmak
-
-## 9. Temel Kriz Havuzu
-
-- Barista Ayrıldı
-- Süt Fiyat Şoku
-- WiFi Şikayet Dalgası
-- Google'da "çok yavaş servis" yorumları
-- Güneşli havada oturma kapasitesi yetmedi
-- Müzik lisansı denetimi
-
-## 10. Rakip Baskısı
-
-- iyi baristayı çalma
-- Maps ve Instagram'da görünürlük savaşı
-- ambiyans yatırımıyla premium algı kurma
-
-## 11. Strateji Build'leri
-
-### Erken Oyun Build
-
-`Kalite Önce`
-
-- iyi çekirdek
-- iyi barista
-- az ama sağlıklı demand
-
-### Orta Oyun Build
+## 10. Example Build Paths
 
 `Neighborhood Favorite`
 
-- loyalty
-- Maps yorumları
-- stabil oturma akışı
-
-### Geç Oyun Build
+- iyi çekirdek
+- maps görünürlüğü
+- loyalty odaklı sakin büyüme
 
 `Premium Social Proof`
 
-- güçlü rating
-- organik paylaşım
-- ambiyans + vitrin + tatlı sinerjisi
+- vitrin + ambiyans + influencer
+- daha pahalı ama kırılgan yapı
+
+## 11. Venture-Specific Customer Movement Logic
+
+Cafe müşterisi:
+
+- trust ve rating'e daha duyarlıdır
+- ilk kötü deneyimde tamamen kaçmak yerine nötre dönebilir
+- loyalty kurulduğunda daha sadık akış üretir
+
+## 12. Example 2-Turn Walkthrough
+
+### Turn 1
+
+- soru 1: ilk kalite algısı
+- soru 2: görünürlük açma
+- build: barista ya da espresso upgrade
+- response: maps açılışı ya da ücretsiz tadım
+
+Sonuç:
+
+- az ama kaliteli ilk mavi müşteri akışı oluşur
+
+### Turn 2
+
+- soru 1: servis yavaşlığı
+- soru 2: çekirdek maliyeti
+- build: oturma alanı ya da supplier anlaşması
+- response: eğitim, özür kuponu, menü sadeleştirme
+
+Sonuç:
+
+- güven artabilir ama büyüme yavaş kalabilir; venture'ın ana gerilimi burada doğar

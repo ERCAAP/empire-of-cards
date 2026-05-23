@@ -1,295 +1,419 @@
 # TECHNICAL MAPPING
-# "Empire of Cards" v4
+# "Empire of Cards" v5
 
-> Versiyon: 1.0 | Tarih: 2026-05-20
-> Amaç: GDD v4 kurallarını mevcut Unity omurgasına çarpmadan uygulama planı
+> Versiyon: 2.0 | Tarih: 2026-05-23
+> Amaç: GDD v5 question-driven live board modelini mevcut Unity omurgasına minimum yıkımla eşlemek
 
 ---
 
 ## 1. Hedef
 
-Mevcut Unity veri modelini tamamen yıkmadan, venture-first slot simülasyonuna geçirmek.
+Mevcut Unity omurgasını koruyarak tasarım odağını `visible slot placement` yaklaşımından `question-driven live board` modeline geçirmek.
 
-Korunacak mevcut omurga:
+Korunacak omurga:
 
 - `VentureType`
 - `SlotType`
 - `CardData`
+- `TurnManager` ve turn phase akışı
+- `EventBus`
 - venture selection akışı
-- turn phase akışı
 
 Yeniden yorumlanacak alanlar:
 
-- business/employee/action/upgrade/event kart anlamları
-- slotlara bağlanma kuralları
-- board state çözümü
-- rival davranışı
+- board'un görsel görevi
+- slotların oyuncuya sunuluş biçimi
+- kart yerleştirme mantığı
+- turn brief ve question çözümü
+- customer movement presentation
 
 ---
 
-## 2. Yeni veya Yeniden Tanımlanacak Arayüzler
+## 2. Tasarım Kavramı -> Teknik Kavram Eşlemesi
 
-## 2.1 VentureBoardProfile
+## 2.1 SlotType Korunur, Sunum Değişir
 
-Amaç:
+`SlotType` enum teknik olarak kalır:
 
-- venture'ın alt-slot yerleşimini
-- açılış slot sayılarını
-- slot upgrade eşiklerini
-- görsel masa bağlarını
-
-tek veri noktasında toplamak
-
-Önerilen alanlar:
-
-- `VentureType ventureType`
-- `string displayName`
-- `BoardSubSlotDefinition[] operationSubSlots`
-- `BoardSubSlotDefinition[] staffSubSlots`
-- `BoardSubSlotDefinition[] marketingSubSlots`
-- `BoardSubSlotDefinition[] supplierSubSlots`
-- `int startingOperationSlots`
-- `int startingStaffSlots`
-- `int startingMarketingSlots`
-- `int startingSupplierSlots`
-- `int maxOperationSlots`
-- `int maxStaffSlots`
-- `int maxMarketingSlots`
-- `int maxSupplierSlots`
-- `SlotUnlockStep[] unlockSteps`
-
-## 2.2 VentureDeckProfile
-
-Amaç:
-
-- starter deck
-- venture kart havuzu
-- neutral kart havuzu
-- crisis havuzu
-- oyun evresine göre unlock mantığı
-
-tek yerde toplansın
-
-Önerilen alanlar:
-
-- `VentureType ventureType`
-- `string[] starterCardIds`
-- `string[] earlyPoolCardIds`
-- `string[] midPoolCardIds`
-- `string[] latePoolCardIds`
-- `string[] neutralCardIds`
-- `string[] crisisCardIds`
-- `DeckBiasRule[] drawBiasRules`
-
-## 2.3 VentureEconomyProfile
-
-Amaç:
-
-- venture'a özel kalite, rating, demand ve cost katsayılarını taşımak
-
-Önerilen alanlar:
-
-- `VentureType ventureType`
-- `float baseDemand`
-- `float capacityToDemandPenalty`
-- `float qualityToRatingWeight`
-- `float ratingToOrganicDemandWeight`
-- `float staffInstabilityPenalty`
-- `float legalRiskTriggerWeight`
-- `float marketShareGainWeight`
-- `DerivedMetricRule[] derivedMetrics`
-
-## 2.4 CardData Ek Kuralları
-
-`CardData` tamamen değişmek zorunda değil ama şu yorumlar zorunlu hale gelmeli:
-
-- her kartın `ventureType` aidiyeti net olmalı
-- `targetSlotType` aktif olarak kullanılmalı
-- alt-slot uyum bilgisi tanımlanmalı
-- kartın aile tipi belirgin olmalı:
-  - `Setup`
-  - `Growth`
-  - `Risk`
-  - `Reaction`
-  - `Crisis`
-
-Önerilen yeni alanlar:
-
-- `string targetSubSlotId`
-- `CardFamily cardFamily`
-- `bool entersTempEffectOnUse`
-- `string[] crisisTags`
-- `string[] solutionTags`
-- `BoardPressureType[] preferredWhenBoardState`
-
----
-
-## 3. Runtime Sistem Eşlemesi
-
-## 3.1 Board State
-
-Bugünkü yapıda business-centric çözüm var. v4'te venture board state çözümü gerekir.
-
-Yeni runtime veri ihtiyacı:
-
-- `currentCash`
-- `currentDemand`
-- `currentCapacity`
-- `currentQuality`
-- `currentRating`
-- `currentStaffStability`
-- `currentLegalRisk`
-- `currentMarketShare`
-
-venture özel derived alanlar:
-
-- fast food/cafe: `ingredientQuality`, `serviceSpeed`, `hygiene`
-- tech: `stability`, `churn`, `infraCost`
-- giyim: `stockHealth`, `seasonFit`, `returnPressure`
-- market: `spoilagePressure`, `sktPressure`, `creditLedger`, `localLoyalty`
-
-## 3.2 Slot Çözümü
-
-Mevcut `SlotType` enum korunur.
+- `Operation`
+- `Staff`
+- `Marketing`
+- `Supplier`
+- `TempEffect`
 
 Yeni yorum:
 
-- `Operation`: venture'ın çekirdek üretim ve kapasite omurgası
-- `Staff`: bu omurgayı canlı tutan insan gücü
-- `Marketing`: demand iten aktif baskı
-- `Supplier`: quality ve cost eğrisi
-- `TempEffect`: krizler ve geçici durumlar
+- oyuncu visible slot box görmez
+- runtime bu enum'ları `BusinessAnchorDefinition` ile sahnedeki gerçek işletme noktalarına map eder
+- aynı enum hem build placement hem temp effect organize etmek için kullanılır
 
-Alt-slotlar enum ile değil profil verisiyle çözülmeli. Böylece teknik omurga sabit kalır, venture özelleşmesi veriden gelir.
+## 2.2 Question Panel Runtime Varlığı
 
-## 3.3 Çekme Mantığı
+Sorular yeni runtime kavramı olarak ele alınır.
 
-Kart çekimi salt rarity bazlı olmamalı.
+Önerilen veri yapıları:
 
-Yeni bias kuralları:
+- `QuestionDefinition`
+- `QuestionRuntimeState`
+- `QuestionOutcomeRule`
 
-- demand düşükse growth/setup ağırlığı artar
-- capacity demand'in altında kaldıysa operation/staff ağırlığı artar
-- rating düştüyse reaction/quality kartları öne gelir
-- legal risk yükseldiyse defensive/reaction kartları öne gelir
-- geç oyunda scale kartları açılır
+`QuestionDefinition` alanları:
 
-Bu mantık `VentureDeckProfile` + board snapshot ile çalışmalı.
+- `string questionId`
+- `VentureType ventureType`
+- `string headline`
+- `string detail`
+- `string primaryTag`
+- `string optionalSupportTag`
+- `string[] allowedFamilies`
+- `string[] riskWarnings`
+- `string[] followUpQuestionIds`
+- `string[] resultingTempEffectIds`
 
----
+`QuestionRuntimeState` alanları:
 
-## 4. UI ve Sunum Eşlemesi
+- `string questionId`
+- `int spawnedTurn`
+- `bool isForced`
+- `CardData committedPrimaryCard`
+- `CardData committedSupportCard`
+- `QuestionResolutionState resolutionState`
+- `string generatedFollowUpId`
 
-## 4.1 Venture Selection
+## 2.3 Business Anchor Tanımı
 
-Mevcut venture selection akışı korunur.
+Görsel slot yerine anchor kullanılmalı.
 
-Geliştirme:
+Önerilen veri yapısı:
 
-- venture kartında alt-slot kimliği kısa metinle gösterilir
-- her venture için "oyun tarzı" etiketi eklenir
-- rakibin aynı venture başlayacağı açıkça belirtilir
+- `BusinessAnchorDefinition`
 
-## 4.2 Board UI
+Alanlar:
 
-Yeni ihtiyaçlar:
+- `string anchorId`
+- `SlotType slotType`
+- `string displayLabel`
+- `string ventureSpecificRole`
+- `Vector3 localPosition`
+- `bool acceptsPersistentBuild`
+- `bool acceptsTempEffect`
+- `string[] preferredTags`
 
-- ortak slot ailesi görünür kalmalı
-- venture alt-slot etiketleri değişebilir olmalı
-- District Zone demand/traffic/rating baskısını gösterebilmeli
-- Temp Effect slotları aktif krizleri okunur göstermeli
-
-## 4.3 Göstergeler
-
-Top bar veya yan panel şu statları zorunlu taşır:
-
-- Cash
-- Demand
-- Capacity
-- Quality
-- Rating
-- Staff Stability
-- Legal Risk
-- Market Share
-
-venture bazlı ikinci sıra göstergeler context panelde açılır.
+Bu veri `VentureBoardProfile` ya da benzeri bir board profilinde tutulmalı.
 
 ---
 
-## 5. Rival AI Eşlemesi
+## 3. CardData ve Kart Çözümleme
 
-## 5.1 Sabit Kural
+## 3.1 CardData Yeni Kuralları
 
-Rakip oyuncuyla aynı venture içinden kart çeker.
+`CardData` yapısı tamamen yıkılmadan genişletilir.
 
-## 5.2 Davranış Profili
+Zorunlu yorum değişiklikleri:
 
-Rival AI her tur şu soruları cevaplar:
+- `targetSlotType` artık visible slot hedefi değil, anchor family hedefidir
+- `targetSubSlotId` yerine ya da yanında `anchorId` kullanımı açılmalıdır
+- her kart tag tabanlı eşleşme taşımalıdır
+- her kartın build mi response mu risk/opportunity mi olduğu net olmalıdır
 
-- demand mi artırmalı?
-- kapasite mi toparlamalı?
-- rating mi korumalı?
-- riskli kısa yola mı başvurmalı?
-- oyuncunun güçlü tarafına karşı hangi karşı baskıyı kurmalı?
+Önerilen ek alanlar:
 
-## 5.3 Venture Bazlı Öncelikler
+- `CardFamily cardFamily`
+- `string[] primaryTags`
+- `string[] secondaryTags`
+- `bool isPersistentBuild`
+- `bool canAnswerQuestion`
+- `bool canBecomeTempEffect`
+- `string[] ventureAffinity`
+- `int payrollCost`
+- `int upfrontCost`
+- `float delayedRiskWeight`
 
-- Fast food: fiyat savaşı, delivery baskısı, yorum savaşı
-- Cafe: Google Maps ve barista baskısı
-- Tech: ASO, paid growth, crash sonrası hızlı toparlama
-- Giyim: indirim ve vitrin baskısı
-- Market: yakınlık, gece servis ve fiyat baskısı
+## 3.2 Dual Placement Davranışı
 
-## 5.4 Okunabilirlik
+Bir el kartı 4 sonuca gidebilir:
 
-Rakip kararları tam gizlenmemeli. UI oyuncuya şunu göstermeli:
+- `question queue`
+- `business anchor`
+- `temp effect strip`
+- `discard/history`
 
-- rakip bugün quality oynadı
-- rakip marketing blitz açtı
-- rakip supplier maliyete düştü
+Bu yüzden drop doğrulama yalnızca `SlotType` ile değil, `placement context` ile yapılmalıdır.
 
----
+Önerilen context enum:
 
-## 6. İçerik Uygulama Sırası
+- `QuestionPanel`
+- `BusinessAnchor`
+- `TempEffectStrip`
 
-## 6.1 Faz 1
+## 3.3 Kart Doğrulama Akışı
 
-- `GDD.md` v4
-- 5 venture dokümanı v4
-- teknik eşleme notu
+Soru paneli için doğrulama:
 
-## 6.2 Faz 2
+- kart `canAnswerQuestion` mı
+- primary tag eşleşiyor mu
+- support rolü destek etiketiyle uyumlu mu
+- riskli ama legal çözümler kabul ediliyor mu
 
-- `VentureBoardProfile`
-- `VentureDeckProfile`
-- `VentureEconomyProfile`
-- `CardData` yorum ve alan güncellemeleri
+Business anchor için doğrulama:
 
-## 6.3 Faz 3
-
-- board state çözümleyici
-- draw bias sistemi
-- rating/quality/capacity zinciri
-- venture bazlı crisis tetikleyici
-
-## 6.4 Faz 4
-
-- rival AI refactor
-- District Zone okunabilirliği
-- venture özel UI etiketleri
+- kart `isPersistentBuild` mi
+- anchor family eşleşiyor mu
+- venture-specific role uyumlu mu
+- unlock koşulu sağlanıyor mu
 
 ---
 
-## 7. Kabul Kriterleri
+## 4. Turn Flow Eşlemesi
 
-- Teknik omurga `VentureType` ve `SlotType` ile uyumlu kalır.
-- Alt-slot farklılığı veri odaklı çözülür, enum patlaması yaratılmaz.
-- Kartların venture aidiyeti ve hedef slot mantığı netleşir.
-- Draw sistemi board-state aware hale gelir.
-- Rakip aynı venture içinde anlamlı stratejiler üretebilir.
+## 4.1 Mevcut Fazlar Korunur
+
+Mevcut turn phase akışı korunabilir:
+
+- Draw
+- Planning
+- Play
+- Resolve
+- CrisisReaction
+- Rival
+- MarketUpdate
+
+Yeni yorum:
+
+- `Planning`: brief + question spawn
+- `Play`: question placement + build placement
+- `Resolve`: question outcome + economy + customer flow
+- `CrisisReaction`: forced question ve temp effect zincirleri
+- `Rival`: visible rival pressure
+
+## 4.2 Turn Brief
+
+`TurnBriefData` genişletilebilir ya da yanında yeni payload taşınabilir.
+
+Ek ihtiyaçlar:
+
+- aktif soru başlıkları
+- önerilen baskı etiketi
+- build ihtiyacı
+- rival threat summary
+
+## 4.3 Decision Record
+
+Turn memory için veri modeli gerekir.
+
+Önerilen yapı:
+
+- `DecisionRecord`
+
+Alanlar:
+
+- `int turnNumber`
+- `string questionId`
+- `string questionHeadline`
+- `string primaryCardId`
+- `string supportCardId`
+- `string buildCardId`
+- `string outcomeLabel`
+- `string[] carriedEffects`
+
+Bu kayıt UI decision ledger tarafından tüketilir.
 
 ---
 
-## 8. Açık Not
+## 5. Board State ve Ekonomi Çözümü
 
-Bu belge uygulama kararlarını sabitler ama henüz kod patch'i değildir. Bir sonraki uygulama fazında veri profilleri ve runtime çözümleyiciler eklenirken bu belge referans kabul edilir.
+## 5.1 Core State
+
+Ana runtime state görünür metrikleri taşımalıdır:
+
+- `cash`
+- `customerPull`
+- `serviceCapacity`
+- `quality`
+- `reputation`
+- `staffStability`
+- `legalRisk`
+- `marketShare`
+
+## 5.2 Support Metrics
+
+Venture-specific support metrics ayrı paketlerde tutulmalıdır.
+
+Örnek:
+
+- fast food/cafe: `ingredientQuality`, `hygiene`, `serviceSpeed`
+- tech app: `productStability`, `churn`, `serverLoad`
+- giyim: `stockFreshness`, `seasonalFit`, `returnPressure`
+- market: `spoilagePressure`, `shelfHealth`, `localCreditLoad`
+
+## 5.3 Hidden Accumulation Pressures
+
+Bu alanlar görünür panelde özetlenebilir ama doğrudan ana HUD'a yüklenmez:
+
+- burnout buildup
+- review instability
+- inspection readiness
+- supplier reliability drift
+- rival pressure bank
+
+## 5.4 Resolve Sırası
+
+Önerilen çözüm sırası:
+
+1. queued question sonuçları
+2. persistent build etkileri
+3. staff ve operation kapasitesi
+4. supplier ve quality etkileri
+5. demand/pull hesabı
+6. trust/reputation hesabı
+7. cashflow
+8. risk accumulation
+9. customer flow snapshot
+10. market share update
+
+## 5.5 TurnResolutionReport
+
+Turn sonu için explicit rapor yapısı gerekir.
+
+Önerilen alanlar:
+
+- `int turnNumber`
+- `int cashDelta`
+- `float pullDelta`
+- `float reputationDelta`
+- `float riskDelta`
+- `float marketShareDelta`
+- `int customersToPlayer`
+- `int customersToRival`
+- `string[] reasons`
+- `DecisionRecord[] records`
+
+---
+
+## 6. Customer Movement Sunumu
+
+## 6.1 Presentation Model
+
+Customer movement gerçek simülasyon değil, simülasyonu görünür kılan presentation katmanıdır.
+
+Önerilen yapı:
+
+- `CustomerFlowSnapshot`
+
+Alanlar:
+
+- `int neutralCount`
+- `int movedToPlayer`
+- `int movedToRival`
+- `int loyalPlayerCount`
+- `int loyalRivalCount`
+- `string dominantReason`
+
+## 6.2 Hesap ve Sunum Ayrımı
+
+Market share ve trust ekonomiden hesaplanır.
+
+Customer movement:
+
+- bu sonucu sahneye çevirir
+- aynı tur neden-sonuç ilişkisini görünür kılar
+- gameplay logic için tek kaynak olmaz
+
+---
+
+## 7. UI ve Input Eşlemesi
+
+## 7.1 InputManager3D
+
+Mevcut `InputManager3D` şu yeni drop hedeflerini bilmelidir:
+
+- question panel collider / target
+- business anchor collider / target
+- temp effect target
+
+`SlotZone3D` mantığı ya yeniden yorumlanmalı ya da adapter ile anchor temsiline çevrilmelidir.
+
+## 7.2 Hand3D
+
+El kartları şu state'leri taşımalıdır:
+
+- `InHand`
+- `QueuedToQuestion`
+- `CommittedToBuild`
+- `ConvertedToTempEffect`
+- `Discarded`
+
+## 7.3 Side Panels
+
+UIManager ve ilgili paneller şu yeni verileri göstermelidir:
+
+- current turn question list
+- decision history
+- last turn report
+- rival response summary
+- active effect strip
+
+---
+
+## 8. Rival AI Eşlemesi
+
+## 8.1 Rakip Yalnızca Delta Basmaz
+
+Rival AI output'u sayısal etki yanında sahne baskısı da üretmelidir.
+
+Yeni görünür sonuç örnekleri:
+
+- campaign prop active
+- customer tug-of-war bias
+- poaching threat badge
+- supplier pressure alert
+
+## 8.2 Question Kaynağı Olarak Rakip
+
+Rakip hamlesi yeni soru da doğurabilir.
+
+Örnek:
+
+- "Rakip indirim açtı, fiyatı mı güveni mi savunacaksın?"
+- "Rakip ustanı yokluyor, maaş mı sadakat mi?"
+
+---
+
+## 9. İçerik Profilleri
+
+## 9.1 Venture Docs ile Teknik Profil Ayrımı
+
+Venture tasarım dokümanları:
+
+- question family
+- pressure identity
+- example flows
+
+Teknik profiller:
+
+- board anchors
+- deck pools
+- economy coefficients
+- question pools
+
+## 9.2 Gerekli Yeni Profil Tipleri
+
+- `QuestionPoolProfile`
+- `BusinessAnchorProfile`
+- `CustomerFlowProfile`
+- `RivalPressureProfile`
+
+Var olan venture playbook yapıları bunlara genişletilebilir.
+
+---
+
+## 10. Kabul Kriterleri
+
+- `SlotType` teknikte kalır ama oyuncuya visible slot box olarak görünmez
+- sorular runtime entity olarak tanımlanır
+- kartlar dual placement davranışına sahip olur
+- turn report ve decision ledger veri modeli açıkça tanımlanır
+- customer movement presentation, market share hesabından beslenir
+- rival baskısı board üzerinde görünür hale gelir
+
+Bu eşleme sağlanırsa v5 tasarım yönü mevcut Unity omurgasıyla uyumlu ilerleyebilir.

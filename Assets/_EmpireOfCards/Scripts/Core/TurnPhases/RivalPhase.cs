@@ -83,6 +83,16 @@ namespace EmpireOfCards.Core.TurnPhases
             var action = _queuedActions[_actionIndex];
             EventBus.RivalMoodChanged(action.moodIcon);
             EventBus.RivalActionQueued(action);
+            EventBus.RivalPressureVisualChanged(new RivalPressureViewModel
+            {
+                headline = action.displayName,
+                laneLabel = action.laneLabel,
+                shortDescription = action.shortDescription,
+                moodIcon = action.moodIcon,
+                pressureDelta = action.pressureDelta,
+                demandSteal = action.demandSteal,
+                ratingDelta = action.ratingDelta
+            });
             EventBus.RivalActed($"{action.displayName} -> {action.laneLabel}");
             rival.ResolveQueuedAction(action, playerShare);
             _actionDelay = action.previewDelay + action.resolveDelay;

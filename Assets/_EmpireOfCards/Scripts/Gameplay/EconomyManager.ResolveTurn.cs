@@ -74,12 +74,27 @@ namespace EmpireOfCards.Gameplay
 
         private TurnLanes CaptureTurnLanes()
         {
+            var tempCards = new List<CardData>(boardManager.GetCardsInSlotType(SlotType.TempEffect));
+            var gm = GameManager.Instance;
+            if (gm != null && gm.QuestionManager != null)
+            {
+                var questionCards = gm.QuestionManager.GetEconomyCardsForResolve();
+                if (questionCards != null)
+                {
+                    for (int i = 0; i < questionCards.Count; i++)
+                    {
+                        if (questionCards[i] != null)
+                            tempCards.Add(questionCards[i]);
+                    }
+                }
+            }
+
             return new TurnLanes(
                 boardManager.GetCardsInSlotType(SlotType.Operation),
                 boardManager.GetCardsInSlotType(SlotType.Staff),
                 boardManager.GetCardsInSlotType(SlotType.Marketing),
                 boardManager.GetCardsInSlotType(SlotType.Supplier),
-                boardManager.GetCardsInSlotType(SlotType.TempEffect));
+                tempCards);
         }
 
         private BaselineEconomyMetrics ResolveBaselineMetrics(TurnLanes lanes, TechCategoryProfile techCategory)

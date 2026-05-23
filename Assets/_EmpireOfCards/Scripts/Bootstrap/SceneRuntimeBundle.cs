@@ -5,17 +5,19 @@ namespace EmpireOfCards.Bootstrap
 {
     public sealed class SceneRuntimeBundle
     {
-        public SceneRuntimeBundle(Camera mainCamera, Board3D board3D, CardFactory cardFactory, Hand3D hand3D)
+        public SceneRuntimeBundle(Camera mainCamera, Board3D board3D, CardFactory cardFactory, Hand3D hand3D, BoardStageAuthoring stageAuthoring)
         {
             MainCamera = mainCamera;
             Board3D = board3D;
             CardFactory = cardFactory;
             Hand3D = hand3D;
+            StageAuthoring = stageAuthoring;
         }
 
         public Camera MainCamera { get; }
         public Board3D Board3D { get; }
         public CardFactory CardFactory { get; }
         public Hand3D Hand3D { get; }
+        public BoardStageAuthoring StageAuthoring { get; }
     }
 }

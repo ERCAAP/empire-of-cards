@@ -38,6 +38,9 @@ namespace EmpireOfCards.UI
         [Header("Turn Flow")]
         [SerializeField] private TMP_Text turnBriefText;
         [SerializeField] private TMP_Text turnReportText;
+        private string _activeQuestionSummary = string.Empty;
+        private string _lastDecisionSummary = string.Empty;
+        private string _lastCustomerFlowSummary = string.Empty;
 
         [Header("Income Cascade")]
         [SerializeField] private float cascadeStepDuration = 0.4f;
@@ -125,6 +128,10 @@ namespace EmpireOfCards.UI
             EventBus.OnTurnBriefGenerated += HandleTurnBriefGenerated;
             EventBus.OnTurnReportGenerated += HandleTurnReportGenerated;
             EventBus.OnRivalActionQueued += HandleRivalActionQueued;
+            EventBus.OnQuestionsGenerated += HandleQuestionsGenerated;
+            EventBus.OnDecisionRecorded += HandleDecisionRecorded;
+            EventBus.OnCustomerFlowResolved += HandleCustomerFlowResolved;
+            EventBus.OnTurnResolutionReady += HandleTurnResolutionReady;
             EventBus.OnBusinessPlaced += HandleBusinessPlaced;
             EventBus.OnEmployeePlaced += HandleBoardChanged;
             EventBus.OnUpgradePlaced += HandleBoardChanged;
@@ -142,6 +149,7 @@ namespace EmpireOfCards.UI
             EventBus.OnStaffPoachAccepted += HandleStaffPoachAccepted;
             EventBus.OnStaffPoachCountered += HandleStaffPoachCountered;
             EventBus.OnStaffPoachRejected += HandleStaffPoachRejected;
+            EventBus.OnStaffQuit += HandleStaffQuit;
         }
 
         private void OnDisable()
@@ -161,6 +169,10 @@ namespace EmpireOfCards.UI
             EventBus.OnTurnBriefGenerated -= HandleTurnBriefGenerated;
             EventBus.OnTurnReportGenerated -= HandleTurnReportGenerated;
             EventBus.OnRivalActionQueued -= HandleRivalActionQueued;
+            EventBus.OnQuestionsGenerated -= HandleQuestionsGenerated;
+            EventBus.OnDecisionRecorded -= HandleDecisionRecorded;
+            EventBus.OnCustomerFlowResolved -= HandleCustomerFlowResolved;
+            EventBus.OnTurnResolutionReady -= HandleTurnResolutionReady;
             EventBus.OnBusinessPlaced -= HandleBusinessPlaced;
             EventBus.OnEmployeePlaced -= HandleBoardChanged;
             EventBus.OnUpgradePlaced -= HandleBoardChanged;
@@ -178,6 +190,7 @@ namespace EmpireOfCards.UI
             EventBus.OnStaffPoachAccepted -= HandleStaffPoachAccepted;
             EventBus.OnStaffPoachCountered -= HandleStaffPoachCountered;
             EventBus.OnStaffPoachRejected -= HandleStaffPoachRejected;
+            EventBus.OnStaffQuit -= HandleStaffQuit;
         }
 
         // ------------------------------------------------------------------
@@ -270,6 +283,9 @@ namespace EmpireOfCards.UI
 
         private void HandleTurnStarted(int turnNumber)
         {
+            _activeQuestionSummary = string.Empty;
+            _lastDecisionSummary = string.Empty;
+            _lastCustomerFlowSummary = string.Empty;
             if (topBar != null)
                 topBar.UpdateTurn(turnNumber, Constants.MAX_TURNS);
             RefreshAnalytics();
@@ -303,7 +319,10 @@ namespace EmpireOfCards.UI
             string move = string.IsNullOrWhiteSpace(brief.recommendedMove) ? brief.detail : brief.recommendedMove;
             turnBriefText.text = $"PROBLEM  {brief.headline}";
             if (turnReportText != null)
-                turnReportText.text = $"NEXT MOVE  {move}";
+            {
+                string questionLine = string.IsNullOrWhiteSpace(_activeQuestionSummary) ? move : _activeQuestionSummary;
+                turnReportText.text = $"NEXT MOVE  {questionLine}";
+            }
             topBar?.UpdateBuildIdentity(brief.buildIdentity);
             topBar?.UpdatePressureState(brief.pressure);
             RefreshAnalytics();
@@ -322,7 +341,8 @@ namespace EmpireOfCards.UI
             }
             if (turnBriefText != null)
                 turnBriefText.text = $"RESULT  {report.headline}";
-            turnReportText.text = $"WHY  {reasons}";
+            string flowLine = string.IsNullOrWhiteSpace(_lastCustomerFlowSummary) ? reasons : $"{reasons} | {_lastCustomerFlowSummary}";
+            turnReportText.text = $"WHY  {flowLine}";
             if (!string.IsNullOrWhiteSpace(report.buildIdentity))
                 topBar?.UpdateBuildIdentity(report.buildIdentity);
             if (GameManager.Instance != null && GameManager.Instance.EconomyManager != null)
@@ -363,6 +383,65 @@ namespace EmpireOfCards.UI
         private void HandleCardRemovedFromSlot(CardData card, SlotType slotType)
         {
             topBar?.UpdateBuildIdentity(GameClarityFormatter.GetBuildIdentity(GameManager.Instance));
+            RefreshAnalytics();
+            RefreshContextPanels();
+        }
+
+        private void HandleQuestionsGenerated(QuestionRuntimeState[] questions)
+        {
+            if (questions == null || questions.Length == 0)
+            {
+                _activeQuestionSummary = string.Empty;
+                return;
+            }
+
+            string first = questions.Length > 0 && questions[0] != null && questions[0].definition != null ? questions[0].definition.headline : string.Empty;
+            string second = questions.Length > 1 && questions[1] != null && questions[1].definition != null ? questions[1].definition.headline : string.Empty;
+            _activeQuestionSummary = string.IsNullOrWhiteSpace(second) ? first : $"{first} | {second}";
+
+            if (turnReportText != null && !string.IsNullOrWhiteSpace(_activeQuestionSummary))
+                turnReportText.text = $"QUESTIONS  {_activeQuestionSummary}";
+        }
+
+        private void HandleDecisionRecorded(DecisionRecord record)
+        {
+            if (record == null)
+                return;
+
+            _lastDecisionSummary = !string.IsNullOrWhiteSpace(record.buildCardId)
+                ? $"Build: {record.buildCardId}"
+                : $"{record.questionHeadline}: {record.outcomeLabel}";
+
+            analyticsPanel?.SetAlert("Decision", _lastDecisionSummary);
+        }
+
+        private void HandleCustomerFlowResolved(CustomerFlowSnapshot snapshot)
+        {
+            if (snapshot == null)
+                return;
+
+            _lastCustomerFlowSummary = $"Flow P{snapshot.movedToPlayer} / R{snapshot.movedToRival}";
+            analyticsPanel?.SetAlert("Customer Flow", $"{snapshot.dominantReason} {_lastCustomerFlowSummary}");
+        }
+
+        private void HandleTurnResolutionReady(TurnResolutionReport report)
+        {
+            if (report == null)
+                return;
+
+            string resultLine = $"Cash {(report.cashDelta >= 0 ? "+" : "")}{report.cashDelta} | Rating {(report.ratingDelta >= 0f ? "+" : "")}{report.ratingDelta:0.0} | Share {(report.marketShareDelta >= 0f ? "+" : "")}{report.marketShareDelta:0.0}";
+            string decisionLine = BuildDecisionChainLine(report);
+            string flowLine = $"Customers P{report.customersToPlayer} / R{report.customersToRival}";
+            string reason = string.IsNullOrWhiteSpace(report.dominantReason) ? "Turn resolved through your placed cards and operating pressure." : report.dominantReason;
+
+            if (turnBriefText != null)
+                turnBriefText.text = $"RESOLVE  {resultLine}";
+            if (turnReportText != null)
+                turnReportText.text = string.IsNullOrWhiteSpace(decisionLine)
+                    ? $"WHY  {reason} | {flowLine}"
+                    : $"WHY  {decisionLine} | {flowLine}";
+
+            analyticsPanel?.SetAlert("Turn Resolved", $"{reason} {flowLine}");
             RefreshAnalytics();
             RefreshContextPanels();
         }
@@ -468,6 +547,16 @@ namespace EmpireOfCards.UI
             RefreshAnalytics();
         }
 
+        private void HandleStaffQuit(CardData card, QuitReason reason)
+        {
+            string target = card != null ? card.cardName : "Staff";
+            string detail = $"{target} left because of {FormatQuitReason(reason)}. Capacity and service quality will suffer until replaced.";
+            eventPopup?.ShowMessage("Staff Lost", detail, "Staff Stability");
+            analyticsPanel?.SetAlert("Staff Lost", detail);
+            RefreshAnalytics();
+            RefreshContextPanels();
+        }
+
         // ------------------------------------------------------------------
         // Income Cascade Animation (Balatro-style scoring chain)
         // ------------------------------------------------------------------
@@ -520,6 +609,41 @@ namespace EmpireOfCards.UI
                 SalaryChoice.PartialPay => "Partial pay",
                 SalaryChoice.Advance => "Advance pay",
                 _ => choice.ToString()
+            };
+        }
+
+        private static string BuildDecisionChainLine(TurnResolutionReport report)
+        {
+            if (report.records == null || report.records.Count == 0)
+                return string.Empty;
+
+            string line = string.Empty;
+            int added = 0;
+            for (int i = 0; i < report.records.Count && added < 3; i++)
+            {
+                DecisionRecord record = report.records[i];
+                if (record == null)
+                    continue;
+
+                string item = !string.IsNullOrWhiteSpace(record.buildCardId)
+                    ? $"Build {record.buildCardId}"
+                    : $"{record.questionHeadline}: {record.outcomeLabel}";
+                line = string.IsNullOrWhiteSpace(line) ? item : $"{line} | {item}";
+                added++;
+            }
+
+            return line;
+        }
+
+        private static string FormatQuitReason(QuitReason reason)
+        {
+            return reason switch
+            {
+                QuitReason.Burnout => "burnout",
+                QuitReason.LowMorale => "low morale",
+                QuitReason.SalaryDelay => "salary pressure",
+                QuitReason.RivalPoach => "a rival offer",
+                _ => "staff instability"
             };
         }
 

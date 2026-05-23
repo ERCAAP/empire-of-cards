@@ -418,6 +418,22 @@ namespace EmpireOfCards.Gameplay
             foreach (CardData card in GetCardsInSlotType(SlotType.TempEffect)) yield return card;
         }
 
+        public bool ContainsCardOnBoard(CardData card)
+        {
+            if (card == null)
+                return false;
+
+            foreach (CardData activeCard in GetAllActiveCards())
+            {
+                if (activeCard == card)
+                    return true;
+                if (activeCard != null && activeCard.cardId == card.cardId)
+                    return true;
+            }
+
+            return false;
+        }
+
         private bool PlaceEmployee(CardData card, int businessIndex, int slotIndex)
         {
             if (card == null || slotIndex < 0 || !TryPlaceCard(card, SlotType.Staff, slotIndex))

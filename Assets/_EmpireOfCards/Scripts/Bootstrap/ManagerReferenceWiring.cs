@@ -26,6 +26,7 @@ namespace EmpireOfCards.Bootstrap
             m.gameManager.Init(
                 data.balanceData,
                 m.turnManager, m.economyManager, m.deckManager, m.boardManager,
+                m.questionManager, m.decisionHistoryManager, m.customerFlowManager,
                 m.marketShareVisualizer, m.rivalAI,
                 m.shopManager, m.uiManager, m.audioManager, m.vfxManager, m.saveManager,
                 m.slotManager, m.staffStateSystem, m.chainReactionSystem);
@@ -35,6 +36,9 @@ namespace EmpireOfCards.Bootstrap
             m.rivalAI.Init(data.rivalData);
             m.slotManager.Init();
             m.boardManager.Init(m.slotManager);
+            m.decisionHistoryManager.ResetState();
+            m.customerFlowManager.ResetState();
+            m.questionManager.Init(m.decisionHistoryManager);
             m.chainReactionSystem.Init(m.boardManager, m.economyManager, m.staffStateSystem);
             m.shopManager.Init(data.shopPool, m.deckManager, m.economyManager);
             m.audioManager.Init(m.musicSourceA, m.musicSourceB, m.sfxSource);
@@ -75,9 +79,15 @@ namespace EmpireOfCards.Bootstrap
             Hand3D hand3D,
             UnityEngine.Camera mainCamera)
         {
-            m.inputManager3D.InitRuntime(mainCamera, m.gameManager, m.abilitySystem, board3D.AllSlots);
-            hand3D.Init(cardFactory, m.deckManager, hand3D.transform.parent);
-            board3D.Init(m.gameManager, m.boardManager, m.slotManager);
+            m.inputManager3D.InitRuntime(mainCamera, m.gameManager, m.abilitySystem, board3D.AllSlots, board3D.QuestionZones);
+            BoardStageAuthoring stage = board3D != null ? board3D.StageAuthoring : null;
+            hand3D.Init(
+                cardFactory,
+                m.deckManager,
+                stage != null && stage.BuildHandAnchor != null ? stage.BuildHandAnchor : hand3D.transform.parent,
+                stage != null && stage.ResponseHandAnchor != null ? stage.ResponseHandAnchor : hand3D.transform.parent);
+            board3D.Init(m.gameManager, m.boardManager, m.slotManager, stage);
+            board3D.RefreshSlotOccupancyVisuals();
             cardFactory.Init(data.allCards);
 
             var eventCards = data.allCards

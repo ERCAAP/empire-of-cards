@@ -43,12 +43,13 @@ namespace EmpireOfCards.Bootstrap
         private string _pendingRunName;
         private TechCategoryProfile _pendingTechCategory;
         private bool _showingCategoryStage;
+        [SerializeField] private BoardStageAuthoring boardStageAuthoring;
 
         private void Awake()
         {
             var data = CardDataFactory.CreateAllData();
             var managers = ManagerFactory.CreateAll();
-            var scene = SceneRuntimeFactory.Create();
+            var scene = SceneRuntimeFactory.Create(boardStageAuthoring);
             var hud = HUDBuilder.Build();
             WiringService.WireAll(data, managers, scene.Board3D, scene.CardFactory, scene.Hand3D, hud, scene.MainCamera);
 

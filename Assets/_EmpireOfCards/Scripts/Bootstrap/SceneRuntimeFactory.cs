@@ -11,19 +11,36 @@ namespace EmpireOfCards.Bootstrap
 {
     public static class SceneRuntimeFactory
     {
-        public static SceneRuntimeBundle Create()
+        public static SceneRuntimeBundle Create(BoardStageAuthoring authoredStage = null)
         {
-            Camera mainCamera = Setup3DCamera();
+            BoardStageAuthoring stage = ResolveStageAuthoring(authoredStage);
+            Camera mainCamera = Setup3DCamera(stage);
             SetupLightingAndPostProcessing();
-            Board3D board3D = Build3DBoard();
+            Board3D board3D = Build3DBoard(stage);
             CardFactory cardFactory = CreateCardFactory();
-            Hand3D hand3D = Build3DHand(cardFactory);
+            Hand3D hand3D = Build3DHand(cardFactory, stage);
             CreateVFX();
 
-            return new SceneRuntimeBundle(mainCamera, board3D, cardFactory, hand3D);
+            return new SceneRuntimeBundle(mainCamera, board3D, cardFactory, hand3D, stage);
         }
 
-        private static Camera Setup3DCamera()
+        private static BoardStageAuthoring ResolveStageAuthoring(BoardStageAuthoring authoredStage)
+        {
+            if (authoredStage != null)
+            {
+                authoredStage.EnsureLayout();
+                authoredStage.LogMissingReferences();
+                return authoredStage;
+            }
+
+            var stageGo = new GameObject("[BoardStageAuthoring Runtime Dev]");
+            var stage = stageGo.AddComponent<BoardStageAuthoring>();
+            stage.EnsureLayout();
+            Debug.LogError("[SceneRuntimeFactory] Game.unity has no authored BoardStageAuthoring assigned. Created a runtime development stage so the loop can run, but production scene authoring is still required.");
+            return stage;
+        }
+
+        private static Camera Setup3DCamera(BoardStageAuthoring stage)
         {
             Camera cam = Camera.main;
             if (cam == null)
@@ -46,17 +63,25 @@ namespace EmpireOfCards.Bootstrap
             if (cam.GetComponent<ScreenShake>() == null)
                 cam.gameObject.AddComponent<ScreenShake>();
 
-            if (cam.GetComponent<CameraController>() == null)
-                cam.gameObject.AddComponent<CameraController>();
+            var controller = cam.GetComponent<CameraController>();
+            if (controller == null)
+                controller = cam.gameObject.AddComponent<CameraController>();
+            controller.ApplyStage(stage);
 
             return cam;
         }
 
-        private static Board3D Build3DBoard()
+        private static Board3D Build3DBoard(BoardStageAuthoring stage)
         {
             var boardGo = new GameObject("--- BOARD 3D ---");
+            if (stage != null && stage.StageRoot != null)
+                boardGo.transform.SetParent(stage.StageRoot, false);
+
             var board3D = boardGo.AddComponent<Board3D>();
-            board3D.BuildBoard();
+            if (stage != null && stage.HasAuthoredBoardSockets)
+                board3D.BindAuthoredStage(stage);
+            else
+                board3D.BuildBoard(stage);
             return board3D;
         }
 
@@ -66,14 +91,21 @@ namespace EmpireOfCards.Bootstrap
             return factoryGo.AddComponent<CardFactory>();
         }
 
-        private static Hand3D Build3DHand(CardFactory cardFactory)
+        private static Hand3D Build3DHand(CardFactory cardFactory, BoardStageAuthoring stage)
         {
-            var handAnchor = new GameObject("HandAnchor");
-            handAnchor.transform.position = new Vector3(0f, 0.84f, -3.06f);
-            handAnchor.transform.rotation = Quaternion.Euler(-2f, 0f, 0f);
+            Transform buildAnchor = stage != null ? stage.BuildHandAnchor : null;
+            Transform responseAnchor = stage != null ? stage.ResponseHandAnchor : null;
+            if (buildAnchor == null || responseAnchor == null)
+            {
+                var handAnchor = new GameObject("HandAnchor");
+                handAnchor.transform.position = new Vector3(0f, 0.84f, -3.06f);
+                handAnchor.transform.rotation = Quaternion.Euler(-2f, 0f, 0f);
+                buildAnchor = handAnchor.transform;
+                responseAnchor = handAnchor.transform;
+            }
 
             var handGo = new GameObject("Hand3D");
-            handGo.transform.SetParent(handAnchor.transform);
+            handGo.transform.SetParent(stage != null && stage.HandRoot != null ? stage.HandRoot : buildAnchor);
             handGo.transform.localPosition = Vector3.zero;
             handGo.transform.localRotation = Quaternion.identity;
             var hand3D = handGo.AddComponent<Hand3D>();

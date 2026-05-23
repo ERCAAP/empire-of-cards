@@ -16,6 +16,10 @@ namespace EmpireOfCards.Core
             rivalCustomers = 0;
             playerMarketBlocks = 0;
             rivalMarketBlocks = 0;
+            persistentBuildsPlayedThisTurn = 0;
+            questionManager?.ResetState();
+            decisionHistoryManager?.ResetState();
+            customerFlowManager?.ResetState();
         }
 
         private void PrepareNewRunRuntime(bool autoStartTurn)
@@ -74,6 +78,9 @@ namespace EmpireOfCards.Core
 
             staffStateSystem?.Reset();
             chainReactionSystem?.Reset();
+            questionManager?.ResetState();
+            decisionHistoryManager?.ResetState();
+            customerFlowManager?.ResetState();
             WinLoseChecker.Reset();
 
             EventBus.MoneyUpdated(resources.Money);
