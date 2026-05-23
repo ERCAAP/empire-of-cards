@@ -34,12 +34,6 @@ namespace EmpireOfCards.Gameplay.Economy
             _consecutiveDelayTurns = 0;
         }
 
-        public void RestoreState(SalaryChoice choice, int consecutiveDelayTurns)
-        {
-            _lastChoice = choice;
-            _consecutiveDelayTurns = Mathf.Max(0, consecutiveDelayTurns);
-        }
-
         public SalaryResult ProcessSalary(SalaryChoice choice, int totalSalaries, int playerMoney)
         {
             var result = new SalaryResult();

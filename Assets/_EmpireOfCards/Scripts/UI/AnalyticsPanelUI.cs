@@ -22,13 +22,7 @@ namespace EmpireOfCards.UI
         private float _lastQuality = float.NaN;
         private float _lastRating = float.NaN;
         private float _lastRisk = float.NaN;
-        private float _lastLoyalty = float.NaN;
-        private float _lastInflation = float.NaN;
-        private float _lastSupplier = float.NaN;
-        private float _lastStock = float.NaN;
         private int _lastCash = int.MinValue;
-        private string _alertHeadline;
-        private string _alertDetail;
 
         public void Init(
             TMP_Text title,
@@ -75,11 +69,9 @@ namespace EmpireOfCards.UI
                 string flowLine = BuildDualMetricLine("Demand", FormatDelta(snapshot.demand, ref _lastDemand), "Cap", FormatDelta(snapshot.capacity, ref _lastCapacity), ControlDeskTheme.AccentBlue);
                 string qualityLine = BuildDualMetricLine("Qual", FormatDelta(snapshot.quality, ref _lastQuality), "Rate", FormatDelta(snapshot.rating, ref _lastRating), ControlDeskTheme.AccentAmber);
                 string riskLine = BuildMetricLine("Risk", FormatDelta(snapshot.legalRisk, ref _lastRisk), ControlDeskTheme.AccentRed);
-                string loyaltyLine = BuildDualMetricLine("Loyal", FormatDelta(snapshot.loyalty, ref _lastLoyalty), "Infl", FormatDelta(snapshot.inflationPressure, ref _lastInflation), ControlDeskTheme.AccentGreen);
-                string supplyLine = BuildDualMetricLine("Supply", FormatDelta(snapshot.supplierReliability, ref _lastSupplier), "Stock", FormatDelta(snapshot.stockPressure, ref _lastStock), ControlDeskTheme.AccentAmber);
                 string buildLine = BuildMetricLine("Build", buildIdentity, ControlDeskTheme.TextPrimary);
                 playerBodyText.text =
-                    $"{shareLine}\n{cashLine}\n{flowLine}\n{qualityLine}\n{riskLine}\n{loyaltyLine}\n{supplyLine}\n{buildLine}";
+                    $"{shareLine}\n{cashLine}\n{flowLine}\n{qualityLine}\n{riskLine}\n{buildLine}";
             }
 
             if (rivalNameText != null)
@@ -101,7 +93,7 @@ namespace EmpireOfCards.UI
                     rivalBodyText.text =
                         $"{shareLine}\n{economyLine}\n{qualityLine}\n{threatLine}\n{focusLine}\n{lastLine}";
                     if (footerText != null)
-                        footerText.text = BuildFooterText(pressureDetail, buildDetail);
+                        footerText.text = $"Pressure read: {pressureDetail}\nBuild note: {buildDetail}";
                 }
                 else
                 {
@@ -110,12 +102,6 @@ namespace EmpireOfCards.UI
                         footerText.text = string.Empty;
                 }
             }
-        }
-
-        public void SetAlert(string headline, string detail)
-        {
-            _alertHeadline = string.IsNullOrWhiteSpace(headline) ? null : headline.Trim();
-            _alertDetail = string.IsNullOrWhiteSpace(detail) ? null : detail.Trim();
         }
 
         private static string FormatMoney(int value, ref int previous)
@@ -166,19 +152,6 @@ namespace EmpireOfCards.UI
         {
             string color = ColorUtility.ToHtmlStringRGB(accent);
             return $"<color=#{color}>{leftLabel.ToUpperInvariant()}</color> {leftValue}   <color=#{color}>{rightLabel.ToUpperInvariant()}</color> {rightValue}";
-        }
-
-        private string BuildFooterText(string pressureDetail, string buildDetail)
-        {
-            string footer = $"Pressure read: {pressureDetail}\nBuild note: {buildDetail}";
-            if (!string.IsNullOrWhiteSpace(_alertHeadline))
-            {
-                footer += $"\nAlert: {_alertHeadline}";
-                if (!string.IsNullOrWhiteSpace(_alertDetail))
-                    footer += $" · {_alertDetail}";
-            }
-
-            return footer;
         }
     }
 }

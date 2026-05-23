@@ -12,21 +12,6 @@ namespace EmpireOfCards.Data
     public class IncomeBreakdown
     {
         public List<IncomeStep> steps = new List<IncomeStep>();
-        public int grossIncome;
-        public int salaryExpense;
-        public int upkeepExpense;
-        public int taxExpense;
-        public int creditExpense;
-        public int insuranceExpense;
-        public int stockLossExpense;
-        public int inflationExpense;
-        public float loyaltyContribution;
-        public float organicDemandContribution;
-        public float demandTotal;
-        public float capacityTotal;
-        public float qualityTotal;
-        public float ratingDelta;
-        public float marketShareDelta;
         public int netIncome;
     }
 

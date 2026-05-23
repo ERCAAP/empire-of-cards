@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
 using EmpireOfCards.Core;
-using EmpireOfCards.Data;
 
 namespace EmpireOfCards.Gameplay.Economy
 {
@@ -32,17 +31,6 @@ namespace EmpireOfCards.Gameplay.Economy
                 }
                 return total;
             }
-        }
-
-        public bool HasActiveCreditType(CreditType type)
-        {
-            for (int i = 0; i < activeCredits.Count; i++)
-            {
-                if (activeCredits[i] != null && activeCredits[i].type == type)
-                    return true;
-            }
-
-            return false;
         }
 
         public bool CanTakeCredit(CreditType type)
@@ -141,51 +129,6 @@ namespace EmpireOfCards.Gameplay.Economy
         public void Reset()
         {
             activeCredits.Clear();
-        }
-
-        public List<ActiveCreditSaveData> CaptureState()
-        {
-            var state = new List<ActiveCreditSaveData>(activeCredits.Count);
-            for (int i = 0; i < activeCredits.Count; i++)
-            {
-                ActiveCredit credit = activeCredits[i];
-                if (credit == null)
-                    continue;
-
-                state.Add(new ActiveCreditSaveData
-                {
-                    type = credit.type,
-                    principal = credit.principal,
-                    interestRate = credit.interestRate,
-                    turnsRemaining = credit.turnsRemaining,
-                    accumulatedInterest = credit.accumulatedInterest
-                });
-            }
-
-            return state;
-        }
-
-        public void RestoreState(IList<ActiveCreditSaveData> saved)
-        {
-            activeCredits.Clear();
-            if (saved == null)
-                return;
-
-            for (int i = 0; i < saved.Count; i++)
-            {
-                ActiveCreditSaveData item = saved[i];
-                if (item == null)
-                    continue;
-
-                activeCredits.Add(new ActiveCredit
-                {
-                    type = item.type,
-                    principal = item.principal,
-                    interestRate = item.interestRate,
-                    turnsRemaining = item.turnsRemaining,
-                    accumulatedInterest = item.accumulatedInterest
-                });
-            }
         }
     }
 }

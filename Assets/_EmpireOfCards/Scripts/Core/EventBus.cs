@@ -91,13 +91,9 @@ namespace EmpireOfCards.Core
         public static event Action<CreditType, int> OnCreditTaken;         // type, amount
         public static event Action<CreditType> OnCreditRepaid;             // type
         public static event Action<int> OnRentCharged;                     // rent amount
-        public static event Action<int> OnPayrollDefaulted;                // unpaid payroll amount
         public static event Action<VentureType, int> OnStockSpoilageOccurred;    // venture, cost
         public static event Action<VentureType, int> OnStockSeasonLossOccurred;  // venture, cost
         public static event Action<int, float> OnInflationOccurred;        // currentTurn, increase
-        public static event Action<VentureType, int> OnSupplierFailed;     // venture, penalty cost
-        public static event Action<string, int> OnInspectionTriggered;     // label, turns
-        public static event Action<string> OnInspectionResolved;           // label
         #endregion
 
         #region Turn Flow Events
@@ -220,13 +216,9 @@ namespace EmpireOfCards.Core
         public static void CreditTaken(CreditType type, int amount) => OnCreditTaken?.Invoke(type, amount);
         public static void CreditRepaid(CreditType type) => OnCreditRepaid?.Invoke(type);
         public static void RentCharged(int amount) => OnRentCharged?.Invoke(amount);
-        public static void PayrollDefaulted(int unpaidAmount) => OnPayrollDefaulted?.Invoke(unpaidAmount);
         public static void StockSpoilageOccurred(VentureType venture, int cost) => OnStockSpoilageOccurred?.Invoke(venture, cost);
         public static void StockSeasonLossOccurred(VentureType venture, int cost) => OnStockSeasonLossOccurred?.Invoke(venture, cost);
         public static void InflationOccurred(int currentTurn, float increase) => OnInflationOccurred?.Invoke(currentTurn, increase);
-        public static void SupplierFailed(VentureType venture, int penaltyCost) => OnSupplierFailed?.Invoke(venture, penaltyCost);
-        public static void InspectionTriggered(string label, int turns) => OnInspectionTriggered?.Invoke(label, turns);
-        public static void InspectionResolved(string label) => OnInspectionResolved?.Invoke(label);
         #endregion
 
         #region Turn Flow Invoke Helpers
@@ -373,13 +365,9 @@ namespace EmpireOfCards.Core
             OnCreditTaken = null;
             OnCreditRepaid = null;
             OnRentCharged = null;
-            OnPayrollDefaulted = null;
             OnStockSpoilageOccurred = null;
             OnStockSeasonLossOccurred = null;
             OnInflationOccurred = null;
-            OnSupplierFailed = null;
-            OnInspectionTriggered = null;
-            OnInspectionResolved = null;
 
             // Turn flow
             OnTurnStarted = null;

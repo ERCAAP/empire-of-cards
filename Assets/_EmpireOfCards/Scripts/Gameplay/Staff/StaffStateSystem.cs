@@ -34,11 +34,6 @@ namespace EmpireOfCards.Gameplay.Staff
     {
         private List<StaffState> _staffStates = new List<StaffState>();
         private StaffWorkloadReport _lastWorkloadReport = new StaffWorkloadReport();
-        private readonly List<StaffApplicant> _applicantPool = new List<StaffApplicant>();
-        private int _lastApplicantTurn;
-        private string _pendingPoachCardId;
-        private int _pendingPoachOffer;
-        private int _lastPoachTurn;
 
         // Exposed for other systems to query staff modifiers
         public IReadOnlyList<StaffState> StaffStates => _staffStates;
@@ -241,9 +236,6 @@ namespace EmpireOfCards.Gameplay.Staff
             }
 
             TryResolveQuitChecks();
-            var gm = GameManager.Instance;
-            if (gm != null)
-                RunStaffingCycle(gm.CurrentTurn);
         }
 
         // ----------------------------------------------------------------
@@ -362,11 +354,6 @@ namespace EmpireOfCards.Gameplay.Staff
         {
             _staffStates.Clear();
             _lastWorkloadReport = new StaffWorkloadReport();
-            _applicantPool.Clear();
-            _lastApplicantTurn = 0;
-            _pendingPoachCardId = null;
-            _pendingPoachOffer = 0;
-            _lastPoachTurn = 0;
         }
     }
 }

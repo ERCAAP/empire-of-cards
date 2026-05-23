@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using UnityEngine;
 
 namespace EmpireOfCards.Data
@@ -25,36 +24,5 @@ namespace EmpireOfCards.Data
         public VentureBoardThemeProfile themeProfile;
         [TextArea] public string playstyleSummary;
         public string[] openingSequenceCardIds;
-    }
-
-    public static class LaunchVentureScope
-    {
-        private static readonly HashSet<EmpireOfCards.Core.VentureType> EnabledVentures = new HashSet<EmpireOfCards.Core.VentureType>
-        {
-            EmpireOfCards.Core.VentureType.FastFood,
-            EmpireOfCards.Core.VentureType.Cafe,
-            EmpireOfCards.Core.VentureType.GroceryStore
-        };
-
-        public static bool IsEnabled(EmpireOfCards.Core.VentureType ventureType)
-        {
-            return EnabledVentures.Contains(ventureType);
-        }
-
-        public static VentureData[] Filter(VentureData[] ventures)
-        {
-            if (ventures == null || ventures.Length == 0)
-                return System.Array.Empty<VentureData>();
-
-            var filtered = new List<VentureData>(ventures.Length);
-            for (int i = 0; i < ventures.Length; i++)
-            {
-                VentureData venture = ventures[i];
-                if (venture != null && IsEnabled(venture.ventureType))
-                    filtered.Add(venture);
-            }
-
-            return filtered.ToArray();
-        }
     }
 }

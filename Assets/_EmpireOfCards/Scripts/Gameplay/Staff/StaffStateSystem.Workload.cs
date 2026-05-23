@@ -150,8 +150,8 @@ namespace EmpireOfCards.Gameplay.Staff
                 result.loyaltyDelta = decision == HiringDecision.Hire ? 1 : 0;
 
                 CardData template = result.accepted ? ResolveApplicantTemplate(applicant) : null;
-                if (template != null)
-                    result.placedImmediately = TryPlaceHiredStaff(template, applicant, result.agreedSalary, decision, result.moraleDelta, result.loyaltyDelta);
+                if (template != null && GameManager.Instance != null && GameManager.Instance.DeckManager != null)
+                    GameManager.Instance.DeckManager.AddCardToDeck(template);
             }
 
             EventBus.HiringDecisionResolved(result);
@@ -161,7 +161,6 @@ namespace EmpireOfCards.Gameplay.Staff
         public StaffApplicant[] GenerateApplicantPool(VentureType venture, IReadOnlyDictionary<string, CardData> lookup, int count = 3)
         {
             var candidates = new List<CardData>();
-            StaffRoleCoverage coverage = GetRoleCoverage(venture);
             if (lookup != null)
             {
                 foreach (KeyValuePair<string, CardData> item in lookup)
@@ -171,13 +170,9 @@ namespace EmpireOfCards.Gameplay.Staff
                         continue;
                     if (!card.isGeneralCard && card.ventureType != venture)
                         continue;
-                    if (!IsApplicantCardAvailable(card))
-                        continue;
                     candidates.Add(card);
                 }
             }
-
-            candidates.Sort((left, right) => ScoreApplicantCandidate(right, coverage) - ScoreApplicantCandidate(left, coverage));
 
             int take = Mathf.Min(Mathf.Max(1, count), candidates.Count);
             var pool = new StaffApplicant[take];
@@ -201,29 +196,6 @@ namespace EmpireOfCards.Gameplay.Staff
 
             EventBus.ApplicantPoolGenerated(pool);
             return pool;
-        }
-
-        public void RunStaffingCycle(int currentTurn)
-        {
-            var gm = GameManager.Instance;
-            if (gm == null || gm.SelectedVenture == null || gm.CardLookup == null)
-                return;
-
-            StaffRoleCoverage coverage = GetRoleCoverage(gm.SelectedVenture.ventureType);
-            bool needsApplicants = _applicantPool.Count == 0
-                && currentTurn > _lastApplicantTurn
-                && (coverage.coverageRatio < 0.8f || CountWorkingStaff() < 3);
-
-            if (needsApplicants)
-            {
-                StaffApplicant[] generated = GenerateApplicantPool(gm.SelectedVenture.ventureType, gm.CardLookup, 3);
-                _applicantPool.Clear();
-                if (generated != null)
-                    _applicantPool.AddRange(generated);
-                _lastApplicantTurn = currentTurn;
-            }
-
-            AutoResolveApplicantPool(gm, coverage);
         }
 
         public bool TryResolveQuitChecks()
@@ -314,88 +286,6 @@ namespace EmpireOfCards.Gameplay.Staff
                 state.turnsWorked = item.turnsWorked;
                 state.consecutiveOvertimeTurns = item.consecutiveOvertimeTurns;
             }
-        }
-
-        public StaffSystemRuntimeSaveData CaptureSystemRuntimeState()
-        {
-            return new StaffSystemRuntimeSaveData
-            {
-                applicantPool = new List<StaffApplicant>(_applicantPool),
-                lastApplicantTurn = _lastApplicantTurn,
-                pendingPoachCardId = _pendingPoachCardId,
-                pendingPoachOffer = _pendingPoachOffer,
-                lastPoachTurn = _lastPoachTurn
-            };
-        }
-
-        public void RestoreSystemRuntimeState(StaffSystemRuntimeSaveData saved)
-        {
-            _applicantPool.Clear();
-            if (saved == null)
-            {
-                _lastApplicantTurn = 0;
-                _pendingPoachCardId = null;
-                _pendingPoachOffer = 0;
-                _lastPoachTurn = 0;
-                return;
-            }
-
-            if (saved.applicantPool != null)
-                _applicantPool.AddRange(saved.applicantPool);
-            _lastApplicantTurn = saved.lastApplicantTurn;
-            _pendingPoachCardId = saved.pendingPoachCardId;
-            _pendingPoachOffer = saved.pendingPoachOffer;
-            _lastPoachTurn = saved.lastPoachTurn;
-        }
-
-        public void ResolveRivalPoachAttempt(VentureType venture, int offer, float rivalPressure)
-        {
-            StaffState target = SelectPoachTarget(venture);
-            if (target == null || target.card == null)
-                return;
-
-            var gm = GameManager.Instance;
-            if (gm == null)
-                return;
-
-            _pendingPoachCardId = target.card.cardId;
-            _pendingPoachOffer = Mathf.Max(offer, Mathf.Max(20, target.negotiatedSalary));
-            _lastPoachTurn = gm.CurrentTurn;
-
-            EventBus.StaffPoachAttempted(target.card, _pendingPoachOffer);
-
-            int counterCost = Mathf.Max(15, Mathf.RoundToInt(_pendingPoachOffer * 0.65f));
-            bool criticalRole = !IsRoleCoveredFallback(venture, target.role);
-            bool canCounter = gm.PlayerMoney >= counterCost && (criticalRole || target.loyalty >= 3 || target.Level >= 2);
-
-            if (canCounter)
-            {
-                gm.AdjustMoney(-counterCost);
-                target.moral = Mathf.Clamp(target.moral + 1, 0, Constants.STAFF_MORAL_MAX);
-                target.loyalty = Mathf.Clamp(target.loyalty + 2, 0, Constants.STAFF_LOYALTY_MAX);
-                target.resignRisk = Mathf.Clamp01(target.resignRisk - 0.20f);
-                EventBus.StaffPoachCountered(target.card, counterCost);
-                gm.RivalAI?.RespondToPoach_CounterOffer();
-            }
-            else if (target.loyalty <= 2 || target.resignRisk >= 0.45f || rivalPressure >= 3f)
-            {
-                target.employmentStatus = EmploymentStatus.Poached;
-                target.lastQuitReason = QuitReason.RivalPoach;
-                RemoveStaffFromBoard(target.card);
-                EventBus.StaffPoachAccepted(target.card);
-                gm.RivalAI?.RespondToPoach_Accept();
-            }
-            else
-            {
-                target.moral = Mathf.Clamp(target.moral - 1, 0, Constants.STAFF_MORAL_MAX);
-                target.loyalty = Mathf.Clamp(target.loyalty - 1, 0, Constants.STAFF_LOYALTY_MAX);
-                target.resignRisk = Mathf.Clamp01(target.resignRisk + 0.05f);
-                EventBus.StaffPoachRejected(target.card, 0);
-                gm.RivalAI?.RespondToPoach_RejectWithBonus();
-            }
-
-            _pendingPoachCardId = null;
-            _pendingPoachOffer = 0;
         }
 
         private void ApplyWorkloadToStaff(Dictionary<StaffRole, float> rolePressure, float totalPressure, int workingStaff, IReadOnlyList<CardData> tempEffects)
@@ -731,169 +621,6 @@ namespace EmpireOfCards.Gameplay.Staff
             if (lookup != null && lookup.TryGetValue(applicant.templateCardId, out CardData card))
                 return card;
             return null;
-        }
-
-        private void AutoResolveApplicantPool(GameManager gm, StaffRoleCoverage coverage)
-        {
-            if (gm == null || gm.SelectedVenture == null || _applicantPool.Count == 0)
-                return;
-
-            EconomyManager economy = gm.EconomyManager;
-            int availableCash = gm.PlayerMoney;
-            for (int i = _applicantPool.Count - 1; i >= 0; i--)
-            {
-                StaffApplicant applicant = _applicantPool[i];
-                if (applicant == null)
-                {
-                    _applicantPool.RemoveAt(i);
-                    continue;
-                }
-
-                bool roleMissing = coverage != null && coverage.missingRoles != null && coverage.missingRoles.Contains(applicant.role);
-                bool canAffordHire = availableCash >= applicant.requestedSalary + 30;
-                HiringDecision decision = HiringDecision.Reject;
-
-                if (roleMissing && canAffordHire)
-                    decision = applicant.reliabilityScore >= 6 ? HiringDecision.Hire : HiringDecision.Trial;
-                else if (CountWorkingStaff() < 2 && canAffordHire)
-                    decision = HiringDecision.Trial;
-                else if (roleMissing && availableCash >= Mathf.RoundToInt(applicant.requestedSalary * 0.9f))
-                    decision = HiringDecision.CounterOffer;
-
-                HiringDecisionResult result = ApplyHiringDecision(applicant, decision);
-                if (result.accepted)
-                {
-                    availableCash -= Mathf.Max(0, result.agreedSalary);
-                    _applicantPool.RemoveAt(i);
-                    break;
-                }
-
-                if (decision == HiringDecision.Reject)
-                    _applicantPool.RemoveAt(i);
-            }
-        }
-
-        private bool TryPlaceHiredStaff(CardData template, StaffApplicant applicant, int agreedSalary, HiringDecision decision, int moraleDelta, int loyaltyDelta)
-        {
-            var gm = GameManager.Instance;
-            if (gm == null || template == null || !IsApplicantCardAvailable(template))
-                return false;
-
-            bool placed = false;
-            if (gm.BoardManager != null && gm.BoardManager.GetActiveBusinessCount() > 0)
-                placed = gm.BoardManager.PlaceEmployee(template, 0);
-
-            if (!placed && gm.DeckManager != null)
-            {
-                gm.DeckManager.AddCardToDeck(template);
-                return false;
-            }
-
-            StaffState state = GetState(template);
-            if (state != null)
-            {
-                state.baseSalary = agreedSalary;
-                state.negotiatedSalary = agreedSalary;
-                state.trialTurnsRemaining = Mathf.Max(0, applicant != null ? applicant.trialTurns : template.defaultTrialTurns);
-                state.employmentStatus = decision == HiringDecision.Trial ? EmploymentStatus.Trial : EmploymentStatus.Active;
-                state.moral = Mathf.Clamp(state.moral + moraleDelta, 0, Constants.STAFF_MORAL_MAX);
-                state.loyalty = Mathf.Clamp(state.loyalty + loyaltyDelta, 0, Constants.STAFF_LOYALTY_MAX);
-            }
-
-            return placed;
-        }
-
-        private StaffState SelectPoachTarget(VentureType venture)
-        {
-            StaffState best = null;
-            float bestScore = float.MinValue;
-            for (int i = 0; i < _staffStates.Count; i++)
-            {
-                StaffState state = _staffStates[i];
-                if (state == null || state.card == null)
-                    continue;
-                if (state.employmentStatus == EmploymentStatus.Quit || state.employmentStatus == EmploymentStatus.Poached)
-                    continue;
-
-                float criticality = IsRoleCritical(venture, state.role) ? 2.5f : 0f;
-                float score = criticality + (10 - state.loyalty) + state.resignRisk * 4f + state.burnoutRisk * 3f + state.Level;
-                if (score > bestScore)
-                {
-                    best = state;
-                    bestScore = score;
-                }
-            }
-
-            return best;
-        }
-
-        private bool IsApplicantCardAvailable(CardData card)
-        {
-            if (card == null)
-                return false;
-
-            var gm = GameManager.Instance;
-            if (gm == null)
-                return true;
-
-            if (gm.BoardManager != null && gm.BoardManager.ContainsCardOnBoard(card))
-                return false;
-
-            DeckManager deck = gm.DeckManager;
-            if (deck == null)
-                return true;
-
-            return !ContainsCard(deck.DrawPile, card) && !ContainsCard(deck.Hand, card) && !ContainsCard(deck.DiscardPile, card);
-        }
-
-        private static bool ContainsCard(IReadOnlyList<CardData> cards, CardData card)
-        {
-            if (cards == null || card == null)
-                return false;
-
-            for (int i = 0; i < cards.Count; i++)
-                if (cards[i] == card || (cards[i] != null && cards[i].cardId == card.cardId))
-                    return true;
-            return false;
-        }
-
-        private static int ScoreApplicantCandidate(CardData card, StaffRoleCoverage coverage)
-        {
-            if (card == null)
-                return int.MinValue;
-
-            int roleBonus = coverage != null && coverage.missingRoles != null && coverage.missingRoles.Contains(card.staffRole) ? 10 : 0;
-            int skill = Mathf.Clamp(Mathf.RoundToInt(card.capacityDelta + card.qualityDelta + card.staffStabilityDelta), 0, 10);
-            int reliability = Mathf.Clamp(Mathf.RoundToInt(card.staffStabilityDelta + 5f), 0, 10);
-            return roleBonus + skill + reliability;
-        }
-
-        private static bool IsRoleCritical(VentureType venture, StaffRole role)
-        {
-            StaffRole[] required = GetRequiredRoles(venture);
-            for (int i = 0; i < required.Length; i++)
-                if (required[i] == role)
-                    return true;
-            return false;
-        }
-
-        private bool IsRoleCoveredFallback(VentureType venture, StaffRole role)
-        {
-            if (!IsRoleCritical(venture, role))
-                return true;
-
-            int count = 0;
-            for (int i = 0; i < _staffStates.Count; i++)
-            {
-                StaffState state = _staffStates[i];
-                if (state == null || state.card == null || state.role != role)
-                    continue;
-                if (state.employmentStatus == EmploymentStatus.Quit || state.employmentStatus == EmploymentStatus.Poached)
-                    continue;
-                count++;
-            }
-
-            return count > 1;
         }
 
         private static float SumTemp(IReadOnlyList<CardData> cards, Func<CardData, float> selector)

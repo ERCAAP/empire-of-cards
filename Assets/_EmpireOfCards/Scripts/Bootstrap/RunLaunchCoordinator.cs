@@ -50,9 +50,6 @@ namespace EmpireOfCards.Bootstrap
                 return false;
 
             RunSaveData run = _saveManager.LoadRun(slotId);
-            if (run == null || !LaunchVentureScope.IsEnabled((VentureType)run.ventureType))
-                return false;
-
             VentureData venture = FindVenture(ventures, (VentureType)run.ventureType);
             if (venture == null)
                 return false;

@@ -62,11 +62,11 @@ namespace EmpireOfCards.Bootstrap.Data
         {
             return new[]
             {
-                CreateEconomyProfile(VentureType.FastFood, 550f, 3f, 4f, 3.2f, 3.2f, 6.5f, "ingredient_quality", "Ingredient Quality", 4f, "service_speed", "Service Speed", 4f, "hygiene", "Hygiene", 5f, "loyalty", "Loyalty", 4.2f),
-                CreateEconomyProfile(VentureType.Cafe, 575f, 2.8f, 3.5f, 3.8f, 3.4f, 7f, "bean_quality", "Bean Quality", 4.2f, "consistency", "Drink Consistency", 4f, "ambience", "Ambience", 5.2f, "regular_loyalty", "Regular Loyalty", 4.4f),
+                CreateEconomyProfile(VentureType.FastFood, 550f, 3f, 4f, 3.2f, 3.2f, 6.5f, "ingredient_quality", "Ingredient Quality", 4f, "service_speed", "Service Speed", 4f, "hygiene", "Hygiene", 5f),
+                CreateEconomyProfile(VentureType.Cafe, 575f, 2.8f, 3.5f, 3.8f, 3.4f, 7f, "bean_quality", "Bean Quality", 4.2f, "consistency", "Drink Consistency", 4f, "ambience", "Ambience", 5.2f),
                 CreateEconomyProfile(VentureType.TechApp, 520f, 1.5f, 2.5f, 3f, 3f, 6.2f, "stability", "App Stability", 4f, "churn", "Churn", 2.5f, "infra_cost", "Infra Cost", 3f),
                 CreateEconomyProfile(VentureType.ClothingStore, 600f, 2.4f, 3.2f, 3.6f, 3.1f, 6.4f, "stock_health", "Stock Health", 4.5f, "season_fit", "Season Fit", 4f, "return_pressure", "Return Pressure", 2.5f),
-                CreateEconomyProfile(VentureType.GroceryStore, 530f, 3.4f, 4.1f, 3.1f, 3.3f, 6.8f, "freshness", "Freshness", 4.1f, "shelf_fill", "Shelf Fill", 4.4f, "credit_ledger", "Credit Ledger", 2f, "local_loyalty", "Local Loyalty", 4.4f)
+                CreateEconomyProfile(VentureType.GroceryStore, 530f, 3.4f, 4.1f, 3.1f, 3.3f, 6.8f, "spoilage", "Spoilage", 2.2f, "credit_ledger", "Credit Ledger", 2f, "local_loyalty", "Local Loyalty", 4.4f)
             };
         }
 
@@ -270,10 +270,7 @@ namespace EmpireOfCards.Bootstrap.Data
             float metric2Start,
             string metric3Id,
             string metric3Label,
-            float metric3Start,
-            string metric4Id = null,
-            string metric4Label = null,
-            float metric4Start = 0f)
+            float metric3Start)
         {
             var profile = ScriptableObject.CreateInstance<VentureEconomyProfile>();
             profile.ventureType = type;
@@ -284,25 +281,12 @@ namespace EmpireOfCards.Bootstrap.Data
             profile.startingRating = startingRating;
             profile.startingStaffStability = startingStaffStability;
             profile.startingMarketShare = 12f;
-            var metrics = new List<DerivedMetricRule>
+            profile.derivedMetrics = new[]
             {
                 new DerivedMetricRule { id = metric1Id, labelKey = $"metric.{metric1Id}", fallbackLabel = metric1Label, startingValue = metric1Start },
                 new DerivedMetricRule { id = metric2Id, labelKey = $"metric.{metric2Id}", fallbackLabel = metric2Label, startingValue = metric2Start },
                 new DerivedMetricRule { id = metric3Id, labelKey = $"metric.{metric3Id}", fallbackLabel = metric3Label, startingValue = metric3Start }
             };
-
-            if (!string.IsNullOrWhiteSpace(metric4Id))
-            {
-                metrics.Add(new DerivedMetricRule
-                {
-                    id = metric4Id,
-                    labelKey = $"metric.{metric4Id}",
-                    fallbackLabel = metric4Label,
-                    startingValue = metric4Start
-                });
-            }
-
-            profile.derivedMetrics = metrics.ToArray();
             profile.name = $"EconomyProfile_{type}";
             return profile;
         }

@@ -116,10 +116,6 @@ namespace EmpireOfCards.Data
         public float capacity;
         public float quality;
         public float rating;
-        public float loyalty;
-        public float inflationPressure;
-        public float supplierReliability;
-        public float stockPressure;
         public float staffStability;
         public float legalRisk;
         public float marketShare;

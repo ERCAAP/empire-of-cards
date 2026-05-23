@@ -32,12 +32,6 @@ modal run tools/asset_pipeline/modal_app.py::generate_3d_asset --asset-id <asset
 
 5. Download and inspect the processed model before Unity import.
 
-6. Import only the approved processed asset into Unity:
-
-```bash
-python tools/asset_pipeline/import_to_unity.py <asset_id>
-```
-
 ## Approval Checks
 
 - [ ] One asset only.
@@ -50,23 +44,16 @@ python tools/asset_pipeline/import_to_unity.py <asset_id>
 - [ ] Venture colors are accents only; the whole set still feels unified.
 - [ ] Mobile/low-spec silhouette would survive LOD reduction.
 
-## Current Status
+## First Batch Status
 
 | Asset ID | Reference | 3D | Unity Import | Notes |
 | --- | --- | --- | --- | --- |
-| `global_slot_operation` | Approved transparent cutout | Not started | Not started | First transparent workflow test passed after cutout cleanup. |
-| `global_card_generic` | Approved transparent cutout | Not started | Not started | Card silhouette acceptable for TRELLIS input. |
-| `global_market_block` | Approved transparent cutout | Not started | Not started | Token silhouette generated with new group-aware manifest. |
+| `global_slot_operation` | Review after rembg pass | Not started | Not started | First transparent workflow test. |
+| `global_card_generic` | Not started | Not started | Not started | Generate only after slot approval. |
+| `global_market_block` | Not started | Not started | Not started | Generate only after card approval. |
 | `ff_grill_fryer` | Not started | Not started | Not started | Fast Food prop. |
 | `ff_staff_cook` | Not started | Not started | Not started | Staff standee. |
 | `cf_espresso_machine` | Not started | Not started | Not started | Cafe prop. |
 | `cf_staff_barista` | Not started | Not started | Not started | Staff standee. |
 | `gr_checkout_counter` | Not started | Not started | Not started | Grocery prop. |
 | `gr_produce_crate` | Not started | Not started | Not started | Grocery prop. |
-
-## Active Groups
-
-- `phase1_launch`
-- `phase1_staff`
-- `phase2_ventures`
-- `shared_humans`
