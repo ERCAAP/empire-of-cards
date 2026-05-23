@@ -1,118 +1,160 @@
 # TECH APP — Venture Dosyası
 
-> Empire of Cards | Versiyon: 5.0 | Tarih: 2026-05-23
+> Empire of Cards | Versiyon: 4.0 | Tarih: 2026-05-20
 
 ---
 
 ## 1. Venture Kimliği
 
-Tech app venture'ı kullanıcı kazanımı, ürün stabilitesi ve ölçeklenme baskısı üzerinden oynanır.
+Tech app venture'ı fiziksel müşteri yerine kullanıcı akışı, store rating ve ölçek ekonomisi üzerinden oynanır. En yavaş açılan ama doğru kurulursa en sert sıçrayan venture budur.
 
 Oyuncu hissi:
 
-> "Kullanıcı çekebilirim ama ürün hazır değilse kendi büyümem beni boğar."
+> "Başta kimse yok ama sistem oturursa bir anda büyüme eğrisi kırılıyor."
 
-## 2. 3-Zone Board Kimliği
+## 2. Başlangıç Board'u
 
-- üstte rakip app ekibi, kırmızı kullanıcı baskısı ve kampanya sinyalleri
-- ortada nötr kullanıcı havuzu ve karar panelleri
-- altta oyuncunun ürün, ekip, sunucu ve growth altyapısı
+- temel MVP
+- kırılgan backend
+- 1 geliştirici
+- sıfıra yakın kullanıcı
+- gecikmeli gelir akışı
 
-## 3. Persistent Build Anchors
+Başlangıç baskısı:
 
-- product backlog hattı
-- frontend / UX masası
-- backend / infra hattı
-- support / community alanı
-- acquisition kanalı
-- analytics / retention alanı
+- erken oyunda cash akışı zayıf
+- growth açmadan önce stability kurmak gerekir
 
-## 4. Core Question Families
+## 3. Alt-Slot Yapısı
 
-- crash ve bug baskısı
-- kullanıcı akışı tutmama
-- sunucu maliyeti ve ölçeklenme
-- growth kampanyası
-- feature yetiştirme
-- kötü app store yorumu
+### Operation
 
-## 5. Economy Pressure Profile
+- Ürün
+- Backend
+- Growth Pipeline
+- Support / Platform Ops
 
-Ana baskılar:
+### Staff
 
-- product stability
-- churn
-- server load
-- acquisition efficiency
+- Developer
+- Designer
+- Growth
+- Support
+- Product Manager
 
-Bu venture fiziksel müşteri yerine kullanıcı akışı gösterir ama aynı board grammar'ını korur.
+### Marketing
 
-## 6. Early-Stage Question Examples
+- ASO
+- Performance Ads
+- Influencer
+- Community
 
-- "İlk kullanıcıları çekmeden önce ürün ne kadar hazır?"
-- "Bug mı kapatacaksın, growth mü açacaksın?"
-- "Support yok, ilk yorumlar sertleşiyor. Nasıl cevap vereceksin?"
+### Supplier
 
-## 7. Mid-Stage Question Examples
+- Cloud
+- Tooling
+- Payment / Analytics
+- API Partner
 
-- "Reklam çalıştı ama retention düştü. Hangi hattı güçlendireceksin?"
-- "Backend yetişmiyor. Infra mı ekip mi?"
-- "Rakip yeni feature çıkardı. Sen kalite mi hız mı seçeceksin?"
+## 4. Türetilmiş Metrikler
 
-## 8. Late-Stage Question Examples
+- App Stability
+- Store Rating
+- Churn
+- Infra Cost
 
-- "Kullanıcı sayısı arttı, server maliyeti kârı yiyor."
-- "Büyük özellik gecikti. Yol haritasını mı itibarı mı kurtaracaksın?"
-- "Güvenlik açığı söylentisi yayılıyor. Hangi krizi önce çözeceksin?"
+## 5. Kart Aileleri
 
-## 9. Rival Pressure Patterns
+### Kalıcı Kurulum
 
-- agresif user acquisition
-- hızlı feature shipping
-- düşük fiyat / freemium baskısı
-- ekip transferi
+- MVP Launch
+- Backend Upgrade
+- Crash Monitoring
+- Subscription Setup
 
-## 10. Example Build Paths
+### Aktif Büyüme
 
-`Stable Product`
+- ASO Push
+- Paid Install Campaign
+- Product Hunt Launch
+- Influencer Review
 
-- backend + QA + support
-- yavaş ama güvenli büyüme
+### Risk / Illegal
 
-`Growth Sprint`
+- Fake Review Burst
+- Dark Pattern Onboarding
+- Support'u görmezden gel
+- Veri politikasını ertele
 
-- acquisition + viral feature
-- hızlı kullanıcı kazanımı
-- crash ve churn riski
+### Reaksiyon / Çözüm
 
-## 11. Venture-Specific Customer Movement Logic
+- Hotfix Sprint
+- Refund Dalgası Yönetimi
+- Support Hire
+- Store Description Rework
 
-Buradaki "müşteri" akışı kullanıcı akışıdır:
+## 6. Erken Oyun
 
-- gri kullanıcılar nötr pazar havuzunu temsil eder
-- mavi kullanıcılar aktif kazanımını
-- kırmızı kullanıcılar rakibe kayan kitleyi temsil eder
+Hedef:
 
-## 12. Example 2-Turn Walkthrough
+- product-market fit sinyali almak
+- crash oranını kontrol etmek
+- store rating'i kırmamak
 
-### Turn 1
+## 7. Orta Oyun
 
-- soru 1: ürün hazır mı
-- soru 2: ilk kullanıcı nasıl çekilecek
-- build: backend ya da support
-- response: beta kampanyası ya da hata düzeltme sprint'i
+Hedef:
 
-Sonuç:
+- performans pazarlaması ile büyümek
+- churn'i düşürmek
+- gecikmeli gelir baskısını taşımak
 
-- sınırlı ama değerli kullanıcı akışı başlar
+## 8. Geç Oyun
 
-### Turn 2
+Hedef:
 
-- soru 1: retention baskısı
-- soru 2: server load artışı
-- build: infra ya da frontend polish
-- response: acil hotfix, indirimli kampanya, onboarding değişimi
+- ölçek maliyetini optimize etmek
+- organik büyüme ve rating üstünlüğü kurmak
+- rakibin paid growth baskısını retention ile kırmak
 
-Sonuç:
+## 9. Temel Kriz Havuzu
 
-- venture'ın ana gerilimi büyüme ile ürün stabilitesi arasındaki savaştır
+- Crash Spike
+- 1 Yıldız Review Bomb
+- App Store Reddi
+- Infra Cost Sıçraması
+- Churn Dalgası
+- Veri gizliliği uyarısı
+
+## 10. Rakip Baskısı
+
+- paid growth ile kullanıcı çalma
+- rating üstünlüğü
+- daha sık feature release
+- topluluk sahiplenmesi
+
+## 11. Strateji Build'leri
+
+### Erken Oyun Build
+
+`Stable MVP`
+
+- düşük büyüme
+- yüksek stability
+- güvenli store rating
+
+### Orta Oyun Build
+
+`Efficient Growth`
+
+- ASO
+- destekli paid growth
+- churn kontrolü
+
+### Geç Oyun Build
+
+`Scale Engine`
+
+- düşük infra cost
+- güçlü retention
+- rating ile organik install akışı

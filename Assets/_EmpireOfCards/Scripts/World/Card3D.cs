@@ -5,7 +5,6 @@ using EmpireOfCards.Data;
 using EmpireOfCards.Core;
 using EmpireOfCards.Presentation;
 using EmpireOfCards.UI.Clarity;
-using EmpireOfCards.Gameplay;
 
 namespace EmpireOfCards.World
 {
@@ -215,22 +214,7 @@ namespace EmpireOfCards.World
 
             string buy = $"BUY {Mathf.Max(0, card.buyCost)}";
             string play = card.playCost > 0 ? $" / PLAY {card.playCost}" : string.Empty;
-            return $"{BuildRoleChip(card)} | {buy}{play}";
-        }
-
-        private static string BuildRoleChip(CardData card)
-        {
-            if (card == null)
-                return "CARD";
-
-            if (card.cardFamily == CardFamily.Risk || card.cardFamily == CardFamily.Crisis || card.legalRiskOnPlay > 0 || card.legalRiskPerTurn > 0 || card.legalRiskDeltaPerTurn > 0f)
-                return "RISK";
-            if (QuestionTagUtility.IsPersistentBuild(card))
-                return "BUILD";
-            if (QuestionTagUtility.IsResponseCard(card))
-                return "RESPONSE";
-
-            return "CARD";
+            return buy + play;
         }
     }
 }

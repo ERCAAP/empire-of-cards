@@ -104,15 +104,6 @@ namespace EmpireOfCards.Gameplay
 
             list[slotIndex] = card;
             EventBus.CardPlacedInSlot(card, slotType);
-            EventBus.BoardAnchorStateChanged(new BoardAnchorViewModel
-            {
-                slotType = slotType,
-                slotIndex = slotIndex,
-                laneId = slotType.ToString(),
-                label = slotType.ToString(),
-                occupied = true,
-                residentCardId = card.cardId
-            });
             return true;
         }
 
@@ -143,15 +134,6 @@ namespace EmpireOfCards.Gameplay
             removed = list[slotIndex];
             list[slotIndex] = null;
             EventBus.CardRemovedFromSlot(removed, slotType);
-            EventBus.BoardAnchorStateChanged(new BoardAnchorViewModel
-            {
-                slotType = slotType,
-                slotIndex = slotIndex,
-                laneId = slotType.ToString(),
-                label = slotType.ToString(),
-                occupied = false,
-                residentCardId = null
-            });
             return true;
         }
 

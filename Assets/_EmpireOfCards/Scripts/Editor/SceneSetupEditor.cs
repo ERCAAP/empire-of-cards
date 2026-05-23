@@ -81,58 +81,12 @@ namespace EmpireOfCards.Editor
                 cam.backgroundColor = new Color(0.15f, 0.12f, 0.1f);
             }
 
-            var stageGo = new GameObject("[BoardStage]");
-            var stage = stageGo.AddComponent<EmpireOfCards.World.BoardStageAuthoring>();
-            stage.EnsureLayout();
-
             // Add GameSceneBootstrap
             var bootstrapGo = new GameObject("[GameBootstrap]");
-            var bootstrap = bootstrapGo.AddComponent<Bootstrap.GameSceneBootstrap>();
-            var serializedBootstrap = new SerializedObject(bootstrap);
-            serializedBootstrap.FindProperty("boardStageAuthoring").objectReferenceValue = stage;
-            serializedBootstrap.ApplyModifiedPropertiesWithoutUndo();
+            bootstrapGo.AddComponent<Bootstrap.GameSceneBootstrap>();
 
             EditorSceneManager.SaveScene(scene, "Assets/Scenes/Game.unity");
             Debug.Log("[SceneSetup] Game.unity created.");
-        }
-
-        [MenuItem("EmpireOfCards/Rebuild Game Stage Contract")]
-        public static void RebuildGameStageContract()
-        {
-            var scene = EditorSceneManager.GetActiveScene();
-            if (!scene.IsValid())
-                return;
-
-            var stageGo = GetOrCreateRoot(scene, "[BoardStage]");
-            var stage = stageGo.GetComponent<EmpireOfCards.World.BoardStageAuthoring>();
-            if (stage == null)
-                stage = stageGo.AddComponent<EmpireOfCards.World.BoardStageAuthoring>();
-            stage.EnsureLayout();
-
-            var bootstrapGo = GetOrCreateRoot(scene, "[GameBootstrap]");
-            var bootstrap = bootstrapGo.GetComponent<Bootstrap.GameSceneBootstrap>();
-            if (bootstrap == null)
-                bootstrap = bootstrapGo.AddComponent<Bootstrap.GameSceneBootstrap>();
-
-            var serializedBootstrap = new SerializedObject(bootstrap);
-            serializedBootstrap.FindProperty("boardStageAuthoring").objectReferenceValue = stage;
-            serializedBootstrap.ApplyModifiedPropertiesWithoutUndo();
-
-            EditorSceneManager.MarkSceneDirty(scene);
-            EditorSceneManager.SaveScene(scene);
-            Debug.Log("[SceneSetup] Game stage authoring contract rebuilt.");
-        }
-
-        private static GameObject GetOrCreateRoot(Scene scene, string objectName)
-        {
-            var roots = scene.GetRootGameObjects();
-            for (int i = 0; i < roots.Length; i++)
-            {
-                if (roots[i] != null && roots[i].name == objectName)
-                    return roots[i];
-            }
-
-            return new GameObject(objectName);
         }
     }
 }

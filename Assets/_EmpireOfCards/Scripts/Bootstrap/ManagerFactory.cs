@@ -42,17 +42,8 @@ namespace EmpireOfCards.Bootstrap
             // --- BoardManager ---
             b.boardManager = CreateChild<BoardManager>(gmGo.transform, "BoardManager");
 
-            // --- QuestionManager ---
-            b.questionManager = CreateChild<QuestionManager>(gmGo.transform, "QuestionManager");
-
-            // --- DecisionHistoryManager ---
-            b.decisionHistoryManager = CreateChild<DecisionHistoryManager>(gmGo.transform, "DecisionHistoryManager");
-
-            // --- CustomerFlowManager ---
-            b.customerFlowManager = CreateChild<CustomerFlowManager>(gmGo.transform, "CustomerFlowManager");
-
-            // --- MarketShareVisualizer ---
-            b.marketShareVisualizer = CreateChild<MarketShareVisualizer>(gmGo.transform, "MarketShareVisualizer");
+            // --- MarketShareVisualizer (TerritoryManager compatibility component) ---
+            b.marketShareVisualizer = CreateChild<TerritoryManager>(gmGo.transform, "MarketShareVisualizer");
 
             // --- RivalAI ---
             b.rivalAI = CreateChild<RivalAI>(gmGo.transform, "RivalAI");
@@ -129,9 +120,6 @@ namespace EmpireOfCards.Bootstrap
         public EconomyManager economyManager;
         public DeckManager deckManager;
         public BoardManager boardManager;
-        public QuestionManager questionManager;
-        public DecisionHistoryManager decisionHistoryManager;
-        public CustomerFlowManager customerFlowManager;
         public MarketShareVisualizer marketShareVisualizer;
         public RivalAI rivalAI;
         public ShopManager shopManager;

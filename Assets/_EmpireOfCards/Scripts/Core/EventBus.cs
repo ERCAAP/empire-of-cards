@@ -81,19 +81,6 @@ namespace EmpireOfCards.Core
         public static event Action<TurnReportData> OnTurnReportGenerated;
         #endregion
 
-        #region Question System Events
-        public static event Action<QuestionRuntimeState[]> OnQuestionsGenerated;
-        public static event Action<int, QuestionRuntimeState> OnQuestionAnswered;
-        public static event Action<int, QuestionRuntimeState> OnQuestionResolved;
-        public static event Action<DecisionRecord> OnDecisionRecorded;
-        public static event Action<CustomerFlowSnapshot> OnCustomerFlowResolved;
-        public static event Action<CameraFocusRequest> OnQuestionFocusRequested;
-        public static event Action OnQuestionFocusReleased;
-        public static event Action<BoardAnchorViewModel> OnBoardAnchorStateChanged;
-        public static event Action<RivalPressureViewModel> OnRivalPressureVisualChanged;
-        public static event Action<TurnResolutionReport> OnTurnResolutionReady;
-        #endregion
-
         #region Economy Events
         public static event Action<int> OnMoneyChanged;                    // newAmount
         public static event Action<int> OnIncomeReceived;                  // amount
@@ -221,19 +208,6 @@ namespace EmpireOfCards.Core
         #region Turn Messaging Invoke Helpers
         public static void TurnBriefGenerated(TurnBriefData brief) => OnTurnBriefGenerated?.Invoke(brief);
         public static void TurnReportGenerated(TurnReportData report) => OnTurnReportGenerated?.Invoke(report);
-        #endregion
-
-        #region Question System Invoke Helpers
-        public static void QuestionsGenerated(QuestionRuntimeState[] questions) => OnQuestionsGenerated?.Invoke(questions);
-        public static void QuestionAnswered(int index, QuestionRuntimeState question) => OnQuestionAnswered?.Invoke(index, question);
-        public static void QuestionResolved(int index, QuestionRuntimeState question) => OnQuestionResolved?.Invoke(index, question);
-        public static void DecisionRecorded(DecisionRecord record) => OnDecisionRecorded?.Invoke(record);
-        public static void CustomerFlowResolved(CustomerFlowSnapshot snapshot) => OnCustomerFlowResolved?.Invoke(snapshot);
-        public static void QuestionFocusRequested(CameraFocusRequest request) => OnQuestionFocusRequested?.Invoke(request);
-        public static void QuestionFocusReleased() => OnQuestionFocusReleased?.Invoke();
-        public static void BoardAnchorStateChanged(BoardAnchorViewModel state) => OnBoardAnchorStateChanged?.Invoke(state);
-        public static void RivalPressureVisualChanged(RivalPressureViewModel state) => OnRivalPressureVisualChanged?.Invoke(state);
-        public static void TurnResolutionReady(TurnResolutionReport report) => OnTurnResolutionReady?.Invoke(report);
         #endregion
 
         #region Economy Invoke Helpers
@@ -380,18 +354,6 @@ namespace EmpireOfCards.Core
             // Turn messaging
             OnTurnBriefGenerated = null;
             OnTurnReportGenerated = null;
-
-            // Question system
-            OnQuestionsGenerated = null;
-            OnQuestionAnswered = null;
-            OnQuestionResolved = null;
-            OnDecisionRecorded = null;
-            OnCustomerFlowResolved = null;
-            OnQuestionFocusRequested = null;
-            OnQuestionFocusReleased = null;
-            OnBoardAnchorStateChanged = null;
-            OnRivalPressureVisualChanged = null;
-            OnTurnResolutionReady = null;
 
             // Platform Rating
             OnPlatformRatingChanged = null;

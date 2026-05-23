@@ -95,7 +95,6 @@ namespace EmpireOfCards.Core.TurnPhases
             {
                 // 4a: Businesses produce products/customers
                 case ResolveStep.BusinessProduce:
-                    gm.QuestionManager?.PrepareResolve(gm.CurrentTurn);
                     if (gm.BoardManager != null)
                     {
                         if (gm.BoardManager.ConsumeProductionDisabled())
@@ -112,15 +111,6 @@ namespace EmpireOfCards.Core.TurnPhases
                 // 4b: Normalize the economy-resolved customer result before presentation.
                 case ResolveStep.CustomerFlow:
                     NormalizeCustomerShare(gm);
-                    gm.CustomerFlowManager?.ResolveSnapshot(
-                        gm.CurrentTurn,
-                        gm.PlayerCustomers,
-                        gm.RivalCustomers,
-                        Constants.TOTAL_MARKET_CUSTOMERS,
-                        gm.EconomyManager != null && gm.EconomyManager.LastReport != null
-                            ? gm.EconomyManager.LastReport.primaryReason
-                            : "Customer flow shifted.");
-                    EventBus.TurnResolutionReady(BuildTurnResolutionReport(gm));
                     break;
 
                 // 4b.5: Season transition check
@@ -209,49 +199,6 @@ namespace EmpireOfCards.Core.TurnPhases
 
             gm.SetPlayerCustomers(playerCustomers);
             gm.SetRivalCustomers(rivalCustomers);
-        }
-
-        private static TurnResolutionReport BuildTurnResolutionReport(GameManager gm)
-        {
-            var report = new TurnResolutionReport();
-            if (gm == null)
-                return report;
-
-            report.turnNumber = gm.CurrentTurn;
-
-            TurnReportData economyReport = gm.EconomyManager != null ? gm.EconomyManager.LastReport : null;
-            if (economyReport != null)
-            {
-                report.cashDelta = economyReport.netIncome;
-                report.ratingDelta = economyReport.ratingDelta;
-                report.marketShareDelta = economyReport.marketShareDelta;
-                report.dominantReason = economyReport.primaryReason;
-                if (economyReport.reasons != null)
-                    report.reasons.AddRange(economyReport.reasons);
-            }
-
-            CustomerFlowSnapshot flow = gm.CustomerFlowManager != null ? gm.CustomerFlowManager.CurrentSnapshot : null;
-            if (flow != null)
-            {
-                report.customersToPlayer = flow.movedToPlayer;
-                report.customersToRival = flow.movedToRival;
-                if (string.IsNullOrWhiteSpace(report.dominantReason))
-                    report.dominantReason = flow.dominantReason;
-            }
-
-            if (gm.EconomyManager != null && gm.EconomyManager.Snapshot != null)
-                report.riskDelta = gm.EconomyManager.Snapshot.legalRisk;
-
-            if (gm.DecisionHistoryManager != null && gm.DecisionHistoryManager.Ledger != null)
-            {
-                foreach (DecisionRecord record in gm.DecisionHistoryManager.Ledger)
-                {
-                    if (record != null && record.turnNumber == gm.CurrentTurn)
-                        report.records.Add(record);
-                }
-            }
-
-            return report;
         }
 
         public static float GetVentureSeasonMultiplier(VentureType venture, SeasonType season)

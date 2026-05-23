@@ -1,797 +1,762 @@
 # GAME DESIGN DOCUMENT
-# "Empire of Cards" v5
+# "Empire of Cards"
 
-> Versiyon: 5.0 | Tarih: 2026-05-23
-> Tür: Question-driven business card strategy
-> Platform: PC / Steam
+> Versiyon: 4.0 | Tarih: 2026-05-20
+> Engine: Unity 6 (C#) | Platform: PC (Steam)
+> Tür: Venture-first business card strategy
 
 ---
 
-# 1. Yüksek Konsept ve Oyuncu Fantezisi
+# 1. Yüksek Konsept
 
 ## 1.1 Oyuncu Vaadi
 
-Empire of Cards, oyuncuya mahallede iş kurup rakibini geride bırakma hissi veren, karar baskısı yüksek, kart tabanlı bir işletme simülasyonudur.
+Oyuncu oyunun başında bir girişim seçer ve aynı sektörde başlayan rakibine karşı aynı semtte, aynı müşteri havuzu içinde büyüme savaşı verir. Kart oynar ama his olarak kart oyunu değil, işletme yönetimi yaşar.
 
-Oyuncu bir "slot dolduran masa oyunu" oynamaz. Oyuncu:
+Bu oyunun fantezisi:
 
-- işletmesini kurar,
-- tur başına gelen gerçek problemleri çözer,
-- müşteri akışını gözle görünür şekilde etkiler,
-- kısa vadeli kurtarış ile uzun vadeli istikrar arasında karar verir,
-- rakibin aynı müşteri havuzu için baskısını hisseder.
+> "Küçük bir masadan başladım, doğru yatırımlar ve doğru risklerle semti ele geçirdim."
 
 ## 1.2 Oyunun Cümlesi
 
-> "Mahalledeki müşterileri rakibinden önce kendine çekmek için işletmeni kur, sorulara kartlarla cevap ver ve her turun sonunda mahallenin sana mı rakibine mi aktığını izle."
+Küçük bir işletmeyle başla, sektörüne özel kart havuzuyla büyü, müşteri memnuniyeti ile itibarını koru, rakibinle aynı pazarı paylaş ve market share savaşını kazan.
 
-## 1.3 Çekirdek Fantezi
+## 1.3 Tasarım İlkeleri
 
-- Senin işletmen altta, rakibin işletmesi üstte yaşar.
-- Ortada mahalle ve müşteri havuzu görünür.
-- Her tur 2 baskı sorusu açılır.
-- Oyuncu 1 kalıcı gelişim kartı ve soru başına uygun cevap kartları oynar.
-- Tur sonunda müşteriler fiziksel olarak taraf değiştirir.
+1. Kartlar karar temsil eder, büyü değil.
+2. Sektör seçimi sadece kozmetik değildir; kart havuzunu, krizleri, büyüme yolunu ve rakip baskısını değiştirir.
+3. Ortak omurga korunur; her venture kendi alt-slot diliyle farklılaşır.
+4. Oyun ağır simülasyon değil, okunabilir kart-strateji hibritidir.
+5. Başarılı hamleler zincir reaksiyon üretmeli, kötü planlama da yavaş çöküş yaratmalıdır.
 
----
+## 1.4 Oyuncunun Her Tur Yaptığı Şey
 
-# 2. Çekirdek Tasarım İlkeleri
-
-## 2.1 Tasarım Sütunları
-
-1. Kartlar büyü değil, işletme kararıdır.
-2. Board dekor değil, yaşayan durum ekranıdır.
-3. Sorular oyunun ana oynanış motorudur.
-4. Ekonomi derin olmalı ama okunamaz olmamalıdır.
-5. Her iyi karar bir bedel ya da fırsat maliyeti taşımalıdır.
-6. Müşteri akışı oyunun ana geri bildirimi olmalıdır.
-
-## 2.2 Neden Board Hala Var
-
-Bu tasarım question-first'tür ama boardless değildir.
-
-Board'un görevleri:
-
-- oyuncunun kurduğu kalıcı işletmeyi göstermek,
-- müşteri savaşını görselleştirmek,
-- rakibin baskısını okunur tutmak,
-- aktif etkileri ve kalıcı yatırımları sahnede yaşatmak,
-- tur sonunda kararların sonucu olarak neyin değiştiğini göstermektir.
-
-## 2.3 Oyuncunun Her Tur Yaptığı Şey
-
-1. Turn brief'i okur.
-2. Ortaya çıkan 2 aktif soruyu görür.
-3. Elindeki kartlardan bu sorulara uygun cevapları seçer.
-4. Aynı tur 1 kalıcı build kartını işletmesine yerleştirir.
-5. Turu bitirir ve müşteri akışı, gelir, risk ve rakip cevabını izler.
+1. Venture ve mevcut board durumuna uygun kartlar çeker.
+2. Kartları slotlara yerleştirir veya anlık karar kartları oynar.
+3. Sistem demand, capacity, quality, rating ve market share üzerinden çözülür.
+4. Kriz varsa reaksiyon verir.
+5. Rakibin aynı sektörde nasıl büyüdüğünü görür ve cevap üretir.
 
 ---
 
-# 3. Board ve Level Design
+# 2. Venture Seçimi ve Rakip Kuralı
 
-## 3.1 Üç Bölge Yapısı
+## 2.1 Açılış Kuralı
 
-### Üst Bölge: Rival Zone
+Run başında oyuncu 1 venture seçer:
 
-- kırmızı tonlu rakip işletme
-- rakibin aktif personeli, kampanyaları ve baskıları görünür
-- tüm iç detaylar açık edilmez
-- rakip güçlü ama tamamen şeffaf olmayan bir tehdit olarak hissedilir
+- Fast Food
+- Cafe
+- Tech App
+- Giyim Magazasi
+- Market / Bakkal
 
-### Orta Bölge: District / Market Zone
+Rakip otomatik olarak aynı venture ile başlar.
 
-- gri, nötr müşteri havuzu burada yaşar
-- tur içi soru panelleri burada açılır
-- resolve anında müşteriler bu bölgeden sana veya rakibe akar
-- market share sayısal olmadan da burada hissedilir
+Bu kararın sonuçları:
 
-### Alt Bölge: Player Business Zone
+- Aynı müşteri havuzu için savaşılır.
+- Aynı sektör krizleri iki tarafa da uygulanır.
+- Kimin daha iyi kurduğu, daha doğru büyüdüğü ve daha temiz toparladığı görünür hale gelir.
 
-- oyuncunun kalıcı işletmesi burada büyür
-- personel, ekipman, supplier bağlantıları ve aktif altyapı burada görünür
-- mavi ve sıcak tonlarla sahiplik hissi verir
+## 2.2 Venture Seçiminin Etkilediği Sistemler
 
-## 3.2 Alt Şerit: Hand Rail
+Seçilen venture şunları belirler:
 
-- eldeki kartlar alt şeritte tutulur
-- kartlar fiziksel ve taktil görünür
-- turu bitir butonu burada yer alır
-- oyuncu elindeki kartları hem soru paneline hem işletme anchor'larına sürükleyebilir
+- Starter deck
+- Venture kart havuzu
+- Alt-slot isimleri
+- Türetilmiş metrikler
+- Kriz havuzu
+- Rakip davranış öncelikleri
+- Görsel masa dili
 
-## 3.3 Yan Paneller
+## 2.3 Venture Dosyaları
 
-Sağ veya sol yan paneller şu işlevleri taşır:
+Her venture'ın detaylı kuralları ayrı dosyadadır:
 
-- anlık ana metrikler
-- turn report
-- decision history
-- aktif temp effect listesi
-- son rakip hamlesi özeti
-
-## 3.4 Board Üzerinde Neler Hareket Eder
-
-- müşteriler
-- soru panelleri
-- aktif kampanya ve baskı ikonları
-- temp effect işaretleri
-- resolve anındaki para, puan ve risk pop-up'ları
-
-## 3.5 Kalıcı Olanlar
-
-- personel varlığı
-- ekipman
-- supplier anlaşmaları
-- kalıcı marketing altyapısı
-- işletme kapasite yapısı
-
-## 3.6 Görsel Okunabilirlik Kuralları
-
-- oyuncu gözü önce ortaya, sonra kendi işletmesine, sonra rakibe kaymalıdır
-- oyuncunun işletmesi detaylı, rakip işletme özetlenmiş görünmelidir
-- soru paneli sahneye entegre olmalı, menü gibi kopuk durmamalıdır
-- resolve anında müşteri akışı en baskın animasyon olmalıdır
+- `Assets/steam-card-game-gdd/businesses/fast_food.md`
+- `Assets/steam-card-game-gdd/businesses/cafe.md`
+- `Assets/steam-card-game-gdd/businesses/tech_app.md`
+- `Assets/steam-card-game-gdd/businesses/giyim_magazasi.md`
+- `Assets/steam-card-game-gdd/businesses/market_bakkal.md`
 
 ---
 
-# 4. Ana Oyun Döngüsü ve Tur Yapısı
+# 3. Masa Düzeni
 
-## 4.1 Tur Yapısı
+## 3.1 Üç Ana Bölge
 
-Her standart tur şu sırayla akar:
+Masa 3 ana bölgeye ayrılır:
 
-1. Turn Start Brief
-2. Question Spawn
-3. Decision Placement
-4. Persistent Build Placement
-5. Resolve
-6. Customer Movement
-7. Rival Response
-8. State Carryover
+1. Player Zone
+2. District / Market Zone
+3. Rival Zone
 
-## 4.2 Turn Start Brief
+```text
+┌──────────────────────────────────────────────┐
+│ RIVAL ZONE                                   │
+│ Rakibin slotları, kampanyaları, baskısı      │
+├──────────────────────────────────────────────┤
+│ DISTRICT / MARKET ZONE                       │
+│ Müşteri akışı, trafik, trendler, olaylar     │
+│ Görünürlük, organik talep, market paylaşımı  │
+├──────────────────────────────────────────────┤
+│ PLAYER ZONE                                  │
+│ Senin işletmen, slotların, çalışanların       │
+│ aktif kampanyaların ve krizlerin             │
+└──────────────────────────────────────────────┘
+```
 
-Tur başında oyuncuya kısa ama operasyonel anlam taşıyan bir brief verilir.
+## 3.2 Player Zone Amacı
 
-Brief şunları açıklar:
+Player Zone oyuncuya "bu benim işletmem" hissini vermelidir. Kartlar sadece sayaç değil, işletmenin gerçek parçaları gibi görünmelidir.
 
-- günün baskısı
-- hangi metriğin kırılgan olduğu
-- rakipten gelen görünür tehdit
-- önerilen oyun yönü
+Örnek bağlar:
 
-## 4.3 Question Spawn
+- Operation kartları fiziksel işletmeye oturur.
+- Staff kartları operasyonun üstüne bağlanır.
+- Marketing kartları District Zone'a görsel etki yollar.
+- Supplier kartları üretim veya stok tarafına bağlanır.
+- Temp Effect kartları işletmeyi bozulan veya baskı altındaki durumda gösterir.
 
-Varsayılan tempo:
+## 3.3 District / Market Zone Amacı
 
-- her tur 2 aktif soru
-- risk eşiği aşılırsa 1 zorunlu bonus reaksiyon sorusu
-- milestone turlarında daha güçlü soru pencereleri
+Bu bölge oyunun rekabet kalbidir. Şunları temsil eder:
 
-Sorular şu kaynaklardan gelir:
+- Trafik
+- Organik talep
+- Görünürlük
+- Yerel etkinlikler
+- Sezon etkisi
+- Rakip baskısı
+- Müşteri yön değiştirmesi
 
-- venture script beat'leri
-- board state tetikleri
-- ekonomi ve risk eşikleri
-- rakip hamleleri
-- milestone turn kırılmaları
+Oyuncu burada şunu okumalı:
 
-## 4.4 Decision Placement
+> "Pazar bana mı akıyor, rakibe mi kayıyor?"
 
-Oyuncu response kartlarını orta bölgedeki soru paneline bırakır.
+## 3.4 Rival Zone Amacı
 
-Bir soru:
+Rakip oyuncuyla aynı venture içinde büyür. Oyuncu rakibin:
 
-- 1 ana ihtiyaç etiketi ister
-- isteğe bağlı 1 destek etiketi isteyebilir
-- risk uyarısı taşıyabilir
-- çözülünce yeni temp effect ya da follow-up build ihtiyacı doğurabilir
+- hangi alt-slotları doldurduğunu,
+- kalite mi fiyat mı oynadığını,
+- agresif marketing mi premium kalite mi seçtiğini,
+- hangi krizden zarar gördüğünü
 
-## 4.5 Persistent Build Placement
-
-Oyuncu her tur 1 kalıcı build kartını işletme anchor'larından birine yerleştirir.
-
-Kalıcı build:
-
-- kapasite kurar,
-- yeni insan gücü ekler,
-- supplier zinciri tanımlar,
-- marketing altyapısı oluşturur,
-- sonraki turların soru çözme potansiyelini değiştirir.
-
-## 4.6 Resolve
-
-Resolve şu sırayla hesaplanır:
-
-1. aktif soru çözümleri
-2. operasyon ve staff etkisi
-3. supplier ve quality etkisi
-4. demand üretimi ve service kapasitesi
-5. reputation güncellemesi
-6. gelir/gider ve nakit sonucu
-7. risk ve gizli baskı birikimi
-8. market share kayması
-
-## 4.7 Customer Movement
-
-Resolve sonrası müşteriler fiziksel olarak hareket eder.
-
-- gri müşteriler nötr havuzdur
-- maviye dönenler o tur sana gelen müşteridir
-- kırmızıya dönenler rakibe giden müşteridir
-- sadık müşteriler gelecekte geri dönme eğilimi taşır
-
-## 4.8 Rival Response
-
-Rakip her tur görünür bir niyet ya da hamle üretir:
-
-- fiyat baskısı
-- personel transferi
-- agresif kampanya
-- daha hızlı servis
-- trust/reputation oyunu
-
-Oyuncu rakibin tam formülünü görmez, ama board'da baskısını hisseder.
-
-## 4.9 State Carryover
-
-Tur sonunda:
-
-- kalıcı build kartları board'da kalır
-- response kartları discard olur veya temp effect'e dönüşür
-- risk ve güven birikimleri taşınır
-- decision history'ye tur özeti düşer
+okuyabilmelidir.
 
 ---
 
-# 5. Soru Sistemi
+# 4. Ortak Slot Omurgası
 
-## 5.1 Soru Nedir
+## 4.1 Ana Slot Aileleri
 
-Soru, oyuncuya o tur "hangi problemi nasıl çözeceksin" diye soran ana oynanış birimidir.
+Tüm venture'lar aynı 5 ana slot ailesini kullanır:
 
-Soru bir kart metni değil, sahne içinde açılan karar panelidir.
+1. `Operation`
+2. `Staff`
+3. `Marketing`
+4. `Supplier`
+5. `Temp Effect`
 
-## 5.2 Soru Yapısı
+Bu ortak omurga teknik ve tasarım uyumu için sabittir.
 
-Her soru şu alanları taşır:
+## 4.2 Başlangıç Slot Sayıları
 
-- başlık
-- bağlam metni
-- ana ihtiyaç etiketi
-- opsiyonel destek etiketi
-- risk uyarısı
-- önerilen kart tipleri
-- follow-up ihtimali
+| Slot Türü | Başlangıç | Amaç |
+|---|---:|---|
+| Operation | 4 | Fiziksel veya çekirdek kapasite |
+| Staff | 5 | Operasyonu ayakta tutan ekip |
+| Marketing | 3 | Aynı anda yönetilen aktif büyüme baskısı |
+| Supplier | 2 | Kalite/maliyet kararları |
+| Temp Effect | 3 | Krizler, geçici trendler, geçici boost/penalty |
 
-## 5.3 Standart Etiketler
+Başlangıç toplamı: 17 slot
 
-Tüm venture'larda ortak kullanılan etiketler:
+## 4.3 Slot Felsefesi
 
-- Cash
-- Demand
-- Capacity
-- Quality
-- Staff
-- Speed
-- Risk
-- Reputation
-- Loyalty
-- Supply
+Oyuncu her şeyi aynı anda yapamaz. Bu sınırlama stratejiyi doğurur.
 
-## 5.4 Soru Sonuç Tipleri
+Slot baskısının ürettiği kararlar:
 
-Bir soru şu biçimlerde sonuçlanabilir:
+- Yeni masa mı eklemeliyim, yoksa yeni aşçı mı almalıyım?
+- Premium tedarik mi seçeyim, düşük maliyet mi?
+- Google Ads mi açayım, influencer mı alayım, broşür mü bastırayım?
+- Krizi hemen çözeyim mi, büyümeyi zorlayıp riski göze mi alayım?
 
-- temiz çözüldü
-- pahalı çözüldü
-- riskli çözüldü
-- kısmen çözüldü
-- görmezden gelindi
+## 4.4 Temp Effect Kuralı
 
-## 5.5 Soru Örnekleri
+Risk/illegal kartlar ve reaction kartları ayrı bir altıncı slot ailesi açmaz.
 
-- Öğle kalabalığı geliyor, yetişecek misin?
-- Tedarik gecikti, kaliteyi mi maliyeti mi koruyacaksın?
-- İlk yorumlar düşüyor, güveni nasıl toparlayacaksın?
-- Rakip iyi elemanını ayartıyor, maaşı mı sadakati mi artıracaksın?
+Onların çalışma mantığı:
 
-## 5.6 2 Questions + 1 Build Tempo Kuralı
+- bazıları tek atımlık karar olarak çözülür,
+- bazıları mevcut slotları etkiler,
+- bazıları `Temp Effect` slotuna düşerek birkaç tur baskı yaratır.
 
-Temel tempo kilidi:
+Bu sayede masa karmaşıklaşmaz ama risk hissi korunur.
 
-- 2 aktif soru
-- 1 kalıcı build hakkı
-- risk yükselirse ek reaksiyon sorusu
+## 4.5 Slot Genişlemesi
 
-Bu yapı oyuna hem yönetilebilirlik hem baskı sağlar.
+Slot büyümesi venture kimliğine göre yorumlanır ama ana mantık aynıdır:
+
+- Erken oyun: çekirdek işletme kurulur
+- Orta oyun: uzmanlaşma ve darboğaz açma
+- Geç oyun: şubeleşme, zincirleşme, ölçek
+
+Örnek genel açılım:
+
+- İlk büyük eşik: `Marketing +1`
+- İkinci büyük eşik: `Operation +2`, `Staff +2`
+- Üçüncü büyük eşik: `Supplier +1`, `Marketing +1`
 
 ---
 
-# 6. Kart Sistemi ve Yerleştirme Kuralları
+# 5. Venture'a Özel Alt-Slotlar
+
+## 5.1 Ortak Kural
+
+Her venture aynı `SlotType` omurgasını kullanır ama alt-slot isimleri ve kuralları farklıdır.
+
+Bu fark tasarımın çekirdeğidir: oyuncu her sektörde farklı işletme dili konuştuğunu hissetmelidir.
+
+## 5.2 Fast Food Alt-Slotları
+
+- Operation: Mutfak, Servis, Oturma, Delivery
+- Staff: Asci, Kasiyer, Kurye, Temizlik, Sube Muduru
+- Marketing: Brosur, Google, Sosyal Medya, Yemek App Kampanyasi
+- Supplier: Kasap, Manav, Ekmek/Firinci, Icecek Anlasmasi
+
+## 5.3 Cafe Alt-Slotları
+
+- Operation: Bar, Oturma, Takeaway, Vitrin/Pastane
+- Staff: Barista, Kasiyer, Floor Staff, Temizlik, Vardiya Sorumlusu
+- Marketing: Instagram, Reels, Loyalty, Google Maps
+- Supplier: Kahve, Sut, Tatli/Pastane, Ambiyans Is Ortakligi
+
+## 5.4 Tech App Alt-Slotları
+
+- Operation: Urun, Backend, Growth Pipeline, Support/Platform Ops
+- Staff: Developer, Designer, Growth, Support, Product Manager
+- Marketing: ASO, Performance Ads, Influencer, Community
+- Supplier: Cloud, Tooling, Payment/Analytics, API Partner
+
+## 5.5 Giyim Alt-Slotları
+
+- Operation: Vitrin, Raf/Stok, Kasa, Online Siparis
+- Staff: Satis Danismani, Kasiyer, Terzi, Depo, Mağaza Muduru
+- Marketing: Instagram, Influencer, Indirim, Shopping Ads
+- Supplier: Toptanci, Atolye, Kargo, Fotograf/Cekim Partneri
+
+## 5.6 Market / Bakkal Alt-Slotları
+
+- Operation: Raf, Taze Urun, Kasa, Mahalle Servis / WhatsApp
+- Staff: Kasiyer, Reyon, Taze Urun Sorumlusu, Kurye, Vardiya
+- Marketing: WhatsApp, Mahalle Afişi, Sadakat, Gece Acik
+- Supplier: Hal, Distribütör, Mandıra/Fırın, Icecek Partneri
+
+---
+
+# 6. Kart Aileleri ve Kart Akışı
 
 ## 6.1 Kart Aileleri
 
-### Persistent Build Cards
+Her venture kendi kart havuzunu aşağıdaki ailelerle kurar:
 
-- staff alımı
-- ekipman yatırımı
-- supplier anlaşması
-- kalıcı marketing altyapısı
+1. Kalıcı kurulum kartları
+2. Aktif büyüme kartları
+3. Risk / illegal kartları
+4. Reaksiyon / çözüm kartları
 
-Yerleşim:
+## 6.2 Kalıcı Kurulum Kartları
 
-- player business zone içindeki business anchor'larına gider
-- board'da kalır
+Bunlar işletmenin omurgasını kurar:
 
-### Decision Response Cards
+- dükkan
+- masa
+- espresso makinesi
+- backend upgrade
+- vitrin sistemi
+- buzdolabı
 
-- mesai
-- indirim
+Çoğu `Operation`, `Staff` veya `Supplier` slotuna bağlanır.
+
+## 6.3 Aktif Büyüme Kartları
+
+Bunlar demand ve visibility üretir:
+
+- broşür kampanyası
+- influencer
+- Google reklamı
+- ASO iyileştirmesi
+- indirim haftası
+- yemek platform anlaşması
+
+Çoğu `Marketing` slotunda kalır veya kısa süreli boost verir.
+
+## 6.4 Risk / Illegal Kartları
+
+Bunlar kısa vadeli güç sağlar ama orta vadede baskı üretir:
+
+- sahte yorum
+- sigortasız çalışan
+- vergi kaçırma
+- kalitesiz tedarik
+- fake specialty iddiası
+- store policy etrafından dolanma
+
+Bu kartlar `Legal Risk`, `Reputation`, `Staff Stability` veya `Temp Effect` baskısı oluşturur.
+
+## 6.5 Reaksiyon / Çözüm Kartları
+
+Bunlar kriz geldikten sonra toparlama araçlarıdır:
+
 - özür kampanyası
-- acil alım
-- fiyat ayarı
+- tedarikçi değişimi
+- acil işe alım
+- ustayı değiştirme
+- ücretsiz ikram
+- refund / hotfix / recall
 
-Yerleşim:
+## 6.6 Venture'a Göre Kart Dağıtımı
 
-- soru panelindeki drop alanına gider
-- bu tur çözülür
-- sonra discard olur veya temp effect'e dönüşür
+Kart akışı venture ve board state'e göre filtrelenir:
 
-### Risk / Opportunity Cards
+- Erken oyun: kurulum ve temel hayatta kalma
+- Orta oyun: uzmanlaşma, ilk krizler, rakibe cevap
+- Geç oyun: zincir, franchise, ölçek veya platform dominasyonu
 
-- denetim
-- influencer ziyareti
-- grev tehdidi
-- sahte yorum fırsatı
-- tedarik şoku
+## 6.7 Board-State Aware Çekme Mantığı
 
-Yerleşim:
+Kart sistemi tamamen rastgele olmamalıdır. Aşağıdaki baskılar kart havuzunu etkiler:
 
-- bazıları soru olarak açılır
-- bazıları temp effect strip'e düşer
-- bazıları kriz zinciri başlatır
-
-## 6.2 Kart Bilgi Yapısı
-
-Her kart şu tasarım alanlarıyla tanımlanır:
-
-- primary tags
-- secondary tags
-- cost
-- immediate effect
-- end-turn effect
-- persistence
-- delayed risk
-- venture affinity
-
-## 6.3 Business Anchor Mantığı
-
-Görselde klasik slot kutuları yoktur, ama sistemsel anchor mantığı vardır.
-
-Ana anchor aileleri:
-
-- Operation
-- Staff
-- Marketing
-- Supplier
-- Temp Effect
-
-Bunlar oyuncuya "slot" diye sunulmaz. İşletmenin gerçek parçaları olarak görünürler.
-
-## 6.4 Kart Seçim Felsefesi
-
-Kartlar iyi/kötü olarak değil, bağlama uygunluk üzerinden değerlenir.
-
-Bir kart:
-
-- ideal cevap olabilir,
-- yasal ama zayıf cevap olabilir,
-- çok güçlü ama tehlikeli cevap olabilir.
-
-Oyuncu bugünü kurtarıp yarını bozabilmelidir.
-
-## 6.5 Persistent vs Temporary State
-
-Kalıcı durum:
-
-- personel
-- ekipman
-- supplier
-- uzun ömürlü marketing altyapısı
-
-Geçici durum:
-
-- mesai baskısı
-- denetim hazırlığı
-- kampanya etkisi
-- kısa süreli şikayet baskısı
+- Capacity demand'in gerisinde kaldıysa toparlayıcı operasyon/staff kartları
+- Rating düştüyse çözüm kartları
+- Legal Risk arttıysa denetim ve savunma kartları
+- Supplier zayıfsa kalite veya maliyet baskılı anlaşmalar
 
 ---
 
-# 7. Ekonomi ve Pazar Simülasyonu
+# 7. Ortak Stat Sistemi
 
-## 7.1 Görünür Ana Metrikler
+## 7.1 Ana Statlar
 
-- Cash
-- Customer Pull
-- Service Capacity
-- Product / Service Quality
-- Reputation
-- Staff Stability
-- Legal / Operational Risk
-- Market Share
+Her venture şu ana statları kullanır:
 
-## 7.2 Venture-Specific Destek Metrikleri
+- `Cash`
+- `Demand`
+- `Capacity`
+- `Quality`
+- `Reputation/Rating`
+- `Staff Stability`
+- `Legal Risk`
+- `Market Share`
 
-### Fast Food / Cafe
+## 7.2 Stat Anlamları
 
-- ingredient quality
-- hygiene
-- service speed
+### Cash
 
-### Tech App
+Anlık büyüme hızı ve kriz çözme kapasitesidir.
 
-- product stability
-- churn
-- server load
+### Demand
 
-### Giyim
+Gelen müşteri veya kullanıcı isteğidir. Marketing, word of mouth ve rating ile yükselir.
 
-- stock freshness
-- seasonal fit
-- return pressure
+### Capacity
 
-### Market / Bakkal
+Talebi gerçekten karşılayabilme gücüdür. Operation ve Staff ile oluşur.
 
-- spoilage pressure
-- shelf health
-- local credit load
+### Quality
 
-## 7.3 Gizli Birikim Baskıları
+Ürün ya da hizmet kalitesidir. Supplier, staff seviyesi ve altyapı ile belirlenir.
 
-- burnout buildup
-- review instability
-- inspection readiness
-- supplier reliability drift
-- rival pressure bank
+### Reputation / Rating
 
-## 7.4 Temel Ekonomi Akışı
+Müşterinin seni dışarıdan nasıl gördüğüdür. Google yıldızı, app store skoru, yorum algısı ve sosyal proof bunun yüzüdür.
 
-Ekonomi şuna göre çözülür:
+### Staff Stability
 
-`Pull x Trust x Capacity Fit x Quality`
+Ekibin ne kadar sağlıklı çalıştığını gösterir. Fazla mesai, maaş baskısı ve yetersiz kadro bunu düşürür.
 
-Yüksek talep tek başına kazandırmaz.
+### Legal Risk
 
-Kazanç için:
+Kısa yol kullanmanın zamanla biriken cezasıdır.
 
-- müşteriyi çekmek,
-- gelen müşteriye yetişmek,
-- kaliteyi korumak,
-- güveni sürdürülebilir tutmak gerekir.
+### Market Share
 
-## 7.5 Oyunun Gerçek Gerginliği
+Kazanmaya en yakın ana metriktir. Talep çekmek yetmez; o talebi sürdürülebilir şekilde elde tutmak gerekir.
 
-Ana baskılar:
+## 7.3 Türetilmiş Kurallar
 
-- oyuncu tüm soruları aynı anda iyi çözemez
-- kısa vadeli çözümler uzun vadeli borç veya risk yaratır
-- kalıcı büyüme nakit ve maaş baskısı doğurur
-- rakip zayıf alanına saldırır
-- müşteri kazanımı geri çevrilebilir
+Ana zincir kuralı:
 
----
+```text
+Demand > Capacity
+→ servis/teslim gecikir
+→ memnuniyet düşer
+→ rating düşer
+→ organik demand düşer
+→ rakip market share çalar
+```
 
-# 8. Müşteri Akışı ve Market Share Görselleştirmesi
+Kalite zinciri:
 
-## 8.1 Müşteri Akışı Ana Feedback'tir
+```text
+Supplier + Staff + Operation
+→ Quality
+→ memnuniyet
+→ review/rating
+→ organik büyüme
+```
 
-Oyunun en önemli sahne geri bildirimi müşteri hareketidir.
+Risk zinciri:
 
-Oyuncu kararının sonucu:
-
-- sayıyla,
-- panel raporuyla,
-- sahne hareketiyle
-
-aynı anda okunmalıdır.
-
-## 8.2 Müşteri Grupları
-
-- nötr gri müşteri
-- oyuncuya kayan mavi müşteri
-- rakibe kayan kırmızı müşteri
-- sadık müşteri
-- kararsız müşteri
-
-## 8.3 Market Share Kuralı
-
-Market share her tur yeniden tartılır.
-
-Milestone turlar büyük kırılma üretir ama günlük çekişmeyi iptal etmez.
-
-## 8.4 Neden Bu Sistem Eğlencelidir
-
-- oyuncu sayısal üstünlüğü gözle görür
-- rakibin baskısı sahnede okunur
-- kart kararları hemen sonuç üretir
-- board statik kalmaz
+```text
+Illegal kısa yol
+→ Legal Risk
+→ denetim veya skandal
+→ Reputation kaybı / para cezası / temp effect
+```
 
 ---
 
-# 9. Rakip Tasarımı
+# 8. Venture'a Özel Türetilmiş Metrikler
 
-## 9.1 Sabit Kural
+## 8.1 Fast Food ve Cafe
 
-Rakip aynı venture ile oynar ve aynı müşteri havuzu için savaşır.
+- Malzeme Kalitesi
+- Servis Hizi
+- Hijyen
+- Google Puani
 
-## 9.2 Rakibin Rolü
+## 8.2 Tech App
 
-Rakip yalnızca sayı rakibi değildir. Rakip:
+- App Stability
+- Store Rating
+- Churn
+- Infra Cost
 
-- oyuncunun zayıf tarafını cezalandırır,
-- müşteriyi çalar,
-- personel transfer etmeye çalışır,
-- riskten faydalanır,
-- baskı yaratır ama tüm iç planını açmaz.
+## 8.3 Giyim Magazasi
 
-## 9.3 Rakip Davranış Aileleri
+- Stok Sagligi
+- Sezon Uyumu
+- Iade Baskisi
+- Vitrin Cekiciligi
 
-- aggressive
-- conservative
-- balanced
-- opportunist
+## 8.4 Market / Bakkal
 
-## 9.4 Rakip Nasıl Gösterilir
+- Fire
+- SKT Baskisi
+- Veresiye Riski
+- Mahalle Sadakati
 
-- üst bölgedeki işletme durumu
-- görünür kampanya ve baskı ikonları
-- kısa hamle bildirimi
-- müşteri akışındaki kırmızı hareket
-
----
-
-# 10. Oyun Aşamaları
-
-## 10.1 Opening
-
-Amaç:
-
-- minimum operasyonu kurmak
-- ilk güveni kazanmak
-- ilk müşteri akışını başlatmak
-
-Soru tipi:
-
-- fark edilme
-- yetişme
-- ilk ekip seçimi
-
-## 10.2 Stabilization
-
-Amaç:
-
-- staff, supply ve review dengesini kurmak
-- ilk darboğazları çözmek
-
-Soru tipi:
-
-- kalite mi maliyet mi
-- hız mı güven mi
-- maaş mı büyüme mi
-
-## 10.3 Escalation
-
-Amaç:
-
-- rakibin baskısını yönetmek
-- birden çok sistem çarpışmasını taşımak
-
-Soru tipi:
-
-- poaching
-- kötü yorum dalgası
-- tedarik arızası
-- kapasite kırılması
-
-## 10.4 Expansion / Domination
-
-Amaç:
-
-- makineleşmiş bir işletme yönetmek
-- karmaşıklık artarken güveni korumak
-- şubeleşme veya baskın pazar hakimiyeti kurmak
-
-Soru tipi:
-
-- ikinci şube baskısı
-- marka itibarı krizi
-- yasal denetim zinciri
-- aşırı büyümenin yan etkileri
+Bu metrikler ana statlardan türetilir; oyuncunun önüne ikinci bir karmaşık ekonomi sayfası olarak değil, karar sonuçlarını okunur hale getiren sektör lensi olarak çıkmalıdır.
 
 ---
 
-# 11. Venture Adaptation Framework
+# 9. Tur Akışı
 
-## 11.1 Tüm Venture'lar İçin Ortak Çatı
+## 9.1 Fazlar
 
-Her venture aynı üst döngüyü kullanır:
+Her tur aşağıdaki sırayla oynanır:
 
-- 3-zone board
-- 2 questions + 1 build
-- customer movement
-- persistent anchors
-- readable deep sim
+1. Draw
+2. Planning
+3. Play
+4. Resolve
+5. Crisis / Reaction
+6. Rival
+7. End of Turn Market Update
 
-## 11.2 Venture'ların Değiştirdiği Alanlar
+## 9.2 Draw
 
-- soru aileleri
-- support metric'ler
-- pressure map
-- kart havuzu
-- rival davranış önceliği
-- müşteri kazanım mantığının tonu
+Oyuncu mevcut venture, board state ve oyun evresine göre kart çeker.
 
-## 11.3 Venture Identity Kuralları
+## 9.3 Planning
 
-Venture farkı kozmetik değildir.
+Oyuncu darboğazı okur:
 
-Her venture:
+- Demand mi eksik?
+- Capacity mi eksik?
+- Rating mi düşüyor?
+- Supplier tarafı mı zayıf?
+- Staff Stability mi kırılıyor?
 
-- farklı bir baskı eğrisi,
-- farklı soru dili,
-- farklı kalıcı anchor önceliği,
-- farklı risk yapısı üretmelidir.
+## 9.4 Play
+
+Oyuncu sınırlı sayıda aksiyonla kartları oynar:
+
+- Slota yerleştirir
+- Var olan slotu upgrade eder
+- Anlık kart çözer
+- Krize cevap verir
+
+## 9.5 Resolve
+
+Sistem şu sırayla hesaplanır:
+
+1. Operation ve Staff kapasitesi
+2. Supplier etkileri
+3. Marketing görünürlüğü ve demand üretimi
+4. Quality ve service sonucu
+5. Rating / reputation güncellemesi
+6. Cash gelir/gider hesabı
+7. Market share kayması
+
+## 9.6 Crisis / Reaction
+
+Kriz kartları iki kaynaktan gelir:
+
+- venture bazlı global olaylar
+- oyuncunun kendi kararlarının tetiklediği olaylar
+
+Örnek:
+
+- düşük kalite + yüksek demand = kötü yorum patlaması
+- sigortasız çalışan + yüksek denetim baskısı = ceza
+- ucuz tedarik + sıcak hava = hijyen sorunu
+
+## 9.7 Rival
+
+Rakip aynı venture üzerinden karar verir. Oyuncunun seçtiği stratejiye göre cevap üretir:
+
+- fiyat savaşı
+- kalite yükseltme
+- marketing baskısı
+- staff poach
+- itibar saldırısı
 
 ---
 
-# 12. UI/UX Okunabilirliği ve Geçmiş Panelleri
+# 10. Ekonomi Döngüsü ve Kriz Çözümü
 
-## 12.1 Decision History and Turn Memory
+## 10.1 Temel Ekonomi Döngüsü
 
-Oyuncu şu soruların cevabını her an alabilmelidir:
+```text
+Kurulum
+→ talep yaratma
+→ talebi taşıyacak kapasite kurma
+→ kalite ve rating'i koruma
+→ market share büyütme
+→ yeni slot / yeni ölçek
+```
 
-- bu tur ne seçtim?
-- hangi etkiler hala aktif?
-- geçen tur neden müşteri kaybettim?
-- rakip son ne yaptı?
+## 10.2 Oyunun Gerçek Gerginliği
 
-## 12.2 Zorunlu Geçmiş Katmanları
+Oyuncu genelde üç problemden biriyle uğraşır:
 
-### Current Turn Queue
+1. Talep yokluğu
+2. Talebi taşıyamama
+3. Kısa yol yüzünden büyürken çürüme
 
-Bu tur commit edilen kartlar görünür.
+## 10.3 Kriz Çözme Felsefesi
 
-### Last Turn Report
+Her kriz en az iki çözüm yolu vermelidir:
 
-Bir önceki turun:
+- ucuz ama riskli
+- pahalı ama temiz
 
-- müşteri farkı
-- nakit sonucu
-- reputation etkisi
-- risk artışı
+Fast food örneği:
 
-özetlenir.
+- Google yorum satın al
+- daha kaliteli et ve yeni usta ile kalıcı çözüm kur
 
-### Decision Ledger
+Tech örneği:
 
-Son 3-5 turun karar hafızası tutulur.
+- sahte review ve paid traffic ile şişir
+- hotfix, support yatırımı ve crash azaltımı yap
 
-## 12.3 Okunabilirlik Kuralı
+## 10.4 Toparlanma Hissi
 
-Oyuncu battığında "neden battığını" anlayabilmelidir.
-
-Bu oyun cezayı gizleyerek değil, sebep-sonuç zincirini görünür kılarak zor olmalıdır.
+Kriz kartları oyunu bitiren cezalar değil, oyuncuyu yön zorlayan dönemeçler olmalıdır. Oyuncu doğru toparlarsa daha güçlü dönebilmelidir.
 
 ---
 
-# 13. Kazanma ve Kaybetme Koşulları
+# 11. Fast Food Referans Akışı
 
-## 13.1 Ana Kazanma Hissi
+Fast food venture v4 tasarımının referans örneğidir.
 
-- market share üstünlüğü
-- mahallede açık baskınlık
-- daha sağlıklı işletme makinesi
-- rakibi stratejik olarak sıkıştırma
+## 11.1 Erken Oyun Örneği
 
-## 13.2 Kaybetme Hissi
+Başlangıç:
 
-- nakit çöküşü
-- trust / reputation çöküşü
-- kapasite yetişememe zinciri
-- staff dağılması
-- yasal riskin cezaya dönüşmesi
-- rakibin müşteriyi kalıcı biçimde ele geçirmesi
+- küçük dükkan
+- sınırlı cash
+- düşük Google puanı
+- temel mutfak
+
+İlk kararlar:
+
+- dükkan satın al
+- masa ekle
+- usta işe al
+- kasap ve manav bul
+- Google işletme profili aç
+
+## 11.2 İlk Büyüme Kararları
+
+- broşür bastır
+- ışıklarda broşür dağıtacak eleman tut
+- yemek uygulamasıyla anlaş
+- paket servisi aç
+- sosyal medya reklamı ver
+
+## 11.3 Baskı Noktaları
+
+- talep artar ama mutfak yetişmez
+- servis yavaşlar
+- yorumlar düşer
+- puan 4.4'ten 3.9'a iner
+- organik müşteri kesilir
+
+## 11.4 Kriz Sonrası Seçim Örnekleri
+
+- sahte yorum satın al: hızlı düzeltme, ban riski
+- kaliteli et anlaşması yap: pahalı ama kalıcı kalite artışı
+- ustayı değiştir: staff yatırımı
+- ücretsiz tatlı veya özür kampanyası yap: itibar toparlama
+
+## 11.5 Fast Food'un Kimliği
+
+Fast food venture yüksek tempo ve kapasite yönetimi venture'ıdır. Yanlış marketing ile en hızlı patlayan, doğru denge ile de en hızlı büyüyen sektördür.
+
+---
+
+# 12. Rakip Sistemi
+
+## 12.1 Aynı Venture Rakip Kuralı
+
+Rakip oyuncuyla aynı venture'da olduğu için adil ama baskılı bir yarış kurulur.
+
+## 12.2 Rakip Davranış Aileleri
+
+Rakip aşağıdaki stratejiler arasında döner:
+
+- Agresif marketing
+- Premium kalite
+- Ucuz genişleme
+- Defansif stabilizasyon
+- Riskli kısa yol
+
+## 12.3 Venture Bazlı Baskı Örnekleri
+
+- Fast food: fiyat kırma, yorum savaşı, kurye baskısı
+- Cafe: barista çalma, ambiyans savaşı, Google Maps üstünlüğü
+- Tech: CAC yarışı, store rating savaşı, feature velocity baskısı
+- Giyim: indirim savaşı, vitrin savaşı, influencer yarışı
+- Market: fiyat baskısı, gece açık kalma farkı, WhatsApp sadakati
+
+## 12.4 Görünürlük Kuralı
+
+Rakip tüm detaylarıyla açık olmayabilir; ama oyuncu onun hangi yönde büyüdüğünü okuyabilmelidir.
+
+---
+
+# 13. Kazanma Yapısı
+
+## 13.1 Ana Hedef
+
+Kazanma yapısı kısa run 1v1 aynı-sektör market domination olarak kalır.
+
+Varsayılan hedef:
+
+- 25 tur içinde market share üstünlüğü kurmak
+- belirli eşik: `%60 market share`
+
+## 13.2 Alternatif Başarı Hissi
+
+Run bitse bile skor şu eksenlerde okunur:
+
+- market share
+- final cash
+- rating
+- çözülen kriz sayısı
+- ulaşılan ölçek seviyesi
 
 ## 13.3 Kaybetme Şartları
 
 - iflas
-- kritik güven çöküşü
-- belirli süre toparlanamayan operasyon iflası
-- milestone hedeflerinin sürekli kaçırılması
+- itibarın geri dönülemez çökmesi
+- ağır legal darbe
+- rakibin sektör içinde ezici dominasyonu
 
 ---
 
-# 14. Playtest Senaryoları
+# 14. İçerik Katmanları
 
-## 14.1 Fast Food Turn 1
+## 14.1 Ana GDD
 
-- oyuncu 2 basit soru görür
-- 1 build ve 1 response oynar
-- tur sonunda müşteriler bölünür
+Bu dosya global kuralları anlatır.
 
-## 14.2 Fast Food Turn 2
+## 14.2 Venture Dokümanları
 
-- kısa vadeli çözüm burnout ya da hijyen riski üretir
-- oyuncu bunun nedenini raporda anlar
+Her venture dosyası şunları içerir:
 
-## 14.3 Cafe Reputation Loop
+- venture kimliği
+- başlangıç board'u
+- alt-slot yapısı
+- kart aileleri
+- kriz havuzu
+- erken/orta/geç oyun stratejileri
 
-- yavaş ama güvenli büyüme müşteri sadakati yaratır
-- hızlı büyüme kadar patlayıcı olmayan ama daha dirençli bir akış verir
+## 14.3 Teknik Eşleme
 
-## 14.4 Tech App Service Failure
+Doküman kurallarının koda nasıl taşınacağı şu dosyada tutulur:
 
-- fiziksel olmayan venture bile aynı board gramerine oturur
-- orta bölgedeki kullanıcı akışı ile pazar baskısı okunur
-
-## 14.5 Rival Counterplay
-
-- rakip oyuncunun açık verdiği metriğe yüklenir
-- bu baskı sahnede görünür
-
-## 14.6 History Readability
-
-- oyuncu son 3 turda ne yaptığını okuyabilir
-- aktif durum ile geçmiş karar ayrımı nettir
+- `Assets/steam-card-game-gdd/TECHNICAL_MAPPING.md`
 
 ---
 
-# 15. MVP ve Genişleme Önceliği
+# 15. Kabul Kriterleri
 
-## 15.1 MVP Önceliği
+## 15.1 Doküman Kriterleri
 
-- 3-zone live board
-- 2 questions + 1 build tempo
-- müşteri hareketi
-- decision history
-- visible rival pressure
-- Fast Food referans denge
+- Ana GDD tek başına oyunun temel döngüsünü anlatır.
+- 5 venture dosyasının her biri başlangıç board'u, kart akışı, krizleri ve büyüme yolunu içerir.
+- Her venture için en az bir erken, bir orta ve bir geç oyun build örneği vardır.
 
-## 15.2 Faz 1 Venture'ları
+## 15.2 Sistem Kriterleri
 
-- Fast Food
-- Cafe
-- Market / Bakkal
+- Oyuncu venture seçince rakip aynı venture ile eşleşir.
+- Kart çekimi venture ve board state ile ilişkili çalışır.
+- Marketing operasyonu aşarsa rating baskısı doğar.
+- Supplier ve staff kararları quality ve memnuniyet zinciri üretir.
+- Rating artışı organik talep üretir.
+- Rating düşüşü kriz ve çözüm kartlarını tetikler.
 
-## 15.3 Faz 2 Venture'ları
+## 15.3 Playtest Senaryoları
 
-- Tech App
-- Giyim Magazası
-
-## 15.4 Genişleme Mantığı
-
-Yeni içerik yeni kart eklemekten önce:
-
-- yeni soru aileleri,
-- yeni pressure map'ler,
-- yeni müşteri davranışları,
-- yeni rival baskıları
-
-üretmelidir.
+- Fast food: agresif marketing, zayıf mutfak, yorum çöküşü
+- Cafe: küçük ama premium kalite build'i
+- Tech: düşük erken gelir, yüksek geç ölçek
+- Giyim: yanlış sezon stok baskısı
+- Market: düşük marj, stabil trafik, veresiye riski
 
 ---
 
-# 16. Kabul Kriterleri
+# 16. MVP Önceliği
 
-## 16.1 Bu GDD'nin Doğru Çalıştığını Nasıl Anlarız
+## 16.1 Tasarım Önceliği
 
-- oyun visible slot filling hissi vermiyorsa
-- board yaşayan bir sistem gibi davranıyorsa
-- kartların nereye gittiği netse
-- ekonomi baskısı sade ama ciddi hissediliyorsa
-- venture'lar aynı loop içinde farklı kimlik taşıyorsa
-- müşteri akışı kararların ana sonucu olarak okunuyorsa
+MVP'de amaç tüm venture'ları aynı derinlikte bitirmek değil; aynı sistem diliyle oynanabilir hale getirmektir.
 
-Bu doküman amacına ulaşmıştır.
+Öncelik sırası:
+
+1. Venture seçimi
+2. Aynı venture rakip
+3. Ortak slot omurgası
+4. Venture bazlı kart havuzu
+5. Rating, quality, capacity zinciri
+6. Venture bazlı krizler
+
+## 16.2 Referans Venture
+
+Fast food, sistemin okunabilirliğini test etmek için referans venture'dır. Diğer venture'lar aynı şablonla ama kendi ekonomik kimliğiyle uygulanır.
+
+---
+
+# 17. Uygulama Notu
+
+Bu GDD sürümü kodu anlatan bir teknik taslak değil; tasarımın nihai omurgasıdır. Veri modeli, UI ve rival AI eşlemesi `TECHNICAL_MAPPING.md` içinde karar seviyesinde tanımlanır.

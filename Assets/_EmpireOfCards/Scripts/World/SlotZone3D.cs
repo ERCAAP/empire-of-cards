@@ -9,7 +9,7 @@ using EmpireOfCards.Presentation;
 namespace EmpireOfCards.World
 {
     [RequireComponent(typeof(BoxCollider))]
-    public class SlotZone3D : MonoBehaviour, IDropZoneVisual3D
+    public class SlotZone3D : MonoBehaviour
     {
         [SerializeField] private DropZoneType zoneType;
         [SerializeField] private int slotIndex;

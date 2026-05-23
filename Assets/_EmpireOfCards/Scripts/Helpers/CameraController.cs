@@ -1,15 +1,14 @@
 using UnityEngine;
 using Unity.Cinemachine;
 using EmpireOfCards.Core;
-using EmpireOfCards.Data;
-using EmpireOfCards.World;
 
 namespace EmpireOfCards.Helpers
 {
     /// <summary>
     /// Camera controller with Cinemachine-based phase transitions and screen shake.
     /// Attach to the main camera GameObject.
-    /// Creates a CinemachineBrain on the camera and switches board states through EventBus focus events.
+    /// Creates a CinemachineBrain on the camera and spawns three virtual cameras
+    /// (Play, Resolve, Rival) that switch automatically via EventBus phase events.
     /// </summary>
     public class CameraController : MonoBehaviour
     {
@@ -20,13 +19,10 @@ namespace EmpireOfCards.Helpers
         private Vector3 originalPosition;
         private float shakeTimer;
 
-        private CinemachineCamera overviewCamera;
-        private CinemachineCamera questionFocusCamera;
+        // Cinemachine virtual cameras for each game phase
+        private CinemachineCamera playCamera;
         private CinemachineCamera resolveCamera;
-        private CinemachineCamera rivalPressureCamera;
-        private CinemachineCamera ventureIntroCamera;
-        private BoardCameraState currentState = BoardCameraState.Overview;
-        private bool questionFocusActive;
+        private CinemachineCamera rivalCamera;
 
         private void Awake()
         {
@@ -38,15 +34,11 @@ namespace EmpireOfCards.Helpers
         private void OnEnable()
         {
             EventBus.OnPhaseStarted += HandlePhaseStarted;
-            EventBus.OnQuestionFocusRequested += HandleQuestionFocusRequested;
-            EventBus.OnQuestionFocusReleased += HandleQuestionFocusReleased;
         }
 
         private void OnDisable()
         {
             EventBus.OnPhaseStarted -= HandlePhaseStarted;
-            EventBus.OnQuestionFocusRequested -= HandleQuestionFocusRequested;
-            EventBus.OnQuestionFocusReleased -= HandleQuestionFocusReleased;
         }
 
         private void Update()
@@ -114,23 +106,17 @@ namespace EmpireOfCards.Helpers
         }
 
         /// <summary>
-        /// Spawns the board-state cameras. Overview starts active; focus states are event-driven.
+        /// Spawns three virtual cameras for Play, Resolve, and Rival phases.
+        /// Only PlayCamera starts at priority 10 (active); others begin at 0.
         /// </summary>
         private void CreateVirtualCameras()
         {
-            overviewCamera = CreateVCam(
-                "OverviewCamera",
+            playCamera = CreateVCam(
+                "PlayCamera",
                 new Vector3(0f, 16.6f, -4.6f),
                 new Vector3(0f, 0f, 1.7f),
                 40f,
                 10);
-
-            questionFocusCamera = CreateVCam(
-                "QuestionFocusCamera",
-                new Vector3(0f, 15.2f, -2.8f),
-                new Vector3(0f, 0f, 2.55f),
-                34f,
-                0);
 
             resolveCamera = CreateVCam(
                 "ResolveCamera",
@@ -139,18 +125,11 @@ namespace EmpireOfCards.Helpers
                 37f,
                 0);
 
-            rivalPressureCamera = CreateVCam(
-                "RivalPressureCamera",
+            rivalCamera = CreateVCam(
+                "RivalCamera",
                 new Vector3(0f, 16.9f, -2.7f),
                 new Vector3(0f, 0f, 4.8f),
                 38.5f,
-                0);
-
-            ventureIntroCamera = CreateVCam(
-                "VentureIntroCamera",
-                new Vector3(0f, 18.8f, -7.3f),
-                new Vector3(0f, 0f, 1.0f),
-                42f,
                 0);
         }
 
@@ -185,41 +164,6 @@ namespace EmpireOfCards.Helpers
             return vcam;
         }
 
-        public void ApplyStage(BoardStageAuthoring stage)
-        {
-            if (stage == null)
-                return;
-
-            stage.EnsureLayout();
-            ApplyPose(overviewCamera, stage.OverviewCameraPose, new Vector3(0f, 16.6f, -4.6f), new Vector3(0f, 0f, 1.7f), 40f);
-            ApplyPose(questionFocusCamera, stage.QuestionCameraPose, new Vector3(0f, 15.2f, -2.8f), new Vector3(0f, 0f, 2.55f), 34f);
-            ApplyPose(resolveCamera, stage.ResolveCameraPose, new Vector3(0f, 16.0f, -4.0f), new Vector3(0f, 0f, 2.0f), 37f);
-            ApplyPose(rivalPressureCamera, stage.RivalCameraPose, new Vector3(0f, 16.9f, -2.7f), new Vector3(0f, 0f, 4.8f), 38.5f);
-            ApplyPose(ventureIntroCamera, stage.IntroCameraPose, new Vector3(0f, 18.8f, -7.3f), new Vector3(0f, 0f, 1.0f), 42f);
-            ActivateCameraState(currentState);
-        }
-
-        private static void ApplyPose(CinemachineCamera vcam, Transform pose, Vector3 fallbackPosition, Vector3 fallbackLookAt, float fov)
-        {
-            if (vcam == null)
-                return;
-
-            if (pose != null)
-            {
-                vcam.transform.position = pose.position;
-                vcam.transform.rotation = pose.rotation;
-            }
-            else
-            {
-                vcam.transform.position = fallbackPosition;
-                vcam.transform.LookAt(fallbackLookAt);
-            }
-
-            var lens = vcam.Lens;
-            lens.FieldOfView = fov;
-            vcam.Lens = lens;
-        }
-
         // ==============================================================
         //  Phase Camera Switching
         // ==============================================================
@@ -232,69 +176,31 @@ namespace EmpireOfCards.Helpers
         {
             switch (phase)
             {
+                case TurnPhase.PlayPhase:
+                    ActivateCamera(playCamera);
+                    break;
                 case TurnPhase.ResolvePhase:
-                    questionFocusActive = false;
-                    ActivateCameraState(BoardCameraState.Resolve);
+                    ActivateCamera(resolveCamera);
                     break;
                 case TurnPhase.RivalPhase:
-                    questionFocusActive = false;
-                    ActivateCameraState(BoardCameraState.RivalPressure);
-                    break;
-                case TurnPhase.MarketUpdatePhase:
-                    questionFocusActive = false;
-                    ActivateCameraState(BoardCameraState.Overview);
-                    break;
-                case TurnPhase.DrawPhase:
-                case TurnPhase.PlanningPhase:
-                case TurnPhase.PlayPhase:
-                    if (!questionFocusActive)
-                        ActivateCameraState(BoardCameraState.Overview);
+                    ActivateCamera(rivalCamera);
                     break;
                 default:
-                    if (!questionFocusActive)
-                        ActivateCameraState(BoardCameraState.Overview);
+                    // DrawPhase, PlanningPhase, CrisisReactionPhase, MarketUpdatePhase, or any other -> default overview
+                    ActivateCamera(playCamera);
                     break;
             }
         }
 
-        private void HandleQuestionFocusRequested(CameraFocusRequest request)
+        /// <summary>
+        /// Sets the target camera to priority 10 and all others to 0.
+        /// The CinemachineBrain will blend to the highest-priority camera.
+        /// </summary>
+        private void ActivateCamera(CinemachineCamera target)
         {
-            BoardCameraState nextState = request != null ? request.state : BoardCameraState.QuestionFocus;
-            questionFocusActive = nextState == BoardCameraState.QuestionFocus;
-            ActivateCameraState(nextState);
-        }
-
-        private void HandleQuestionFocusReleased()
-        {
-            questionFocusActive = false;
-            ActivateCameraState(BoardCameraState.Overview);
-        }
-
-        private void ActivateCameraState(BoardCameraState state)
-        {
-            currentState = state;
-            CinemachineCamera target = state switch
-            {
-                BoardCameraState.QuestionFocus => questionFocusCamera,
-                BoardCameraState.Resolve => resolveCamera,
-                BoardCameraState.RivalPressure => rivalPressureCamera,
-                BoardCameraState.VentureIntro => ventureIntroCamera,
-                _ => overviewCamera
-            };
-
-            SetPriority(overviewCamera, target);
-            SetPriority(questionFocusCamera, target);
-            SetPriority(resolveCamera, target);
-            SetPriority(rivalPressureCamera, target);
-            SetPriority(ventureIntroCamera, target);
-        }
-
-        private static void SetPriority(CinemachineCamera camera, CinemachineCamera active)
-        {
-            if (camera == null)
-                return;
-
-            camera.Priority = new PrioritySettings { Value = camera == active ? 10 : 0 };
+            playCamera.Priority = new PrioritySettings { Value = target == playCamera ? 10 : 0 };
+            resolveCamera.Priority = new PrioritySettings { Value = target == resolveCamera ? 10 : 0 };
+            rivalCamera.Priority = new PrioritySettings { Value = target == rivalCamera ? 10 : 0 };
         }
     }
 }

@@ -36,9 +36,6 @@ namespace EmpireOfCards.Core
         [SerializeField] private int rivalMarketBlocks;
         [SerializeField] private float fbiRisk;
 
-        [Header("=== Turn Placement Budget ===")]
-        [SerializeField] private int persistentBuildsPlayedThisTurn;
-
         [Header("=== Balance Data ===")]
         [SerializeField] private GameBalanceData balanceData;
 
@@ -47,9 +44,6 @@ namespace EmpireOfCards.Core
         [SerializeField] private EconomyManager economyManager;
         [SerializeField] private DeckManager deckManager;
         [SerializeField] private BoardManager boardManager;
-        [SerializeField] private QuestionManager questionManager;
-        [SerializeField] private DecisionHistoryManager decisionHistoryManager;
-        [SerializeField] private CustomerFlowManager customerFlowManager;
         [SerializeField] private MarketShareVisualizer marketShareVisualizer;
         [SerializeField] private RivalAI rivalAI;
         [SerializeField] private ShopManager shopManager;
@@ -87,8 +81,6 @@ namespace EmpireOfCards.Core
         public int RivalCustomers => rivalCustomers;
         public int PlayerMarketBlocks => playerMarketBlocks;
         public int RivalMarketBlocks => rivalMarketBlocks;
-        public int PersistentBuildsPlayedThisTurn => persistentBuildsPlayedThisTurn;
-        public bool CanPlacePersistentBuildThisTurn => persistentBuildsPlayedThisTurn < Constants.PERSISTENT_BUILDS_PER_TURN;
 
         // --- Backward-compat: callers can migrate to Resources.X at their own pace ---
         public int PlayerMoney => resources.Money;
@@ -102,9 +94,6 @@ namespace EmpireOfCards.Core
         public EconomyManager EconomyManager => economyManager;
         public DeckManager DeckManager => deckManager;
         public BoardManager BoardManager => boardManager;
-        public QuestionManager QuestionManager => questionManager;
-        public DecisionHistoryManager DecisionHistoryManager => decisionHistoryManager;
-        public CustomerFlowManager CustomerFlowManager => customerFlowManager;
         public MarketShareVisualizer MarketShareVisualizer => marketShareVisualizer;
         public RivalAI RivalAI => rivalAI;
         public ShopManager ShopManager => shopManager;
@@ -165,9 +154,15 @@ namespace EmpireOfCards.Core
             RefreshActiveVentureRuntime();
         }
 
+        /// <summary>
+        /// Assigns all manager dependencies without reflection.
+        /// Called by WiringService during bootstrap.
+        /// </summary>
+        [Obsolete("Use MarketShareVisualizer. TerritoryManager is compatibility-only.")]
+        public TerritoryManager TerritoryManager => marketShareVisualizer as TerritoryManager;
+
         public void Init(GameBalanceData balance, TurnManager tm,
             EconomyManager em, DeckManager dm, BoardManager bm,
-            QuestionManager qm, DecisionHistoryManager dhm, CustomerFlowManager cfm,
             MarketShareVisualizer marketVisualizer, RivalAI ai, ShopManager shop,
             UIManager ui, AudioManager audio, VFXManager vfx, SaveManager save,
             SlotManager sm, StaffStateSystem sss, ChainReactionSystem crs)
@@ -177,9 +172,6 @@ namespace EmpireOfCards.Core
             this.economyManager = em;
             this.deckManager = dm;
             this.boardManager = bm;
-            this.questionManager = qm;
-            this.decisionHistoryManager = dhm;
-            this.customerFlowManager = cfm;
             this.marketShareVisualizer = marketVisualizer;
             this.rivalAI = ai;
             this.shopManager = shop;
@@ -241,16 +233,10 @@ namespace EmpireOfCards.Core
         public void StartNextTurn()
         {
             currentTurn++;
-            persistentBuildsPlayedThisTurn = 0;
             activeVentureRuntime?.OnTurnStarted(currentTurn);
             EventBus.TurnStarted(currentTurn);
             if (economyManager != null)
                 economyManager.GenerateTurnBrief(currentTurn);
-            if (questionManager != null)
-            {
-                BoardPressureType pressure = economyManager != null ? economyManager.CurrentPressure : BoardPressureType.None;
-                questionManager.BeginTurnQuestions(currentTurn, selectedVenture != null ? selectedVenture.ventureType : VentureType.FastFood, pressure, economyManager != null ? economyManager.CurrentBrief : null);
-            }
 
             if (turnManager != null)
                 turnManager.BeginTurn(currentTurn);
@@ -320,14 +306,6 @@ namespace EmpireOfCards.Core
         public bool UseAction() => resources.UseAction();
         public void ResetActions() => resources.ResetActions();
         public void AddExtraAction(int count = 1) => resources.AddExtraAction(count, balanceData);
-
-        public void RegisterPersistentBuildPlayed()
-        {
-            persistentBuildsPlayedThisTurn = Mathf.Clamp(
-                persistentBuildsPlayedThisTurn + 1,
-                0,
-                Constants.PERSISTENT_BUILDS_PER_TURN);
-        }
 
         public void AddBusinessSlot()
         {

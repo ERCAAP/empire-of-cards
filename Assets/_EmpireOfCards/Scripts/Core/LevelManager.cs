@@ -8,6 +8,7 @@ namespace EmpireOfCards.Core
     {
         public static LevelManager Instance { get; private set; }
 
+        [SerializeField] private string bootScene = "Boot";
         [SerializeField] private string menuScene = "MainMenu";
         [SerializeField] private string gameScene = "Game";
 

@@ -14,17 +14,12 @@ namespace EmpireOfCards.World
         [SerializeField] private GameManager gameManager;
         [SerializeField] private BoardManager boardManager;
         [SerializeField] private SlotManager slotManager;
-        [SerializeField] private BoardStageAuthoring stageAuthoring;
 
         private readonly List<SlotZone3D> _operationSlots = new List<SlotZone3D>();
         private readonly List<SlotZone3D> _staffSlots = new List<SlotZone3D>();
         private readonly List<SlotZone3D> _marketingSlots = new List<SlotZone3D>();
         private readonly List<SlotZone3D> _supplierSlots = new List<SlotZone3D>();
         private readonly List<SlotZone3D> _tempEffectSlots = new List<SlotZone3D>();
-        private readonly List<QuestionDropZone3D> _questionZones = new List<QuestionDropZone3D>();
-        private readonly List<Transform> _customerTokens = new List<Transform>();
-        private readonly List<Vector3> _customerTokenTargets = new List<Vector3>();
-        private readonly List<Color> _customerTokenColors = new List<Color>();
 
         // Legacy compatibility for systems still thinking in "business slots".
         private readonly List<SlotZone3D> _businessSlots = new List<SlotZone3D>();
@@ -66,18 +61,14 @@ namespace EmpireOfCards.World
 
         public IReadOnlyList<SlotZone3D> BusinessSlots => _operationSlots;
         public IReadOnlyList<SlotZone3D> AllSlots => _allSlots;
-        public IReadOnlyList<QuestionDropZone3D> QuestionZones => _questionZones;
-        public BoardStageAuthoring StageAuthoring => stageAuthoring;
 
         private readonly List<SlotZone3D> _allSlots = new List<SlotZone3D>();
 
-        public void Init(GameManager game, BoardManager board, SlotManager slots, BoardStageAuthoring stage = null)
+        public void Init(GameManager game, BoardManager board, SlotManager slots)
         {
             gameManager = game;
             boardManager = board;
             slotManager = slots;
-            if (stage != null)
-                BindAuthoredStage(stage);
             BindBoardContextToSlots();
         }
 
@@ -102,63 +93,13 @@ namespace EmpireOfCards.World
             RefreshThemeProps();
         }
 
-        private void Update()
-        {
-            AnimateCustomerTokens();
-        }
-
         public void BuildBoard()
         {
-            BuildBoard(stageAuthoring);
-        }
-
-        public void BuildBoard(BoardStageAuthoring stage)
-        {
-            SetStageAuthoring(stage);
             BuildDeskFoundation();
             BuildPlayerBands();
             BuildMarketBand();
             BuildRivalBand();
             CreateSurfaceHeaders();
-            BindAuthoredStage(stageAuthoring);
-        }
-
-        public void BindAuthoredStage(BoardStageAuthoring stage)
-        {
-            SetStageAuthoring(stage);
-            if (stageAuthoring == null)
-                return;
-
-            bool reboundSlots = false;
-            reboundSlots |= TryReplaceSlotList(stageAuthoring.OperationAnchors, _operationSlots);
-            reboundSlots |= TryReplaceSlotList(stageAuthoring.StaffAnchors, _staffSlots);
-            reboundSlots |= TryReplaceSlotList(stageAuthoring.MarketingAnchors, _marketingSlots);
-            reboundSlots |= TryReplaceSlotList(stageAuthoring.SupplierAnchors, _supplierSlots);
-            reboundSlots |= TryReplaceSlotList(stageAuthoring.TempEffectAnchors, _tempEffectSlots);
-
-            if (reboundSlots)
-                RebuildSlotCaches();
-
-            if (TryReplaceQuestionZones(stageAuthoring.AuthoredQuestionZones))
-            {
-                for (int i = 0; i < _questionZones.Count; i++)
-                    _questionZones[i].RuntimeInit(i);
-            }
-
-            TryReplaceCustomerTokens(stageAuthoring.CustomerTokens);
-            BindBoardContextToSlots();
-        }
-
-        public void SetStageAuthoring(BoardStageAuthoring stage)
-        {
-            stageAuthoring = stage;
-            if (stageAuthoring == null)
-                return;
-
-            stageAuthoring.EnsureLayout();
-            stageAuthoring.LogMissingReferences();
-            if (stageAuthoring.StageRoot != null && transform.parent != stageAuthoring.StageRoot)
-                transform.SetParent(stageAuthoring.StageRoot, false);
         }
 
         private void BuildDeskFoundation()
@@ -276,30 +217,6 @@ namespace EmpireOfCards.World
                 _territoryBlocks.Add(terr);
                 _territoryRenderers.Add(terr.GetComponent<MeshRenderer>());
             }
-
-            _questionZones.Clear();
-            _questionZones.Add(CreateQuestionZone("QuestionZone_01", new Vector3(-2.45f, 0.12f, 2.56f), new Vector3(2.75f, 0.10f, 0.86f), 0));
-            _questionZones.Add(CreateQuestionZone("QuestionZone_02", new Vector3(2.45f, 0.12f, 2.56f), new Vector3(2.75f, 0.10f, 0.86f), 1));
-
-            _customerTokens.Clear();
-            _customerTokenTargets.Clear();
-            _customerTokenColors.Clear();
-            for (int i = 0; i < 12; i++)
-            {
-                float x = -3.30f + (i % 6) * 1.32f;
-                float z = (i < 6) ? 2.18f : 2.92f;
-                var token = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-                token.name = $"CustomerToken_{i + 1:D2}";
-                token.transform.SetParent(transform, false);
-                token.transform.localPosition = new Vector3(x, 0.24f, z);
-                token.transform.localScale = new Vector3(0.28f, 0.28f, 0.28f);
-                var renderer = token.GetComponent<MeshRenderer>();
-                renderer.material.color = ControlDeskTheme.NeutralBlock;
-                Destroy(token.GetComponent<Collider>());
-                _customerTokens.Add(token.transform);
-                _customerTokenTargets.Add(token.transform.localPosition);
-                _customerTokenColors.Add(ControlDeskTheme.NeutralBlock);
-            }
         }
 
         private void BuildRivalBand()
@@ -395,14 +312,6 @@ namespace EmpireOfCards.World
             return zone;
         }
 
-        private QuestionDropZone3D CreateQuestionZone(string zoneName, Vector3 localPos, Vector3 localScale, int questionIndex)
-        {
-            var slot = CreateCube(zoneName, localPos, localScale, ControlDeskTheme.PanelSoft);
-            var zone = slot.AddComponent<QuestionDropZone3D>();
-            zone.RuntimeInit(questionIndex);
-            return zone;
-        }
-
         private void BindBoardContextToSlots()
         {
             for (int i = 0; i < _allSlots.Count; i++)
@@ -410,112 +319,6 @@ namespace EmpireOfCards.World
                 if (_allSlots[i] != null)
                     _allSlots[i].SetBoardManager(boardManager);
             }
-
-            var qm = gameManager != null ? gameManager.QuestionManager : null;
-            for (int i = 0; i < _questionZones.Count; i++)
-            {
-                if (_questionZones[i] != null)
-                    _questionZones[i].SetQuestionManager(qm);
-            }
-        }
-
-        private static bool TryReplaceSlotList(SlotZone3D[] authoredSlots, List<SlotZone3D> target)
-        {
-            if (!HasAny(authoredSlots) || target == null)
-                return false;
-
-            target.Clear();
-            for (int i = 0; i < authoredSlots.Length; i++)
-            {
-                if (authoredSlots[i] != null)
-                    target.Add(authoredSlots[i]);
-            }
-
-            return target.Count > 0;
-        }
-
-        private bool TryReplaceQuestionZones(QuestionDropZone3D[] authoredZones)
-        {
-            if (!HasAny(authoredZones))
-                return false;
-
-            _questionZones.Clear();
-            for (int i = 0; i < authoredZones.Length; i++)
-            {
-                if (authoredZones[i] != null)
-                    _questionZones.Add(authoredZones[i]);
-            }
-
-            return _questionZones.Count > 0;
-        }
-
-        private bool TryReplaceCustomerTokens(Transform[] authoredTokens)
-        {
-            if (!HasAny(authoredTokens))
-                return false;
-
-            _customerTokens.Clear();
-            for (int i = 0; i < authoredTokens.Length; i++)
-            {
-                if (authoredTokens[i] != null)
-                    _customerTokens.Add(authoredTokens[i]);
-            }
-
-            return _customerTokens.Count > 0;
-        }
-
-        private void RebuildSlotCaches()
-        {
-            _allSlots.Clear();
-            _businessSlots.Clear();
-            _businessSlotRenderers.Clear();
-
-            AppendSlots(_operationSlots);
-            AppendSlots(_staffSlots);
-            AppendSlots(_marketingSlots);
-            AppendSlots(_supplierSlots);
-            AppendSlots(_tempEffectSlots);
-
-            if (_sellZone != null)
-                _allSlots.Add(_sellZone);
-            if (_actionZone != null)
-                _allSlots.Add(_actionZone);
-
-            for (int i = 0; i < _operationSlots.Count; i++)
-            {
-                SlotZone3D slot = _operationSlots[i];
-                if (slot == null)
-                    continue;
-
-                _businessSlots.Add(slot);
-                _businessSlotRenderers.Add(slot.GetComponent<MeshRenderer>());
-            }
-        }
-
-        private void AppendSlots(List<SlotZone3D> slots)
-        {
-            if (slots == null)
-                return;
-
-            for (int i = 0; i < slots.Count; i++)
-            {
-                if (slots[i] != null)
-                    _allSlots.Add(slots[i]);
-            }
-        }
-
-        private static bool HasAny<T>(T[] entries) where T : Object
-        {
-            if (entries == null)
-                return false;
-
-            for (int i = 0; i < entries.Length; i++)
-            {
-                if (entries[i] != null)
-                    return true;
-            }
-
-            return false;
         }
 
         private GameObject CreateCube(string objectName, Vector3 localPos, Vector3 localScale, Color color)
@@ -594,8 +397,6 @@ namespace EmpireOfCards.World
             CreateDeskText("SELL", new Vector3(6.52f, 0.16f, -2.74f), flatText, 0.88f, ControlDeskTheme.Lighten(ControlDeskTheme.UtilitySlot, 0.24f), TextAlignmentOptions.Center);
             CreateDeskText("PLAY", new Vector3(6.52f, 0.16f, -3.78f), flatText, 0.88f, ControlDeskTheme.Lighten(ControlDeskTheme.ActionSlot, 0.24f), TextAlignmentOptions.Center);
             CreateDeskText("SHARED MARKET", new Vector3(0f, 0.16f, 3.58f), flatText, 1.10f, ControlDeskTheme.Lighten(ControlDeskTheme.TextPrimary, 0.12f), TextAlignmentOptions.Center);
-            CreateDeskText("QUESTION A", new Vector3(-2.45f, 0.16f, 1.95f), flatText, 0.56f, ControlDeskTheme.AccentBlue, TextAlignmentOptions.Center);
-            CreateDeskText("QUESTION B", new Vector3(2.45f, 0.16f, 1.95f), flatText, 0.56f, ControlDeskTheme.AccentAmber, TextAlignmentOptions.Center);
             CreateDeskText("RIVAL BOARD", new Vector3(0f, 0.16f, 8.10f), flatText, 1.18f, ControlDeskTheme.Lighten(ControlDeskTheme.RivalSlot, 0.28f), TextAlignmentOptions.Center);
             CreateDeskText("OPERATIONS", new Vector3(-5.94f, 0.16f, 7.12f), flatText, 0.92f, ControlDeskTheme.Lighten(ControlDeskTheme.RivalSlot, 0.22f), TextAlignmentOptions.Left);
             CreateDeskText("TEAM", new Vector3(-5.94f, 0.16f, 5.75f), flatText, 0.88f, ControlDeskTheme.Lighten(ControlDeskTheme.RivalSlot, 0.18f), TextAlignmentOptions.Left);
@@ -654,13 +455,8 @@ namespace EmpireOfCards.World
             EventBus.OnTurnBriefGenerated += HandleTurnBrief;
             EventBus.OnTurnReportGenerated += HandleTurnReport;
             EventBus.OnRivalActionQueued += HandleRivalActionQueued;
-            EventBus.OnRivalPressureVisualChanged += HandleRivalPressureVisualChanged;
             EventBus.OnCardPlacedInSlot += HandleCardPlacedInSlot;
             EventBus.OnCardRemovedFromSlot += HandleCardRemovedFromSlot;
-            EventBus.OnQuestionsGenerated += HandleQuestionsGenerated;
-            EventBus.OnQuestionAnswered += HandleQuestionAnswered;
-            EventBus.OnQuestionResolved += HandleQuestionResolved;
-            EventBus.OnCustomerFlowResolved += HandleCustomerFlowResolved;
             LocalizationManager.OnLanguageChanged += ApplyVentureHeaders;
         }
 
@@ -675,13 +471,8 @@ namespace EmpireOfCards.World
             EventBus.OnTurnBriefGenerated -= HandleTurnBrief;
             EventBus.OnTurnReportGenerated -= HandleTurnReport;
             EventBus.OnRivalActionQueued -= HandleRivalActionQueued;
-            EventBus.OnRivalPressureVisualChanged -= HandleRivalPressureVisualChanged;
             EventBus.OnCardPlacedInSlot -= HandleCardPlacedInSlot;
             EventBus.OnCardRemovedFromSlot -= HandleCardRemovedFromSlot;
-            EventBus.OnQuestionsGenerated -= HandleQuestionsGenerated;
-            EventBus.OnQuestionAnswered -= HandleQuestionAnswered;
-            EventBus.OnQuestionResolved -= HandleQuestionResolved;
-            EventBus.OnCustomerFlowResolved -= HandleCustomerFlowResolved;
             LocalizationManager.OnLanguageChanged -= ApplyVentureHeaders;
         }
 
@@ -730,109 +521,6 @@ namespace EmpireOfCards.World
             RefreshThemeProps();
         }
 
-        private void HandleQuestionsGenerated(QuestionRuntimeState[] questions)
-        {
-            for (int i = 0; i < _questionZones.Count; i++)
-            {
-                string text = "QUESTION";
-                if (questions != null && i < questions.Length && questions[i] != null && questions[i].definition != null)
-                    text = $"{questions[i].definition.headline}\n[{questions[i].definition.primaryTag}]";
-                _questionZones[i].SetQuestionText(text);
-            }
-        }
-
-        private void HandleQuestionAnswered(int index, QuestionRuntimeState state)
-        {
-            if (index < 0 || index >= _questionZones.Count || state == null)
-                return;
-
-            string primary = state.committedPrimaryCard != null ? state.committedPrimaryCard.cardName : "No response";
-            string support = state.committedSupportCard != null ? $"\n+ {state.committedSupportCard.cardName}" : string.Empty;
-            _questionZones[index].SetQuestionText($"{state.definition.headline}\n{primary}{support}");
-        }
-
-        private void HandleQuestionResolved(int index, QuestionRuntimeState state)
-        {
-            if (index < 0 || index >= _questionZones.Count || state == null)
-                return;
-
-            _questionZones[index].SetQuestionText($"{state.definition.headline}\n{state.outcomeLabel}");
-        }
-
-        private void HandleCustomerFlowResolved(CustomerFlowSnapshot snapshot)
-        {
-            if (snapshot == null || _customerTokens.Count == 0)
-                return;
-
-            EnsureCustomerAnimationBuffers();
-            int playerCount = Mathf.Clamp(snapshot.movedToPlayer, 0, _customerTokens.Count);
-            int rivalCount = Mathf.Clamp(snapshot.movedToRival, 0, _customerTokens.Count - playerCount);
-
-            for (int i = 0; i < _customerTokens.Count; i++)
-            {
-                Transform token = _customerTokens[i];
-                if (token == null)
-                    continue;
-
-                var renderer = token.GetComponent<MeshRenderer>();
-                if (renderer == null)
-                    continue;
-
-                if (i < playerCount)
-                {
-                    _customerTokenTargets[i] = new Vector3(-4.35f + i * 0.60f, 0.24f, 1.86f);
-                    _customerTokenColors[i] = ControlDeskTheme.PlayerBlock;
-                }
-                else if (i >= _customerTokens.Count - rivalCount)
-                {
-                    int rivalIndex = i - (_customerTokens.Count - rivalCount);
-                    _customerTokenTargets[i] = new Vector3(4.35f - rivalIndex * 0.60f, 0.24f, 3.42f);
-                    _customerTokenColors[i] = ControlDeskTheme.RivalBlock;
-                }
-                else
-                {
-                    int neutralIndex = i - playerCount;
-                    _customerTokenTargets[i] = new Vector3(-1.65f + (neutralIndex % 6) * 0.66f, 0.24f, neutralIndex < 3 ? 2.38f : 2.72f);
-                    _customerTokenColors[i] = ControlDeskTheme.NeutralBlock;
-                }
-            }
-        }
-
-        private void EnsureCustomerAnimationBuffers()
-        {
-            while (_customerTokenTargets.Count < _customerTokens.Count)
-            {
-                int index = _customerTokenTargets.Count;
-                Transform token = _customerTokens[index];
-                _customerTokenTargets.Add(token != null ? token.localPosition : Vector3.zero);
-            }
-
-            while (_customerTokenColors.Count < _customerTokens.Count)
-                _customerTokenColors.Add(ControlDeskTheme.NeutralBlock);
-        }
-
-        private void AnimateCustomerTokens()
-        {
-            if (_customerTokens.Count == 0)
-                return;
-
-            EnsureCustomerAnimationBuffers();
-            float positionLerp = Time.deltaTime * 5.5f;
-            float colorLerp = Time.deltaTime * 7.5f;
-
-            for (int i = 0; i < _customerTokens.Count; i++)
-            {
-                Transform token = _customerTokens[i];
-                if (token == null)
-                    continue;
-
-                token.localPosition = Vector3.Lerp(token.localPosition, _customerTokenTargets[i], positionLerp);
-                MeshRenderer renderer = token.GetComponent<MeshRenderer>();
-                if (renderer != null)
-                    renderer.material.color = Color.Lerp(renderer.material.color, _customerTokenColors[i], colorLerp);
-            }
-        }
-
         private void HandleTurnBrief(TurnBriefData brief)
         {
             if (brief == null) return;
@@ -863,19 +551,6 @@ namespace EmpireOfCards.World
                 _rivalCrisisLabel.text = $"Threat: {action.shortDescription}";
 
             SpawnRivalActionVisual(action);
-        }
-
-        private void HandleRivalPressureVisualChanged(RivalPressureViewModel model)
-        {
-            if (model == null)
-                return;
-
-            if (_rivalCardLabel != null)
-                _rivalCardLabel.text = $"Last Card: {model.headline}";
-            if (_rivalStyleLabel != null)
-                _rivalStyleLabel.text = $"Pressure: {model.laneLabel}";
-            if (_rivalCrisisLabel != null)
-                _rivalCrisisLabel.text = $"Threat: {model.shortDescription}";
         }
 
         private void ApplyVentureHeaders()

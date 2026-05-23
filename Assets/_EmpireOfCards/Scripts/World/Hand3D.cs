@@ -10,8 +10,6 @@ namespace EmpireOfCards.World
     {
         [Header("Hand Layout")]
         [SerializeField] private Transform handAnchor;
-        [SerializeField] private Transform buildRailAnchor;
-        [SerializeField] private Transform responseRailAnchor;
         [SerializeField] private float cardSpacing = 1.18f;
         [SerializeField] private float fanAngle = 8f;
         [SerializeField] private float verticalArc = 0.14f;
@@ -29,16 +27,9 @@ namespace EmpireOfCards.World
         /// </summary>
         public void Init(CardFactory factory, DeckManager deck, Transform anchor)
         {
-            Init(factory, deck, anchor, anchor);
-        }
-
-        public void Init(CardFactory factory, DeckManager deck, Transform buildAnchor, Transform responseAnchor)
-        {
             this.cardFactory = factory;
             this.deckManager = deck;
-            this.buildRailAnchor = buildAnchor;
-            this.responseRailAnchor = responseAnchor != null ? responseAnchor : buildAnchor;
-            this.handAnchor = buildRailAnchor;
+            this.handAnchor = anchor;
         }
 
         private void OnEnable()
@@ -157,38 +148,20 @@ namespace EmpireOfCards.World
 
         private void LayoutHand()
         {
-            if (buildRailAnchor == null && handAnchor != null)
-                buildRailAnchor = handAnchor;
-            if (responseRailAnchor == null)
-                responseRailAnchor = buildRailAnchor;
-            if (buildRailAnchor == null) return;
+            if (handAnchor == null) return;
 
-            var buildCards = new List<Card3D>();
-            var responseCards = new List<Card3D>();
+            // Only layout cards that are still in hand (not placed on board)
+            var handCards = new List<Card3D>();
             for (int i = 0; i < _cards.Count; i++)
             {
                 if (_cards[i] != null && _cards[i].IsInHand)
-                {
-                    if (QuestionTagUtility.IsPersistentBuild(_cards[i].CardData))
-                        buildCards.Add(_cards[i]);
-                    else
-                        responseCards.Add(_cards[i]);
-                }
+                    handCards.Add(_cards[i]);
             }
-
-            LayoutRail(buildCards, buildRailAnchor, -0.02f);
-            LayoutRail(responseCards, responseRailAnchor, -0.02f);
-        }
-
-        private void LayoutRail(List<Card3D> handCards, Transform railAnchor, float depthStep)
-        {
-            if (railAnchor == null)
-                return;
 
             int count = handCards.Count;
             if (count == 0) return;
 
-            float spacing = count >= 4 ? Mathf.Max(0.92f, cardSpacing - 0.16f) : cardSpacing;
+            float spacing = count >= 6 ? Mathf.Max(0.98f, cardSpacing - 0.10f) : cardSpacing;
             float totalWidth = (count - 1) * spacing;
             float startX = -totalWidth / 2f;
 
@@ -199,9 +172,9 @@ namespace EmpireOfCards.World
                 float y = -Mathf.Pow(t - 0.5f, 2) * 4f * verticalArc + verticalArc;
                 float angle = Mathf.Lerp(fanAngle, -fanAngle, t);
 
-                Vector3 localPos = new Vector3(x, y, -i * Mathf.Abs(depthStep));
-                Vector3 worldPos = railAnchor.TransformPoint(localPos);
-                Quaternion rot = railAnchor.rotation * Quaternion.Euler(0, 0, angle);
+                Vector3 localPos = new Vector3(x, y, -i * 0.03f);
+                Vector3 worldPos = handAnchor.TransformPoint(localPos);
+                Quaternion rot = handAnchor.rotation * Quaternion.Euler(0, 0, angle);
 
                 handCards[i].SetHandPosition(worldPos, rot);
             }

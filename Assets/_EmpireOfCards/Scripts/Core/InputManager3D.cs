@@ -13,6 +13,7 @@ namespace EmpireOfCards.Core
         [Header("Raycast Settings")]
         [SerializeField] private Camera mainCamera;
         [SerializeField] private float dragHeight = 1.15f;
+        [SerializeField] private float hoverHeight = 0.18f;
         [SerializeField] private GameManager gameManager;
         [SerializeField] private AbilitySystem abilitySystem;
 
@@ -20,50 +21,39 @@ namespace EmpireOfCards.Core
         private Card3D _hoveredCard;
         private Card3D _draggedCard;
         private SlotZone3D _hoveredSlot;
-        private QuestionDropZone3D _hoveredQuestionZone;
+        private Vector3 _dragOffset;
+        private Vector3 _cardOriginalPos;
+        private Quaternion _cardOriginalRot;
         private bool _isDragging;
         private bool _inputEnabled;
         private readonly List<SlotZone3D> _slotZones = new List<SlotZone3D>();
-        private readonly List<QuestionDropZone3D> _questionZones = new List<QuestionDropZone3D>();
 
         // Events
         public event Action<Card3D> OnCardHoverEnter;
         public event Action<Card3D> OnCardHoverExit;
         public event Action<Card3D> OnCardPickedUp;
         public event Action<Card3D, SlotZone3D> OnCardDropped;
-        public event Action<Card3D, QuestionDropZone3D> OnCardDroppedOnQuestion;
         public event Action<Card3D> OnCardReturnedToHand;
         public event Action<Card3D> OnAbilityUsed;
         public event Action<Card3D, SlotZone3D, bool> OnDragSlotHoverChanged;
-        public event Action<Card3D, QuestionDropZone3D, bool> OnDragQuestionHoverChanged;
 
         public bool InputEnabled { get => _inputEnabled; set => _inputEnabled = value; }
         public Card3D DraggedCard => _draggedCard;
 
-        public void InitRuntime(Camera cameraRef, GameManager gameManagerRef, AbilitySystem abilitySystemRef, IReadOnlyList<SlotZone3D> slotZones, IReadOnlyList<QuestionDropZone3D> questionZones)
+        public void InitRuntime(Camera cameraRef, GameManager gameManagerRef, AbilitySystem abilitySystemRef, IReadOnlyList<SlotZone3D> slotZones)
         {
             mainCamera = cameraRef;
             gameManager = gameManagerRef;
             abilitySystem = abilitySystemRef;
 
             _slotZones.Clear();
-            if (slotZones != null)
-            {
-                for (int i = 0; i < slotZones.Count; i++)
-                {
-                    if (slotZones[i] != null)
-                        _slotZones.Add(slotZones[i]);
-                }
-            }
+            if (slotZones == null)
+                return;
 
-            _questionZones.Clear();
-            if (questionZones != null)
+            for (int i = 0; i < slotZones.Count; i++)
             {
-                for (int i = 0; i < questionZones.Count; i++)
-                {
-                    if (questionZones[i] != null)
-                        _questionZones.Add(questionZones[i]);
-                }
+                if (slotZones[i] != null)
+                    _slotZones.Add(slotZones[i]);
             }
         }
 
@@ -176,42 +166,9 @@ namespace EmpireOfCards.Core
                     _draggedCard.transform.position, worldPos, Time.deltaTime * 22f);
             }
 
-            // Check question hover first, then slot hover.
+            // Check slot hover - raycast all layers, check for SlotZone3D component
             if (Physics.Raycast(ray, out RaycastHit hit, 100f))
             {
-                var question = hit.collider.GetComponent<QuestionDropZone3D>();
-                if (question == null) question = hit.collider.GetComponentInParent<QuestionDropZone3D>();
-
-                if (question != null)
-                {
-                    if (_hoveredSlot != null)
-                    {
-                        _hoveredSlot.SetHighlight(false);
-                        if (_hoveredSlot.CanAccept(_draggedCard.CardData))
-                            _hoveredSlot.SetPulse(true);
-                        OnDragSlotHoverChanged?.Invoke(_draggedCard, null, false);
-                        _hoveredSlot = null;
-                    }
-
-                    if (question != _hoveredQuestionZone)
-                    {
-                        if (_hoveredQuestionZone != null)
-                            _hoveredQuestionZone.SetHighlight(false, false);
-                        _hoveredQuestionZone = question;
-                        bool valid = _hoveredQuestionZone.CanAccept(_draggedCard.CardData);
-                        _hoveredQuestionZone.SetHighlight(true, valid);
-                        OnDragQuestionHoverChanged?.Invoke(_draggedCard, _hoveredQuestionZone, valid);
-                    }
-
-                    return;
-                }
-                else if (_hoveredQuestionZone != null)
-                {
-                    _hoveredQuestionZone.SetHighlight(false, false);
-                    OnDragQuestionHoverChanged?.Invoke(_draggedCard, null, false);
-                    _hoveredQuestionZone = null;
-                }
-
                 var slot = hit.collider.GetComponent<SlotZone3D>();
                 if (slot == null) slot = hit.collider.GetComponentInParent<SlotZone3D>();
 
@@ -249,13 +206,6 @@ namespace EmpireOfCards.Core
                 OnDragSlotHoverChanged?.Invoke(_draggedCard, null, false);
                 _hoveredSlot = null;
             }
-
-            if (!Physics.Raycast(ray, out _, 100f) && _hoveredQuestionZone != null)
-            {
-                _hoveredQuestionZone.SetHighlight(false, false);
-                OnDragQuestionHoverChanged?.Invoke(_draggedCard, null, false);
-                _hoveredQuestionZone = null;
-            }
         }
 
         /// <summary>
@@ -288,8 +238,11 @@ namespace EmpireOfCards.Core
             var gm = gameManager;
             if (gm == null || gm.PlayerActions <= 0) return;
             if (gm.TurnManager == null || gm.TurnManager.CurrentPhase != TurnPhase.PlayPhase) return;
+
             _isDragging = true;
             _draggedCard = card;
+            _cardOriginalPos = card.transform.position;
+            _cardOriginalRot = card.transform.rotation;
 
             card.SetDragging(true);
             card.transform.rotation = Quaternion.Euler(18f, 0f, 0f);
@@ -299,11 +252,6 @@ namespace EmpireOfCards.Core
             {
                 if (s != null && s.CanAccept(card.CardData))
                     s.SetPulse(true);
-            }
-            foreach (var q in _questionZones)
-            {
-                if (q != null && q.CanAccept(card.CardData))
-                    q.SetPulse(true);
             }
 
             OnCardPickedUp?.Invoke(card);
@@ -321,20 +269,8 @@ namespace EmpireOfCards.Core
                 s.SetHighlight(false);
                 s.SetPulse(false);
             }
-            foreach (var q in _questionZones)
-            {
-                if (q == null)
-                    continue;
-                q.SetHighlight(false, false);
-                q.SetPulse(false);
-            }
 
-            if (_hoveredQuestionZone != null && _hoveredQuestionZone.CanAccept(_draggedCard.CardData))
-            {
-                _draggedCard.SetDragging(false);
-                OnCardDroppedOnQuestion?.Invoke(_draggedCard, _hoveredQuestionZone);
-            }
-            else if (_hoveredSlot != null && _hoveredSlot.CanAccept(_draggedCard.CardData))
+            if (_hoveredSlot != null && _hoveredSlot.CanAccept(_draggedCard.CardData))
             {
                 // Valid drop -- snap card to slot with overshoot animation
                 _draggedCard.SetDragging(false);
@@ -353,9 +289,7 @@ namespace EmpireOfCards.Core
             _isDragging = false;
             _draggedCard = null;
             _hoveredSlot = null;
-            _hoveredQuestionZone = null;
             OnDragSlotHoverChanged?.Invoke(null, null, false);
-            OnDragQuestionHoverChanged?.Invoke(null, null, false);
         }
 
         public void SetCamera(Camera cam) { mainCamera = cam; }
