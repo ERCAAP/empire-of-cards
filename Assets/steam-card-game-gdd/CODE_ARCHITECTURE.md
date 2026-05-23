@@ -317,3 +317,18 @@ PlayMode tests:
 - Kart data'sı değiştirilince slot ve world manifestation davranışı editor data'dan akmalı.
 - Presenter kapalıyken systems test edilebilmeli.
 - UI ve world feedback aynı state değişiminden beslenmeli.
+
+## 9. Exact Blueprint Source
+
+Kod üretiminde `IMPLEMENTATION_BLUEPRINT.md` ana teknik kaynak kabul edilir. Bu dosyada enum, ScriptableObject, runtime state, system, presenter, scene hierarchy ve P0 prefab contract kesin isimlerle tanımlanmıştır.
+
+Architecture uygulama kuralı:
+
+- `Scripts/Definitions/Enums` altında blueprint enumları oluşturulur.
+- `Scripts/Definitions/ScriptableObjects` altında `*SO` definitions oluşturulur.
+- `Scripts/Runtime/State` altında saf C# state modelleri oluşturulur.
+- `Scripts/Systems` altında gameplay logic sistemleri oluşturulur.
+- `Scripts/Presenters` altında world/UI presenter MonoBehaviour sınıfları oluşturulur.
+- `Scenes/Gameplay_Diorama.unity` root hierarchy blueprint ile aynı isimleri taşır.
+
+İlk vertical slice Fast Food ile başlasa bile enum ve SO sistemi tüm venture'ları destekleyecek şekilde kurulur.

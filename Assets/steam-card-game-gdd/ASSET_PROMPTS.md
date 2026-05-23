@@ -502,3 +502,91 @@ Debug helper:
 Use: editor-only camera anchors, flow paths, event anchors, slot links.
 Rules: not included in final player-facing build; clear gizmo colors.
 ```
+
+## 8. Locked Visual Reference Prompts
+
+Use these prompts when generating full-screen concept references. Always prepend the Global Toy Diorama Style Prompt and append the Global Negative Prompt / Avoid List.
+
+### PROMPT_GAMEPLAY_BOARD_REFERENCE
+
+```text
+Subject: playable gameplay screen for Empire of Cards, a stylized 3D business strategy diorama.
+Camera/view: fixed orthographic isometric BoardOverview, medium-wide, readable UI and world together.
+Composition: wooden tabletop frame around a rectangular board; bottom foreground player fast food business with blue accent; center district road intersection with sidewalks, parks, benches, trees and the word DISTRICT on the road; top background rival business with red accent; left vertical wooden stat plaques; right simulation/event panel; bottom card hand and physical slot board.
+Gameplay elements: gray neutral customers in district, blue player customers queueing near player business, red rival customers near rival business, card hand with Install/Burst/Policy/Risk/Reaction examples, slot board labels Operation Staff Marketing Supplier Temp Effect.
+Color ownership: neutral customers gray, player customers blue, rival customers red, loyal customers blue with gold accent.
+UI placement: left HUD must not cover district; bottom cards must not hide player business; right panel must leave event source visible.
+Final readability requirement: viewer must understand player business, rival business, district flow, cards, slots and current pressure in 5 seconds.
+```
+
+### PROMPT_EVENT_OVERLAY_REFERENCE
+
+```text
+Subject: micro-cinematic event overlay during gameplay for Empire of Cards.
+Camera/view: same fixed isometric board, slightly focused on player business and event source.
+Composition: living district remains visible; right side wooden event panel shows problem, two or three choices and visible consequence; bottom card hand and slot board remain partially visible; event source appears in world near player business.
+Gameplay elements: stressed waiter NPC with speech bubble, queue growing, blue customers becoming impatient, staff slot card highlighted, right panel titled employee quitting event, choices such as pay bonus or accept quit.
+Color ownership: blue player customers, gray undecided customers, red rival customers in background.
+UI placement: event panel must not block the stressed employee or customer queue.
+Final readability requirement: viewer must understand problem, choices, visible consequence and new systemic pressure.
+```
+
+### PROMPT_SYSTEM_OVERVIEW_REFERENCE
+
+```text
+Subject: production overview sheet explaining Empire of Cards systems.
+Camera/view: clean infographic board, isometric toy diorama panels, not a poster.
+Composition: numbered panels for core idea, player action, core loop, card system, board/scene, slot system, simulation, event system, rival, venture types, meta progression and technical architecture.
+Gameplay elements: tiny business modules, card type examples, customer flow arrows, simulation bars, event choice panel, startup to holding progression, Unity-style definitions/runtime/systems/presenters diagram.
+Final readability requirement: a developer, artist and UI designer can understand the game structure from the sheet.
+```
+
+### PROMPT_TABLETOP_FRAME
+
+```text
+Subject: wooden tabletop frame and board edge for a toy diorama strategy game.
+Camera/view: isometric 3/4 prop sheet and in-context board corner.
+Composition: warm wood table surface, raised board border, off-board card stack and colored folders at edges.
+Gameplay elements: must frame the diorama without stealing attention from district and cards.
+Final readability requirement: board feels physical and premium but UI remains clear.
+```
+
+### PROMPT_LEFT_STAT_HUD
+
+```text
+Subject: left vertical stat HUD plaques for Empire of Cards.
+Camera/view: UI concept sheet and in-game left-edge placement.
+Composition: stacked wooden/paper plaques for Cash, Rating, Demand, Staff Stability, Legal Risk, Market Share.
+Gameplay elements: pulse states for gain/loss/warning, readable icons, no tiny paragraphs.
+Final readability requirement: stats readable at gameplay scale without looking like a spreadsheet.
+```
+
+### PROMPT_BOTTOM_CARD_HAND_AND_SLOT_BOARD
+
+```text
+Subject: bottom card hand and physical slot board for Empire of Cards.
+Camera/view: isometric gameplay UI, bottom screen band.
+Composition: fan or row of decision cards in foreground; behind or beside it a physical slot board with Operation, Staff, Marketing, Supplier and Temp Effect sections.
+Gameplay elements: cards can drag into slots; filled slots show persistent cards; hover creates a subtle link to world object or NPC.
+Final readability requirement: card type, target slot and occupied slot state are clear while district remains visible.
+```
+
+### PROMPT_RIGHT_EVENT_SIM_PANEL
+
+```text
+Subject: right-side simulation and event panel for Empire of Cards.
+Camera/view: in-game UI panel concept.
+Composition: wooden framed vertical panel that can switch between simulation loop, event choice, consequence and end turn summary.
+Gameplay elements: active turn phase highlight, event title, 1-3 choice buttons, consequence area, new pressure label.
+Final readability requirement: panel supports drama without becoming a generic modal popup.
+```
+
+### PROMPT_DISTRICT_ROAD_INTERSECTION
+
+```text
+Subject: central district road intersection board for Empire of Cards.
+Camera/view: fixed isometric gameplay board.
+Composition: crossroad, sidewalks, small green park corners, benches, trees, lamps, trash bins, shop corners, visible customer lanes.
+Gameplay elements: neutral gray customer spawn points, blue path to player business, red path to rival business, trend/event spot, review bubble anchors.
+Final readability requirement: market share can be read from customer color distribution and path direction.
+```

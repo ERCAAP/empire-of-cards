@@ -210,3 +210,23 @@ P0 batch must ship before deeper venture expansion:
 - Every customer ownership state is readable under Toy Studio lighting.
 - Every P0 asset has a placeholder path and final production target.
 - Every final asset has a prompt or 3D brief reference in `ASSET_PROMPTS.md`.
+
+## 14. Visual Reference Addendum Assets
+
+These assets are required to match the locked screen references in `VISUAL_REFERENCE_BIBLE.md`.
+
+| Asset ID | Category | Venture | Usage | Priority | Gameplay State | Variants | Placeholder | Final Requirement | Prompt Ref |
+|---|---|---|---|---:|---|---|---|---|---|
+| EOC_ENV_TabletopFrame | Environment | Shared | Physical board frame | P0 | board identity | clean, worn edge | wood planes | warm tabletop, not cluttered | PROMPT_TABLETOP_FRAME |
+| EOC_ENV_OffBoard_CardStack | Environment | Shared | Tabletop side dressing | P1 | visual context | blue/red/yellow folders | colored planes | decorative, outside gameplay area | PROMPT_TABLETOP_FRAME |
+| EOC_ENV_District_RoadIntersection | Environment | Shared | Central district | P0 | market flow | startup, growth, holding | road decals | readable crossroad and sidewalks | PROMPT_DISTRICT_ROAD_INTERSECTION |
+| EOC_ENV_District_LabelDecal | Environment | Shared | District label | P0 | board readability | district, trend | text decal | large but non-blocking | PROMPT_DISTRICT_ROAD_INTERSECTION |
+| EOC_ENV_District_ParkProps | Environment | Shared | Parks/sidewalk detail | P1 | readable city life | bench, tree, lamp, bin | simple props | low clutter, clear scale | PROMPT_DISTRICT_ROAD_INTERSECTION |
+| EOC_UI_LeftStatPlaque_Set | UI | Shared | Left HUD | P0 | stats | normal, pulse, warning | TMP panels | wooden plaque style | PROMPT_LEFT_STAT_HUD |
+| EOC_UI_RightSimulationPanel | UI | Shared | Right phase panel | P0 | turn flow | compact, expanded | UGUI panel | switchable mode panel | PROMPT_RIGHT_EVENT_SIM_PANEL |
+| EOC_UI_RightEventPanel | UI | Shared | Event decisions | P0 | crisis choice | 1,2,3 choices | UGUI panel | problem/choice/consequence states | PROMPT_RIGHT_EVENT_SIM_PANEL |
+| EOC_UI_EventInsetFrame | UI | Shared | Micro-cinematic inset | P1 | event focus | staff, customer, rival | framed panel | optional world close-up | PROMPT_EVENT_OVERLAY_REFERENCE |
+| EOC_UI_BottomCardRail | UI | Shared | Card hand support | P0 | card offer | 3,4,5 cards | bottom strip | card band does not cover world | PROMPT_BOTTOM_CARD_HAND_AND_SLOT_BOARD |
+| EOC_PROP_SlotBoardPedestal | Business Module | Shared | Physical slot board | P0 | persistent decisions | startup, expanded | flat board | sits in world, accepts cards | PROMPT_BOTTOM_CARD_HAND_AND_SLOT_BOARD |
+| EOC_VFX_CardWorldLinkPulse | VFX | Shared | Hover/commit link | P0 | card-to-world relation | blue, red, warning | line renderer | short, subtle, readable | PROMPT_BOTTOM_CARD_HAND_AND_SLOT_BOARD |
+| EOC_UI_GameplayBoardReference | UI | Shared | Full composition target | P0 | art direction | board, event | screenshot mock | locked screen reference | PROMPT_GAMEPLAY_BOARD_REFERENCE |

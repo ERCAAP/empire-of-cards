@@ -656,3 +656,26 @@ Işık üretim kararı:
 - Event kamera odağı, NPC beat, seçim ve görünür consequence üretir.
 - Rating düşünce müşteri akışı rakibe kayar.
 - Rakip en az bir görünür hamle yapar.
+
+## 11. Blueprint Reference
+
+Kod üretimine başlamadan önce `IMPLEMENTATION_BLUEPRINT.md` kaynak kabul edilir. Bu dosyadaki karar seviyesi modeller production C# sözleşmesine şu şekilde bağlanır:
+
+- Enum contract: `VentureType`, `CardBehaviorType`, `SlotType`, `TurnPhase`, `EventCategory`, `CustomerOwnership`, `CameraMode` ve diğer enumlar doğrudan C# dosyalarına taşınır.
+- ScriptableObject contract: `VentureDefinitionSO`, `CardDefinitionSO`, `EventDefinitionSO`, `LevelDefinitionSO`, `AssetManifestSO`, `UIFlowDefinitionSO`, `CameraProfileSO`, `LightingStateSO`, `CardPoolSO`, `RivalBehaviorProfileSO`.
+- Runtime state contract: `RunState`, `BusinessState`, `DistrictState`, `BoardSlotState`, `StaffState`, `CustomerFlowState`, `DeckState`, `ActiveEventState`, `TempEffectState`.
+- Scene contract: `Gameplay_Diorama.unity` root hierarchy ve P0 prefab listesi blueprint'teki isimlerle kurulmalıdır.
+
+Bu mapping dosyası sistem davranışını açıklar; blueprint ise geliştiricinin dosya/sınıf üretirken karar vermesini engelleyen kesin listedir.
+
+## 12. Visual Reference Data Binding
+
+`VISUAL_REFERENCE_BIBLE.md` production screen composition için kaynak kabul edilir.
+
+Data bağlantıları:
+
+- `LevelDefinitionSO` tabletop frame, road intersection, player/rival anchors ve slot board anchor'larını referanslar.
+- `AssetManifestSO` tabletop, left HUD, right panel, bottom card rail ve slot board pedestal prefab key'lerini taşır.
+- `UIFlowDefinitionSO` left HUD, bottom card hand, right simulation/event panel modlarını phase'e göre açar.
+- `CameraProfileSO` BoardOverview'da sol HUD, sağ panel ve alt card bandı için safe frame kuralı taşır.
+- `WorldManifestationDefinition` kart commit sonrası slot ve world entity arasındaki link feedback'ini tetikler.

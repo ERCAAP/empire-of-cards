@@ -346,3 +346,52 @@ Flow path kuralı:
 - Büyük market share değişimi müşteri renk akışıyla fiziksel görünmeli.
 - Event kamera odağı problem kaynağını göstermeli.
 - Toy Studio ışık gri/mavi/kırmızı müşteri ayrımını bozmayacak kadar temiz olmalı.
+
+## 8. Locked Visual Reference Layout
+
+`VISUAL_REFERENCE_BIBLE.md` içindeki üç görsel referans production için kaynak kabul edilir. Level tasarımı artık sadece genel Toy Diorama değil, şu ekran kompozisyonunu hedefler:
+
+```text
+┌──────────────────────────────────────────────────────────────┐
+│ Sol stat plakaları    Rakip işletme / kırmızı akış            │
+│                                                              │
+│                 DISTRICT yol kavşağı                         │
+│          gri müşteri havuzu + mavi/kırmızı path               │
+│                                                              │
+│ Kart eli       Oyuncu işletmesi + slot board       Sağ panel  │
+└──────────────────────────────────────────────────────────────┘
+```
+
+Kesin çevre modülleri:
+
+- Ahşap tabletop frame ve board kenarı.
+- Merkezi yol kavşağı, kaldırım ve park adaları.
+- Ağaç, bank, çöp kutusu, sokak lambası ve küçük signage props.
+- Altta oyuncu işletmesi için açık shop cutaway veya dollhouse açısı.
+- Üstte rakip işletmesi için kırmızı accent'li kompakt shop.
+- District üzerinde customer spawn noktaları ve flow path spline'ları.
+- Player/rival işletmelerinde queue anchor, service anchor, staff anchor ve event anchor noktaları.
+
+Bu layout her venture'da korunur; sadece işletme modülleri ve dekor kimliği değişir.
+
+## 9. Environment Production Anchors
+
+Her venture level prefab'ında şu anchorlar bulunmalıdır:
+
+- `Anchor_Player_Entrance`
+- `Anchor_Player_Service`
+- `Anchor_Player_Queue_Start`
+- `Anchor_Player_Queue_End`
+- `Anchor_Player_Staff_Work`
+- `Anchor_Player_Event_Primary`
+- `Anchor_Rival_Entrance`
+- `Anchor_Rival_Campaign`
+- `Anchor_District_NeutralSpawn_A`
+- `Anchor_District_NeutralSpawn_B`
+- `Anchor_District_PlayerFlow`
+- `Anchor_District_RivalFlow`
+- `Anchor_District_TrendSpot`
+- `Anchor_SlotBoard`
+- `Anchor_RightPanel_WorldSafe`
+
+Camera ve event sistemleri bu anchor isimlerini kullanarak production scene ile data arasında ortak dil kurar.

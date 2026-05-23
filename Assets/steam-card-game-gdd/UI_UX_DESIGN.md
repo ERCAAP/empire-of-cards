@@ -240,3 +240,60 @@ UI Toolkit production polish için sonra değerlendirilebilir; ilk hedef oynanab
 - Event seçiminde oyuncu neden karar verdiğini ve sonucu ne bekleyeceğini anlar.
 - End turn sonunda oyuncu bir sonraki turun ana problemini bilir.
 - UI, Toy Diorama hissini bozacak kadar ağır veya kurumsal görünmez.
+
+## 14. Locked Screen Composition
+
+Gönderilen görsel referanslara göre gameplay UI şu yerleşimi kullanır:
+
+- Sol dikey HUD: ekran genişliğinin yaklaşık yüzde 10-14'ü.
+- Merkez dünya: ekranın ana alanı; district ve müşteri flow kapatılmaz.
+- Alt card hand: ekran yüksekliğinin yaklaşık yüzde 20-28'i.
+- Slot board: alt bandın içinde veya hemen üstünde, player business ile fiziksel ilişkili.
+- Sağ panel: ekran genişliğinin yaklaşık yüzde 16-24'ü; simulation phase, event veya consequence için kullanılır.
+
+Sol HUD içerikleri:
+
+- Cash
+- Rating
+- Demand veya traffic pressure
+- Staff stability
+- Legal risk
+- Market share
+
+Sağ panel modları:
+
+- `SimulationLoop`: turn phase listesi ve aktif faz vurgusu.
+- `EventChoice`: problem başlığı, 1 kısa neden, 1-3 seçim.
+- `VisibleConsequence`: seçimin sahadaki sonucu ve yeni pressure.
+- `EndTurnSummary`: market share, rating, cash ve ana pressure delta.
+
+## 15. Card Drag And Slot Commit UX
+
+Kart oynama fiziksel ama kısa olmalıdır:
+
+1. Oyuncu kartı hover eder.
+2. Kart yükselir, target slot parlar.
+3. Sahada ghost preview belirir.
+4. Oyuncu kartı slota sürükler veya seçip slota tıklar.
+5. Slot uygunsa kart snap animasyonuyla oturur.
+6. Linked world object/NPC/flow aynı anda spawn veya activate olur.
+7. Kart-slot-world link çizgisi 0.8-1.2 sn görünür, sonra kaybolur.
+
+Invalid feedback:
+
+- Yanlış slotta kısa shake.
+- Slot doluysa `Replace / Upgrade / Merge / Discard-Sell` paneli açılır.
+- Cash yetmiyorsa kart karar olarak kalabilir ama commit kilitlenir.
+
+## 16. Event Overlay UX Reference
+
+Event overlay sağ paneli büyütür ama dünyayı kapatmaz.
+
+Panel yapısı:
+
+- Üst icon: event category.
+- Başlık: örnek `Garsonun Ayrılmak İstemesi`.
+- Choice area: maksimum 3 seçenek.
+- Consequence area: seçim sonrası görsel sonuç açıklaması.
+
+World inset sadece gerektiğinde kullanılır. Öncelik ana sahada NPC beat'i göstermektir; inset panel, problem kaynağı kamera açısından küçük kalıyorsa kullanılır.
